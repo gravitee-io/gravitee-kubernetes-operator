@@ -23,6 +23,10 @@ import (
 )
 
 func ResolveGroup(ctx context.Context, ref core.ObjectRef, namespace string) (*v1alpha1.Group, error) {
+	if isNilRef(ref) {
+		return nil, errors.NewSevere("Group reference is mandatory")
+	}
+
 	refKind := ref.GetKind()
 	if ref.GetKind() == "" {
 		refKind = GroupGVR.Resource
