@@ -16,7 +16,9 @@ package portal
 
 import (
 	"context"
+	"fmt"
 
+	prtlmodel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,10 +30,52 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 )
 
+func pathsOf(navigation []*prtlmodel.NavigationEntry) []string {
+	paths := make([]string, 0, len(navigation))
+	for _, entry := range navigation {
+		paths = append(paths, entry.Path)
+	}
+	return paths
+}
+
 var _ = Describe("Create", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	ctx := context.Background()
+
+	It("should create portal in APIM and persist the top navbar structure in list order", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortal(constants.PortalStructureFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build().
+			Apply()
+
+		By("expecting portal status to be completed")
+
+		Expect(assert.PortalAccepted(fixtures.Portal)).To(Succeed())
+		Expect(assert.ManagedByAutomationAPI(fixtures.Portal)).To(Succeed())
+
+		By("calling rest API, expecting the top navbar to round-trip in the same order")
+
+		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		expectedPaths := pathsOf(fixtures.Portal.Spec.Structure.TopNavbar)
+
+		Eventually(func() error {
+			prtl, prtlErr := apim.Portals.GetByHRID(hrid)
+			if prtlErr != nil {
+				return prtlErr
+			}
+			if err := assert.NotEmptyString("id", prtl.ID); err != nil {
+				return err
+			}
+			if prtl.Structure == nil {
+				return fmt.Errorf("expected portal structure to be set, got none")
+			}
+			return assert.ContainsInOrder("Portal top navbar", expectedPaths, pathsOf(prtl.Structure.TopNavbar))
+		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
+	})
 
 	It("should create portal in APIM and persist navigation in list order", func() {
 		fixtures := fixture.Builder().

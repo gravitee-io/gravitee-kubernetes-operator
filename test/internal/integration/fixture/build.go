@@ -320,6 +320,12 @@ func setupPortal(obj *Objects, prtl **v1alpha1.Portal, suffix string) {
 	for i := range obj.Portal.Spec.Navigation {
 		obj.Portal.Spec.Navigation[i].Path = obj.navigationRoot + obj.Portal.Spec.Navigation[i].Path
 	}
+	if obj.Portal.Spec.Structure != nil {
+		navbar := obj.Portal.Spec.Structure.TopNavbar
+		for i := range navbar {
+			navbar[i].Path = obj.navigationRoot + navbar[i].Path
+		}
+	}
 }
 
 func setupPortalListing(obj *Objects, listing **v1alpha1.PortalListing, suffix string) {

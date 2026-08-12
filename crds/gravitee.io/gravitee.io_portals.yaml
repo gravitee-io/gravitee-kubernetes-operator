@@ -70,8 +70,8 @@ spec:
                   description: Display name of the portal.
                   type: string
                 navigation:
-                  description: The portal's navigation hierarchy as an ordered, flat list of
-                    paths.
+                  description: "Deprecated: use structure.topNavbar instead, the two cannot be set
+                    at the same time."
                   items:
                     description: NavigationPath is a single entry in a portal or API definition
                       navigation tree.
@@ -95,6 +95,32 @@ spec:
                   x-kubernetes-list-map-keys:
                     - path
                   x-kubernetes-list-type: map
+                structure:
+                  description: The portal's navigation, grouped by portal area.
+                  properties:
+                    topNavbar:
+                      description: |-
+                        Top navbar entries as an ordered, flat list of paths.
+                        The order of entries in the list is preserved.
+                      items:
+                        description: NavigationEntry is a portal navigation entry, ordered by its
+                          position in the list.
+                        properties:
+                          displayName:
+                            description: Optional human-friendly label for this node.
+                            type: string
+                          path:
+                            description: A slash-separated path defining the navigation hierarchy.
+                            pattern: ^/
+                            type: string
+                        required:
+                          - path
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                        - path
+                      x-kubernetes-list-type: map
+                  type: object
               required:
                 - name
               type: object
