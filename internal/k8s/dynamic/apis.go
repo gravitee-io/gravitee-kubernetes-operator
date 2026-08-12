@@ -32,6 +32,10 @@ type ListOptions struct {
 }
 
 func ResolveAPI(ctx context.Context, ref core.ObjectRef, parentNs string) (core.ApiDefinitionObject, error) {
+	if isNilRef(ref) {
+		return nil, errors.NewSevere("API definition reference is mandatory")
+	}
+
 	refKind := ref.GetKind()
 	if ref.GetKind() == "" {
 		refKind = ApiV4GVR.Resource
