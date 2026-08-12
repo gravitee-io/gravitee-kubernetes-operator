@@ -23,6 +23,10 @@ import (
 )
 
 func ResolveNotification(ctx context.Context, ref core.ObjectRef, namespace string) (*v1alpha1.Notification, error) {
+	if isNilRef(ref) {
+		return nil, fmt.Errorf("notification reference is mandatory")
+	}
+
 	refKind := ref.GetKind()
 	if ref.GetKind() == "" {
 		refKind = NotificationGVR.Resource
