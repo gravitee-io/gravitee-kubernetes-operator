@@ -70,7 +70,7 @@ webhooks:
   namespaceSelector: {}
   {{ end }}
   sideEffects: None
-  timeoutSeconds: 10
+  timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
   admissionReviewVersions:
     - v1
 - name: v1alpha1.gravitee.io.subscription
@@ -106,7 +106,7 @@ webhooks:
   namespaceSelector: {}
   {{ end }}
   sideEffects: None
-  timeoutSeconds: 10
+  timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
   admissionReviewVersions:
     - v1
 - name: v1alpha1.gravitee.io.group
@@ -142,7 +142,7 @@ webhooks:
   namespaceSelector: {}
   {{ end }}
   sideEffects: None
-  timeoutSeconds: 10
+  timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
   admissionReviewVersions:
     - v1
 {{- end }}
