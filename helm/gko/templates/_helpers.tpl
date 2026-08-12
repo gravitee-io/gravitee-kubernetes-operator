@@ -186,6 +186,21 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
+{{/*
+ Compute the timeout given to the admission webhooks by the Kubernetes API server.
+
+ Admission handlers issue calls to the Management API (dry run for instance), so this
+ timeout must exceed the HTTP client timeout. Otherwise the API server gives up before
+ the HTTP client does, and the HTTP client timeout is never honoured.
+
+ We keep 5 seconds of headroom on top of the HTTP client timeout to account for the rest
+ of the admission processing, and cap the result to 30 seconds, which is the maximum
+ value accepted by Kubernetes.
+ */}}
+{{- define "gko.WebhookTimeoutSeconds" -}}
+{{- min (add (int .Values.manager.httpClient.timeoutSeconds) 5) 30 -}}
+{{- end }}
+
 
 {{/*
  merge list of ingress classes into a single string that will be parsed later in the code
