@@ -70,7 +70,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.apiv4definition
@@ -106,7 +106,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.application
@@ -142,7 +142,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.apiresource
@@ -178,7 +178,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.managementcontext
@@ -214,7 +214,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.subscription
@@ -250,7 +250,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.group
@@ -286,7 +286,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.dictionary
@@ -322,7 +322,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.portal
@@ -358,7 +358,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.portallisting
@@ -394,7 +394,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.documentation
@@ -430,7 +430,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
   - name: v1alpha1.gravitee.io.sharedpolicygroups
@@ -466,7 +466,7 @@ webhooks:
     {{ end }}
     objectSelector: {}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
     admissionReviewVersions:
       - v1
 {{- end }}
