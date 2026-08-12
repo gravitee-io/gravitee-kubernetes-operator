@@ -18,7 +18,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
     gravitee.io/extends: gateway.networking.k8s.io
-    gravitee.io/operator.version: 4.10.28-rc
+    gravitee.io/operator.version: 4.10.28
   name: gatewayclassparameters.gravitee.io
 spec:
   group: gravitee.io
