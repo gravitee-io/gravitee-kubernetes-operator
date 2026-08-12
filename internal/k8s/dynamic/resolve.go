@@ -16,6 +16,8 @@ package dynamic
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -56,12 +58,23 @@ func resolveRef[T any](
 	return convert(dynamic.Object, target)
 }
 
+// isNilRef reports whether a reference is absent. References are not always required,
+// e.g. contextRef is optional on API definitions, and an unset one reaches the resolvers
+// as an interface wrapping a nil pointer, which is not equal to nil on its own.
+func isNilRef(ref core.ObjectRef) bool {
+	return ref == nil || reflect.ValueOf(ref).IsNil()
+}
+
 func resolve(
 	ctx context.Context,
 	ref core.ObjectRef,
 	parentNs string,
 	gvr schema.GroupVersionResource,
 ) (*unstructured.Unstructured, error) {
+	if isNilRef(ref) {
+		return nil, fmt.Errorf("no %s reference to resolve in namespace %s", gvr.Resource, parentNs)
+	}
+
 	if ref.GetNamespace() == "" {
 		ref.SetNamespace(parentNs)
 	}
