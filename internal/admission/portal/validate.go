@@ -32,6 +32,11 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
+	errs.MergeWith(validateNavigation(prtl))
+	if errs.IsSevere() {
+		return errs
+	}
+
 	if !prtl.HasContext() {
 		errs.AddSevere("a management context reference (spec.contextRef) is required")
 		return errs
@@ -43,6 +48,23 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	}
 
 	errs.MergeWith(validateDryRun(ctx, prtl))
+	return errs
+}
+
+func validateNavigation(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	if !prtl.Spec.UsesDeprecatedNavigation() {
+		return errs
+	}
+
+	if prtl.Spec.Structure != nil {
+		errs.AddSevere("navigation and structure cannot be used at the same time")
+		return errs
+	}
+
+	errs.AddWarning("spec.navigation is deprecated, use spec.structure.topNavbar instead")
+
 	return errs
 }
 

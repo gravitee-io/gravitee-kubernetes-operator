@@ -165,7 +165,8 @@ const (
 	DictionaryManualFile  = "apim/dictionary/dictionary-manual.yml"
 	DictionaryDynamicFile = "apim/dictionary/dictionary-dynamic.yml"
 
-	PortalFile = "apim/portal/portal.yml"
+	PortalFile          = "apim/portal/portal.yml"
+	PortalStructureFile = "apim/portal/portal-structure.yml"
 
 	PortalListingFile = "apim/portal/portal-listing.yml"
 

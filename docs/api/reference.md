@@ -785,7 +785,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
-| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | Optional: \{\} <br /> |
+| `structure` _[NavigationStructure](#navigationstructure)_ | The portal's navigation, grouped by portal area. |  | Optional: \{\} <br /> |
+| `navigation` _NavigationPath array_ | Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.<br />Still synced for portals created before navigation was grouped by area. |  | Optional: \{\} <br /> |
 | `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this portal is synced to. |  |  |
 
 
@@ -2926,6 +2927,41 @@ _Appears in:_
 
 
 
+#### NavigationEntry
+
+
+
+NavigationEntry is a portal navigation entry, ordered by its position in the list.
+
+
+
+_Appears in:_
+- [NavigationStructure](#navigationstructure)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `path` _string_ | A slash-separated path defining the navigation hierarchy.<br />Intermediate folders are implicitly created by APIM if not listed explicitly. |  | Pattern: `^/` <br />Required: \{\} <br /> |
+| `displayName` _string_ | Optional human-friendly label for this node. Listing a path explicitly<br />is the only way to attach a display name to it. |  | Optional: \{\} <br /> |
+
+
+#### NavigationStructure
+
+
+
+NavigationStructure groups a portal's navigation by portal area. Each area
+carries its own tree, and leaving an area unset leaves it untouched.
+
+
+
+_Appears in:_
+- [PortalSpec](#portalspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `topNavbar` _[NavigationEntry](#navigationentry) array_ | Top navbar entries as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | Optional: \{\} <br /> |
+
+
 #### Status
 
 
@@ -2960,7 +2996,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
-| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | Optional: \{\} <br /> |
+| `structure` _[NavigationStructure](#navigationstructure)_ | The portal's navigation, grouped by portal area. |  | Optional: \{\} <br /> |
+| `navigation` _NavigationPath array_ | Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.<br />Still synced for portals created before navigation was grouped by area. |  | Optional: \{\} <br /> |
 
 
 

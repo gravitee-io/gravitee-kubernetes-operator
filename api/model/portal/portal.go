@@ -18,16 +18,47 @@ import (
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 )
 
-// Type defines the specification of a Portal resource (next-gen developer portal).
-type Type struct {
-	// Display name of the portal.
+// NavigationEntry is a portal navigation entry, ordered by its position in the list.
+type NavigationEntry struct {
+	// A slash-separated path defining the navigation hierarchy.
+	// Intermediate folders are implicitly created by APIM if not listed explicitly.
 	// +kubebuilder:validation:Required
-	Name string `json:"name"`
-	// The portal's navigation hierarchy as an ordered, flat list of paths.
+	// +kubebuilder:validation:Pattern=`^/`
+	Path string `json:"path"`
+	// Optional human-friendly label for this node. Listing a path explicitly
+	// is the only way to attach a display name to it.
+	// +kubebuilder:validation:Optional
+	DisplayName *string `json:"displayName,omitempty"`
+}
+
+// NavigationStructure groups a portal's navigation by portal area. Each area
+// carries its own tree, and leaving an area unset leaves it untouched.
+type NavigationStructure struct {
+	// Top navbar entries as an ordered, flat list of paths.
 	// The order of entries in the list is preserved. Intermediate folders are
 	// implicitly created by APIM if not listed explicitly.
 	// +kubebuilder:validation:Optional
 	// +listType=map
 	// +listMapKey=path
+	TopNavbar []*NavigationEntry `json:"topNavbar,omitempty"`
+}
+
+// Type defines the specification of a Portal resource (next-gen developer portal).
+type Type struct {
+	// Display name of the portal.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+	// The portal's navigation, grouped by portal area.
+	// +kubebuilder:validation:Optional
+	Structure *NavigationStructure `json:"structure,omitempty"`
+	// Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.
+	// Still synced for portals created before navigation was grouped by area.
+	// +kubebuilder:validation:Optional
+	// +listType=map
+	// +listMapKey=path
 	Navigation []*nav.NavigationPath `json:"navigation,omitempty"`
+}
+
+func (t *Type) UsesDeprecatedNavigation() bool {
+	return len(t.Navigation) > 0
 }
