@@ -155,7 +155,7 @@ manager:
   httpClient:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
-    ## @param manager.httpClient.timeoutSeconds the timeout (in seconds) used when issuing request to the Management API.
+    ## @param manager.httpClient.timeoutSeconds the timeout (in seconds) used when issuing request to the Management API. Because admission webhooks issue requests to the Management API (dry runs for instance), the timeout granted to the webhooks by the Kubernetes API server follows this value, with 5 extra seconds of headroom, capped to the 30 seconds maximum accepted by Kubernetes.
     timeoutSeconds: 5
     proxy:
       ## @param manager.httpClient.proxy.enabled If true, GKO will use your proxy when making any external call
