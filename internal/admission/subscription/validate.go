@@ -137,7 +137,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.Add(validateContextRefs(api, app))
+	errs.Add(ValidateContextRefs(api, app))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -258,12 +258,22 @@ func validateApiKind(sub core.SubscriptionObject) *errors.AdmissionError {
 	return nil
 }
 
-func validateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObject) *errors.AdmissionError {
-	apiCtx, appCtx := api.ContextRef(), app.ContextRef()
+func ValidateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObject) *errors.AdmissionError {
+	if !api.HasContext() {
+		return errors.NewSeveref(
+			"unable to subscribe to API [%s] because it does not reference a management context",
+			api.GetRef(),
+		)
+	}
 
-	mismatch := appCtx.GetName() != apiCtx.GetName()
-	mismatch = mismatch || appCtx.GetNamespace() != apiCtx.GetNamespace()
-	if mismatch {
+	if !app.HasContext() {
+		return errors.NewSeveref(
+			"unable to subscribe from application [%s] because it does not reference a management context",
+			app.GetRef(),
+		)
+	}
+
+	if !sameContextRef(api.ContextRef(), app.ContextRef()) {
 		return errors.NewSeveref(
 			"management contexts must match between application [%s] and API [%s], got [%v] and [%v]",
 			app.GetRef(),
@@ -272,7 +282,14 @@ func validateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObjec
 			api.ContextRef(),
 		)
 	}
+
 	return nil
+}
+
+// sameContextRef compares two management context references. Both are expected to be
+// non nil, which callers guarantee by checking HasContext beforehand.
+func sameContextRef(left core.ObjectRef, right core.ObjectRef) bool {
+	return left.GetName() == right.GetName() && left.GetNamespace() == right.GetNamespace()
 }
 
 func validateEndingAt(endingAt *string) *errors.AdmissionError {
