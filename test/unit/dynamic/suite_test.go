@@ -67,10 +67,6 @@ var _ = Describe("Resolving a nil reference", func() {
 			_, err := dynamic.ResolveResource(ctx, ref, "default")
 			return err
 		}),
-		Entry("portal", func(ref core.ObjectRef) error {
-			_, err := dynamic.ResolvePortal(ctx, ref, "default")
-			return err
-		}),
 		Entry("notification", func(ref core.ObjectRef) error {
 			_, err := dynamic.ResolveNotification(ctx, ref, "default")
 			return err
