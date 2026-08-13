@@ -819,6 +819,7 @@ workflows:
           name: Sonarcloud analysis
           context: cicd-orchestrator
           requires:
+            - Run unit tests
             - Run IT with context
             - Run IT without context
             - Run Conformance Test
