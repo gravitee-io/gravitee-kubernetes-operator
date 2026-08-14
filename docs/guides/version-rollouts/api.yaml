@@ -1,0 +1,80 @@
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: weather-api-v1
+spec:
+  contextRef:
+    name: "dev-ctx"
+  name: "weather-api-v1"
+  description: "API v4 managed by Gravitee Kubernetes Operator"
+  version: "1.0"
+  type: PROXY
+  tags: ["consumer-group-a"]
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/weather-api"
+          host: "consumer-group-a.example.com"
+      entrypoints:
+        - type: http-proxy
+          qos: AUTO
+  endpointGroups:
+    - name: Default HTTP proxy group
+      type: http-proxy
+      endpoints:
+        - name: Default HTTP proxy
+          type: http-proxy
+          inheritConfiguration: false
+          configuration:
+            target: https://weather-api-v1.com
+          secondary: false
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
+  plans:
+    KeyLess:
+      name: "Free plan"
+      description: "This plan does not require any authentication"
+      security:
+        type: "KEY_LESS"
+---
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: weather-api-v2
+spec:
+  contextRef:
+    name: "dev-ctx"
+  name: "weather-api-v2"
+  description: "API v4 managed by Gravitee Kubernetes Operator"
+  version: "1.0"
+  type: PROXY
+  tags: ["consumer-group-b"]
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/weather-api"
+          host: "consumer-group-b.example.com"
+      entrypoints:
+        - type: http-proxy
+          qos: AUTO
+  endpointGroups:
+    - name: Default HTTP proxy group
+      type: http-proxy
+      endpoints:
+        - name: Default HTTP proxy
+          type: http-proxy
+          inheritConfiguration: false
+          configuration:
+            target: https://weather-api-v2.com
+          secondary: false
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
+  plans:
+    KeyLess:
+      name: "Free plan"
+      description: "This plan does not require any authentication"
+      security:
+        type: "KEY_LESS"
+
