@@ -344,20 +344,29 @@ func validateApiKind(sub core.SubscriptionObject) *errors.AdmissionError {
 }
 
 func validateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObject) *errors.AdmissionError {
-	apiCtx, appCtx := api.ContextRef(), app.ContextRef()
+	mismatch := api.HasContext() != app.HasContext()
+	if !mismatch && api.HasContext() {
+		apiCtx, appCtx := api.ContextRef(), app.ContextRef()
+		mismatch = appCtx.GetName() != apiCtx.GetName() || appCtx.GetNamespace() != apiCtx.GetNamespace()
+	}
 
-	mismatch := appCtx.GetName() != apiCtx.GetName()
-	mismatch = mismatch || appCtx.GetNamespace() != apiCtx.GetNamespace()
 	if mismatch {
 		return errors.NewSeveref(
-			"management contexts must match between application [%s] and API [%s], got [%v] and [%v]",
+			"management contexts must match between application [%s] and API [%s], got [%s] and [%s]",
 			app.GetRef(),
 			api.GetRef(),
-			app.ContextRef(),
-			api.ContextRef(),
+			contextRefString(app),
+			contextRefString(api),
 		)
 	}
 	return nil
+}
+
+func contextRefString(obj core.ContextAwareObject) string {
+	if !obj.HasContext() {
+		return "none"
+	}
+	return obj.ContextRef().String()
 }
 
 func validateCertEndDatesVsSubscriptionEndDate(
