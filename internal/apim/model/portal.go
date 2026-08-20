@@ -14,14 +14,39 @@
 
 package model
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
+)
 
 type PortalDTO struct {
-	portal.Type `json:",omitempty"`
-	HRID        string `json:"hrid,omitempty"`
+	HRID       string                  `json:"hrid,omitempty"`
+	Name       string                  `json:"name"`
+	Navigation []NavigationPathDTO     `json:"navigation,omitempty" drift:"ignore"`
+	Structure  *NavigationStructureDTO `json:"structure,omitempty"`
+}
+
+type NavigationPathDTO struct {
+	Path        string  `json:"path"`
+	DisplayName *string `json:"displayName,omitempty"`
+	Order       *int32  `json:"order,omitempty"`
+}
+
+type NavigationStructureDTO struct {
+	TopNavbar []*NavigationEntryDTO `json:"topNavbar,omitempty"`
+}
+
+type NavigationEntryDTO struct {
+	Path        string  `json:"path"`
+	DisplayName *string `json:"displayName,omitempty"`
 }
 
 type PortalState struct {
 	PortalDTO     `json:",omitempty"`
 	portal.Status `json:",omitempty"`
+}
+
+func ToPortalDTO(crd portal.Type, hrid string) PortalDTO {
+	dto := mapViaJSON[PortalDTO](crd)
+	dto.HRID = hrid
+	return dto
 }

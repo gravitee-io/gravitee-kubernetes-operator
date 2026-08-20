@@ -1,0 +1,22 @@
+{
+  "apiVersion": "gravitee.io/v1alpha1",
+  "kind": "Portal",
+  "metadata": {
+    "name": "my-portal",
+    "namespace": "default"
+  },
+  "spec": {
+    "name": "My Portal",
+    "contextRef": {
+      "name": "dev-ctx"
+    },
+    "structure": {
+      "topNavbar": [
+        {
+          "path": "/projects/alpha",
+          "displayName": "Alpha"
+        }
+      ]
+    }
+  }
+}
