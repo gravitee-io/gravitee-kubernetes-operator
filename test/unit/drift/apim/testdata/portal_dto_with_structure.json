@@ -1,0 +1,12 @@
+{
+  "hrid": "default-my-portal",
+  "name": "My Portal",
+  "structure": {
+    "topNavbar": [
+      {
+        "path": "/projects/alpha",
+        "displayName": "Alpha"
+      }
+    ]
+  }
+}

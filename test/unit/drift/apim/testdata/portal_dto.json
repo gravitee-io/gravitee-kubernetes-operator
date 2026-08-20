@@ -1,0 +1,11 @@
+{
+  "hrid": "default-my-portal",
+  "name": "My Portal",
+  "navigation": [
+    {
+      "path": "/projects/alpha",
+      "displayName": "Alpha",
+      "order": 1
+    }
+  ]
+}
