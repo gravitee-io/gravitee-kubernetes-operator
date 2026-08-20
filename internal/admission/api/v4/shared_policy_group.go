@@ -23,18 +23,13 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func validateSharedPolicyGroups(ctx context.Context, coreApi core.ApiDefinitionObject) *errors.AdmissionErrors {
+func validateSharedPolicyGroups(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	api, ok := coreApi.(*v1alpha1.ApiV4Definition)
-	if !ok {
-		errs.AddSevere("unable to convert to ApiV4Definition")
-	}
 
 	if api.Spec.Flows != nil {
 		errs.Add(validateFlowSharedPolicyGroups(ctx, api.Spec.Flows, api.Namespace))
