@@ -38,7 +38,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 	It("should delete documentation in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithDocumentation(constants.DocumentationPortalFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().

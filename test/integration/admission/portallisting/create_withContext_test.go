@@ -65,7 +65,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
 			WithAPIv4(constants.ApiV4WithContextFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithPortalListing(constants.PortalListingFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build()
@@ -89,7 +89,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 	It("should return severe error (no panic) when a listed API has no management context", func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4WithContextFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithPortalListing(constants.PortalListingFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build()
@@ -108,7 +108,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 	It("should return severe error when the referenced portal has no management context", func() {
 		fixtures := fixture.Builder().
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithPortalListing(constants.PortalListingFile).
 			Build()
 

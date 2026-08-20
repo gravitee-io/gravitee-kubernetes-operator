@@ -23,6 +23,10 @@ make manifests                 # Generate CRD manifests into helm/gko/crds/gravi
 # Lint
 make lint-fix                  # Auto-fix lint issues + add license headers
 make add-license               # Add Apache 2.0 license headers to all Go files
+make lint-commits              # Lint HEAD commit message (commitlint)
+# Lint every commit on the branch (same rules as CI `job-lint-commits`)
+npx --yes -p @commitlint/cli -p @commitlint/config-conventional \
+  commitlint --from origin/master
 
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
@@ -187,7 +191,7 @@ a reviewed plan in `plans/` before any implementation.
 
 ## Conventions
 
-- **Commit style:** Conventional Commits (enforced by commitlint)
+- **Commit style:** Conventional Commits (enforced by commitlint via `commitlint.config.js`). Body lines must be ≤ 120 characters (`body-max-line-length`). After rewriting history, lint the whole branch before finishing: `npx --yes -p @commitlint/cli -p @commitlint/config-conventional commitlint --from origin/master`
 - **License headers:** Apache 2.0 on all `.go` files (enforced by `addlicense`, template in `LICENSE_TEMPLATE.txt`)
 - **Linting:** `go vet` + `revive` + `staticcheck` (run in parallel via `make -j4 lint-sources`). Config in `.revive.toml`. Max cyclomatic complexity 30. Coding standards in `.agent/rules/`
 - **Naming:** Lint excludes `Api/Url/Http` vs `API/URL/HTTP` casing warnings

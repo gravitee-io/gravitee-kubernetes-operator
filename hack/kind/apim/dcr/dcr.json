@@ -1,0 +1,15 @@
+{
+  "name" : "DCR",
+  "description" : "DCR",
+  "discovery_endpoint" : "https://am.gateway.master.gravitee.dev/tar/oidc/.well-known/openid-configuration",
+  "initial_access_token_type" : "CLIENT_CREDENTIALS",
+  "client_id" : "123456",
+  "client_secret" : "123456",
+  "renew_client_secret_support" : false,
+  "trust_store" : {
+    "type" : "NONE"
+  },
+  "key_store" : {
+    "type" : "NONE"
+  }
+}

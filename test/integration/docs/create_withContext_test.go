@@ -38,7 +38,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	It("should create a portal-attached documentation page in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithDocumentation(constants.DocumentationPortalFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
@@ -72,7 +72,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	It("should create a top navbar page when the area is TOP_NAVBAR", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithDocumentation(constants.DocumentationPortalTopNavbarFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
@@ -105,7 +105,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	It("should create a portal homepage when the area is HOMEPAGE", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithDocumentation(constants.DocumentationPortalHomepageFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().

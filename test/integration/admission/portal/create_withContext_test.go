@@ -64,7 +64,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 	It("should warn when the deprecated navigation is used", func() {
 		prtl := fixture.
 			Builder().
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			Build()
 
 		warnings, _ := admissionCtrl.ValidateCreate(ctx, prtl.Portal)
@@ -75,7 +75,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 	It("should return severe error when navigation and structure are both set", func() {
 		prtl := fixture.
 			Builder().
-			WithPortal(constants.PortalStructureFile).
+			WithPortal(constants.PortalFile).
 			Build()
 
 		prtl.Portal.Spec.Navigation = []*nav.NavigationPath{{Path: "/legacy"}}
@@ -92,7 +92,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 	It("should not warn when only the structure is set", func() {
 		prtl := fixture.
 			Builder().
-			WithPortal(constants.PortalStructureFile).
+			WithPortal(constants.PortalFile).
 			Build()
 
 		warnings, _ := admissionCtrl.ValidateCreate(ctx, prtl.Portal)

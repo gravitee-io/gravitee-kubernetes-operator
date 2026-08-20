@@ -21,12 +21,11 @@ spec:
   contextRef:
     name: "dev-ctx"
   name: "Default Portal"
-  # Navigation grouped by area, replacing the deprecated spec.navigation list.
-  structure:
-    topNavbar:
-      - path: /projects/alpha
-        displayName: Alpha
-      - path: /projects/alpha/docs
-      - path: /projects/alpha/src
-      - path: /projects/beta
-      - path: /archive/2024
+  navigation:
+    - path: /projects/alpha
+      displayName: Alpha
+      order: 1
+    - path: /projects/alpha/docs
+    - path: /projects/alpha/src
+    - path: /projects/beta
+    - path: /archive/2024
