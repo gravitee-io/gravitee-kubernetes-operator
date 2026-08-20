@@ -182,8 +182,8 @@ func init() {
 	Config.LogsTimestampField = os.Getenv(LogsTimestampField)
 	Config.LogsTimestampFormat = os.Getenv(LogsTimestampFormat)
 	Config.ReconcileStrategy = os.Getenv(ReconcileStrategy)
-	Config.EnableTemplating = os.Getenv(EnableTemplating) != FalseString   // enabled by default
-	Config.DriftDetection = os.Getenv(EnableDriftDetection) != FalseString // enabled by default
+	Config.EnableTemplating = os.Getenv(EnableTemplating) != FalseString // enabled by default
+	Config.DriftDetection = os.Getenv(EnableDriftDetection) == TrueString // disabled by default
 	Config.MaxConcurrentReconciles = parseInt(MaxConcurrentReconcilesKey, defaultMaxConcurrentReconciles)
 }
 

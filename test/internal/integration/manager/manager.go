@@ -71,6 +71,8 @@ func Instance() ctrl.Manager {
 
 func init() {
 	os.Setenv(env.HttpCLientInsecureSkipCertVerify, env.TrueString)
+	// env.Config is already initialized; enable drift so admission tests exercise it.
+	env.Config.DriftDetection = true
 
 	ctx := context.Background()
 
