@@ -48,10 +48,7 @@ func (svc *Dictionaries) createOrUpdate(
 	url := svc.AutomationTarget("dictionaries").
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	dto := &model.DictionaryDTO{
-		HRID: refs.NewNamespacedNameFromObject(dict).HRID(),
-		Type: dict.Spec.Type,
-	}
+	dto := model.ToDictionaryDTO(dict.Spec.Type, refs.NewNamespacedNameFromObject(dict).HRID())
 	importStatus := &dictionary.Status{}
 
 	if err := svc.HTTP.Put(url.String(), dto, &importStatus); err != nil {

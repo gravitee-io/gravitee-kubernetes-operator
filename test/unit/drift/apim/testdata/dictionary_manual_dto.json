@@ -1,0 +1,13 @@
+{
+  "hrid": "manual-dict",
+  "name": "Manual Dictionary",
+  "description": "manual description",
+  "deployed": true,
+  "type": "MANUAL",
+  "manual": {
+    "properties": {
+      "env": "test",
+      "region": "eu"
+    }
+  }
+}

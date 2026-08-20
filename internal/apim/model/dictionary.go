@@ -17,11 +17,51 @@ package model
 import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/dictionary"
 
 type DictionaryDTO struct {
-	dictionary.Type `json:",omitempty"`
-	HRID            string `json:"hrid,omitempty"`
+	HRID           string                    `json:"hrid,omitempty"`
+	Name           string                    `json:"name"`
+	Description    string                    `json:"description,omitempty"`
+	Deployed       bool                      `json:"deployed"`
+	DictionaryType dictionary.DictionaryType `json:"type"`
+	Manual         *ManualSpec               `json:"manual,omitempty"`
+	Dynamic        *DynamicSpec              `json:"dynamic,omitempty"`
+}
+
+type ManualSpec struct {
+	Properties map[string]string `json:"properties"`
+}
+
+type DynamicSpec struct {
+	Provider *Provider `json:"provider"`
+	Trigger  *Trigger  `json:"trigger"`
+}
+
+type Provider struct {
+	ProviderType   string           `json:"type"`
+	URL            string           `json:"url"`
+	Method         string           `json:"method"`
+	Specification  string           `json:"specification"`
+	Body           string           `json:"body,omitempty"`
+	UseSystemProxy bool             `json:"useSystemProxy,omitempty"`
+	Headers        []ProviderHeader `json:"headers,omitempty" drift:"empty-is-nil"`
+}
+
+type ProviderHeader struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type Trigger struct {
+	Rate int64                  `json:"rate"`
+	Unit dictionary.TriggerUnit `json:"unit"`
 }
 
 type DictionaryState struct {
 	DictionaryDTO     `json:",omitempty"`
 	dictionary.Status `json:",omitempty"`
+}
+
+func ToDictionaryDTO(crd dictionary.Type, hrid string) DictionaryDTO {
+	dto := mapViaJSON[DictionaryDTO](crd)
+	dto.HRID = hrid
+	return dto
 }
