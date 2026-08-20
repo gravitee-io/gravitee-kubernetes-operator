@@ -1,0 +1,27 @@
+{
+  "hrid": "dynamic-dict",
+  "name": "Dynamic Dictionary",
+  "description": "dynamic description",
+  "deployed": true,
+  "type": "DYNAMIC",
+  "dynamic": {
+    "provider": {
+      "type": "HTTP",
+      "url": "https://example.com",
+      "method": "GET",
+      "specification": "[]",
+      "body": "{\"hello\":\"world\"}",
+      "useSystemProxy": true,
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer token"
+        }
+      ]
+    },
+    "trigger": {
+      "rate": 30,
+      "unit": "SECONDS"
+    }
+  }
+}
