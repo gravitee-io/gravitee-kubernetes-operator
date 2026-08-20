@@ -25,20 +25,13 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, doc *v1alpha1.Documentation) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+	errs.Add(admission.CompileAndValidateTemplate(ctx, doc))
 	if errs.IsSevere() {
-		return errs
-	}
-
-	doc, ok := obj.(*v1alpha1.Documentation)
-	if !ok {
-		errs.AddSevere("can't cast to *v1alpha1.Documentation")
 		return errs
 	}
 
@@ -47,23 +40,41 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, doc))
-	return errs
-}
-
-func validateUpdate(ctx context.Context, oldObj, newObj runtime.Object) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	newDoc, nok := newObj.(*v1alpha1.Documentation)
-	oldDoc, ook := oldObj.(*v1alpha1.Documentation)
-	if !nok || !ook {
-		errs.AddSevere("can't cast to *v1alpha1.Documentation")
+	target := resolveTarget(ctx, doc, errs)
+	if errs.IsSevere() {
 		return errs
 	}
 
-	// Compare user-declared (raw) refs before any template compilation mutates newObj,
-	// otherwise an unchanged templated ref would look like a change.
+	errs.MergeWith(validateDryRun(ctx, target, doc))
+	return errs
+}
 
+func validateUpdate(ctx context.Context, oldDoc, newDoc *v1alpha1.Documentation) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	errs.Add(admission.CompileAndValidateTemplate(ctx, newDoc))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// validate
+	errs.MergeWith(verifyImmutableFields(oldDoc, newDoc))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// validateCreate compiles templates and runs ref/dry-run validation.
+	errs.MergeWith(validateCreate(ctx, newDoc))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	mergeDriftValidation(ctx, oldDoc, newDoc, errs)
+	return errs
+}
+
+func verifyImmutableFields(oldDoc *v1alpha1.Documentation, newDoc *v1alpha1.Documentation) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
 	// A documentation is parented by exactly one of a portal or an API; switching
 	// between the two is a different (and clearer) error than moving it to a
 	// different parent of the same kind.
@@ -84,6 +95,7 @@ func validateUpdate(ctx context.Context, oldObj, newObj runtime.Object) *errors.
 		)
 		return errs
 	}
+
 	if refString(newDoc.Spec.API) != refString(oldDoc.Spec.API) {
 		errs.AddSeveref(
 			"apiRef is immutable; documentation cannot be moved to a different API "+
@@ -92,9 +104,7 @@ func validateUpdate(ctx context.Context, oldObj, newObj runtime.Object) *errors.
 		)
 		return errs
 	}
-
-	// validateCreate compiles templates and runs ref/dry-run validation.
-	return validateCreate(ctx, newObj)
+	return errs
 }
 
 func refString(ref *refs.NamespacedName) string {
@@ -137,6 +147,44 @@ type dryRunTarget struct {
 	contextRef core.ObjectRef
 	contextNs  string
 	parent     service.DocumentationParent
+}
+
+func validateDryRun(ctx context.Context, target *dryRunTarget, doc *v1alpha1.Documentation) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	cp := doc.DeepCopy()
+
+	apimClient, err := apim.FromContextRef(ctx, target.contextRef, target.contextNs)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
+
+	status, err := apimClient.Documentations.DryRunCreateOrUpdate(cp, target.parent)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
+
+	for _, severe := range status.Errors.Severe {
+		errs.AddSevere(severe)
+	}
+
+	for _, warning := range status.Errors.Warning {
+		errs.AddWarning(warning)
+	}
+
+	return errs
+}
+
+func resolveTarget(ctx context.Context, cp *v1alpha1.Documentation, errs *errors.AdmissionErrors) *dryRunTarget {
+	var target *dryRunTarget
+	if cp.IsPortalDoc() {
+		target = resolvePortalTarget(ctx, cp, errs)
+	} else {
+		target = resolveApiTarget(ctx, cp, errs)
+	}
+	return target
 }
 
 func resolvePortalTarget(
@@ -187,42 +235,4 @@ func resolveApiTarget(
 		contextNs:  api.GetNamespace(),
 		parent:     service.DocumentationParent{API: api},
 	}
-}
-
-func validateDryRun(ctx context.Context, doc *v1alpha1.Documentation) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	cp := doc.DeepCopy()
-
-	var target *dryRunTarget
-	if cp.IsPortalDoc() {
-		target = resolvePortalTarget(ctx, cp, errs)
-	} else {
-		target = resolveApiTarget(ctx, cp, errs)
-	}
-	if errs.IsSevere() || target == nil {
-		return errs
-	}
-
-	apimClient, err := apim.FromContextRef(ctx, target.contextRef, target.contextNs)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	status, err := apimClient.Documentations.DryRunCreateOrUpdate(cp, target.parent)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
-	}
-
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
-
-	return errs
 }

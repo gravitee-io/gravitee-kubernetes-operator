@@ -1,0 +1,19 @@
+{
+  "apiVersion": "gravitee.io/v1alpha1",
+  "kind": "Documentation",
+  "metadata": {
+    "name": "getting-started",
+    "namespace": "default"
+  },
+  "spec": {
+    "name": "Getting Started",
+    "type": "GRAVITEE_MARKDOWN",
+    "content": "# Getting Started\n\nWelcome to the developer portal.",
+    "location": "/projects/alpha",
+    "order": 1,
+    "area": "HOMEPAGE",
+    "portalRef": {
+      "name": "default-portal"
+    }
+  }
+}
