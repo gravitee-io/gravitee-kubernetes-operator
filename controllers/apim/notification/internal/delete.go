@@ -97,7 +97,7 @@ func checkRefs(
 	if err := search.FindByFieldReferencing(
 		ctx,
 		field,
-		refs.NewNamespacedName(resource.Namespace, resource.Name),
+		*(refs.NewNamespacedNameFromObject(resource)),
 		apis,
 	); err != nil {
 		err = fmt.Errorf("an error occurred while checking if the notification is linked to an api definition: %w", err)

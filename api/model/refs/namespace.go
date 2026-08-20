@@ -66,6 +66,9 @@ func NewNamespacedName(namespace, name string) NamespacedName {
 func NewNamespacedNameFromObject(object v1.Object) *NamespacedName {
 	return &NamespacedName{Namespace: object.GetNamespace(), Name: object.GetName()}
 }
+func NewNamespacedNameFromObjectRef(object core.ObjectRef) *NamespacedName {
+	return &NamespacedName{Namespace: object.GetNamespace(), Name: object.GetName()}
+}
 
 func (n *NamespacedName) NamespacedName() types.NamespacedName {
 	return types.NamespacedName{Namespace: n.Namespace, Name: n.Name}

@@ -148,8 +148,8 @@ func (in *Auth) GetSecretRef() core.ObjectRef {
 
 // SetSecretRef implements custom.Auth.
 func (in *Auth) SetSecretRef(ref core.ObjectRef) {
-	nsm := refs.NewNamespacedName(ref.GetNamespace(), ref.GetName())
-	in.SecretRef = &nsm
+	nsm := refs.NewNamespacedNameFromObjectRef(ref)
+	in.SecretRef = nsm
 }
 
 // SetCredentials implements custom.Auth.

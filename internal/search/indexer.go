@@ -378,7 +378,7 @@ func indexDocumentationApi(doc *v1alpha1.Documentation, fields *[]string) {
 }
 
 func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {
-	cp := refs.NewNamespacedName(ref.GetNamespace(), ref.GetName())
+	cp := refs.NewNamespacedNameFromObjectRef(ref)
 	if cp.Namespace == "" {
 		cp.Namespace = obj.GetNamespace()
 	}

@@ -27,41 +27,36 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func ValidateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func ValidateCreate(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	// Should be the first validation, it will also compile the templates internally
-	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+	errs.Add(admission.CompileAndValidateTemplate(ctx, api))
 
 	if errs.IsSevere() {
 		return errs
 	}
 
-	errs.Add(ctxref.Validate(ctx, obj))
+	errs.Add(ctxref.Validate(ctx, api))
 
-	if api, ok := obj.(core.ApiDefinitionObject); ok {
-		errs.Add(validatePlans(api))
-		errs.Add(ValidateNoConflictingPath(ctx, api))
-		errs.MergeWith(validateResourceOrRefs(ctx, api))
-		errs.MergeWith(validatePages(api))
-		errs.MergeWith(validateNotifications(ctx, api))
-	}
+	errs.Add(validatePlans(api))
+	errs.Add(ValidateNoConflictingPath(ctx, api))
+	errs.MergeWith(validateResourceOrRefs(ctx, api))
+	errs.MergeWith(validatePages(api))
+	errs.MergeWith(validateNotifications(ctx, api))
 
 	return errs
 }
 
-func ValidateUpdate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
-	return ValidateCreate(ctx, obj)
+func ValidateUpdate(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
+	return ValidateCreate(ctx, api)
 }
 
-func ValidateDelete(_ context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func ValidateDelete(_ context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if api, ok := obj.(core.ApiDefinitionObject); ok {
-		errs.Add(validateSubscriptionCount(api))
-	}
+	errs.Add(validateSubscriptionCount(api))
 	return errs
 }
 

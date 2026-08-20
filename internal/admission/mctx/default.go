@@ -20,20 +20,18 @@ import (
 	"slices"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gioerr "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const cloudGateUrlTemplate = "https://%s.cloudgate.gravitee.io"
 
 // SetDefaults when cloud mode is enabled.
-func SetDefaults(ctx context.Context, obj runtime.Object) error {
-	if contextObject, ok := obj.(core.ContextObject); ok {
-		if contextObject.HasCloud() && contextObject.GetCloud().IsEnabled() {
-			return defaultContextUsingCloudToken(ctx, contextObject)
-		}
+func SetDefaults(ctx context.Context, contextObject *v1alpha1.ManagementContext) error {
+	if contextObject.HasCloud() && contextObject.GetCloud().IsEnabled() {
+		return defaultContextUsingCloudToken(ctx, contextObject)
 	}
 
 	return nil

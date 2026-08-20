@@ -20,7 +20,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
@@ -32,8 +31,8 @@ func newDocumentation(area *documentation.PageArea) *v1alpha1.Documentation {
 				Name:     "Getting Started",
 				PageType: documentation.GraviteeMarkdown,
 				Content:  "# Getting Started",
-				Location: utils.ToReference("/guides"),
-				Order:    utils.ToReference(int32(1)),
+				Location: new("/guides"),
+				Order:    new(int32(1)),
 				Area:     area,
 			},
 		},
@@ -46,16 +45,16 @@ var _ = Describe("Documentation spec", func() {
 			Expect(newDocumentation(given).Spec.GetArea()).To(Equal(expected))
 		},
 		Entry("with no area", nil, documentation.PageArea("")),
-		Entry("with top navbar area", utils.ToReference(documentation.TopNavbar), documentation.TopNavbar),
-		Entry("with homepage area", utils.ToReference(documentation.Homepage), documentation.Homepage),
+		Entry("with top navbar area", new(documentation.TopNavbar), documentation.TopNavbar),
+		Entry("with homepage area", new(documentation.Homepage), documentation.Homepage),
 	)
 
 	// The area is part of the spec hash, so that flipping a page to (or away
 	// from) the homepage triggers a reconcile instead of being skipped as
 	// unchanged by the last-spec-hash predicate.
 	It("should be reflected in the spec hash", func() {
-		navbar := newDocumentation(utils.ToReference(documentation.TopNavbar))
-		homepage := newDocumentation(utils.ToReference(documentation.Homepage))
+		navbar := newDocumentation(new(documentation.TopNavbar))
+		homepage := newDocumentation(new(documentation.Homepage))
 		unset := newDocumentation(nil)
 
 		Expect(navbar.Spec.Hash()).ToNot(Equal(homepage.Spec.Hash()))

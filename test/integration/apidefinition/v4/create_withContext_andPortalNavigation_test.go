@@ -19,8 +19,6 @@ import (
 
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -44,7 +42,7 @@ var _ = Describe("Create with portalNavigation", labels.WithContext, func() {
 			Build()
 
 		navigation := []*nav.NavigationPath{
-			{Path: "/projects/alpha", DisplayName: utils.ToReference("Alpha"), Order: utils.ToReference(int32(1))},
+			{Path: "/projects/alpha", DisplayName: new("Alpha"), Order: new(int32(1))},
 			{Path: "/projects/alpha/docs"},
 			{Path: "/projects/alpha/src"},
 			{Path: "/projects/beta"},

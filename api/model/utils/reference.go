@@ -18,11 +18,6 @@ package utils
 
 import "golang.org/x/exp/constraints"
 
-
-func ToReference[T any](t T) *T {
-	return &t
-}
-
 func ToStringValue(s *string) string {
 	if s == nil {
 		return ""
