@@ -32,10 +32,14 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.String, Ignore)
 	RegisterEquivalenceFunc("trimmed", reflect.String, Trimmed)
 	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
-	RegisterEquivalenceFunc("ignore-remote-prefix", reflect.String, IgnoreRemotePrefix)
+	RegisterEquivalenceFunc("ignore-remote", reflect.String, IgnoreRemoteArgs)
+	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
+	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
+	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
 	RegisterEquivalenceFunc(ignoreName, reflect.Bool, Ignore)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int, EmptyIsNilInt)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int32, EmptyIsNilInt)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Uint, EmptyIsNilUint)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Slice, EmptyIsNilLen)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Map, EmptyIsNilLen)
@@ -43,52 +47,66 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("empty-is-true", reflect.Bool, EmptyIsTrue)
 	RegisterEquivalenceFunc(ignoreName, reflect.Struct, IgnoreSkip)
 	RegisterEquivalenceFunc("unstructured", reflect.Struct, DefaultEquivalencePostPullUpObjectChildren)
+	RegisterEquivalenceFunc("unstructured", reflect.Slice, DefaultEquivalencePostPullUpObjectChildren)
 }
 
-func Ignore(_ any, _ any) Equivalence {
+// IgnoreRemoteArgs ignores the remote difference if the remote string is in the context.FuncArgs.
+func IgnoreRemoteArgs(crd any, remote any, context DriftContext) Equivalence {
+	e := DefaultEquivalence(crd, remote, context)
+	if e.Equivalent == Inequivalent {
+		rs := asString(remote)
+		if context.FuncArgs != nil {
+			for _, arg := range context.FuncArgs {
+				if arg == rs {
+					return Equivalence{Equivalent: Equivalent}
+				}
+			}
+		}
+	}
+	return e
+}
+
+func Ignore(_ any, r any, c DriftContext) Equivalence {
 	return Equivalence{Equivalent: CannotCompare}
 }
 
 // EmptyIsNilString checks if the value is nil or empty string.
-func EmptyIsNilString(crd any, remote any) Equivalence {
+func EmptyIsNilString(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && remote == "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	if remote == nil && crd != nil && crd == "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return DefaultEquivalence(crd, remote, ctx)
 }
 
 // Trimmed trims the value before comparing.
-func Trimmed(crd any, remote any) Equivalence {
+func Trimmed(crd any, remote any, _ DriftContext) Equivalence {
 	// the registry protects us from casting panics
-	crdString, _ := crd.(string)
-	remoteString, _ := remote.(string)
+	crdString := asString(crd)
+	remoteString := asString(remote)
 	if strings.TrimSpace(crdString) == strings.TrimSpace(remoteString) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return Equivalence{Equivalent: Inequivalent}
 }
 
-// IgnoreRemotePrefix ignores the remote difference if the remote string ends with the crd string.
-func IgnoreRemotePrefix(crd any, remote any) Equivalence {
-	// the registry protects us from casting panics
-	crdString, _ := crd.(string)
-	remoteString, _ := remote.(string)
-	if len(crdString) <= len(remoteString) {
-		if strings.HasSuffix(remoteString, crdString) {
-			return Equivalence{Equivalent: Equivalent}
-		}
-	}
-	return FromDeepEqual(crd, remote)
+// IgnoreNamespacePrefix ignores the remote difference if the remote string ends with the crd string.
+func IgnoreNamespacePrefix(crd any, remote any, ctx DriftContext) Equivalence {
+	crdString := asString(crd)
+	remoteString := asString(remote)
+	prefix := ctx.Namespace + "-"
+	crdString = strings.TrimPrefix(crdString, prefix)
+	remoteString = strings.TrimPrefix(remoteString, prefix)
+	return DefaultEquivalence(crdString, remoteString, ctx)
 }
 
 // RFC3339 checks if the value is a valid RFC3339 time and if they represent the same time.
-func RFC3339(crd any, remote any) Equivalence {
+func RFC3339(crd any, remote any, _ DriftContext) Equivalence {
 	// the registry protects us from casting panics
-	crdString, _ := crd.(string)
-	remoteString, _ := remote.(string)
+	crdString := asString(crd)
+	remoteString := asString(remote)
 	// avoid parsing error
 	if (crdString != "") != (remoteString != "") {
 		return Equivalence{Equivalent: Inequivalent}
@@ -110,41 +128,59 @@ func RFC3339(crd any, remote any) Equivalence {
 	return Equivalence{Equivalent: Inequivalent}
 }
 
+// CaseInsensitive checks if the value is equal ignoring the case.
+func CaseInsensitive(crd any, remote any, _ DriftContext) Equivalence {
+	if crd == nil && remote == nil {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	if crd == nil || remote == nil {
+		return Equivalence{Equivalent: Inequivalent}
+	}
+	crdString := asString(crd)
+	crdString = strings.ToLower(crdString)
+	remoteString := asString(remote)
+	remoteString = strings.ToLower(remoteString)
+	if crdString == remoteString {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	return Equivalence{Equivalent: Inequivalent}
+}
+
 // EmptyIsNilInt checks if the value is nil or equal to 0.
-func EmptyIsNilInt(crd any, remote any) Equivalence {
+func EmptyIsNilInt(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, 0) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	if remote == nil && crd != nil && reflect.DeepEqual(crd, 0) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return DefaultEquivalence(crd, remote, ctx)
 }
 
 // EmptyIsNilUint checks if the value is nil or equal to 0.
-func EmptyIsNilUint(crd any, remote any) Equivalence {
+func EmptyIsNilUint(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, uint(0)) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	if remote == nil && crd != nil && reflect.DeepEqual(crd, uint(0)) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return DefaultEquivalence(crd, remote, ctx)
 }
 
 // EmptyIsNilBool checks if the value is nil or equal to false.
-func EmptyIsNilBool(crd any, remote any) Equivalence {
+func EmptyIsNilBool(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, false) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	if remote == nil && crd != nil && reflect.DeepEqual(crd, false) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return DefaultEquivalence(crd, remote, ctx)
 }
 
 // EmptyIsNilLen checks if the slice or map value is nil or len is equal to 0.
-func EmptyIsNilLen(crd any, remote any) Equivalence {
+func EmptyIsNilLen(crd any, remote any, _ DriftContext) Equivalence {
 	var crdLen int
 	var remoteLen int
 	if crd != nil {
@@ -160,10 +196,10 @@ func EmptyIsNilLen(crd any, remote any) Equivalence {
 }
 
 // EmptyIsNilStruct checks if one struct is nil and the other is an empty struct or vice versa, and reports equivalence.
-func EmptyIsNilStruct(crd any, remote any) Equivalence {
+func EmptyIsNilStruct(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil {
 		crd = toZero(remote)
-		e := FromDeepEqual(crd, remote)
+		e := DefaultEquivalence(crd, remote, ctx)
 		if e.Equivalent == Equivalent {
 			// don't need to go further
 			e.Skip = true
@@ -172,7 +208,7 @@ func EmptyIsNilStruct(crd any, remote any) Equivalence {
 	}
 	if crd != nil && remote == nil {
 		remote = toZero(crd)
-		e := FromDeepEqual(crd, remote)
+		e := DefaultEquivalence(crd, remote, ctx)
 		if e.Equivalent == Equivalent {
 			// don't need to go further
 			e.Skip = true
@@ -183,20 +219,25 @@ func EmptyIsNilStruct(crd any, remote any) Equivalence {
 }
 
 // IgnoreSkip ignores the comparison and skips the children.
-func IgnoreSkip(crd any, remote any) Equivalence {
-	r := Ignore(crd, remote)
+func IgnoreSkip(crd any, remote any, ctx DriftContext) Equivalence {
+	r := Ignore(crd, remote, ctx)
 	r.Skip = true
 	return r
 }
 
 // DefaultEquivalencePostPullUpObjectChildren perform s a default struct equivalence and adds a post-function moves the children of the "object" property to the root.
-func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any) Equivalence {
-	e := defaultStructEquivalence(crd, remote)
+func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any, ctx DriftContext) Equivalence {
+	var e Equivalence
+	if ctx.Kind == reflect.Slice {
+		e = defaultSliceEquivalence(crd, remote, ctx)
+	} else {
+		e = defaultStructEquivalence(crd, remote, ctx)
+	}
 	e.PostFunc = func(r *Result) {
 		var objectChild *Result
-		r.Children = slices.DeleteFunc(r.Children, func(e *Result) bool {
+		r.children = slices.DeleteFunc(r.children, func(e *Result) bool {
 			if e.Property == "object" {
-				if len(e.Children) > 0 {
+				if len(e.children) > 0 {
 					objectChild = e
 				}
 				return true
@@ -205,7 +246,7 @@ func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any) Equivalence
 		})
 
 		if objectChild != nil {
-			for _, c := range objectChild.Children {
+			for _, c := range objectChild.children {
 				r.AppendChild(c, true)
 			}
 		}
@@ -213,14 +254,14 @@ func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any) Equivalence
 	return e
 }
 
-func EmptyIsTrue(crd any, remote any) Equivalence {
+func EmptyIsTrue(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, true) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return DefaultEquivalence(crd, remote, ctx)
 }
 
-func FromDeepEqual(crd any, remote any) Equivalence {
+func DefaultEquivalence(crd any, remote any, _ DriftContext) Equivalence {
 	eq := reflect.DeepEqual(remote, crd)
 	if eq {
 		return Equivalence{Equivalent: Equivalent}
@@ -238,4 +279,19 @@ func parseRFC3339(value string) (time.Time, error) {
 		return t, nil
 	}
 	return time.Parse(time.RFC3339Nano, value)
+}
+
+// asString returns the string representation of the value. Works with pure strings and typed-strings (e.g., enum)
+func asString(v any) string {
+	if v == nil {
+		return ""
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.String {
+		return rv.String()
+	}
+	return ""
 }

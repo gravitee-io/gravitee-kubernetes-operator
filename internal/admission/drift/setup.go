@@ -1,5 +1,3 @@
-package drift
-
 // Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +12,15 @@ package drift
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package drift
+
 import (
-	"testing"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
+	driftapim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/drift"
+	driftlib "github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 )
 
-func TestDrift(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Drift detection unit tests suite")
+func Init() {
+	driftlib.InitRegistry()
+	driftlib.InitEnableCheck()
+	driftapim.InitRegistry()
 }
-
-var _ = BeforeSuite(func() {
-	drift.Init()
-})

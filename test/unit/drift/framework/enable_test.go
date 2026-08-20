@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package drift
+package framework
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -47,10 +47,10 @@ var _ = Describe("Drift enablement", func() {
 
 			Expect(drift.IsDriftEnabled(g)).To(BeFalse())
 		},
-		Entry("config=true, annotation=true", true, ptr(env.TrueString)),
-		Entry("config=true, annotation=false", true, ptr(env.FalseString)),
+		Entry("config=true, annotation=true", true, new(env.TrueString)),
+		Entry("config=true, annotation=false", true, new(env.FalseString)),
 		Entry("config=true, annotation missing", true, nil),
-		Entry("config=false, annotation=true", false, ptr(env.TrueString)),
+		Entry("config=false, annotation=true", false, new(env.TrueString)),
 	)
 
 	DescribeTable(
@@ -67,6 +67,8 @@ var _ = Describe("Drift enablement", func() {
 					t.Annotations = map[string]string{core.DriftDetectionAnnotation: annotatedValue}
 				case *v1alpha1.PortalListing:
 					t.Annotations = map[string]string{core.DriftDetectionAnnotation: annotatedValue}
+				case *v1alpha1.PortalLink:
+					t.Annotations = map[string]string{core.DriftDetectionAnnotation: annotatedValue}
 				default:
 					Fail("unexpected CRD type in test table")
 				}
@@ -80,6 +82,8 @@ var _ = Describe("Drift enablement", func() {
 			func() runtime.Object { return &v1alpha1.Documentation{} }, true, "", false),
 		Entry("PortalListing: config=true, annotation missing -> excluded by predicate",
 			func() runtime.Object { return &v1alpha1.PortalListing{} }, true, "", false),
+		Entry("PortalLink: config=true, annotation missing -> excluded by predicate",
+			func() runtime.Object { return &v1alpha1.PortalLink{} }, true, "", false),
 		Entry("Portal: config=true, annotation invalid -> excluded by predicate",
 			func() runtime.Object { return &v1alpha1.Portal{} }, true, "invalid", false),
 		Entry("Portal: config=true, annotation=true -> enabled (annotation overrides predicate)",
@@ -88,6 +92,12 @@ var _ = Describe("Drift enablement", func() {
 			func() runtime.Object { return &v1alpha1.Portal{} }, true, env.FalseString, false),
 		Entry("Portal: config=false, annotation=true -> enabled (annotation overrides predicate)",
 			func() runtime.Object { return &v1alpha1.Portal{} }, false, env.TrueString, true),
+		Entry("PortalLink: config=true, annotation=true -> enabled (annotation overrides predicate)",
+			func() runtime.Object { return &v1alpha1.PortalLink{} }, true, env.TrueString, true),
+		Entry("PortalLink: config=true, annotation=false -> disabled (annotation overrides predicate)",
+			func() runtime.Object { return &v1alpha1.PortalLink{} }, true, env.FalseString, false),
+		Entry("PortalLink: config=false, annotation=true -> enabled (annotation overrides predicate)",
+			func() runtime.Object { return &v1alpha1.PortalLink{} }, false, env.TrueString, true),
 	)
 
 	DescribeTable(
