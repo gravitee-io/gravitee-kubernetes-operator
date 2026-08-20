@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 
@@ -46,6 +47,7 @@ var _ = SynchronizedBeforeSuite(func() {
 		AddConfigMap(constants.ApiWithTemplatingConfigMapFile).
 		Build().
 		Apply()
+	drift.Init()
 })
 
 var _ = SynchronizedAfterSuite(func() {

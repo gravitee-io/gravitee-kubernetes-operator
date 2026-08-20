@@ -12,18 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v4
+package apidefinition
 
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-)
+import "context"
 
-func validateApiType(oldApi, newAPI *v1alpha1.ApiV4Definition) *errors.AdmissionError {
-	if newAPI.GetType() != oldApi.GetType() {
-		return errors.NewSeveref("it is not possible to change API Type. Old type '%s', "+
-			"new type '%s'", oldApi.GetType(), newAPI.GetType())
-	}
+type apiNamespaceKey string
 
-	return nil
+const nsKey = apiNamespaceKey("api-namespace")
+
+// WithAPINamespace stores the API namespace in ctx for shared-policy-group ref resolution.
+func WithAPINamespace(ctx context.Context, namespace string) context.Context {
+	return context.WithValue(ctx, nsKey, namespace)
 }

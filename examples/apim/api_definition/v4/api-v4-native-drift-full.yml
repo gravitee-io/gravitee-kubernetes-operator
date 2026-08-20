@@ -16,15 +16,21 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: api-v4-native
+  name: api-v4-native-drift-full
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "api-v4-native"
-  description: "V4 Native API managed by Gravitee Kubernetes Operator"
+  name: "api-v4-native-drift-full"
+  description: "V4 Native Kafka API with extended fields for drift admission tests"
   version: "1.0"
   type: NATIVE
   state: STARTED
+  properties:
+    - key: owner
+      value: gko
+  analytics:
+    enabled: true
+    reporterMetricsEnabled: false
   listeners:
     - type: KAFKA
       host: "kafka.local"
@@ -41,13 +47,31 @@ spec:
         - name: Default Native proxy
           type: native-kafka
           inheritConfiguration: true
-          "weight": 1
+          weight: 1
           configuration:
             bootstrapServers: "kafka.local:9001"
           secondary: false
+          sharedConfigurationOverride:
+            security:
+              protocol: PLAINTEXT
   plans:
     KeyLess:
       name: "Free plan"
       description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"
+      bootstrapPort: 9092
+      brokerRangeStart: 9100
+      brokerRangeEnd: 9102
+  pages:
+    markdowns-folder:
+      name: markdowns
+      type: FOLDER
+    markdown:
+      name: "hello-markdown"
+      type: MARKDOWN
+      parent: markdowns-folder
+      content: |
+        Hello from native API drift test.
+      visibility: PRIVATE
+  notifyMembers: false

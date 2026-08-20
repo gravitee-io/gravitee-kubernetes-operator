@@ -1,0 +1,314 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: api-v4-proxy-drift-full
+spec:
+  contextRef:
+    name: "dev-ctx"
+  name: "api-v4-proxy-drift-full"
+  description: "V4 Proxy API with extended fields for drift admission tests"
+  version: "1.0"
+  type: PROXY
+  state: STARTED
+  allowedInApiProducts: true
+  allowMultiJwtOauth2Subscriptions: true
+  properties:
+    - key: owner
+      value: gko
+    - key: dev
+      value: devex team
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/api-v4-proxy-drift-full"
+      entrypoints:
+        - type: http-proxy
+          qos: NONE
+  endpointGroups:
+    - name: Default HTTP proxy group
+      type: http-proxy
+      sharedConfiguration:
+        proxy:
+          useSystemProxy: false
+          enabled: false
+        http:
+          keepAliveTimeout: 30000
+          keepAlive: true
+          propagateClientHost: false
+          followRedirects: false
+          readTimeout: 10000
+          idleTimeout: 60000
+          connectTimeout: 3000
+          useCompression: true
+          maxConcurrentConnections: 20
+          version: "HTTP_1_1"
+          pipelining: false
+        ssl:
+          keyStore:
+            type: "NONE"
+          hostnameVerifier: true
+          trustStore:
+            type: "NONE"
+          trustAll: false
+      endpoints:
+        - name: Default HTTP proxy
+          type: http-proxy
+          inheritConfiguration: true
+          configuration:
+            target: https://api.gravitee.io/echo
+          secondary: false
+          services:
+           healthCheck:
+            enabled: true
+            type: "http-health-check"
+            overrideConfiguration: true
+            configuration:
+              schedule: "*/10 * * * * *"
+              headers:
+                - name: "X-HC-Data"
+                  value: "check override"
+              overrideEndpointPath: true
+              method: "GET"
+              failureThreshold: 3
+              assertion: "{#response.status < 300 }"
+              successThreshold: 3
+              target: "/test"
+        - name: Backup HTTP proxy
+          type: http-proxy
+          inheritConfiguration: true
+          configuration:
+            target: https://api.gravitee.io/echo/2
+          secondary: true
+      loadBalancer:
+        type: ROUND_ROBIN
+      services:
+        discovery:
+          enabled: true
+          overrideConfiguration: false
+          type: "consul-service-discovery"
+          configuration:
+            url: "http://localhost:8500"
+            trustStoreType: "NONE"
+            keyStoreType: "NONE"
+            service: "test"
+        healthCheck:
+          enabled: true
+          type: "http-health-check"
+          overrideConfiguration: false
+          configuration:
+            schedule: "*/10 * * * * *"
+            headers:
+              - name: "X-HC-Data"
+                value: "check override"
+            overrideEndpointPath: true
+            method: "GET"
+            failureThreshold: 3
+            assertion: "{#response.status < 300}"
+            successThreshold: 3
+            target: "/test"
+  flowExecution:
+    matchRequired: true
+    mode: BEST_MATCH
+  flows:
+    - name: default
+      enabled: true
+      selectors:
+        - type: HTTP
+          pathOperator: EQUALS
+          methods:
+            - GET
+            - POST
+      request:
+        - name: Rate Limit
+          description: k8s rate limit
+          enabled: true
+          policy: rate-limit
+          configuration:
+            async: false
+            addHeaders: true
+            rate:
+              useKeyOnly: false
+              periodTime: 100
+              limit: 10000
+              periodTimeUnit: MINUTES
+              key: ""
+      response:
+        - name: SPG
+          description: SPG
+          enabled: true
+          policy: shared-policy-group
+          sharedPolicyGroupRef:
+            name: "simple-shared-policy-groups"
+  metadata:
+    - key: "build-version"
+      name: "build-version"
+      format: "STRING"
+      value: "0.0.1"
+  pages:
+    markdowns-folder:
+      name: markdowns
+      type: FOLDER
+      published: true
+    markdown:
+      name: "hello-markdown"
+      type: MARKDOWN
+      parent: markdowns-folder
+      content: |
+        Hello from proxy API drift test.
+      visibility: PUBLIC
+      published: true
+    swagger:
+      name: "pet-store"
+      type: SWAGGER
+      parent: markdowns-folder
+      source:
+        type: "http-fetcher"
+        configuration:
+          url: https://petstore.swagger.io/v2/swagger.json
+          autoFetch: true
+          fetchCron: "*/10 * * * * *"
+          useSystemProxy: false
+      published: true
+  plans:
+    ApiKeys:
+      name: "Api Key plan"
+      description: "This plan requires an API Key to be set in the request header"
+      security:
+        type: "API_KEY"
+      flows:
+        - name: default
+          enabled: true
+          selectors:
+            - type: HTTP
+              path: "/"
+              pathOperator: EQUALS
+              methods: [ ]
+    KeyLess:
+      name: "Free plan"
+      description: "This plan does not require any authentication"
+      security:
+        type: "key_less" # this is supported and does not create drifts
+      flows:
+        - name: default
+          enabled: true
+          selectors:
+            - type: HTTP
+              path: "/"
+              pathOperator: EQUALS
+              methods: [ ]
+          request:
+            - name: Rate Limit
+              description: k8s rate limit
+              enabled: true
+              policy: rate-limit
+              configuration:
+                async: false
+                addHeaders: true
+                rate:
+                  useKeyOnly: false
+                  periodTime: 100
+                  limit: 10000
+                  periodTimeUnit: MINUTES
+                  key: ""
+  lifecycleState: PUBLISHED
+  services:
+    dynamicProperty:
+      enabled: false
+      overrideConfiguration: false
+      type: "http-dynamic-properties"
+      configuration:
+        schedule: "*/30 * * * * *"
+        headers:
+         - name: "X-Test"
+           value: "TRUE"
+        url: "https://api.gravitee.io/echo"
+        method: "GET"
+        systemProxy: false
+        transformation: >-
+          [
+            {
+              "operation": "shift",
+              "spec": {
+                "headers": {
+                  "*": {
+                    "$": "[#2].key",
+                    "@": "[#2].value"
+                  }
+                }
+              }
+            }
+          ]
+  analytics:
+    enabled: true
+    otelLogs:
+      enabled: true
+    logging:
+      mode:
+        endpoint: true
+        entrypoint: true
+      content:
+        headers: true
+        payload: true
+        messageHeaders: false
+        messagePayload: false
+        messageMetadata: false
+      phase:
+        request: true
+        response: true
+      condition: "{#true}"
+    tracing:
+      enabled: true
+      verbose: true
+  failover:
+    enabled: true
+    maxFailures: 3
+    maxRetries: 5
+    openStateDuration: 10000
+    perSubscription: true
+    slowCallDuration: 30000
+  responseTemplates:
+    CORS_PREFLIGHT_FAILED:
+      "text/html":
+        headers:
+          X-Custom-Header: "Custom header value"
+        body: "Error occurred while processing CORS preflight request for HTML"
+        status: 412
+        propagateErrorKeyToLogs: true
+      "application/json":
+        headers:
+          X-Custom-Header: "Custom header value"
+        body: "Error occurred while processing CORS preflight request for JSON"
+        status: 412
+        propagateErrorKeyToLogs: true
+    INVALID_HTTP_METHOD:
+      "*/*":
+        headers:
+          X-Custom-Header: "Custom header value"
+        body: "Error occurred while processing CORS preflight request"
+        status: 400
+        propagateErrorKeyToLogs: true
+  notifyMembers: false
+  groups:
+    - product
+  groupRefs:
+    - name: developers
+  notificationsRefs:
+    - name: api-notification-groups
+  resources:
+    - ref:
+        name: reusable-resource-cache-redis
