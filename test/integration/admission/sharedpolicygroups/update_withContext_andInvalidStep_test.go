@@ -50,7 +50,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		updated.Spec.Steps = []*sharedpolicygroups.Step{
 			{
 				Enabled:       true,
-				Policy:        utils.ToReference("policy_throw_unexpected_policy_exception"),
+				Policy:        new("policy_throw_unexpected_policy_exception"),
 				Configuration: configuration,
 			},
 		}

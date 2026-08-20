@@ -32,6 +32,7 @@ spec:
       configuration:
         async: false
         addHeaders: true
+        errorStrategy: "FALLBACK_PASS_TROUGH"
         rate:
           useKeyOnly: false
           periodTime: 1

@@ -55,7 +55,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		uuid := uuid.NewV4String()
 		fixtures2.SharedPolicyGroup.Spec.CrossID = &uuid
 		fixtures2.SharedPolicyGroup.Spec.ApiType = "PROXY"
-		fixtures2.SharedPolicyGroup.Spec.Phase = (*sharedpolicygroups.FlowPhase)(utils.ToReference("REQUEST"))
+		fixtures2.SharedPolicyGroup.Spec.Phase = (*sharedpolicygroups.FlowPhase)(new("REQUEST"))
 
 		configuration := utils.NewGenericStringMap()
 		configuration.Put("key", "value")
@@ -63,7 +63,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		fixtures2.SharedPolicyGroup.Spec.Steps = []*sharedpolicygroups.Step{
 			{
 				Enabled:       true,
-				Policy:        utils.ToReference("policy_throw_unexpected_policy_exception"),
+				Policy:        new("policy_throw_unexpected_policy_exception"),
 				Configuration: configuration,
 			},
 		}
