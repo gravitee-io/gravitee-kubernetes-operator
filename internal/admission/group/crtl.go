@@ -52,11 +52,11 @@ func (a AdmissionCtrl) ValidateDelete(
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
-	ctx context.Context, _ *v1alpha1.Group, newObj *v1alpha1.Group,
+	ctx context.Context, oldObj *v1alpha1.Group, newObj *v1alpha1.Group,
 ) (admission.Warnings, error) {
 	if newObj.IsBeingDeleted() {
 		return admission.Warnings{}, nil
 	}
 
-	return validateCreate(ctx, newObj).Map()
+	return validateUpdate(ctx, oldObj, newObj).Map()
 }
