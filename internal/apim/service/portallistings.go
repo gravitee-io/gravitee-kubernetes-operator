@@ -58,7 +58,7 @@ func (svc *Listings) createOrUpdate(
 		WithPath("listings").
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	dto := toPortalListingDTO(listing)
+	dto := ToPortalListingDTO(listing)
 	importStatus := &portallisting.Status{}
 
 	if err := svc.HTTP.Put(url.String(), dto, &importStatus); err != nil {
@@ -93,7 +93,7 @@ func (svc *Listings) GetByHRID(portalHrid, listingHrid string) (*model.PortalLis
 	return listing, nil
 }
 
-func toPortalListingDTO(listing *v1alpha1.PortalListing) *model.PortalListingDTO {
+func ToPortalListingDTO(listing *v1alpha1.PortalListing) *model.PortalListingDTO {
 	dto := &model.PortalListingDTO{
 		HRID: refs.NewNamespacedNameFromObject(listing).HRID(),
 		APIs: make([]model.PortalListingApiEntryDTO, 0, len(listing.Spec.APIs)),

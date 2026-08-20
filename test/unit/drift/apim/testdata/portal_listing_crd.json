@@ -1,0 +1,22 @@
+{
+  "apiVersion": "gravitee.io/v1alpha1",
+  "kind": "PortalListing",
+  "metadata": {
+    "name": "my-listing",
+    "namespace": "default"
+  },
+  "spec": {
+    "portalRef": {
+      "name": "my-portal"
+    },
+    "apis": [
+      {
+        "ref": {
+          "name": "api-v4-with-context"
+        },
+        "location": "/projects/alpha",
+        "order": 1
+      }
+    ]
+  }
+}
