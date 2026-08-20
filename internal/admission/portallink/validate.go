@@ -22,39 +22,29 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, link *v1alpha1.PortalLink) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+	errs.Add(admission.CompileAndValidateTemplate(ctx, link))
 	if errs.IsSevere() {
 		return errs
 	}
 
-	link, ok := obj.(*v1alpha1.PortalLink)
-	if !ok {
-		errs.AddSevere("can't cast to *v1alpha1.PortalLink")
+	portal := validatePortal(ctx, link, errs)
+	if errs.IsSevere() {
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, link))
+	errs.MergeWith(validateDryRun(ctx, link, portal))
 	return errs
 }
 
-func validateUpdate(ctx context.Context, oldObj, newObj runtime.Object) *errors.AdmissionErrors {
+func validateUpdate(ctx context.Context, oldLink, newLink *v1alpha1.PortalLink) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	newLink, nok := newObj.(*v1alpha1.PortalLink)
-	oldLink, ook := oldObj.(*v1alpha1.PortalLink)
-	if !nok || !ook {
-		errs.AddSevere("can't cast to *v1alpha1.PortalLink")
-		return errs
-	}
-
-	// Compare user-declared (raw) refs before any template compilation mutates newObj,
-	// otherwise an unchanged templated portalRef would look like a change.
+	// after the portal is resolved, validate that the portalRef hasn't changed.
 	if newLink.Spec.Portal.String() != oldLink.Spec.Portal.String() {
 		errs.AddSeveref(
 			"portalRef is immutable. Detected change from [%s] to [%s]",
@@ -63,40 +53,29 @@ func validateUpdate(ctx context.Context, oldObj, newObj runtime.Object) *errors.
 		return errs
 	}
 
-	// validateCreate compiles templates and runs the dry-run validation.
-	return validateCreate(ctx, newObj)
+	// validateCreate compiles templates, resolve portal and runs the dry-run validation.
+	errs.MergeWith(validateCreate(ctx, newLink))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	mergeDriftValidation(ctx, oldLink, newLink, errs)
+
+	return errs
 }
 
-func validateDryRun(ctx context.Context, link *v1alpha1.PortalLink) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, link *v1alpha1.PortalLink, portal *v1alpha1.Portal) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	cp := link.DeepCopy()
-	ns := cp.GetNamespace()
 
-	prtl, err := dynamic.ResolvePortal(ctx, cp.GetPortalRef(), ns)
-	if err != nil {
-		errs.AddSeveref(
-			"portal link [%s] references portal [%v] that can't be resolved",
-			cp.GetName(), cp.GetPortalRef(),
-		)
-		return errs
-	}
-
-	if !prtl.HasContext() {
-		errs.AddSeveref(
-			"referenced portal [%v] has no management context (spec.contextRef)",
-			cp.GetPortalRef(),
-		)
-		return errs
-	}
-
-	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
+	apimClient, err := apim.FromContextRef(ctx, portal.ContextRef(), portal.GetNamespace())
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
 
-	status, err := apimClient.Links.DryRunCreateOrUpdate(cp, prtl)
+	status, err := apimClient.Links.DryRunCreateOrUpdate(cp, portal)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
@@ -111,4 +90,25 @@ func validateDryRun(ctx context.Context, link *v1alpha1.PortalLink) *errors.Admi
 	}
 
 	return errs
+}
+
+func validatePortal(ctx context.Context, link *v1alpha1.PortalLink, errs *errors.AdmissionErrors) *v1alpha1.Portal {
+	ns := link.GetNamespace()
+	portal, err := dynamic.ResolvePortal(ctx, link.GetPortalRef(), ns)
+	if err != nil {
+		errs.AddSeveref(
+			"portal link [%s] references portal [%v] that can't be resolved",
+			link.GetName(), link.GetPortalRef(),
+		)
+		return nil
+	}
+
+	if !portal.HasContext() {
+		errs.AddSeveref(
+			"referenced portal [%v] has no management context (spec.contextRef)",
+			link.GetPortalRef(),
+		)
+		return nil
+	}
+	return portal
 }

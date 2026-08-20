@@ -1,0 +1,7 @@
+{
+  "hrid": "default-my-portal-link",
+  "name": "My Link",
+  "href": "https://example.com",
+  "location": "/projects/alpha",
+  "order": 1
+}
