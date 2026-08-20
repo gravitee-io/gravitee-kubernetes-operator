@@ -43,6 +43,7 @@ const MONGO_IMAGE_TAG = await Mongo.getImageTag();
 
 const APIM_VALUES = `${$.env.APIM_VALUES || "values.yaml"}`;
 const APIM_UI = $.env.APIM_UI === "true";
+const DBLESS = APIM_VALUES.includes("dbless");
 
 const IMAGES = new Map([
   [
@@ -62,7 +63,7 @@ const IMAGES = new Map([
   [`redis:7.4.4-alpine`, `redis:dev`],
 ]);
 
-if (APIM_VALUES.includes("dbless")) {
+if (DBLESS) {
   IMAGES.delete(`mongo:${MONGO_IMAGE_TAG}`);
   IMAGES.delete(`${APIM_IMAGE_REGISTRY}/apim-management-api:${APIM_IMAGE_TAG}`);
   IMAGES.delete(`${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`);
@@ -152,7 +153,12 @@ async function createTLSSecret() {
 async function helmInstallAPIM() {
   await $`helm repo add graviteeio https://helm.gravitee.io`;
   await $`helm repo update graviteeio`;
-  await $`helm upgrade --install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --set ui.enabled=${APIM_UI} --version ${APIM_CHART_VERSION}`;
+  if ($.env.APIM_GRAVITEE_LICENSE) {
+    let lic = $.env.APIM_GRAVITEE_LICENSE;
+    await $`helm upgrade --install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --set ui.enabled=${APIM_UI} --set license.key=${lic} --version ${APIM_CHART_VERSION}`;
+  } else {
+    await $`helm upgrade --install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --set ui.enabled=${APIM_UI} --version ${APIM_CHART_VERSION}`;
+  }
 }
 
 async function deployHTTPBin() {
@@ -165,6 +171,107 @@ async function deployRedis() {
 
 async function waitForApim() {
   await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
+}
+
+async function fetchWithRetry(
+  url,
+  options,
+  { retries = 10, baseDelay = 1000, maxDelay = 30000 } = {},
+) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fetch(url, options);
+    } catch (err) {
+      if (attempt === retries) {
+        throw err;
+      }
+      const delay = Math.min(baseDelay * 2 ** (attempt - 1), maxDelay);
+      LOG.blue(
+        `  fetch ${url} failed (${err.cause?.code || err.message}), retrying in ${delay / 1000}s (${attempt}/${retries})`,
+      );
+      await sleep(delay);
+    }
+  }
+}
+
+async function configureAPIM() {
+  const dcrResourcePath = path.join(PROJECT_DIR, "hack", "kind", "apim", "dcr");
+  const settings = await fs.readFile(
+    path.join(dcrResourcePath, "settings.json"),
+    "utf-8",
+  );
+  const dcr = await fs.readFile(
+    path.join(dcrResourcePath, "dcr.json"),
+    "utf-8",
+  );
+
+  const adminAuth = "Basic " + Buffer.from("admin:admin").toString("base64");
+  const api1Auth = "Basic " + Buffer.from("api1:api1").toString("base64");
+  const application11Auth =
+    "Basic " + Buffer.from("application1:application1").toString("base64");
+  const baseUrl =
+    "http://localhost:30083/management/organizations/DEFAULT/environments/DEFAULT";
+
+  let resp;
+
+  resp = await fetchWithRetry(`${baseUrl}/settings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: adminAuth,
+    },
+    body: settings,
+  });
+  if (resp.status >= 400) {
+    throw new Error(
+      `POST settings failed (${resp.status}): ${await resp.text()}`,
+    );
+  }
+
+  resp = await fetchWithRetry(
+    `${baseUrl}/configuration/applications/registration/providers`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: adminAuth,
+      },
+      body: dcr,
+    },
+  );
+  if (resp.status >= 400) {
+    throw new Error(
+      `POST DCR provider failed (${resp.status}): ${await resp.text()}`,
+    );
+  }
+
+  resp = await fetchWithRetry(
+    "http://localhost:30083/management/organizations/DEFAULT/environments",
+    {
+      headers: {
+        Authorization: api1Auth,
+      },
+    },
+  );
+  if (resp.status >= 400) {
+    throw new Error(
+      `GET environments failed with api1 user (${resp.status}): ${await resp.text()}`,
+    );
+  }
+
+  resp = await fetchWithRetry(
+    "http://localhost:30083/management/organizations/DEFAULT/environments",
+    {
+      headers: {
+        Authorization: application11Auth,
+      },
+    },
+  );
+  if (resp.status >= 400) {
+    throw new Error(
+      `GET environments failed with application1 user (${resp.status}): ${await resp.text()}`,
+    );
+  }
 }
 
 LOG.blue(`
@@ -217,12 +324,26 @@ LOG.magenta(`
     Available endpoints are:
         Gateway             http://localhost:30082
         Gateway with mTLS   https://localhost:30084
-        Management API      http://localhost:30083/management/organizations/DEFAULT
-        Console             http://localhost:30080
 `);
+
+if (!DBLESS) {
+  LOG.magenta(`      Management API      http://localhost:30083/management/organizations/DEFAULT
+  `);
+}
+if (!DBLESS && APIM_UI) {
+  LOG.magenta(`      Console             http://localhost:30080
+  `);
+}
 
 LOG.blue(`Waiting for services to be ready ...
     
     Press ctrl+c to exit this script without waiting ...
 `);
 await time(waitForApim);
+
+if ($.env.APIM_GRAVITEE_LICENSE && !DBLESS) {
+  LOG.blue(`
+  Configuring APIM instance
+`);
+  await time(configureAPIM);
+}

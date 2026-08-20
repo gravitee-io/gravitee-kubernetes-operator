@@ -1,0 +1,271 @@
+{
+  "analytics": {
+    "clientTimeout": 30000
+  },
+  "api": {
+    "labelsDictionary": [],
+    "primaryOwnerMode": "HYBRID"
+  },
+  "apiQualityMetrics": {
+    "categoriesWeight": 0,
+    "descriptionMinLength": 100,
+    "descriptionWeight": 0,
+    "enabled": false,
+    "functionalDocumentationWeight": 0,
+    "healthcheckWeight": 0,
+    "labelsWeight": 0,
+    "logoWeight": 0,
+    "technicalDocumentationWeight": 0
+  },
+  "apiReview": {
+    "enabled": false
+  },
+  "apiScore": {
+    "enabled": false
+  },
+  "application": {
+    "registration": {
+      "enabled": true
+    },
+    "types": {
+      "backend_to_backend": {
+        "enabled": true
+      },
+      "browser": {
+        "enabled": true
+      },
+      "native": {
+        "enabled": true
+      },
+      "simple": {
+        "enabled": true
+      },
+      "web": {
+        "enabled": true
+      }
+    }
+  },
+  "authentication": {
+    "forceLogin": {
+      "enabled": false
+    },
+    "github": {},
+    "google": {},
+    "localLogin": {
+      "enabled": true
+    },
+    "oauth2": {}
+  },
+  "company": {
+    "name": "Gravitee.io"
+  },
+  "cors": {
+    "allowHeaders": [
+      "Cache-Control",
+      "Pragma",
+      "Origin",
+      "Authorization",
+      "Content-Type",
+      "X-Requested-With",
+      "If-Match",
+      "X-Xsrf-Token",
+      "X-Recaptcha-Token"
+    ],
+    "allowMethods": [
+      "OPTIONS",
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ],
+    "allowOrigin": [
+      "*"
+    ],
+    "exposedHeaders": [
+      "ETag",
+      "X-Xsrf-Token"
+    ],
+    "maxAge": 1728000
+  },
+  "dashboards": {
+    "apiStatus": {
+      "enabled": true
+    }
+  },
+  "documentation": {
+    "pageNotFoundMessage": "",
+    "url": "https://documentation.gravitee.io/apim"
+  },
+  "email": {
+    "enabled": true,
+    "from": "noreply@my.domain",
+    "host": "smtp.my.domain",
+    "password": "********",
+    "port": 587,
+    "properties": {
+      "auth": false,
+      "startTlsEnable": false
+    },
+    "protocol": "smtp",
+    "subject": "[Gravitee.io] %s"
+  },
+  "logging": {
+    "audit": {
+      "enabled": false,
+      "trail": {
+        "enabled": false
+      }
+    },
+    "maxDurationMillis": 0,
+    "messageSampling": {
+      "count": {
+        "default": 100,
+        "limit": 10
+      },
+      "probabilistic": {
+        "default": 0.01,
+        "limit": 0.5
+      },
+      "temporal": {
+        "default": "PT1S",
+        "limit": "PT1S"
+      },
+      "windowedCount": {
+        "default": "1/PT10S",
+        "limit": "1/PT1S"
+      }
+    },
+    "user": {
+      "displayed": false
+    }
+  },
+  "metadata": {
+    "readonly": [
+      "email.enabled",
+      "portal.url"
+    ]
+  },
+  "openAPIDocViewer": {
+    "openAPIDocType": {
+      "defaultType": "Swagger",
+      "redoc": {
+        "enabled": true
+      },
+      "swagger": {
+        "enabled": true
+      }
+    }
+  },
+  "plan": {
+    "security": {
+      "apikey": {
+        "enabled": true
+      },
+      "customApiKey": {
+        "enabled": false
+      },
+      "jwt": {
+        "enabled": true
+      },
+      "keyless": {
+        "enabled": true
+      },
+      "mtls": {
+        "enabled": true
+      },
+      "oauth2": {
+        "enabled": true
+      },
+      "push": {
+        "enabled": true
+      },
+      "sharedApiKey": {
+        "enabled": false
+      }
+    }
+  },
+  "portal": {
+    "analytics": {
+      "enabled": false
+    },
+    "apikeyHeader": "X-Gravitee-Api-Key",
+    "apis": {
+      "apiHeaderShowCategories": {
+        "enabled": true
+      },
+      "apiHeaderShowTags": {
+        "enabled": true
+      },
+      "categoryMode": {
+        "enabled": true
+      },
+      "documentationOnlyMode": {
+        "enabled": false
+      },
+      "promotedApiMode": {
+        "enabled": true
+      },
+      "tilesMode": {
+        "enabled": true
+      }
+    },
+    "entrypoint": "https://api.company.com",
+    "kafkaDomain": "{apiHost}",
+    "kafkaPort": 9092,
+    "kafkaSaslMechanisms": [
+      "PLAIN",
+      "SCRAM-SHA-256",
+      "SCRAM-SHA-512"
+    ],
+    "media": {
+      "enabled": false,
+      "maxSizeInOctet": 1000000
+    },
+    "rating": {
+      "comment": {
+        "mandatory": false
+      },
+      "enabled": true
+    },
+    "support": {
+      "enabled": true
+    },
+    "tcpPort": 4082,
+    "uploadMedia": {
+      "enabled": false,
+      "maxSizeInOctet": 1000000
+    },
+    "url": "https://apim.example.com",
+    "userCreation": {
+      "automaticValidation": {
+        "enabled": true
+      },
+      "enabled": true
+    }
+  },
+  "portalNext": {
+    "access": {
+      "enabled": false
+    },
+    "banner": {
+      "enabled": true,
+      "primaryButton": {
+        "enabled": false
+      },
+      "secondaryButton": {
+        "enabled": false
+      },
+      "subtitle": "Discover powerful APIs to supercharge your projects.",
+      "title": "Welcome to Gravitee Developer Portal!"
+    },
+    "catalog": {}
+  },
+  "reCaptcha": {
+    "enabled": false
+  },
+  "scheduler": {
+    "notifications": 10,
+    "tasks": 10
+  }
+}

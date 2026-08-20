@@ -175,7 +175,6 @@ const (
 	PortalDriftMinimalFile = "apim/portal/portal-drift-minimal.yml"
 	PortalDriftFullFile    = "apim/portal/portal-drift-full.yml"
 	PortalFileDeprecated   = "apim/portal/portal-deprecated.yml"
-	PortalStructureFile    = "apim/portal/portal-structure.yml"
 
 	PortalListingFile             = "apim/portal/portal-listing.yml"
 	PortalListingDriftMinimalFile = "apim/portal/portal-listing-drift-minimal.yml"

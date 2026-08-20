@@ -342,6 +342,9 @@ jobs:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
+      - keeper/env-export:
+          secret-url: keeper://w8WBpALVCgYdxtV5pVrQsw/custom_field/base64
+          var-name: APIM_GRAVITEE_LICENSE
       - run:
           name: Install kind
           command: |
