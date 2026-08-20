@@ -19,7 +19,6 @@ import (
 
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -69,7 +68,7 @@ func (svc *Documentations) createOrUpdate(
 	url := svc.documentationsTarget(parent).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	dto := toDocumentationDTO(doc)
+	dto := model.ToDocumentationDTO(doc)
 	importStatus := &documentation.Status{}
 
 	if err := svc.HTTP.Put(url.String(), dto, &importStatus); err != nil {
@@ -101,7 +100,7 @@ func (svc *Documentations) GetByHRID(parent DocumentationParent, docHrid string)
 // the owning portal or API, computing the parent HRID from the resolved object.
 func (svc *Documentations) documentationsTarget(parent DocumentationParent) *gohttp.URL {
 	if parent.API != nil {
-		apiRef := refs.NewNamespacedName(parent.API.GetNamespace(), parent.API.GetName())
+		apiRef := refs.NewNamespacedNameFromObject(parent.API)
 		return svc.AutomationTarget("apis").
 			WithPath(apiRef.HRID()).
 			WithPath("documentations")
@@ -110,16 +109,4 @@ func (svc *Documentations) documentationsTarget(parent DocumentationParent) *goh
 	return svc.AutomationTarget("portals").
 		WithPath(portalHrid).
 		WithPath("documentations")
-}
-
-func toDocumentationDTO(doc *v1alpha1.Documentation) *model.DocumentationDTO {
-	return &model.DocumentationDTO{
-		HRID:     refs.NewNamespacedNameFromObject(doc).HRID(),
-		Name:     doc.Spec.Name,
-		PageType: doc.Spec.PageType,
-		Content:  doc.Spec.Content,
-		Location: utils.ToStringValue(doc.Spec.Location),
-		Order:    doc.Spec.Order,
-		Area:     doc.Spec.GetArea(),
-	}
 }
