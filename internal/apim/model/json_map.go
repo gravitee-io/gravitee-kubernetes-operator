@@ -12,27 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package drift
+package model
 
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-)
+import "encoding/json"
 
-func expectDrift(r drift.Result, expected string) {
-	GinkgoHelper()
-	Expect(r.String()).To(Equal(expected))
-	Expect(r.DriftDetected()).To(BeTrue())
-}
+func mapViaJSON[T any](src any) T {
+	var dst T
+	if src == nil {
+		return dst
+	}
 
-func expectNoDrift(r drift.Result) {
-	GinkgoHelper()
-	Expect(r.String()).To(BeEmpty())
-	Expect(r.DriftDetected()).To(BeFalse())
-}
+	data, err := json.Marshal(src)
+	if err != nil {
+		return dst
+	}
 
-func ptr[T any](v T) *T {
-	GinkgoHelper()
-	return &v
+	if err := json.Unmarshal(data, &dst); err != nil {
+		return dst
+	}
+
+	return dst
 }

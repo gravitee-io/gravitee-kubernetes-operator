@@ -12,9 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package drift
+package framework
 
-func Init() {
-	InitRegistry()
-	InitEnableCheck()
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
+
+func expectDrift(r drift.Result, expected string) {
+	GinkgoHelper()
+	Expect(r.String()).To(Equal(expected))
+	Expect(r.DriftDetected()).To(BeTrue())
+}
+
+func expectNoDrift(r drift.Result) {
+	GinkgoHelper()
+	Expect(r.String()).To(BeEmpty())
+	Expect(r.DriftDetected()).To(BeFalse())
 }

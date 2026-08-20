@@ -232,6 +232,14 @@ func Equals(field string, expected, given any) error {
 	return nil
 }
 
+// DriftDetected asserts that err is the severe admission error produced by drift
+// detection, matching the full message (not a substring). expected is the drift
+// tree body, without the "drift detected:" prefix.
+func DriftDetected(expected string, err error) error {
+	want := "\ndrift detected:\n" + strings.TrimSpace(expected)
+	return SevereError(errors.NewSevere(want), err)
+}
+
 func Deleted[T client.Object](ctx context.Context, kind string, obj T) error {
 	err := manager.GetLatest(ctx, obj)
 	if k8serr.IsNotFound(err) {

@@ -157,23 +157,23 @@ tests:
       - equal:
           path: data.HTTP_CLIENT_PROXY_USE_SYSTEM_PROXY
           value: "true"
-  - it: Templating and drift detection enabled by default
+  - it: Templating enabled and drift detection disabled by default
     asserts:
       - equal:
           path: data.ENABLE_TEMPLATING
           value: "true"
       - equal:
           path: data.ENABLE_DRIFT_DETECTION
-          value: "true"
+          value: "false"
 
-  - it: Should have drift detection disabled
+  - it: Should have drift detection enabled
     set:
       manager:
         driftDetection:
-          enabled: false
+          enabled: true
     asserts:
       - hasDocuments:
           count: 1
       - equal:
           path: data.ENABLE_DRIFT_DETECTION
-          value: "false"
+          value: "true"
