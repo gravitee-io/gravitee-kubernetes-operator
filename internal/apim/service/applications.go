@@ -44,9 +44,9 @@ func NewApplications(client *client.Client) *Applications {
 }
 
 // Search For tests purposes only.
-func (svc *Applications) Search(query string, status string) ([]model.Application, error) {
+func (svc *Applications) Search(query string, status string) ([]model.ApplicationDTO, error) {
 	url := svc.EnvV1Target(applicationsPath).WithQueryParam("query", query).WithQueryParam("status", status)
-	applications := new([]model.Application)
+	applications := new([]model.ApplicationDTO)
 
 	if err := svc.HTTP.Get(url.String(), applications); err != nil {
 		return nil, err
@@ -56,13 +56,13 @@ func (svc *Applications) Search(query string, status string) ([]model.Applicatio
 }
 
 // GetByID For tests purposes only.
-func (svc *Applications) GetByID(appID string) (*model.Application, error) {
+func (svc *Applications) GetByID(appID string) (*model.ApplicationDTO, error) {
 	if appID == "" {
 		return nil, errors.NewNotFoundError()
 	}
 
 	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
-	app := new(model.Application)
+	app := new(model.ApplicationDTO)
 
 	if err := svc.HTTP.Get(url.String(), app); err != nil {
 		return nil, err
@@ -88,9 +88,9 @@ func (svc *Applications) GetMetadataByApplicationID(appID string) (*[]model.Appl
 }
 
 // GetByHRID For test purposes only.
-func (svc *Applications) GetByHRID(hrid string) (*model.Application, error) {
+func (svc *Applications) GetByHRID(hrid string) (*model.ApplicationDTO, error) {
 	url := svc.AutomationTarget(applicationsPath).WithPath(hrid)
-	app := new(model.Application)
+	app := new(model.ApplicationDTO)
 
 	if err := svc.HTTP.Get(url.String(), app); err != nil {
 		return nil, err

@@ -19,11 +19,10 @@ import (
 	"encoding/pem"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
@@ -32,42 +31,34 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if app, ok := obj.(core.ApplicationObject); ok {
-		// Should be the first validation, it will also compile the templates internally
-		errs.Add(admission.CompileAndValidateTemplate(ctx, app))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.Add(ctxref.Validate(ctx, app))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.MergeWith(validateSettings(ctx, app))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.MergeWith(validateDryRun(ctx, app))
+	// Should be the first validation, it will also compile the templates internally
+	errs.Add(admission.CompileAndValidateTemplate(ctx, app))
+	if errs.IsSevere() {
+		return errs
 	}
+	errs.Add(ctxref.Validate(ctx, app))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateSettings(ctx, app))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateDryRun(ctx, app))
 	return errs
 }
 
 func validateUpdate(
 	ctx context.Context,
-	oldObj runtime.Object,
-	newObj runtime.Object,
+	oldApp *v1alpha1.Application,
+	newApp *v1alpha1.Application,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	oldApp, ook := oldObj.(core.ApplicationObject)
-	newApp, nok := newObj.(core.ApplicationObject)
-	if !ook || !nok {
-		return errs
-	}
 
 	if newApp.IsBeingDeleted() {
 		return errs
@@ -94,16 +85,21 @@ func validateUpdate(
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(validateDryRun(ctx, newApp))
+	if oldApp.GetSpec().Hash() != newApp.GetSpec().Hash() {
+		errs.MergeWith(validateDryRun(ctx, newApp))
+	}
+	if errs.IsSevere() {
+		return errs
+	}
+	mergeDriftValidation(ctx, oldApp, newApp, errs)
+
 	return errs
 }
 
-func validateSettings(ctx context.Context, app core.ApplicationObject) *errors.AdmissionErrors {
+func validateSettings(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	model := app.GetModel()
-
-	settings := model.GetSettings()
+	settings := app.Spec.Settings
 	if settings.IsOAuth() && settings.IsSimple() {
 		errs.AddSevere("configuring both OAuth and simple settings is not allowed")
 	}
@@ -121,15 +117,11 @@ func validateSettings(ctx context.Context, app core.ApplicationObject) *errors.A
 	}
 
 	if hasMultipleCerts {
-		appSettings, ok := settings.(*application.Setting)
-		if !ok {
-			return errs
-		}
-		errs.MergeWith(validateClientCertificates(appSettings.GetClientCertificates()))
+		errs.MergeWith(validateClientCertificates(settings.GetClientCertificates()))
 		if errs.IsSevere() {
 			return errs
 		}
-		if err := appResolve.ResolveClientCertificates(ctx, appSettings, app.GetNamespace(), app.GetName()); err != nil {
+		if err := appResolve.ResolveClientCertificates(ctx, settings, app.GetNamespace(), app.GetName()); err != nil {
 			errs.AddSevere(err.Error())
 		}
 	}
@@ -162,11 +154,10 @@ func validateClientCertificates(certs []application.ClientCertificate) *errors.A
 	return errs
 }
 
-func validateSettingsUpdate(oldApp, newApp core.ApplicationObject) *errors.AdmissionErrors {
+func validateSettingsUpdate(oldApp, newApp *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	oldModel, newModel := oldApp.GetModel(), newApp.GetModel()
-	oldSettings, newSettings := oldModel.GetSettings(), newModel.GetSettings()
+	oldSettings, newSettings := oldApp.Spec.Settings, newApp.Spec.Settings
 
 	if oldSettings.IsOAuth() && newSettings.IsSimple() {
 		errs.AddSevere("moving from OAuth to simple settings is not allowed")
@@ -181,10 +172,10 @@ func validateSettingsUpdate(oldApp, newApp core.ApplicationObject) *errors.Admis
 	return errs
 }
 
-func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp, _ := app.DeepCopyObject().(*v1alpha1.Application)
+	cp := app.DeepCopy()
 
 	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
@@ -192,11 +183,6 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 	}
 
 	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(app))
-
-	impl, ok := cp.GetModel().(*application.Application)
-	if !ok {
-		errs.AddSeveref("unable to call dry run (unknown type %T)", impl)
-	}
 
 	status, err := apim.Applications.DryRunCreateOrUpdate(cp)
 	if err != nil {
@@ -217,12 +203,12 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 
 func validateCertEndDatesVsSubscriptionEndDates(
 	ctx context.Context,
-	app core.ApplicationObject,
+	app *v1alpha1.Application,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	settings, ok := app.GetModel().GetSettings().(*application.Setting)
-	if !ok || !settings.HasClientCertificates() {
+	settings := app.Spec.Settings
+	if settings == nil || !settings.HasClientCertificates() {
 		return errs
 	}
 
@@ -231,9 +217,9 @@ func validateCertEndDatesVsSubscriptionEndDates(
 		return errs
 	}
 
-	appRef := refs.NewNamespacedName(app.GetNamespace(), app.GetName())
+	appRef := refs.NewNamespacedNameFromObject(app)
 	subList := &v1alpha1.SubscriptionList{}
-	if err := search.FindByFieldReferencing(ctx, search.AppSubsField, appRef, subList); err != nil {
+	if err := search.FindByFieldReferencing(ctx, search.AppSubsField, *appRef, subList); err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
@@ -317,17 +303,14 @@ func fetchAPI(ctx context.Context, sub *v1alpha1.Subscription) core.ApiDefinitio
 	}
 }
 
-func validateDelete(_ context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateDelete(_ context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if app, ok := obj.(core.ApplicationObject); ok {
-		errs.Add(validateSubscriptionCount(app))
-	}
+	errs.Add(validateSubscriptionCount(app))
 	return errs
 }
 
-func validateSubscriptionCount(app core.ApplicationObject) *errors.AdmissionError {
-	st, _ := app.GetStatus().(core.SubscribableStatus)
-	sc := st.GetSubscriptionCount()
+func validateSubscriptionCount(app *v1alpha1.Application) *errors.AdmissionError {
+	sc := app.Status.GetSubscriptionCount()
 	if sc > 0 {
 		return errors.NewSeveref(
 			"cannot delete [%s] because it is referenced in %d subscriptions. "+

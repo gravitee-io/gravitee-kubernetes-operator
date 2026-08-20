@@ -40,16 +40,16 @@ type ClientCertificate struct {
 	Name string `json:"name,omitempty"`
 	// Content is the certificate inlined (PEM or Base64) or a template [[ ]] notation.
 	// +kubebuilder:validation:Optional
-	Content string `json:"content,omitempty"`
+	Content string `json:"content,omitempty" drift:"trimmed"`
 	// Ref is a reference to a Secret or ConfigMap containing the certificate.
 	// +kubebuilder:validation:Optional
-	Ref *CertificateRef `json:"ref,omitempty"`
+	Ref *CertificateRef `json:"ref,omitempty" drift:"ignore"`
 	// StartsAt is the optional start date of the certificate validity (RFC3339).
 	// +kubebuilder:validation:Optional
-	StartsAt string `json:"startsAt,omitempty"`
+	StartsAt string `json:"startsAt,omitempty" drift:"rfc3339"`
 	// EndsAt is the optional end date of the certificate validity (RFC3339).
 	// +kubebuilder:validation:Optional
-	EndsAt string `json:"endsAt,omitempty"`
+	EndsAt string `json:"endsAt,omitempty" drift:"rfc3339"`
 	// Encoded indicates whether the content is base64 encoded.
 	// If true, the content will be decoded before being sent to APIM.
 	// +kubebuilder:validation:Optional
