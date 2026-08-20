@@ -24,19 +24,13 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	api, ok := obj.(core.ApiDefinitionObject)
-	if !ok {
-		return errs
-	}
 
-	errs = validateFlowsAndEndpoints(ctx, api, errs)
+	errs = validateFlowsAndEndpoints(api, errs)
 	if errs.IsSevere() {
 		return errs
 	}
@@ -46,7 +40,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.MergeWith(base.ValidateCreate(ctx, obj))
+	errs.MergeWith(base.ValidateCreate(ctx, api))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -58,13 +52,9 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
-func validateFlowsAndEndpoints(_ context.Context, api core.ApiDefinitionObject,
+func validateFlowsAndEndpoints(api *v1alpha1.ApiV4Definition,
 	errs *errors.AdmissionErrors) *errors.AdmissionErrors {
-	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
-	impl, ok := cp.GetDefinition().(*v4.Api)
-	if !ok {
-		errs.AddSevere("unable to API type because api is not a v4 API")
-	}
+	impl := &api.Spec.Api
 
 	errs.MergeWith(validateApiFlows(impl))
 
@@ -143,10 +133,10 @@ func validateNativeKafkaPlanPorts(api *v4.Api) *errors.AdmissionErrors {
 	return errs
 }
 
-func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
+	cp := api.DeepCopy()
 
 	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
@@ -156,11 +146,7 @@ func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 
 	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
 	cp.SetDefinitionContext(v4.NewDefaultKubernetesContext().MergeWith(cp.GetDefinitionContext()))
-	impl, ok := cp.(*v1alpha1.ApiV4Definition)
-	if !ok {
-		errs.AddSevere("unable to call dry run import because api is not a v4 API")
-	}
-	status, err := apimClient.APIs.DryRunImportV4(impl)
+	status, err := apimClient.APIs.DryRunImportV4(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
@@ -179,15 +165,10 @@ func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 
 func validateUpdate(
 	ctx context.Context,
-	oldObj runtime.Object,
-	newObj runtime.Object,
+	oldApi *v1alpha1.ApiV4Definition,
+	newApi *v1alpha1.ApiV4Definition,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	oldApi, ook := oldObj.(core.ApiDefinitionObject)
-	newApi, nok := newObj.(core.ApiDefinitionObject)
-	if !ook || !nok {
-		return errs
-	}
 
 	if newApi.IsBeingDeleted() {
 		return errs
@@ -206,5 +187,10 @@ func validateUpdate(
 	}
 
 	errs.MergeWith(validateCreate(ctx, newApi))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	mergeDriftValidation(ctx, oldApi, newApi, errs)
 	return errs
 }

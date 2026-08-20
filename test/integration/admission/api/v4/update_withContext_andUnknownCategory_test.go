@@ -17,10 +17,9 @@ package v4
 import (
 	"context"
 
-	apiV4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -43,21 +42,20 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 			Build().
 			Apply()
 
-		By("preparing API for import")
+		newAPI := fixtures.APIv4.DeepCopy()
 
-		fixtures.APIv4.Spec.DefinitionContext = apiV4.NewDefaultKubernetesContext()
-		fixtures.APIv4.PopulateIDs(fixtures.Context, k8s.IsAutomationAPIManaged(fixtures.APIv4))
-
-		By("adding an unknown category to the API")
-
+		By("adding an unknown member to the API")
 		unknownCategory := random.GetName()
+		newAPI.Spec.Categories = []string{unknownCategory}
 
-		fixtures.APIv4.Spec.Categories = []string{unknownCategory}
+		By("preparing API for import")
+		err := apidefinition.PrepareV4SpecForAutomation(ctx, newAPI)
+		Expect(err).ToNot(HaveOccurred())
 
 		By("checking that API validation returns warnings")
 
 		Eventually(func() error {
-			warnings, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, fixtures.APIv4)
+			warnings, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, newAPI)
 			if err != nil {
 				return err
 			}

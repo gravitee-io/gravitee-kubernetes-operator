@@ -16,38 +16,40 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: api-v4-native
+  name: api-v4-message-drift-minimal
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "api-v4-native"
-  description: "V4 Native API managed by Gravitee Kubernetes Operator"
+  name: "api-v4-message-drift-minimal"
+  description: "V4 Message API with minimal fields for drift admission tests"
   version: "1.0"
-  type: NATIVE
+  type: MESSAGE
   state: STARTED
   listeners:
-    - type: KAFKA
-      host: "kafka.local"
-      port: 9092
+    - type: HTTP
+      paths:
+        - path: "/api-v4-message-drift-minimal"
       entrypoints:
-        - type: native-kafka
+        - type: http-get
+          qos: AUTO
   endpointGroups:
-    - name: Default Native endpoint group
-      type: native-kafka
-      sharedConfiguration:
-        security:
-          protocol: PLAINTEXT
+    - name: Default Mock group
+      type: mock
       endpoints:
-        - name: Default Native proxy
-          type: native-kafka
-          inheritConfiguration: true
-          "weight": 1
+        - name: Default Mock endpoint
+          type: mock
+          inheritConfiguration: false
           configuration:
-            bootstrapServers: "kafka.local:9001"
-          secondary: false
+            messageInterval: 1000
+            messageContent: '{"message": "hello from mock"}'
+            messageCount: 1
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
   plans:
     KeyLess:
       name: "Free plan"
       description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"
+  notifyMembers: false

@@ -28,7 +28,7 @@ type Page struct {
 
 type PageSource struct {
 	Type          string                  `json:"type,omitempty"`
-	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
 }
 
 type PageImport struct {

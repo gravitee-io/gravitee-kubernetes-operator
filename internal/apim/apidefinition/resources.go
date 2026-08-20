@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package apidefinition
 
 import (
 	"context"
@@ -24,7 +24,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
 
-func resolveResources(ctx context.Context, resources []*base.ResourceOrRef) error {
+// ResolveResources inlines ApiResource references into the API spec.
+func ResolveResources(ctx context.Context, resources []*base.ResourceOrRef) error {
 	if resources == nil {
 		return nil
 	}

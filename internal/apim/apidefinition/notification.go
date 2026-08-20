@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package apidefinition
 
 import (
 	"context"
@@ -26,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
+// ResolveConsoleNotificationRefs inlines console notification settings from Notification CRDs.
 func ResolveConsoleNotificationRefs(ctx context.Context, api core.ApiDefinitionObject) error {
 	notificationRefs := api.GetNotificationRefs()
 
