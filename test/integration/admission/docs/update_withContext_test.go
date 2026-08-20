@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -33,64 +34,75 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 	admissionCtrl := adm.AdmissionCtrl{}
 
 	It("should return severe error when a portal documentation is reassigned to an API", func() {
-		doc := fixture.
+		fixtures := fixture.
 			Builder().
 			WithDocumentation(constants.DocumentationPortalFile).
 			Build()
 
-		updated := doc.Documentation.DeepCopy()
+		updated := fixtures.Documentation.DeepCopy()
 		updated.Spec.Portal = nil
 		updated.Spec.API = &refs.NamespacedName{Name: "some-api"}
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, doc.Documentation, updated)
-			return assert.NotNil("admission error", err)
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Documentation, updated)
+			return assert.SevereError(
+				errors.NewSevere("a documentation cannot be reassigned from a portal to an API"),
+				err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 
 	It("should return severe error when an API documentation is reassigned to a portal", func() {
-		doc := fixture.
+		fixtures := fixture.
 			Builder().
 			WithDocumentation(constants.DocumentationApiFile).
 			Build()
 
-		updated := doc.Documentation.DeepCopy()
+		updated := fixtures.Documentation.DeepCopy()
 		updated.Spec.API = nil
 		updated.Spec.Portal = &refs.NamespacedName{Name: "some-portal"}
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, doc.Documentation, updated)
-			return assert.NotNil("admission error", err)
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Documentation, updated)
+			return assert.SevereError(
+				errors.NewSevere("a documentation cannot be reassigned from an API to a portal"), err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 
 	It("should return severe error when portalRef is changed", func() {
-		doc := fixture.
+		fixtures := fixture.
 			Builder().
 			WithDocumentation(constants.DocumentationPortalFile).
 			Build()
 
-		updated := doc.Documentation.DeepCopy()
+		updated := fixtures.Documentation.DeepCopy()
 		updated.Spec.Portal.Name += "-repointed"
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, doc.Documentation, updated)
-			return assert.NotNil("admission error", err)
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Documentation, updated)
+			return assert.SevereError(
+				errors.NewSeveref("portalRef is immutable; documentation cannot be moved to a different portal (from [%s] to [%s])",
+					fixtures.Documentation.Spec.GetPortalRef(),
+					updated.Spec.GetPortalRef()),
+				err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 
 	It("should return severe error when apiRef is changed", func() {
-		doc := fixture.
+		fixtures := fixture.
 			Builder().
 			WithDocumentation(constants.DocumentationApiFile).
 			Build()
 
-		updated := doc.Documentation.DeepCopy()
+		updated := fixtures.Documentation.DeepCopy()
 		updated.Spec.API.Name += "-repointed"
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, doc.Documentation, updated)
-			return assert.NotNil("admission error", err)
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Documentation, updated)
+			return assert.SevereError(
+				errors.NewSeveref("apiRef is immutable; documentation cannot be moved to a different API (from [%s] to [%s])",
+					fixtures.Documentation.Spec.GetApiRef(),
+					updated.Spec.GetApiRef()),
+				err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 })
