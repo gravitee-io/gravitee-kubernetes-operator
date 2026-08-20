@@ -22,46 +22,45 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var allowedPlanSecurities = []string{"API_KEY", "JWT", "OAUTH2", "MTLS"}
 
 func validateUpdate(
 	ctx context.Context,
-	oldObj runtime.Object,
-	newObj runtime.Object,
+	oldSub *v1alpha1.Subscription,
+	newSub *v1alpha1.Subscription,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	errs.Add(admission.CompileAndValidateTemplate(ctx, newObj))
+	errs.Add(admission.CompileAndValidateTemplate(ctx, newSub))
 	if errs.IsSevere() {
 		return errs
 	}
-	oldSub, ook := oldObj.(core.SubscriptionObject)
-	newSub, nok := newObj.(core.SubscriptionObject)
-	if ook && nok {
-		errs.MergeWith(validateImmutableProperties(oldSub, newSub))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.Add(validateEndingAt(newSub.GetEndingAt()))
-
-		_, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
-		if errs.IsSevere() {
-			return errs
-		}
-
-		errs.Add(validateApiKeys(plan, newSub.GetApiKeys()))
-		if errs.IsSevere() {
-			return errs
-		}
-
-		validateMTLS(newSub, plan, app, errs)
+	errs.MergeWith(validateImmutableProperties(oldSub, newSub))
+	if errs.IsSevere() {
+		return errs
 	}
+	errs.Add(validateEndingAt(newSub.GetEndingAt()))
+
+	api, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(validateApiKeys(plan, newSub.GetApiKeys()))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	validateMTLS(newSub, plan, app, errs)
+
+	mergeDriftValidation(ctx, oldSub, newSub, api, app, plan, errs)
+
 	return errs
 }
 
@@ -94,15 +93,10 @@ func validateImmutableProperties(
 	return errs
 }
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, sub *v1alpha1.Subscription) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+	errs.Add(admission.CompileAndValidateTemplate(ctx, sub))
 	if errs.IsSevere() {
-		return errs
-	}
-
-	sub, ok := obj.(core.SubscriptionObject)
-	if !ok {
 		return errs
 	}
 
