@@ -1,0 +1,18 @@
+{
+  "apiVersion": "gravitee.io/v1alpha1",
+  "kind": "PortalLink",
+  "metadata": {
+    "name": "my-portal-link",
+    "namespace": "default"
+  },
+  "spec": {
+    "name": "My Link",
+    "href": "https://example.com",
+    "location": "/projects/alpha",
+    "order": 1,
+    "portalRef": {
+      "name": "my-portal",
+      "namespace": "default"
+    }
+  }
+}
