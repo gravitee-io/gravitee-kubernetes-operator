@@ -17,27 +17,23 @@ package resource
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, res *v1alpha1.ApiResource) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	// Should be the first validation, it will also compile the templates internally
-	tmpErr := admission.CompileAndValidateTemplate(ctx, obj)
+	tmpErr := admission.CompileAndValidateTemplate(ctx, res)
 	if tmpErr != nil {
 		errs.Add(tmpErr)
 		return errs
 	}
 
-	if res, ok := obj.(core.ResourceModel); ok {
-		return ValidateModel(ctx, res)
-	}
-	return errors.NewAdmissionErrors()
+	return ValidateModel(ctx, res)
 }
 
 func ValidateModel(ctx context.Context, res core.ResourceModel) *errors.AdmissionErrors {

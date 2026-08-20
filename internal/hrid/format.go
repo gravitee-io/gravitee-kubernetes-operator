@@ -38,8 +38,7 @@ func NameToValidHRIDPointer(s *string) *string {
 	if s == nil {
 		return nil
 	}
-	hrid := NameToValidHRID(*s)
-	return &hrid
+	return new(NameToValidHRID(*s))
 }
 
 // ToHRID convert a namespaced name to a valid HRID.
