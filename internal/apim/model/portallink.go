@@ -14,7 +14,9 @@
 
 package model
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallink"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallink"
+)
 
 type PortalLinkDTO struct {
 	HRID     string `json:"hrid,omitempty"`
@@ -27,4 +29,11 @@ type PortalLinkDTO struct {
 type PortalLinkState struct {
 	PortalLinkDTO     `json:",omitempty"`
 	portallink.Status `json:",omitempty"`
+}
+
+// ToPortalLinkDTO converts a PortalLink CRD to a PortalLinkDTO.
+func ToPortalLinkDTO(crd portallink.Type, hrid string) PortalLinkDTO {
+	dto := mapViaJSON[PortalLinkDTO](crd)
+	dto.HRID = hrid
+	return dto
 }
