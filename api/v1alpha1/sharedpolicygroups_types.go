@@ -122,7 +122,7 @@ func (s *SharedPolicyGroup) PopulateIDs(_ core.ContextModel, automationAPiManage
 	if s.Status.CrossID != "" {
 		s.Spec.CrossID = &s.Status.CrossID
 	} else {
-		s.Spec.CrossID = utils.ToReference(string(s.UID))
+		s.Spec.CrossID = new(string(s.UID))
 	}
 }
 

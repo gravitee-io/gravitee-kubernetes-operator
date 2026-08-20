@@ -139,6 +139,11 @@ const (
 	ApiV4MCPProxy                      = "apim/api_definition/v4/api-v4-mcp-proxy.yml"
 	ApiV4A2AProxy                      = "apim/api_definition/v4/api-v4-a2a-proxy.yml"
 	ApiV4WithPlanPagesNonHridNames     = "apim/api_definition/v4/api-v4-with-jwt-plan-pages-non-hrid-names.yml"
+	ApiV4ProxyDriftDefaultsFile        = "apim/api_definition/v4/api-v4-proxy-drift-only-defaults.yml"
+	ApiV4ProxyDriftFullFile            = "apim/api_definition/v4/api-v4-proxy-drift-full.yml"
+	ApiV4MessageDriftMinimalFile       = "apim/api_definition/v4/api-v4-message-drift-minimal.yml"
+	ApiV4MessageDriftFullFile          = "apim/api_definition/v4/api-v4-message-drift-full.yml"
+	ApiV4NativeDriftFullFile           = "apim/api_definition/v4/api-v4-native-drift-full.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"
@@ -151,6 +156,7 @@ const (
 	ApiAsIngressTemplate       = "ingress/ingress-api-template.yml"
 
 	Application                    = "apim/application/application.yml"
+	ApplicationDriftFull           = "apim/application/application-drift-full.yml"
 	ApplicationWithClientIDFile    = "apim/application/application-with-client-id.yml"
 	ApplicationWithClientCertsRefs = "apim/application/application-with-client-certs-refs.yml"
 	ClientCertSecretFile           = "apim/application/client-cert-secret.yml"
@@ -165,17 +171,25 @@ const (
 	DictionaryManualFile  = "apim/dictionary/dictionary-manual.yml"
 	DictionaryDynamicFile = "apim/dictionary/dictionary-dynamic.yml"
 
-	PortalFile          = "apim/portal/portal.yml"
-	PortalStructureFile = "apim/portal/portal-structure.yml"
+	PortalFile             = "apim/portal/portal.yml"
+	PortalDriftMinimalFile = "apim/portal/portal-drift-minimal.yml"
+	PortalDriftFullFile    = "apim/portal/portal-drift-full.yml"
+	PortalFileDeprecated   = "apim/portal/portal-deprecated.yml"
 
-	PortalListingFile = "apim/portal/portal-listing.yml"
+	PortalListingFile             = "apim/portal/portal-listing.yml"
+	PortalListingDriftMinimalFile = "apim/portal/portal-listing-drift-minimal.yml"
+	PortalListingDriftFullFile    = "apim/portal/portal-listing-drift-full.yml"
 
 	DocumentationPortalFile          = "apim/portal/documentation-portal.yml"
 	DocumentationPortalHomepageFile  = "apim/portal/documentation-portal-homepage.yml"
 	DocumentationPortalTopNavbarFile = "apim/portal/documentation-portal-top-navbar.yml"
 	DocumentationApiFile             = "apim/portal/documentation-api.yml"
+	DocumentationDriftMinimalFile    = "apim/portal/documentation-drift-minimal.yml"
+	DocumentationDriftFullFile       = "apim/portal/documentation-drift-full.yml"
 
-    PortalLinkFile                   = "apim/portal/portal-link.yml"
+	PortalLinkFile             = "apim/portal/portal-link.yml"
+	PortalLinkDriftMinimalFile = "apim/portal/portal-link-drift-minimal.yml"
+	PortalLinkDriftFullFile    = "apim/portal/portal-link-drift-full.yml"
 
 	NotificationNoGroupFile   = "apim/notification/notification-no-group.yml"
 	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"

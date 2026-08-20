@@ -18,6 +18,7 @@ import (
 	"context"
 
 	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallisting"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -32,17 +33,24 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 	admissionCtrl := adm.AdmissionCtrl{}
 
 	It("should return severe error when portalRef is changed", func() {
-		listing := fixture.
+		fixtures := fixture.
 			Builder().
+			WithPortalListing(constants.ContextWithCredentialsFile).
+			WithPortalListing(constants.PortalFile).
+			WithPortalListing(constants.ApiV4).
 			WithPortalListing(constants.PortalListingFile).
 			Build()
 
-		updated := listing.PortalListing.DeepCopy()
+		updated := fixtures.PortalListing.DeepCopy()
 		updated.Spec.Portal.Name += "-repointed"
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, listing.PortalListing, updated)
-			return assert.NotNil("admission error", err)
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.PortalListing, updated)
+			return assert.SevereError(
+				errors.NewSeveref("portalRef is immutable. Detected change from [%s] to [%s]",
+					fixtures.PortalListing.Spec.GetPortalRef(),
+					updated.Spec.GetPortalRef()),
+				err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 })

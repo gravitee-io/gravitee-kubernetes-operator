@@ -29,57 +29,55 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if spg, ok := obj.(*v1alpha1.SharedPolicyGroup); ok {
-		// Should be the first validation, it will also compile the templates internally
-		errs.Add(admission.CompileAndValidateTemplate(ctx, spg))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.Add(ctxref.Validate(ctx, spg))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.MergeWith(validateDryRun(ctx, spg))
+	// Should be the first validation, it will also compile the templates internally
+	errs.Add(admission.CompileAndValidateTemplate(ctx, spg))
+	if errs.IsSevere() {
+		return errs
 	}
+	errs.Add(ctxref.Validate(ctx, spg))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateDryRun(ctx, spg))
 	return errs
 }
 
 func validateUpdate(
 	ctx context.Context,
-	oldObj runtime.Object,
-	newObj runtime.Object,
+	oldSpg *v1alpha1.SharedPolicyGroup,
+	newSpg *v1alpha1.SharedPolicyGroup,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	oldSpg, ook := oldObj.(*v1alpha1.SharedPolicyGroup)
-	newSpg, nok := newObj.(*v1alpha1.SharedPolicyGroup)
-	if ook && nok {
-		if newSpg.IsBeingDeleted() {
-			return errs
-		}
-
-		// Should be the first validation, it will also compile the templates internally
-		errs.Add(admission.CompileAndValidateTemplate(ctx, newSpg))
-		if errs.IsSevere() {
-			return errs
-		}
-
-		errs.Add(ctxref.Validate(ctx, newSpg))
-		if errs.IsSevere() {
-			return errs
-		}
-
-		errs.Add(validateImmutableFields(ctx, oldSpg, newSpg))
-		if errs.IsSevere() {
-			return errs
-		}
-
-		errs.MergeWith(validateDryRun(ctx, newSpg))
+	if newSpg.IsBeingDeleted() {
+		return errs
 	}
+
+	// Should be the first validation, it will also compile the templates internally
+	errs.Add(admission.CompileAndValidateTemplate(ctx, newSpg))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(ctxref.Validate(ctx, newSpg))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(validateImmutableFields(ctx, oldSpg, newSpg))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateDryRun(ctx, newSpg))
+	if errs.IsSevere() {
+		return errs
+	}
+	mergeDriftValidation(ctx, oldSpg, newSpg, errs)
+
 	return errs
 }
 
@@ -111,10 +109,10 @@ func validateImmutableFields(_ context.Context, oldSpg, newSpg *v1alpha1.SharedP
 	return nil
 }
 
-func validateDryRun(ctx context.Context, spg runtime.Object) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp, _ := spg.DeepCopyObject().(*v1alpha1.SharedPolicyGroup)
+	cp := spg.DeepCopy()
 
 	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
@@ -140,9 +138,8 @@ func validateDryRun(ctx context.Context, spg runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
-func validateDelete(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateDelete(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	spg, _ := obj.(*v1alpha1.SharedPolicyGroup)
 
 	if err := search.AssertNoSharedPolicyGroupRef(ctx, spg); err != nil {
 		errs.AddSevere(err.Error())

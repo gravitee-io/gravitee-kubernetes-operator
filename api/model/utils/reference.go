@@ -18,10 +18,6 @@ package utils
 
 import "golang.org/x/exp/constraints"
 
-func ToReference[T any](t T) *T {
-	return &t
-}
-
 func ToStringValue(s *string) string {
 	if s == nil {
 		return ""
@@ -36,4 +32,11 @@ func ToNumberValue[T constraints.Float | constraints.Integer | constraints.Unsig
 	}
 
 	return *t
+}
+
+func SafeDereference[T any](v *T) T {
+	if v == nil {
+		v = new(T)
+	}
+	return *v
 }

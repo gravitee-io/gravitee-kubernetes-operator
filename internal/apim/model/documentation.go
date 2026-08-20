@@ -16,6 +16,8 @@ package model
 
 import (
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 // DocumentationDTO is the automation API wire representation of a Documentation
@@ -29,10 +31,16 @@ type DocumentationDTO struct {
 	Location string                 `json:"location,omitempty"`
 	Order    *int32                 `json:"order,omitempty"`
 	// Unset is omitted so that APIM applies its own TOP_NAVBAR default.
-	Area documentation.PageArea `json:"area,omitempty"`
+	Area documentation.PageArea `json:"area,omitempty" drift:"ignore-remote:TOP_NAVBAR"`
 }
 
 type DocumentationState struct {
 	DocumentationDTO     `json:",omitempty"`
 	documentation.Status `json:",omitempty"`
+}
+
+func ToDocumentationDTO(crd *v1alpha1.Documentation) DocumentationDTO {
+	dto := mapViaJSON[DocumentationDTO](crd.Spec.Type)
+	dto.HRID = refs.NewNamespacedNameFromObject(crd).HRID()
+	return dto
 }

@@ -16,6 +16,7 @@ package fixture
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -276,6 +277,18 @@ func setupAPIv4(obj *Objects, apiV4 **v1alpha1.ApiV4Definition, suffix string) {
 	}
 
 	randomizeAPIv4Paths(obj.APIv4, suffix)
+
+	randomizeNativePlanPorts(obj.APIv4)
+}
+
+func randomizeNativePlanPorts(api *v1alpha1.ApiV4Definition) {
+	if api.Spec.Plans != nil && api.Spec.Type == "NATIVE" {
+		for _, v := range *api.Spec.Plans {
+			v.BootstrapPort = new(rand.Intn(65535))
+			v.BrokerRangeStart = new(*v.BootstrapPort + 1)
+			v.BrokerRangeEnd = new(*v.BootstrapPort + 3)
+		}
+	}
 }
 
 func setupAPI(obj *Objects, api **v1alpha1.ApiDefinition, suffix string) {

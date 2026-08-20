@@ -1,0 +1,165 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: api-v4-proxy-drift-full
+spec:
+  contextRef:
+    name: "dev-ctx"
+  name: "api-v4-proxy-drift-full"
+  description: "V4 Proxy API with extended fields for drift admission tests"
+  version: "1.0"
+  type: PROXY
+  state: STARTED
+  allowedInApiProducts: true
+  allowMultiJwtOauth2Subscriptions: true
+  properties:
+    - key: owner
+      value: gko
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/api-v4-proxy-drift-defaults"
+      entrypoints:
+        - type: http-proxy
+  endpointGroups:
+    - name: Default HTTP proxy group
+      type: http-proxy
+      sharedConfiguration:
+        proxy:
+          enabled: true
+      endpoints:
+        - name: Default HTTP proxy
+          type: http-proxy
+          inheritConfiguration: true
+          configuration:
+            target: https://api.gravitee.io/echo
+          secondary: false
+        - name: Backup HTTP proxy
+          type: http-proxy
+          inheritConfiguration: true
+          configuration:
+            target: https://api.gravitee.io/echo/2
+          secondary: true
+      loadBalancer:
+        type: ROUND_ROBIN
+  flowExecution:
+    matchRequired: false
+  flows:
+    - name: default
+      enabled: true
+      selectors:
+        - type: HTTP
+      request:
+        - name: Rate Limit
+          enabled: true
+          policy: rate-limit
+          configuration:
+            async: false
+            addHeaders: true
+            rate:
+              useKeyOnly: false
+              periodTime: 100
+              limit: 10000
+              periodTimeUnit: MINUTES
+              key: ""
+  metadata:
+    - key: "build-version"
+      name: "build-version"
+      format: "STRING"
+      value: "0.0.1"
+  pages:
+    markdowns-folder:
+      name: markdowns
+      type: FOLDER
+      published: true
+    markdown:
+      name: "hello-markdown"
+      type: MARKDOWN
+      parent: markdowns-folder
+      content: |
+        Hello from proxy API drift test.
+    swagger:
+      name: "pet-store"
+      type: SWAGGER
+      parent: markdowns-folder
+      source:
+        type: "http-fetcher"
+        configuration:
+          url: https://petstore.swagger.io/v2/swagger.json
+          autoFetch: true
+          fetchCron: "*/10 * * * * *"
+          useSystemProxy: false
+  plans:
+    ApiKeys:
+      name: "Api Key plan"
+      description: "This plan requires an API Key to be set in the request header"
+      security:
+        type: "API_KEY"
+      flows:
+        - name: default
+          enabled: true
+          selectors:
+            - type: HTTP
+    KeyLess:
+      name: "Free plan"
+      description: "This plan does not require any authentication"
+      security:
+        type: "KEY_LESS"
+      flows:
+        - name: default
+          enabled: true
+          selectors:
+            - type: HTTP
+          request:
+            - name: Rate Limit
+              description: k8s rate limit
+              enabled: true
+              policy: rate-limit
+              configuration:
+                async: false
+                addHeaders: true
+                rate:
+                  useKeyOnly: false
+                  periodTime: 100
+                  limit: 10000
+                  periodTimeUnit: MINUTES
+                  key: ""
+  lifecycleState: PUBLISHED
+  analytics:
+    enabled: true
+    otelLogs: {}
+    logging:
+      mode:
+        endpoint: true
+        entrypoint: true
+      content:
+        headers: true
+        payload: true
+        messageHeaders: false
+        messagePayload: false
+        messageMetadata: false
+      phase:
+        request: true
+        response: true
+    tracing: {}
+  failover:
+    enabled: true
+  responseTemplates:
+    CORS_PREFLIGHT_FAILED:
+      "*/*":
+        propagateErrorKeyToLogs: true

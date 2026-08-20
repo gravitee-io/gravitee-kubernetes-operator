@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AI Agent Context
 
 @.agent/rules/go-standards.md
 @.agent/rules/operator-standards.md
@@ -23,6 +23,10 @@ make manifests                 # Generate CRD manifests into helm/gko/crds/gravi
 # Lint
 make lint-fix                  # Auto-fix lint issues + add license headers
 make add-license               # Add Apache 2.0 license headers to all Go files
+make lint-commits              # Lint HEAD commit message (commitlint)
+# Lint every commit on the branch (same rules as CI `job-lint-commits`)
+npx --yes -p @commitlint/cli -p @commitlint/config-conventional \
+  commitlint --from origin/master
 
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
@@ -66,7 +70,74 @@ Controllers use a **watch system** (`internal/watch/`) to react to changes in re
 
 ### Admission Webhooks (internal/admission/)
 
-Validation and mutation webhooks organized by resource type (`api/v2/`, `api/v4/`, `application/`, `mctx/`, `subscription/`, `group/`, `policygroups/`). Each has a `ctrl.go` (webhook handler) and `validate.go`.
+Validation and mutation webhooks organized by resource type (`api/v2/`, `api/v4/`, `application/`, `mctx/`, `subscription/`, `group/`, `policygroups/`). Each has a `ctrl.go` (webhook handler) and `validate.go`. Controllers implement generic `admission.Validator[T]` / `admission.Defaulter[T]`; private `validateCreate` / `validateUpdate` / `validateDelete` take the concrete CRD type (e.g. `*v1alpha1.Application`) so they do not type-assert from `runtime.Object`.
+
+### Drift detection
+
+Drift detection rejects admission **updates** when APIM was changed outside the operator while the CRD still reflects the old desired state. It is disabled globally by default (`ENABLE_DRIFT_DETECTION`, Helm `manager.driftDetection.enabled`) and can be overridden per resource with the `gravitee.io/drift-detection` annotation (`true` / `false`).
+
+Two packages are involved:
+
+| Package | Role |
+|---------|------|
+| `internal/drift/` | Comparison engine: struct walk, equivalence registry, `Detect`, `Merge`, `Result.String` |
+| `internal/admission/drift/` | Admission glue: template compile, ref resolution, remote fetch, DTO mapping |
+
+`drift.Init()` must run at startup (`main.go`) and in unit/integration suites that exercise drift (`BeforeSuite`).
+
+#### Adding drift detection to a resource
+
+Hook into `validateUpdate` in `internal/admission/<resource>/validate.go`, after existing validations and before returning errors:
+
+```go
+errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemote, drift.MapDTO(toDTO)))
+// or, when the APIM client comes from a related resource (e.g. subscription uses the application's context):
+errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldObj, newObj, resolveContext, resolveRefs, getRemote, dtoMapper))
+```
+
+Provide four callbacks:
+
+1. **`RefResolver`** (`func(ctx context.Context, obj *v1alpha1.MyResource) error`) — resolve inlined references (Secrets, ConfigMaps, templates) on **both** old and new deep copies before comparison. Return a non-nil error to abort with a severe admission error (e.g. application client-certificate resolution in `resolveAppRefs`).
+2. **`RemoteObjectGetter`** (`func(*apim.APIM, *v1alpha1.MyResource, *errors.AdmissionErrors) any`) — fetch the live APIM object. Branch on `k8s.IsAutomationAPIManaged` (HRID + Automation API) vs legacy (UUID + Management API). Report fetch failures via `errs.AddSeveref`.
+3. **`DTOMapper`** — map each CRD copy to the **same struct type** returned by the remote getter. Use `drift.MapDTO(func(cr *v1alpha1.MyResource) model.MyDTO { ... })` for type safety. The DTO must represent what is (or would be) sent to APIM, not the raw CRD spec.
+4. **`ContextResolver`** (only for `ValidateDriftWithContext`) — when the CRD has no `ManagementContext` ref of its own but depends on a related resource's context (subscription → application).
+
+Reuse dependencies already resolved in `validateUpdate` (API, application, plan, etc.) inside closures passed to `getRemote` / `dtoMapper` — do not resolve them again (nil-deref risk).
+
+#### DTO design
+
+Define comparison DTOs in `internal/apim/model/` (e.g. `ApplicationDTO`, `SubscriptionDTO`). Tag fields with `drift:"<equivalence>"` struct tags:
+
+| Tag | Use for |
+|-----|---------|
+| `ignore` | Server-managed or identity fields not in the CRD payload (`id`, `hrid`, `status` on applications) |
+| `empty-is-nil` | Optional slices, maps, pointers, zero-value structs |
+| `trimmed` | Strings with insignificant whitespace |
+| `rfc3339` | Date-time strings (timezone-tolerant) |
+| `unstructured` | `GenericStringMap` / `unstructured.Unstructured` JSON blobs |
+
+Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of the **spec payload**; if APIM returns a field the DTO mapper never sets and both sides end up empty, comparison is a no-op — explicit `ignore` is optional belt-and-suspenders.
+
+Add drift tags on nested `api/model/` types when the same struct is embedded in the DTO (e.g. TLS certificate fields on `application.ClientCertificate`).
+
+DTO Mapping is done the `api/model/` package.
+
+#### Merge semantics (why both old and new are compared)
+
+`ValidateDriftWithContext` compares **old CRD → remote** and **new CRD → remote**, then `drift.Merge`:
+
+- Remote-only change → **drift** (reject)
+- CRD update that realigns with remote → **ok** (allow)
+- Unchanged CRD, remote changed → **drift** (reject)
+
+See `internal/drift/types.go` (`Merge` comment) and `internal/drift/doc.go`.
+
+#### Testing
+
+- **Unit** (`test/unit/drift/`): table-driven `drift.Detect` tests for DTO equivalence / tag behaviour. Do not re-test the framework; test your DTO tags and `ToDTO()` parity. Call `drift.Init()` in the suite `BeforeSuite`.
+- **Integration** (`test/integration/admission/<resource>/`): apply fixtures, mutate APIM out-of-band, call `AdmissionCtrl.ValidateUpdate`, assert with `test/internal/integration/assert.DriftDetected`. Call `drift.Init()` in `SynchronizedBeforeSuite`. Use `labels.WithContext` when a `ManagementContext` is required.
+
+Reference implementations: `internal/admission/application/validate.go`, `internal/admission/subscription/validate.go`, `test/unit/drift/application_detect_test.go`, `test/unit/drift/subscription_detect_test.go`.
 
 ### Internal Packages (internal/)
 
@@ -120,7 +191,7 @@ a reviewed plan in `plans/` before any implementation.
 
 ## Conventions
 
-- **Commit style:** Conventional Commits (enforced by commitlint)
+- **Commit style:** Conventional Commits (enforced by commitlint via `commitlint.config.js`). Body lines must be ≤ 120 characters (`body-max-line-length`). After rewriting history, lint the whole branch before finishing: `npx --yes -p @commitlint/cli -p @commitlint/config-conventional commitlint --from origin/master`
 - **License headers:** Apache 2.0 on all `.go` files (enforced by `addlicense`, template in `LICENSE_TEMPLATE.txt`)
 - **Linting:** `go vet` + `revive` + `staticcheck` (run in parallel via `make -j4 lint-sources`). Config in `.revive.toml`. Max cyclomatic complexity 30. Coding standards in `.agent/rules/`
 - **Naming:** Lint excludes `Api/Url/Http` vs `API/URL/HTTP` casing warnings

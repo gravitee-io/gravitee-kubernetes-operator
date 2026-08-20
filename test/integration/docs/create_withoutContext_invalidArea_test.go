@@ -18,7 +18,6 @@ import (
 	"context"
 
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -41,7 +40,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 			Build().
 			Documentation
 
-		doc.Spec.Area = utils.ToReference(documentation.PageArea("INVALID"))
+		doc.Spec.Area = new(documentation.PageArea("INVALID"))
 
 		err := manager.Client().Create(ctx, doc)
 

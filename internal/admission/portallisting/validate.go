@@ -23,20 +23,13 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+	errs.Add(admission.CompileAndValidateTemplate(ctx, listing))
 	if errs.IsSevere() {
-		return errs
-	}
-
-	listing, ok := obj.(*v1alpha1.PortalListing)
-	if !ok {
-		errs.AddSevere("can't cast to *v1alpha1.PortalListing")
 		return errs
 	}
 
@@ -45,48 +38,47 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, listing))
-	return errs
-}
-
-func validateUpdate(ctx context.Context, oldObj, newObj runtime.Object) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	newListing, nok := newObj.(*v1alpha1.PortalListing)
-	oldListing, ook := oldObj.(*v1alpha1.PortalListing)
-	if !nok || !ook {
-		errs.AddSevere("can't cast to *v1alpha1.PortalListing")
+	prtl := validatePortal(ctx, listing, errs)
+	if errs.IsSevere() {
 		return errs
 	}
 
-	// Compare user-declared (raw) refs before any template compilation mutates newObj,
-	// otherwise an unchanged templated portalRef would look like a change.
+	errs.MergeWith(validateApis(ctx, listing, prtl))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateDryRun(ctx, listing, prtl))
+	return errs
+}
+
+func validateUpdate(ctx context.Context, oldListing, newListing *v1alpha1.PortalListing) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	errs.MergeWith(validateImmutableFields(oldListing, newListing))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// validateCreate compiles templates, resolve portal and runs the dry-run validation.
+	errs.MergeWith(validateCreate(ctx, newListing))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	mergeDriftValidation(ctx, oldListing, newListing, errs)
+	return errs
+}
+
+func validateImmutableFields(oldListing *v1alpha1.PortalListing, newListing *v1alpha1.PortalListing) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
 	if newListing.Spec.Portal.String() != oldListing.Spec.Portal.String() {
 		errs.AddSeveref(
 			"portalRef is immutable. Detected change from [%s] to [%s]",
 			oldListing.Spec.Portal.String(), newListing.Spec.Portal.String(),
 		)
-		return errs
 	}
-
-	// validateCreate compiles templates and runs kind/dry-run validation.
-	return validateCreate(ctx, newObj)
-}
-
-// sameContext reports whether two management context refs point to the same object.
-// Each ref's empty namespace defaults to its own owning resource's namespace
-// (portalNs / apiNs), since a contextRef without a namespace is resolved relative to
-// the resource that declares it — not to the listing.
-func sameContext(portalCtx core.ObjectRef, portalNs string, apiCtx core.ObjectRef, apiNs string) bool {
-	pNs := portalCtx.GetNamespace()
-	if pNs == "" {
-		pNs = portalNs
-	}
-	aNs := apiCtx.GetNamespace()
-	if aNs == "" {
-		aNs = apiNs
-	}
-	return portalCtx.GetName() == apiCtx.GetName() && pNs == aNs
+	return errs
 }
 
 // validateApiKinds enforces that the next-gen portal only lists v4 APIs.
@@ -107,56 +99,9 @@ func validateApiKinds(listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
 	return errs
 }
 
-func validateDryRun(ctx context.Context, listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, listing *v1alpha1.PortalListing, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-
 	cp := listing.DeepCopy()
-	ns := cp.GetNamespace()
-
-	prtl, err := dynamic.ResolvePortal(ctx, cp.GetPortalRef(), ns)
-	if err != nil {
-		errs.AddSeveref(
-			"portal listing [%s] references portal [%v] that can't be resolved",
-			cp.GetName(), cp.GetPortalRef(),
-		)
-		return errs
-	}
-
-	if !prtl.HasContext() {
-		errs.AddSeveref(
-			"referenced portal [%v] has no management context (spec.contextRef)",
-			cp.GetPortalRef(),
-		)
-		return errs
-	}
-
-	portalCtx := prtl.ContextRef()
-	for _, apiRef := range cp.GetApiRefs() {
-		api, err := dynamic.ResolveAPI(ctx, apiRef, ns)
-		if err != nil {
-			errs.AddSeveref(
-				"portal listing [%s] references API [%v] that can't be resolved",
-				cp.GetName(), apiRef,
-			)
-			continue
-		}
-		if !api.HasContext() {
-			errs.AddSeveref(
-				"API [%s] has no management context (spec.contextRef) and cannot be published to a portal",
-				apiRef.GetName(),
-			)
-			continue
-		}
-		if !sameContext(portalCtx, prtl.GetNamespace(), api.ContextRef(), api.GetNamespace()) {
-			errs.AddSeveref(
-				"API [%s] management context [%v] must match the portal's management context [%v]",
-				apiRef.GetName(), api.ContextRef(), portalCtx,
-			)
-		}
-	}
-	if errs.IsSevere() {
-		return errs
-	}
 
 	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
 	if err != nil {
@@ -179,4 +124,71 @@ func validateDryRun(ctx context.Context, listing *v1alpha1.PortalListing) *error
 	}
 
 	return errs
+}
+
+func validateApis(ctx context.Context, listing *v1alpha1.PortalListing, portal *v1alpha1.Portal) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	ns := listing.GetNamespace()
+	for _, apiRef := range listing.GetApiRefs() {
+		api, err := dynamic.ResolveAPI(ctx, apiRef, ns)
+		if err != nil {
+			errs.AddSeveref(
+				"portal listing [%s] references API [%v] that can't be resolved",
+				listing.GetName(), apiRef,
+			)
+			continue
+		}
+		if !api.HasContext() {
+			errs.AddSeveref(
+				"API [%s] has no management context (spec.contextRef) and cannot be published to a portal",
+				apiRef.GetName(),
+			)
+			continue
+		}
+		if !sameContext(portal.ContextRef(), portal.GetNamespace(), api.ContextRef(), api.GetNamespace()) {
+			errs.AddSeveref(
+				"API [%s] management context [%v] must match the portal's management context [%v]",
+				apiRef.String(), api.ContextRef(), portal.ContextRef(),
+			)
+		}
+	}
+	return errs
+}
+
+func validatePortal(ctx context.Context, listing *v1alpha1.PortalListing, errs *errors.AdmissionErrors) *v1alpha1.Portal {
+	ns := listing.GetNamespace()
+	prtl, err := dynamic.ResolvePortal(ctx, listing.GetPortalRef(), ns)
+	if err != nil {
+		errs.AddSeveref(
+			"portal listing [%s] references portal [%v] that can't be resolved",
+			listing.GetName(), listing.GetPortalRef(),
+		)
+		return nil
+	}
+
+	if !prtl.HasContext() {
+		errs.AddSeveref(
+			"referenced portal [%v] has no management context (spec.contextRef)",
+			listing.GetPortalRef(),
+		)
+		return nil
+	}
+	return prtl
+}
+
+// sameContext reports whether two management context refs point to the same object.
+// Each ref's empty namespace defaults to its own owning resource's namespace
+// (portalNs / apiNs), since a contextRef without a namespace is resolved relative to
+// the resource that declares it — not to the listing.
+func sameContext(portalCtx core.ObjectRef, portalNs string, apiCtx core.ObjectRef, apiNs string) bool {
+	//pNs := portalCtx.GetNamespace()
+	//if pNs == "" {
+	//	pNs = portalNs
+	//}
+	//aNs := apiCtx.GetNamespace()
+	//if aNs == "" {
+	//	aNs = apiNs
+	//}
+	//return portalCtx.GetName() == apiCtx.GetName() && pNs == aNs
+	return portalCtx.String() == apiCtx.String()
 }

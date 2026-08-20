@@ -35,7 +35,7 @@ var _ = Describe("Delete parent guard", labels.WithContext, func() {
 	It("should block Portal deletion while a documentation references it", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithDocumentation(constants.DocumentationPortalFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().

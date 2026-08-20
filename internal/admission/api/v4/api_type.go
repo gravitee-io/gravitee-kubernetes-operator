@@ -15,11 +15,11 @@
 package v4
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func validateApiType(oldApi, newAPI core.ApiDefinitionObject) *errors.AdmissionError {
+func validateApiType(oldApi, newAPI *v1alpha1.ApiV4Definition) *errors.AdmissionError {
 	if newAPI.GetType() != oldApi.GetType() {
 		return errors.NewSeveref("it is not possible to change API Type. Old type '%s', "+
 			"new type '%s'", oldApi.GetType(), newAPI.GetType())

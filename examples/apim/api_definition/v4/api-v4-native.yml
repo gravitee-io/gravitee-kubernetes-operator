@@ -31,7 +31,6 @@ spec:
       port: 9092
       entrypoints:
         - type: native-kafka
-          qos: AUTO
   endpointGroups:
     - name: Default Native endpoint group
       type: native-kafka

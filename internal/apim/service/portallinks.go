@@ -58,7 +58,7 @@ func (svc *Links) createOrUpdate(
 		WithPath("links").
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	dto := toPortalLinkDTO(link)
+	dto := model.ToPortalLinkDTO(link.Spec.Type, refs.NewNamespacedNameFromObject(link).HRID())
 	importStatus := &portallink.Status{}
 
 	if err := svc.HTTP.Put(url.String(), dto, &importStatus); err != nil {
@@ -80,7 +80,6 @@ func (svc *Links) Delete(link *v1alpha1.PortalLink, prtl *v1alpha1.Portal) error
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-// GetByHRID For test purposes only.
 func (svc *Links) GetByHRID(portalHrid, linkHrid string) (*model.PortalLinkState, error) {
 	url := svc.AutomationTarget("portals").
 		WithPath(portalHrid).
@@ -91,18 +90,4 @@ func (svc *Links) GetByHRID(portalHrid, linkHrid string) (*model.PortalLinkState
 		return nil, err
 	}
 	return link, nil
-}
-
-func toPortalLinkDTO(link *v1alpha1.PortalLink) *model.PortalLinkDTO {
-	dto := &model.PortalLinkDTO{
-		HRID: refs.NewNamespacedNameFromObject(link).HRID(),
-		Name: link.Spec.Name,
-		Href: link.Spec.Href,
-	}
-	if link.Spec.Location != nil {
-		dto.Location = *link.Spec.Location
-	}
-	dto.Order = link.Spec.Order
-
-	return dto
 }

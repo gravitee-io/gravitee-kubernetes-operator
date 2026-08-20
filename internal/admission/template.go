@@ -19,16 +19,11 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CompileAndValidateTemplate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
-	o, ok := obj.(client.Object)
-	if !ok {
-		return errors.NewSeveref("unexpected object type %T", obj)
-	}
-	err := template.Compile(ctx, o, false)
+func CompileAndValidateTemplate(ctx context.Context, obj client.Object) *errors.AdmissionError {
+	err := template.Compile(ctx, obj, false)
 
 	if err != nil {
 		return errors.NewSeveref("%s", err.Error())
