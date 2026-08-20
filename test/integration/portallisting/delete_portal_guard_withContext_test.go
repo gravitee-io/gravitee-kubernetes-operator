@@ -36,7 +36,7 @@ var _ = Describe("Delete Portal guard", labels.WithContext, func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
 			WithAPIv4(constants.ApiV4WithContextFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithPortalListing(constants.PortalListingFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().

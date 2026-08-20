@@ -20,6 +20,7 @@ import (
 
 	prtlmodel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -38,6 +39,14 @@ func pathsOf(navigation []*prtlmodel.NavigationEntry) []string {
 	return paths
 }
 
+func pathsOfDTO(navigation []*model.NavigationEntryDTO) []string {
+	paths := make([]string, 0, len(navigation))
+	for _, entry := range navigation {
+		paths = append(paths, entry.Path)
+	}
+	return paths
+}
+
 var _ = Describe("Create", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
@@ -46,7 +55,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	It("should create portal in APIM and persist the top navbar structure in list order", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalStructureFile).
+			WithPortal(constants.PortalFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
@@ -73,14 +82,14 @@ var _ = Describe("Create", labels.WithContext, func() {
 			if prtl.Structure == nil {
 				return fmt.Errorf("expected portal structure to be set, got none")
 			}
-			return assert.ContainsInOrder("Portal top navbar", expectedPaths, pathsOf(prtl.Structure.TopNavbar))
+			return assert.ContainsInOrder("Portal top navbar", expectedPaths, pathsOfDTO(prtl.Structure.TopNavbar))
 		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
 	})
 
 	It("should create portal in APIM and persist navigation in list order", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
