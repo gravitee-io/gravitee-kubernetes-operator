@@ -19,7 +19,6 @@ import (
 
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -40,7 +39,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 	It("should update documentation location in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithDocumentation(constants.DocumentationPortalFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
@@ -65,7 +64,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("updating the documentation location to another portal navigation path")
 
 		updated := fixtures.Documentation.DeepCopy()
-		updated.Spec.Location = utils.ToReference(fixtures.GetNavigationRoot() + "/projects/beta")
+		updated.Spec.Location = new(fixtures.GetNavigationRoot() + "/projects/beta")
 
 		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
@@ -83,7 +82,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 	It("should update documentation area in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
+			WithPortal(constants.PortalFileDeprecated).
 			WithDocumentation(constants.DocumentationPortalFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
@@ -112,7 +111,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		// A homepage is not part of the navigation, so the location goes away
 		// along with the area change.
 		updated := fixtures.Documentation.DeepCopy()
-		updated.Spec.Area = utils.ToReference(documentation.Homepage)
+		updated.Spec.Area = new(documentation.Homepage)
 		updated.Spec.Location = nil
 
 		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())

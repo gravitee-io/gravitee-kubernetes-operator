@@ -21,16 +21,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	prtl, ok := obj.(*v1alpha1.Portal)
-	if !ok {
-		errs.AddSevere("can't cast to *v1alpha1.Portal")
-		return errs
-	}
 
 	errs.MergeWith(validateNavigation(prtl))
 	if errs.IsSevere() {

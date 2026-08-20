@@ -22,18 +22,15 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, group *v1alpha1.Group) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if group, ok := obj.(*v1alpha1.Group); ok {
-		errs.Add(ctxref.Validate(ctx, group))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.MergeWith(validateDryRun(ctx, group))
+	errs.Add(ctxref.Validate(ctx, group))
+	if errs.IsSevere() {
+		return errs
 	}
+	errs.MergeWith(validateDryRun(ctx, group))
 	return errs
 }
 

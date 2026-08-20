@@ -22,14 +22,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func Validate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
-	if ctxAware, ok := obj.(core.ContextAwareObject); ok {
-		if ctxAware.HasContext() {
-			return validateContextRefExists(ctx, ctxAware)
-		}
+func Validate(ctx context.Context, ctxAware core.ContextAwareObject) *errors.AdmissionError {
+	if ctxAware.HasContext() {
+		return validateContextRefExists(ctx, ctxAware)
 	}
 	return nil
 }

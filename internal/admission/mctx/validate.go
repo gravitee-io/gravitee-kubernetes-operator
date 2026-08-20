@@ -21,20 +21,16 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validateDelete(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateDelete(ctx context.Context, mCtx *v1alpha1.ManagementContext) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	mCtx, ok := obj.(core.ContextObject)
-	if !ok {
-		return errs
-	}
 
 	if err := search.AssertNoContextRef(ctx, mCtx); err != nil {
 		errs.AddSevere(err.Error())
@@ -43,22 +39,20 @@ func validateDelete(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
-func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, mCtx *v1alpha1.ManagementContext) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	// Should be the first validation, it will also compile the templates internally
-	tmpErr := admission.CompileAndValidateTemplate(ctx, obj)
+	tmpErr := admission.CompileAndValidateTemplate(ctx, mCtx)
 	if tmpErr != nil {
 		errs.Add(tmpErr)
 	}
 
-	if mCtx, ok := obj.(core.ContextObject); ok {
-		if !mCtx.HasCloud() || !mCtx.GetCloud().IsEnabled() {
-			errs.Add(validateRequiredField(mCtx))
-			errs.Add(validateSecretRef(ctx, mCtx))
-		}
-		errs.Add(validateContextIsAvailable(ctx, mCtx))
+	if !mCtx.HasCloud() || !mCtx.GetCloud().IsEnabled() {
+		errs.Add(validateRequiredField(mCtx))
+		errs.Add(validateSecretRef(ctx, mCtx))
 	}
+	errs.Add(validateContextIsAvailable(ctx, mCtx))
 
 	return errs
 }
