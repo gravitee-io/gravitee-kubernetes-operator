@@ -17,9 +17,16 @@ package drift
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
-const indentSpaces = 2
+const (
+	indentSpaces    = 2
+	maxDisplayRunes = 60
+	ellipsis        = "..."
+	propSuffix      = ": "
+	notEqOp         = " != "
+)
 
 func format(this *Result, b *strings.Builder, indent int) {
 	if len(this.children) > 0 {
@@ -33,12 +40,36 @@ func format(this *Result, b *strings.Builder, indent int) {
 }
 
 func formatValue(this *Result, b *strings.Builder, indent int) {
-	addIndent(b, indent)
-	if this.Index != nil {
-		b.WriteString(fmt.Sprintf("%s[%d]: %v != %v", this.Property, *this.Index, resolve(this.CRDValue), resolve(this.RemoteValue)))
-	} else {
-		b.WriteString(fmt.Sprintf("%s: %v != %v", this.Property, resolve(this.CRDValue), resolve(this.RemoteValue)))
+	if left, right, ok := stringPair(this.CRDValue, this.RemoteValue); ok && isMultiline(left, right) {
+		formatMultilineStrings(b, indent, propertyLabel(this), left, right)
+		writeReason(this, b)
+		b.WriteString("\n")
+		return
 	}
+	addIndent(b, indent)
+	b.WriteString(fmt.Sprintf("%s%s%v%s%v", propertyLabel(this), propSuffix, resolve(this.CRDValue), notEqOp, resolve(this.RemoteValue)))
+	writeReason(this, b)
+	b.WriteString("\n")
+}
+
+func propertyLabel(this *Result) string {
+	if this.Index != nil {
+		return fmt.Sprintf("%s[%d]", this.Property, *this.Index)
+	}
+	return this.Property
+}
+
+func stringPair(crd, remote any) (string, string, bool) {
+	left, lok := crd.(string)
+	right, rok := remote.(string)
+	return left, right, lok && rok
+}
+
+func isMultiline(left, right string) bool {
+	return strings.Contains(left, "\n") || strings.Contains(right, "\n")
+}
+
+func writeReason(this *Result, b *strings.Builder) {
 	switch r := this.Reason.(type) {
 	case string:
 		if r != "" {
@@ -48,7 +79,6 @@ func formatValue(this *Result, b *strings.Builder, indent int) {
 		b.WriteString(fmt.Sprintf(" (error: %s)", this.Reason))
 	default:
 	}
-	b.WriteString("\n")
 }
 
 func formatChildren(this *Result, b *strings.Builder, indent int) {
@@ -67,9 +97,54 @@ func formatChildren(this *Result, b *strings.Builder, indent int) {
 
 func resolve(v any) any {
 	if s, ok := v.(string); ok {
-		return fmt.Sprintf(`"%s"`, s)
+		return displayQuoted(s)
 	}
 	return v
+}
+
+func displayQuoted(s string) string {
+	visible, hidden := clipRunes(s)
+	if hidden == 0 {
+		return `"` + visible + `"`
+	}
+	return fmt.Sprintf(`"%s%s" (%s)`, visible, ellipsis, hiddenLabel(hidden))
+}
+
+func displayLine(s string) string {
+	visible, hidden := clipRunes(s)
+	if hidden == 0 {
+		return visible
+	}
+	return fmt.Sprintf("%s%s (%s)", visible, ellipsis, hiddenLabel(hidden))
+}
+
+func clipRunes(s string) (string, int) {
+	n := utf8.RuneCountInString(s)
+	if n <= maxDisplayRunes {
+		return s, 0
+	}
+	return takeRunes(s, maxDisplayRunes), n - maxDisplayRunes
+}
+
+func takeRunes(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+	i := 0
+	for idx := range s {
+		if i == n {
+			return s[:idx]
+		}
+		i++
+	}
+	return s
+}
+
+func hiddenLabel(n int) string {
+	if n == 1 {
+		return "1 char hidden"
+	}
+	return fmt.Sprintf("%d chars hidden", n)
 }
 
 func addIndent(b *strings.Builder, amount int) {
