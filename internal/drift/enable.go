@@ -30,12 +30,8 @@ type Predicate func(object runtime.Object) bool
 // unsupported predicate returns true if the object dpes not support drift detection.
 var unsupported []Predicate
 
-// disabled predicate returns true if the object does is disabled for drift detection (when no annotation is present).
-var disabled []Predicate
-
 func InitEnableCheck() {
 	unsupported = append(unsupported, isLegacyGroup)
-	disabled = append(disabled, portal, documentation, portalListing, portalLink)
 }
 
 func IsDriftEnabled(crd runtime.Object) bool {
@@ -55,12 +51,6 @@ func IsDriftEnabled(crd runtime.Object) bool {
 	} else {
 		log.Panicf("CRD Does not implement core.Object interface: %T", crd)
 	}
-	// no annotations: check if the CRD is disabled
-	for _, isDisabled := range disabled {
-		if isDisabled(crd) {
-			return false
-		}
-	}
 	return env.Config.DriftDetection
 }
 
@@ -74,24 +64,4 @@ func isLegacyGroup(obj runtime.Object) bool {
 	}
 	// not a group, pass
 	return false
-}
-
-func portal(obj runtime.Object) bool {
-	_, ok := obj.(*v1alpha1.Portal)
-	return ok
-}
-
-func documentation(obj runtime.Object) bool {
-	_, ok := obj.(*v1alpha1.Documentation)
-	return ok
-}
-
-func portalListing(obj runtime.Object) bool {
-	_, ok := obj.(*v1alpha1.PortalListing)
-	return ok
-}
-
-func portalLink(obj runtime.Object) bool {
-	_, ok := obj.(*v1alpha1.PortalLink)
-	return ok
 }
