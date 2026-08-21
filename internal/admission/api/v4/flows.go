@@ -76,6 +76,38 @@ func validateApiEndpointGroups(api *apiV4.Api) *errors.AdmissionErrors {
 		if eg.HttpClientOptions != nil {
 			errs.MergeWith(validateHttpClientOptions(eg.HttpClientOptions, eg.Name, api.Name))
 		}
+		errs.MergeWith(validateEndpointsInheritConfiguration(eg, api.Name))
+	}
+
+	return errs
+}
+
+// validateEndpointsInheritConfiguration rejects endpoints that set inheritConfiguration
+// to true while their EndpointGroup has no sharedConfiguration to inherit from
+func validateEndpointsInheritConfiguration(eg *apiV4.EndpointGroup, apiName string) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	hasSharedConfig := eg.SharedConfig != nil && len(eg.SharedConfig.Object) > 0
+
+	if hasSharedConfig {
+		return errs
+	}
+
+	for _, endpoint := range eg.Endpoints {
+		if !endpoint.Inherit {
+			continue
+		}
+
+		name := ""
+		if endpoint.Name != nil {
+			name = *endpoint.Name
+		}
+
+		errs.AddSeveref(
+			"Endpoint [%s] in EndpointGroup [%s] of API [%s] has inheritConfiguration set to true "+
+				"but the EndpointGroup does not define a sharedConfiguration to inherit from",
+			name, eg.Name, apiName,
+		)
 	}
 
 	return errs
