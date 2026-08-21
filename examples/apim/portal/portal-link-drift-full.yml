@@ -17,8 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: PortalLink
 metadata:
   name: default-portal-link
-  annotations:
-    gravitee.io/drift-detection: "true"
 spec:
   portalRef:
     name: default-portal

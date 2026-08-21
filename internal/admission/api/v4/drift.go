@@ -62,22 +62,20 @@ func toAPIV4DTO(api *v1alpha1.ApiV4Definition) model.APIV4DTO {
 	return model.ToAPIV4DTO(&api.Spec.Api)
 }
 
-func getRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition, errs *errors.AdmissionErrors) any {
+func getRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (any, error) {
 	if !k8s.IsAutomationAPIManaged(api) && api.Spec.ID != "" {
 		remote, err := apimClient.APIs.GetV4ByID(api.Spec.ID)
 		if err != nil {
-			errs.AddSeveref("cannot fetch API v4 during drift detection from ID %s: %s", api.Spec.ID, err.Error())
-			return nil
+			return nil, err
 		}
-		return model.ToAPIV4DTO(remote)
+		return model.ToAPIV4DTO(remote), nil
 	}
 	hrid := apiHRID(api)
 	remote, err := apimClient.APIs.GetV4ByHRID(hrid)
 	if err != nil {
-		errs.AddSeveref("cannot fetch API v4 during drift detection from HRID %s: %s", hrid, err.Error())
-		return nil
+		return nil, err
 	}
-	return *remote
+	return *remote, nil
 }
 
 func apiHRID(api *v1alpha1.ApiV4Definition) string {

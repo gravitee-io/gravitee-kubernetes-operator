@@ -43,12 +43,11 @@ func toPortalDTO(prtl *v1alpha1.Portal) model.PortalDTO {
 	return model.ToPortalDTO(prtl.Spec.Type, refs.NewNamespacedNameFromObject(prtl).HRID())
 }
 
-func getRemotePortal(apimClient *apim.APIM, prtl *v1alpha1.Portal, errs *errors.AdmissionErrors) any {
+func getRemotePortal(apimClient *apim.APIM, prtl *v1alpha1.Portal) (any, error) {
 	hrid := refs.NewNamespacedNameFromObject(prtl).HRID()
 	remote, err := apimClient.Portals.GetByHRID(hrid)
 	if err != nil {
-		errs.AddSeveref("cannot fetch Portal during drift detection from HRID %s: %s", hrid, err.Error())
-		return nil
+		return nil, err
 	}
-	return remote.PortalDTO
+	return remote.PortalDTO, nil
 }

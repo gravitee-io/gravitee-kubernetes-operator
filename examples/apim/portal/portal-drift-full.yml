@@ -17,8 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: Portal
 metadata:
   name: drift-full-portal
-  annotations:
-    gravitee.io/drift-detection: "true"
 spec:
   contextRef:
     name: "dev-ctx"

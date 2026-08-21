@@ -163,8 +163,17 @@ tests:
           path: data.ENABLE_TEMPLATING
           value: "true"
       - equal:
-          path: data.ENABLE_DRIFT_DETECTION
+          path: data.DRIFT_DETECTION_ENABLED
           value: "false"
+      - equal:
+          path: data.DRIFT_DETECTION_POLICY
+          value: deny
+      - equal:
+          path: data.DRIFT_DETECTION_ON_REMOTE_MISSING
+          value: deny
+      - equal:
+          path: data.DRIFT_DETECTION_FETCH_FAILURE_POLICY
+          value: deny
 
   - it: Should have drift detection enabled
     set:
@@ -175,5 +184,37 @@ tests:
       - hasDocuments:
           count: 1
       - equal:
-          path: data.ENABLE_DRIFT_DETECTION
+          path: data.DRIFT_DETECTION_ENABLED
           value: "true"
+      - equal:
+          path: data.DRIFT_DETECTION_POLICY
+          value: deny
+      - equal:
+          path: data.DRIFT_DETECTION_ON_REMOTE_MISSING
+          value: deny
+      - equal:
+          path: data.DRIFT_DETECTION_FETCH_FAILURE_POLICY
+          value: deny
+
+  - it: Should configure custom drift detection policies
+    set:
+      manager:
+        driftDetection:
+          enabled: true
+          policy: warn
+          onRemoteMissing:
+            policy: allow
+          fetchFailurePolicy: warn
+    asserts:
+      - equal:
+          path: data.DRIFT_DETECTION_ENABLED
+          value: "true"
+      - equal:
+          path: data.DRIFT_DETECTION_POLICY
+          value: warn
+      - equal:
+          path: data.DRIFT_DETECTION_ON_REMOTE_MISSING
+          value: allow
+      - equal:
+          path: data.DRIFT_DETECTION_FETCH_FAILURE_POLICY
+          value: warn

@@ -17,8 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: PortalListing
 metadata:
   name: drift-full-portal-listing
-  annotations:
-    gravitee.io/drift-detection: "true"
 spec:
   portalRef:
     name: drift-full-portal

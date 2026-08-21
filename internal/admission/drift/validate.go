@@ -16,10 +16,12 @@ package drift
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -27,9 +29,10 @@ import (
 // RefResolver is a function that resolves all references in the CRD and can add errors. Caller is due to check them.
 type RefResolver[T client.Object] func(ctx context.Context, obj T) error
 
-// RemoteObjectGetter is a function that returns the remote object that will be compared with the local ones;
-// it must make sure to use either Automation API or Management API.
-type RemoteObjectGetter[T client.Object] func(*apim.APIM, T, *errors.AdmissionErrors) any
+// RemoteObjectGetter fetches the remote object that will be compared with the local ones.
+// It must use either the Automation API or the Management API. Fetch failures (including HTTP 404)
+// are returned so the caller can apply drift policies.
+type RemoteObjectGetter[T client.Object] func(*apim.APIM, T) (any, error)
 
 // DTOMapper is a function that converts the CRD into a DTO that can be compared with the remote object.
 type DTOMapper[T client.Object] func(T) any
@@ -90,8 +93,11 @@ func ValidateDriftWithContext[T client.Object](
 		return errs
 	}
 
-	remoteObject := getRemoteObject(apimClient, newCopy, errs)
-	if errs.IsSevere() {
+	remoteObject, err := getRemoteObject(apimClient, newCopy)
+	if err != nil {
+		applyRemoteFetchPolicy(newCopy, err, errs)
+		// An error occurred: whether it is added to the admission errors or not,
+		// we need to return so that "allow" policy is respected: we allow applying in spite of errors or not found
 		return errs
 	}
 
@@ -104,7 +110,14 @@ func ValidateDriftWithContext[T client.Object](
 	newVsRemoteResult := drift.DetectWithNamespace(newDTO, remoteObject, ns)
 
 	if result := drift.Merge(oldVsRemoteResult, newVsRemoteResult); result.DriftDetected() {
-		errs.AddSeveref("\ndrift detected:\n%s", result.String())
+		applyPolicy(env.Config.DriftDetection.Policy, func() string {
+			if env.Config.DriftDetection.Policy == env.DriftPolicyAllow {
+				ref := client.ObjectKeyFromObject(newCRD)
+				kind := newCopy.GetObjectKind().GroupVersionKind().Kind
+				return fmt.Sprintf("drift detected for resource [%s] [%s], drift policy is 'allow': drift is ignored", kind, ref)
+			}
+			return fmt.Sprintf("\ndrift detected:\n%s", result.String())
+		}, errs)
 	}
 
 	return errs

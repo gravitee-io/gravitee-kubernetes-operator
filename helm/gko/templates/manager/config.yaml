@@ -22,7 +22,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/name: {{ template "helm.name" . }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
-    {{- if .Values.common.labels}}
+    {{- if .Values.common.labels }}
     {{- range $key, $value := .Values.common.labels }}
     {{ $key }}: {{ $value | quote }}
     {{- end }}
@@ -30,7 +30,7 @@ metadata:
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-    {{- if .Values.common.annotations}}
+    {{- if .Values.common.annotations }}
     {{- range $key, $value := .Values.common.annotations }}
     {{ $key }}: {{ $value | quote }}
     {{- end }}
@@ -98,17 +98,17 @@ data:
   HTTP_CLIENT_PROXY_USE_SYSTEM_PROXY: "true"
   {{- end }}
   {{ if .Values.manager.httpClient.proxy.url }}
-  HTTP_CLIENT_PROXY_URL: {{.Values.manager.httpClient.proxy.url }}
+  HTTP_CLIENT_PROXY_URL: {{ .Values.manager.httpClient.proxy.url }}
   {{- end }}
   {{- if .Values.manager.httpClient.proxy.username }}
-  HTTP_CLIENT_PROXY_USERNAME: {{.Values.manager.httpClient.proxy.username }}
+  HTTP_CLIENT_PROXY_USERNAME: {{ .Values.manager.httpClient.proxy.username }}
   {{- end }}
   {{- if .Values.manager.httpClient.proxy.password }}
-  HTTP_CLIENT_PROXY_PASSWORD: {{.Values.manager.httpClient.proxy.password }}
+  HTTP_CLIENT_PROXY_PASSWORD: {{ .Values.manager.httpClient.proxy.password }}
   {{- end }}
   {{- end }}
   {{- if .Values.manager.httpClient.trustStore.path }}
-  HTTP_CLIENT_TRUSTSTORE_PATH: {{.Values.manager.httpClient.trustStore.path }}
+  HTTP_CLIENT_TRUSTSTORE_PATH: {{ .Values.manager.httpClient.trustStore.path }}
   {{- end }}
   {{- if .Values.manager.webhook.enabled }}
   ENABLE_WEBHOOK: "true"
@@ -130,8 +130,7 @@ data:
   {{- else }}
   ENABLE_TEMPLATING: "false"
   {{- end }}
-  {{- if .Values.manager.driftDetection.enabled }}
-  ENABLE_DRIFT_DETECTION: "true"
-  {{- else }}
-  ENABLE_DRIFT_DETECTION: "false"
-  {{- end }}
+  DRIFT_DETECTION_ENABLED: {{ quote .Values.manager.driftDetection.enabled }}
+  DRIFT_DETECTION_POLICY: {{ .Values.manager.driftDetection.policy }}
+  DRIFT_DETECTION_ON_REMOTE_MISSING: {{ .Values.manager.driftDetection.onRemoteMissing.policy }}
+  DRIFT_DETECTION_FETCH_FAILURE_POLICY: {{ .Values.manager.driftDetection.fetchFailurePolicy }}

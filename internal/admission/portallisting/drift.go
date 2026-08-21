@@ -66,20 +66,16 @@ func resolveRefs(context.Context, *v1alpha1.PortalListing) error {
 }
 
 func getRemotePortalListing(prtl *v1alpha1.Portal) drift.RemoteObjectGetter[*v1alpha1.PortalListing] {
-	return func(apimClient *apim.APIM, listing *v1alpha1.PortalListing, admissionErrors *errors.AdmissionErrors) any {
+	return func(apimClient *apim.APIM, listing *v1alpha1.PortalListing) (any, error) {
 		dto := service.ToPortalListingDTO(listing)
 		portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
 		remote, err := apimClient.Listings.GetByHRID(portalHrid, dto.HRID)
 		if err != nil {
-			admissionErrors.AddSeveref(
-				"cannot fetch PortalListing during drift detection from portal HRID %s and listing HRID %s: %s",
-				portalHrid, dto.HRID, err.Error(),
-			)
-			return nil
+			return nil, err
 		}
 		return model.PortalListingDTO{
 			HRID: remote.HRID,
 			APIs: remote.APIs,
-		}
+		}, nil
 	}
 }

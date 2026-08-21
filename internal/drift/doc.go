@@ -137,8 +137,8 @@
 //
 // # Enabling drift detection
 //
-// Drift detection is disabled globally by default via [env.Config.DriftDetection] (set by
-// ENABLE_DRIFT_DETECTION environment variable). It can be overridden per resource using the
+// Drift detection is disabled globally by default via [env.Config.DriftDetection.Enabled] (set by
+// DRIFT_DETECTION_ENABLED environment variable). It can be overridden per resource using the
 // gravitee.io/drift-detection annotation with values "true" or "false".
 //
 // Additionally, some resource types are unsupported or disabled by default:

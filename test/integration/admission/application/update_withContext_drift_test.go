@@ -16,6 +16,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -123,6 +124,44 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 		validateDescriptionDrift(ctx, admissionCtrl, fixtures.Application, newApp, fixtures.Context)
 	})
 
+	It("should ignore remote drift when the annotation disables detection", func() {
+		fixtures := fixture.
+			Builder().
+			WithApplication(constants.Application).
+			WithContext(constants.ContextWithCredentialsFile).
+			Build()
+		fixtures.Apply()
+
+		newApp := fixtures.Application.DeepCopy()
+		validateDescriptionDrift(ctx, admissionCtrl, fixtures.Application, newApp, fixtures.Context)
+
+		By("disabling drift detection on the application")
+		setDriftAnnotation(newApp, env.FalseString)
+
+		_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Application, newApp)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("should detect drift when globally disabled if the annotation forces detection", func() {
+		original := env.Config.DriftDetection.Enabled
+		env.Config.DriftDetection.Enabled = false
+		DeferCleanup(func() {
+			env.Config.DriftDetection.Enabled = original
+		})
+
+		fixtures := fixture.
+			Builder().
+			WithApplication(constants.Application).
+			WithContext(constants.ContextWithCredentialsFile).
+			Build()
+		fixtures.Apply()
+
+		By("forcing drift detection with the annotation")
+		newApp := fixtures.Application.DeepCopy()
+		setDriftAnnotation(newApp, env.TrueString)
+		validateDescriptionDrift(ctx, admissionCtrl, fixtures.Application, newApp, fixtures.Context)
+	})
+
 	It("should not drift when CRD realigns with remote", func() {
 		fixtures := fixture.
 			Builder().
@@ -152,6 +191,16 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 func setDescription(app *v1alpha1.Application, description string) {
 	GinkgoHelper()
 	app.Spec.Description = description
+}
+
+func setDriftAnnotation(app *v1alpha1.Application, value string) {
+	GinkgoHelper()
+	annotations := app.GetAnnotations()
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
+	annotations[core.DriftDetectionAnnotation] = value
+	app.SetAnnotations(annotations)
 }
 
 func validateDescriptionDrift(
