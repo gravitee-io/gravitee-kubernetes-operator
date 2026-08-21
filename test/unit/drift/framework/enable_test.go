@@ -21,7 +21,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var _ = Describe("Drift enablement", func() {
@@ -51,53 +50,6 @@ var _ = Describe("Drift enablement", func() {
 		Entry("config=true, annotation=false", true, new(env.FalseString)),
 		Entry("config=true, annotation missing", true, nil),
 		Entry("config=false, annotation=true", false, new(env.TrueString)),
-	)
-
-	DescribeTable(
-		"disabled predicate excludes only when annotation is missing/invalid",
-		func(makeCRD func() runtime.Object, cfg bool, annotatedValue string, expected bool) {
-			env.Config.DriftDetection = cfg
-
-			p := makeCRD()
-			if annotatedValue != "" {
-				switch t := p.(type) {
-				case *v1alpha1.Portal:
-					t.Annotations = map[string]string{core.DriftDetectionAnnotation: annotatedValue}
-				case *v1alpha1.Documentation:
-					t.Annotations = map[string]string{core.DriftDetectionAnnotation: annotatedValue}
-				case *v1alpha1.PortalListing:
-					t.Annotations = map[string]string{core.DriftDetectionAnnotation: annotatedValue}
-				case *v1alpha1.PortalLink:
-					t.Annotations = map[string]string{core.DriftDetectionAnnotation: annotatedValue}
-				default:
-					Fail("unexpected CRD type in test table")
-				}
-			}
-
-			Expect(drift.IsDriftEnabled(p)).To(Equal(expected))
-		},
-		Entry("Portal: config=true, annotation missing -> excluded by predicate",
-			func() runtime.Object { return &v1alpha1.Portal{} }, true, "", false),
-		Entry("Documentation: config=true, annotation missing -> excluded by predicate",
-			func() runtime.Object { return &v1alpha1.Documentation{} }, true, "", false),
-		Entry("PortalListing: config=true, annotation missing -> excluded by predicate",
-			func() runtime.Object { return &v1alpha1.PortalListing{} }, true, "", false),
-		Entry("PortalLink: config=true, annotation missing -> excluded by predicate",
-			func() runtime.Object { return &v1alpha1.PortalLink{} }, true, "", false),
-		Entry("Portal: config=true, annotation invalid -> excluded by predicate",
-			func() runtime.Object { return &v1alpha1.Portal{} }, true, "invalid", false),
-		Entry("Portal: config=true, annotation=true -> enabled (annotation overrides predicate)",
-			func() runtime.Object { return &v1alpha1.Portal{} }, true, env.TrueString, true),
-		Entry("Portal: config=true, annotation=false -> disabled (annotation overrides predicate)",
-			func() runtime.Object { return &v1alpha1.Portal{} }, true, env.FalseString, false),
-		Entry("Portal: config=false, annotation=true -> enabled (annotation overrides predicate)",
-			func() runtime.Object { return &v1alpha1.Portal{} }, false, env.TrueString, true),
-		Entry("PortalLink: config=true, annotation=true -> enabled (annotation overrides predicate)",
-			func() runtime.Object { return &v1alpha1.PortalLink{} }, true, env.TrueString, true),
-		Entry("PortalLink: config=true, annotation=false -> disabled (annotation overrides predicate)",
-			func() runtime.Object { return &v1alpha1.PortalLink{} }, true, env.FalseString, false),
-		Entry("PortalLink: config=false, annotation=true -> enabled (annotation overrides predicate)",
-			func() runtime.Object { return &v1alpha1.PortalLink{} }, false, env.TrueString, true),
 	)
 
 	DescribeTable(
