@@ -46,12 +46,11 @@ func toDictionaryDTO(dict *v1alpha1.Dictionary) model.DictionaryDTO {
 	)
 }
 
-func getRemoteDictionary(apimClient *apim.APIM, dict *v1alpha1.Dictionary, errs *errors.AdmissionErrors) any {
+func getRemoteDictionary(apimClient *apim.APIM, dict *v1alpha1.Dictionary) (any, error) {
 	hrid := refs.NewNamespacedNameFromObject(dict).HRID()
 	remote, err := apimClient.Dictionaries.GetByHRID(hrid)
 	if err != nil {
-		errs.AddSeveref("cannot fetch Dictionary during drift detection from HRID %s: %s", hrid, err.Error())
-		return nil
+		return nil, err
 	}
-	return remote.DictionaryDTO
+	return remote.DictionaryDTO, nil
 }

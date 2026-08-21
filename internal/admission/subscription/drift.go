@@ -49,30 +49,22 @@ func mergeDriftValidation(
 }
 
 func remoteSubscriptionGetter(api core.ApiDefinitionObject) drift.RemoteObjectGetter[*v1alpha1.Subscription] {
-	return func(apimClient *apim.APIM, sub *v1alpha1.Subscription, admissionErrors *errors.AdmissionErrors) any {
+	return func(apimClient *apim.APIM, sub *v1alpha1.Subscription) (any, error) {
 		if k8s.IsAutomationAPIManaged(sub) {
 			apiNSName := refs.NewNamespacedNameFromObject(api)
 			subNSName := refs.NewNamespacedNameFromObject(sub)
 			remoteSub, err := apimClient.Subscription.GetByHRID(apiNSName.HRID(), subNSName.HRID())
 			if err != nil {
-				admissionErrors.AddSeveref("cannot fetch Subscription during drift detection from Api HRID %s and Subscription HRID %s: %s",
-					apiNSName.HRID(),
-					subNSName.HRID(),
-					err.Error())
-				return nil
+				return nil, err
 			}
-			return *remoteSub
+			return *remoteSub, nil
 		}
 		remoteSub, err := apimClient.Subscription.GetByID(api.GetID(), sub.Status.ID)
 		if err != nil {
-			admissionErrors.AddSeveref("cannot fetch Subscription during drift detection from Api ID %s and Subscription ID %s: %s",
-				api.GetID(),
-				sub.Status.ID,
-				err.Error())
-			return nil
+			return nil, err
 		}
 
-		return *remoteSub
+		return *remoteSub, nil
 	}
 }
 

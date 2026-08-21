@@ -51,7 +51,7 @@ func IsDriftEnabled(crd runtime.Object) bool {
 	} else {
 		log.Panicf("CRD Does not implement core.Object interface: %T", crd)
 	}
-	return env.Config.DriftDetection
+	return env.Config.DriftDetection.Enabled
 }
 
 func isLegacyGroup(obj runtime.Object) bool {

@@ -17,8 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: Documentation
 metadata:
   name: drift-minimal-documentation
-  annotations:
-    gravitee.io/drift-detection: "true"
 spec:
   name: "Drift Minimal Doc"
   type: GRAVITEE_MARKDOWN

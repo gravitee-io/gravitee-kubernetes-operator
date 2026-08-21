@@ -65,16 +65,12 @@ func resolveRefs(context.Context, *v1alpha1.PortalLink) error {
 }
 
 func getRemotePortalLink(prtl *v1alpha1.Portal) drift.RemoteObjectGetter[*v1alpha1.PortalLink] {
-	return func(apimClient *apim.APIM, link *v1alpha1.PortalLink, admissionErrors *errors.AdmissionErrors) any {
+	return func(apimClient *apim.APIM, link *v1alpha1.PortalLink) (any, error) {
 		portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
 		linkHrid := refs.NewNamespacedNameFromObject(link).HRID()
 		remote, err := apimClient.Links.GetByHRID(portalHrid, linkHrid)
 		if err != nil {
-			admissionErrors.AddSeveref(
-				"cannot fetch PortalLink during drift detection from portal HRID %s and link HRID %s: %s",
-				portalHrid, linkHrid, err.Error(),
-			)
-			return nil
+			return nil, err
 		}
 		return model.PortalLinkDTO{
 			HRID:     remote.HRID,
@@ -82,6 +78,6 @@ func getRemotePortalLink(prtl *v1alpha1.Portal) drift.RemoteObjectGetter[*v1alph
 			Href:     remote.Href,
 			Location: remote.Location,
 			Order:    remote.Order,
-		}
+		}, nil
 	}
 }

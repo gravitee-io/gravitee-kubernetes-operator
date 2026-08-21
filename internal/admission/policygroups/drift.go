@@ -50,8 +50,7 @@ func toSharedPolicyGroupPayload(spg *v1alpha1.SharedPolicyGroup) model.SharedPol
 func getRemoteSharedPolicyGroup(
 	apimClient *apim.APIM,
 	spg *v1alpha1.SharedPolicyGroup,
-	errs *errors.AdmissionErrors,
-) any {
+) (any, error) {
 	spg.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(spg))
 	id, legacy := sharedPolicyGroupID(spg)
 	var (
@@ -64,17 +63,9 @@ func getRemoteSharedPolicyGroup(
 		remote, err = apimClient.SharedPolicyGroup.GetByHRID(id)
 	}
 	if err != nil {
-		kind := "HRID"
-		if legacy {
-			kind = "ID"
-		}
-		errs.AddSeveref(
-			"cannot fetch SharedPolicyGroup during drift detection from %s %s: %s",
-			kind, id, err.Error(),
-		)
-		return nil
+		return nil, err
 	}
-	return *remote
+	return *remote, nil
 }
 
 func sharedPolicyGroupID(spg *v1alpha1.SharedPolicyGroup) (string, bool) {
