@@ -16,6 +16,7 @@ package group
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
@@ -44,17 +45,15 @@ func toGroupPayload(grp *v1alpha1.Group) model.GroupDTO {
 	return model.ToGroupDTO(*grp.Spec.Type)
 }
 
-func getRemoteGroup(apimClient *apim.APIM, grp *v1alpha1.Group, errs *errors.AdmissionErrors) any {
+func getRemoteGroup(apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
 	grp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(grp))
 	hrid, legacy := service.GetGroupID(grp)
 	if legacy {
-		errs.AddSeveref("drift detection is not supported for legacy Group [%s]", grp.GetRef())
-		return nil
+		return nil, fmt.Errorf("drift detection is not supported for legacy Group [%s]", grp.GetRef())
 	}
 	remote, err := apimClient.Env.GetGroupByHRID(hrid)
 	if err != nil {
-		errs.AddSeveref("cannot fetch Group during drift detection from HRID %s: %s", hrid, err.Error())
-		return nil
+		return nil, err
 	}
-	return remote.GroupDTO
+	return remote.GroupDTO, nil
 }

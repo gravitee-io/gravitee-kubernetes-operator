@@ -39,7 +39,6 @@ func formatMultilineStrings(builder *strings.Builder, indent int, property, left
 	} else if rows := diffLineRows(a, b); len(rows) > 0 {
 		writeLineRows(builder, indent, property, rows)
 	}
-	return
 }
 
 func writeLineRows(b *strings.Builder, indent int, property string, rows []lineRow) {

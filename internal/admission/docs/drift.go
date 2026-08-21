@@ -62,15 +62,11 @@ func resolveRefs(context.Context, *v1alpha1.Documentation) error {
 }
 
 func getRemoteDocumentation(parent service.DocumentationParent) drift.RemoteObjectGetter[*v1alpha1.Documentation] {
-	return func(apimClient *apim.APIM, doc *v1alpha1.Documentation, admissionErrors *errors.AdmissionErrors) any {
+	return func(apimClient *apim.APIM, doc *v1alpha1.Documentation) (any, error) {
 		dto := model.ToDocumentationDTO(doc)
 		remote, err := apimClient.Documentations.GetByHRID(parent, dto.HRID)
 		if err != nil {
-			admissionErrors.AddSeveref(
-				"cannot fetch Documentation during drift detection from HRID %s: %s",
-				dto.HRID, err.Error(),
-			)
-			return nil
+			return nil, err
 		}
 		return model.DocumentationDTO{
 			HRID:     remote.HRID,
@@ -80,6 +76,6 @@ func getRemoteDocumentation(parent service.DocumentationParent) drift.RemoteObje
 			Location: remote.Location,
 			Order:    remote.Order,
 			Area:     remote.Area,
-		}
+		}, nil
 	}
 }

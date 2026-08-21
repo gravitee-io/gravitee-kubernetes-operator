@@ -27,17 +27,17 @@ var _ = Describe("Drift enablement", func() {
 	var originalConfig bool
 
 	BeforeEach(func() {
-		originalConfig = env.Config.DriftDetection
+		originalConfig = env.Config.DriftDetection.Enabled
 	})
 
 	AfterEach(func() {
-		env.Config.DriftDetection = originalConfig
+		env.Config.DriftDetection.Enabled = originalConfig
 	})
 
 	DescribeTable(
 		"unsupported predicate always excludes (legacy group)",
 		func(cfg bool, annotatedValue *string) {
-			env.Config.DriftDetection = cfg
+			env.Config.DriftDetection.Enabled = cfg
 
 			g := &v1alpha1.Group{}
 			if annotatedValue != nil {
@@ -55,7 +55,7 @@ var _ = Describe("Drift enablement", func() {
 	DescribeTable(
 		"supported CRD uses annotation if present, otherwise falls back to config",
 		func(cfg bool, annotatedValue string, expected bool) {
-			env.Config.DriftDetection = cfg
+			env.Config.DriftDetection.Enabled = cfg
 
 			d := &v1alpha1.Dictionary{}
 			if annotatedValue != "" {

@@ -17,8 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: Documentation
 metadata:
   name: drift-full-documentation
-  annotations:
-    gravitee.io/drift-detection: "true"
 spec:
   name: "Drift Full Doc"
   type: GRAVITEE_MARKDOWN

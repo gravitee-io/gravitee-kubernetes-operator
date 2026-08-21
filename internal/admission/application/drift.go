@@ -43,21 +43,19 @@ func resolveAppRefs(ctx context.Context, app *v1alpha1.Application) error {
 	return appResolve.ResolveClientCertificates(ctx, app.Spec.Settings, app.GetNamespace(), app.GetName())
 }
 
-func getRemoteApp(apimClient *apim.APIM, app *v1alpha1.Application, errs *errors.AdmissionErrors) any {
+func getRemoteApp(apimClient *apim.APIM, app *v1alpha1.Application) (any, error) {
 	automation := k8s.IsAutomationAPIManaged(app)
 	app.PopulateIDs(apimClient.Context, automation)
 	if automation {
 		remoteApp, err := apimClient.Applications.GetByHRID(app.Spec.HRID)
 		if err != nil {
-			errs.AddSeveref("cannot fetch Application during drift detection from HRID %s: %s", app.Spec.HRID, err.Error())
-			return nil
+			return nil, err
 		}
-		return *remoteApp
+		return *remoteApp, nil
 	}
 	remoteApp, err := apimClient.Applications.GetByID(app.Spec.ID)
 	if err != nil {
-		errs.AddSeveref("cannot fetch Application during drift detection from ID %s: %s", app.Spec.ID, err.Error())
-		return nil
+		return nil, err
 	}
-	return *remoteApp
+	return *remoteApp, nil
 }

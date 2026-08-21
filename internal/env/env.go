@@ -65,7 +65,10 @@ const (
 	LogsTimestampField                   = "LOGS_TIMESTAMP_FIELD"
 	LogsTimestampFormat                  = "LOGS_TIMESTAMP_FORMAT"
 	EnableTemplating                     = "ENABLE_TEMPLATING"
-	EnableDriftDetection                 = "ENABLE_DRIFT_DETECTION"
+	DriftDetectionEnabled                = "DRIFT_DETECTION_ENABLED"
+	DriftDetectionPolicy                 = "DRIFT_DETECTION_POLICY"
+	DriftDetectionOnRemoteMissing        = "DRIFT_DETECTION_ON_REMOTE_MISSING"
+	DriftDetectionFetchFailurePolicy     = "DRIFT_DETECTION_FETCH_FAILURE_POLICY"
 	MaxConcurrentReconcilesKey           = "MAX_CONCURRENT_RECONCILES"
 
 	// This default are applied when running the app locally.
@@ -123,7 +126,7 @@ var Config = struct {
 	LogsTimestampFormat                  string
 	ReconcileStrategy                    string
 	EnableTemplating                     bool
-	DriftDetection                       bool
+	DriftDetection                       DriftDetection
 	MaxConcurrentReconciles              int
 }{}
 
@@ -182,8 +185,11 @@ func init() {
 	Config.LogsTimestampField = os.Getenv(LogsTimestampField)
 	Config.LogsTimestampFormat = os.Getenv(LogsTimestampFormat)
 	Config.ReconcileStrategy = os.Getenv(ReconcileStrategy)
-	Config.EnableTemplating = os.Getenv(EnableTemplating) != FalseString // enabled by default
-	Config.DriftDetection = os.Getenv(EnableDriftDetection) == TrueString // disabled by default
+	Config.EnableTemplating = os.Getenv(EnableTemplating) != FalseString           // enabled by default
+	Config.DriftDetection.Enabled = os.Getenv(DriftDetectionEnabled) == TrueString // disabled by default
+	Config.DriftDetection.Policy = parseDriftPolicy(DriftDetectionPolicy, DriftPolicyDeny)
+	Config.DriftDetection.OnRemoteMissing = parseDriftPolicy(DriftDetectionOnRemoteMissing, DriftPolicyDeny)
+	Config.DriftDetection.FetchFailurePolicy = parseDriftPolicy(DriftDetectionFetchFailurePolicy, DriftPolicyDeny)
 	Config.MaxConcurrentReconciles = parseInt(MaxConcurrentReconcilesKey, defaultMaxConcurrentReconciles)
 }
 
