@@ -7,6 +7,7 @@ require (
 	github.com/moby/moby v27.5.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.28.0
 	github.com/onsi/gomega v1.40.0
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/exp v0.0.0-20260727155853-b88d891fe743
 	gopkg.in/yaml.v2 v2.4.0
@@ -82,7 +83,6 @@ require (
 	github.com/moby/spdystream v0.5.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
