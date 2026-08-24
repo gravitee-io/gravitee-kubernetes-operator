@@ -27,6 +27,7 @@ const (
 	CRDResourceNotification               = "notifications"
 	CRDResourceGroup                      = "groups"
 	CRDPortalResource                     = "portals"
+	CRDPortalThemeResource                = "portalthemes"
 
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"
@@ -56,6 +57,7 @@ const (
 	PortalListingFinalizer           = "finalizers.gravitee.io/portallistings"
 	PortalLinkFinalizer              = "finalizers.gravitee.io/portallinks"
 	DocumentationFinalizer           = "finalizers.gravitee.io/documentations"
+	PortalThemeFinalizer             = "finalizers.gravitee.io/portalthemes"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 	GraviteeClassParametersFinalizer = "finalizers.gravitee.io/gatewayclassparameters"

@@ -175,6 +175,7 @@ const (
 	PortalDriftMinimalFile = "apim/portal/portal-drift-minimal.yml"
 	PortalDriftFullFile    = "apim/portal/portal-drift-full.yml"
 	PortalFileDeprecated   = "apim/portal/portal-deprecated.yml"
+	PortalWithThemeFile    = "apim/portal/portal-with-theme.yml"
 
 	PortalListingFile             = "apim/portal/portal-listing.yml"
 	PortalListingDriftMinimalFile = "apim/portal/portal-listing-drift-minimal.yml"
@@ -190,6 +191,10 @@ const (
 	PortalLinkFile             = "apim/portal/portal-link.yml"
 	PortalLinkDriftMinimalFile = "apim/portal/portal-link-drift-minimal.yml"
 	PortalLinkDriftFullFile    = "apim/portal/portal-link-drift-full.yml"
+
+	PortalThemeFile             = "apim/portal/portal-theme.yml"
+	PortalThemeDriftMinimalFile = "apim/portal/portal-theme-drift-minimal.yml"
+	PortalThemeDriftFullFile    = "apim/portal/portal-theme-drift-full.yml"
 
 	NotificationNoGroupFile   = "apim/notification/notification-no-group.yml"
 	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"

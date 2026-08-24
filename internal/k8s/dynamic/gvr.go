@@ -51,6 +51,12 @@ var PortalGVR = schema.GroupVersionResource{
 	Resource: core.CRDPortalResource,
 }
 
+var PortalThemeGVR = schema.GroupVersionResource{
+	Group:    core.CRDGroup,
+	Version:  core.CRDVersion,
+	Resource: core.CRDPortalThemeResource,
+}
+
 var ResourceGVR = schema.GroupVersionResource{
 	Group:    core.CRDGroup,
 	Version:  core.CRDVersion,

@@ -79,6 +79,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyDictionary(ctx, cli)
 	}
 
+	if o.PortalTheme != nil {
+		o.applyPortalTheme(ctx, cli)
+	}
+
 	if o.Portal != nil {
 		o.applyPortal(ctx, cli)
 	}
@@ -278,6 +282,17 @@ func (o *Objects) applyDocumentation(ctx context.Context, cli client.Client) {
 		}
 		return assert.DocumentationAccepted(o.Documentation)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Documentation.Name)
+}
+
+func (o *Objects) applyPortalTheme(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.PortalTheme)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.PortalTheme)
+		if err != nil {
+			return err
+		}
+		return assert.PortalThemeAccepted(o.PortalTheme)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.PortalTheme.Name)
 }
 
 func (o *Objects) applySharedPolicyGroup(cli client.Client, ctx context.Context) {

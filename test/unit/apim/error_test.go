@@ -31,6 +31,7 @@ var errRaw = fmt.Errorf("raw error")
 var errNotFound = xErrors.NewControlPlaneError(xErrors.ServerError{StatusCode: 404})
 var errBadRequest = xErrors.NewControlPlaneError(xErrors.ServerError{StatusCode: 400})
 var errUnauthorized = xErrors.NewControlPlaneError(xErrors.ServerError{StatusCode: 401})
+var errWrappedBadRequest = fmt.Errorf("still in use: %w", xErrors.ServerError{StatusCode: 400})
 
 var _ = Describe("Errors", func() {
 	DescribeTable("recoverable errors",
@@ -41,6 +42,7 @@ var _ = Describe("Errors", func() {
 		Entry("With not found error", errNotFound, true),
 		Entry("With unauthorized error", errUnauthorized, false),
 		Entry("With bad request", errBadRequest, false),
+		Entry("With bad request reported outside of the control plane", errWrappedBadRequest, true),
 	)
 
 	DescribeTable("context error",

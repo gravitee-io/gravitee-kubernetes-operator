@@ -23,6 +23,8 @@ type PortalDTO struct {
 	Name       string                  `json:"name"`
 	Navigation []NavigationPathDTO     `json:"navigation,omitempty" drift:"ignore"`
 	Structure  *NavigationStructureDTO `json:"structure,omitempty"`
+	// An absent value is read by APIM as a request to deactivate the portal's theme.
+	ActiveThemeHRID string `json:"activeThemeHrid,omitempty"`
 }
 
 type NavigationPathDTO struct {
@@ -45,8 +47,9 @@ type PortalState struct {
 	portal.Status `json:",omitempty"`
 }
 
-func ToPortalDTO(crd portal.Type, hrid string) PortalDTO {
+func ToPortalDTO(crd portal.Type, hrid string, activeThemeHrid string) PortalDTO {
 	dto := mapViaJSON[PortalDTO](crd)
 	dto.HRID = hrid
+	dto.ActiveThemeHRID = activeThemeHrid
 	return dto
 }

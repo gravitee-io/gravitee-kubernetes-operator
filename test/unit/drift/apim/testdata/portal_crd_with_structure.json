@@ -17,6 +17,10 @@
           "displayName": "Alpha"
         }
       ]
+    },
+    "themeRef": {
+      "name": "brand-theme",
+      "kind": "PortalTheme"
     }
   }
 }

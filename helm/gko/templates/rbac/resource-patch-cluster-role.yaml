@@ -62,6 +62,7 @@ rules:
       - portallistings.gravitee.io
       - portallinks.gravitee.io
       - documentations.gravitee.io
+      - portalthemes.gravitee.io
 {{- if .Values.gatewayAPI.controller.enabled }}
       - gatewayclassparameters.gravitee.io
       - kafkaroutes.gravitee.io

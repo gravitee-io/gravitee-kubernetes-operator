@@ -20,13 +20,20 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
 func validateCreate(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	errs.MergeWith(validateNavigation(prtl))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateThemeKind(prtl))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -41,7 +48,51 @@ func validateCreate(ctx context.Context, prtl *v1alpha1.Portal) *errors.Admissio
 		return errs
 	}
 
+	errs.MergeWith(validateThemeRef(ctx, prtl))
+	if errs.IsSevere() {
+		return errs
+	}
+
 	errs.MergeWith(validateDryRun(ctx, prtl))
+	return errs
+}
+
+// validateThemeKind rejects a themeRef pointing at anything but a PortalTheme,
+// an empty kind meaning PortalTheme.
+func validateThemeKind(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	if !prtl.HasThemeRef() {
+		return errs
+	}
+
+	kind := prtl.Spec.Theme.Kind
+	if kind != "" && dynamic.ResourceFromKind(kind) != core.CRDPortalThemeResource {
+		errs.AddSeveref(
+			"themeRef [%s] is of kind %s, but only PortalTheme is supported",
+			prtl.Spec.Theme.Name, kind,
+		)
+	}
+
+	return errs
+}
+
+// validateThemeRef resolves the referenced PortalTheme, which the automation dry run
+// echoes back without resolving.
+func validateThemeRef(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	if !prtl.HasThemeRef() {
+		return errs
+	}
+
+	if _, err := dynamic.ResolvePortalTheme(ctx, prtl.GetThemeRef(), prtl.GetNamespace()); err != nil {
+		errs.AddSeveref(
+			"portal [%s] references theme [%v] that can't be resolved",
+			prtl.GetName(), prtl.GetThemeRef(),
+		)
+	}
+
 	return errs
 }
 

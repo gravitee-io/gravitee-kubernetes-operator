@@ -388,6 +388,28 @@ rules:
     verbs:
       - get
       - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - portalthemes
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - portalthemes/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - portalthemes/status
+    verbs:
+      - get
+      - update
 {{- if .Values.gatewayAPI.controller.enabled }}
   - apiGroups:
       - gravitee.io

@@ -121,6 +121,19 @@ spec:
                         - path
                       x-kubernetes-list-type: map
                   type: object
+                themeRef:
+                  description: Reference to the theme this portal uses, of kind PortalTheme when
+                    kind is omitted.
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - name
+                  type: object
               required:
                 - name
               type: object

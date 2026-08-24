@@ -15,6 +15,7 @@
 - [gravitee.io/v1alpha1/portal](#graviteeiov1alpha1portal)
 - [gravitee.io/v1alpha1/portallink](#graviteeiov1alpha1portallink)
 - [gravitee.io/v1alpha1/portallisting](#graviteeiov1alpha1portallisting)
+- [gravitee.io/v1alpha1/portaltheme](#graviteeiov1alpha1portaltheme)
 - [gravitee.io/v1alpha1/refs](#graviteeiov1alpha1refs)
 - [gravitee.io/v1alpha1/sharedpolicygroups](#graviteeiov1alpha1sharedpolicygroups)
 - [gravitee.io/v1alpha1/status](#graviteeiov1alpha1status)
@@ -43,6 +44,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [Portal](#portal)
 - [PortalLink](#portallink)
 - [PortalListing](#portallisting)
+- [PortalTheme](#portaltheme)
 - [SharedPolicyGroup](#sharedpolicygroup)
 - [Subscription](#subscription)
 
@@ -851,6 +853,7 @@ _Appears in:_
 | `structure` _[NavigationStructure](#navigationstructure)_ | The portal's navigation, grouped by portal area. |  | Optional: \{\} <br /> |
 | `navigation` _NavigationPath array_ | Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.<br />Still synced for portals created before navigation was grouped by area. |  | Optional: \{\} <br /> |
 | `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this portal is synced to. |  |  |
+| `themeRef` _[NamespacedName](#namespacedname)_ | Reference to the theme this portal uses, of kind PortalTheme when kind is omitted.<br />Setting it activates that theme for the environment, leaving it unset deactivates<br />whichever theme was active. |  | Optional: \{\} <br /> |
 
 
 #### PortalStatus
@@ -871,6 +874,68 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When portal has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### PortalTheme
+
+
+
+PortalTheme is the look and feel of a Gravitee next-gen developer portal managed as a
+Kubernetes resource. Applying one makes it the active theme of its environment.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `PortalTheme` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[PortalThemeSpec](#portalthemespec)_ |  |  |  |
+| `status` _[PortalThemeStatus](#portalthemestatus)_ |  |  |  |
+
+
+#### PortalThemeSpec
+
+
+
+PortalThemeSpec defines the desired state of a PortalTheme.
+
+
+
+_Appears in:_
+- [PortalTheme](#portaltheme)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the theme. |  | Required: \{\} <br /> |
+| `definition` _[Definition](#definition)_ | The look and feel applied to the portal. |  | Required: \{\} <br /> |
+| `logo` _string_ | Logo displayed in the portal header. |  | Optional: \{\} <br /> |
+| `optionalLogo` _string_ | Alternate logo, used where the main logo does not fit. |  | Optional: \{\} <br /> |
+| `favicon` _string_ | Icon displayed by the browser for the portal. |  | Optional: \{\} <br /> |
+| `backgroundImage` _string_ | Image displayed behind the portal header. |  | Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this theme is synced to. |  |  |
+
+
+#### PortalThemeStatus
+
+
+
+PortalThemeStatus defines the observed state of a PortalTheme.
+
+
+
+_Appears in:_
+- [PortalTheme](#portaltheme)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PortalTheme in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalTheme.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When theme has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### SharedPolicyGroup
@@ -3176,6 +3241,127 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/portaltheme
+
+
+
+
+#### Background
+
+
+
+Background holds the background colors of a next-gen portal theme.
+
+
+
+_Appears in:_
+- [Color](#color)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `page` _string_ | Background color of the portal pages. |  | Optional: \{\} <br /> |
+| `card` _string_ | Background color of the cards displayed on the portal pages. |  | Optional: \{\} <br /> |
+
+
+#### Color
+
+
+
+Color is the color palette applied to the next-gen portal.
+
+
+
+_Appears in:_
+- [Definition](#definition)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `primary` _string_ |  |  | Optional: \{\} <br /> |
+| `secondary` _string_ |  |  | Optional: \{\} <br /> |
+| `tertiary` _string_ |  |  | Optional: \{\} <br /> |
+| `error` _string_ | Color used to highlight errors on the portal. |  | Optional: \{\} <br /> |
+| `background` _[Background](#background)_ |  |  | Optional: \{\} <br /> |
+
+
+#### Definition
+
+
+
+Definition is the next-gen portal theme definition. Leaving a section unset
+leaves the corresponding APIM defaults in place.
+
+
+
+_Appears in:_
+- [PortalThemeSpec](#portalthemespec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `customCss` _string_ | Custom CSS appended to the portal stylesheet. |  | Optional: \{\} <br /> |
+| `font` _[Font](#font)_ |  |  | Optional: \{\} <br /> |
+| `color` _[Color](#color)_ |  |  | Optional: \{\} <br /> |
+
+
+#### Font
+
+
+
+Font is the typography applied to the next-gen portal.
+
+
+
+_Appears in:_
+- [Definition](#definition)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `fontFamily` _string_ | CSS font-family stack, e.g. `"Inter", sans-serif`. The console matches its own<br />list of stacks exactly, so a bare family name leaves its font selector empty. |  | Optional: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [PortalThemeStatus](#portalthemestatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PortalTheme in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalTheme.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When theme has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a PortalTheme resource.
+Images are inline data URIs, as the console produces on upload.
+
+
+
+_Appears in:_
+- [PortalThemeSpec](#portalthemespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the theme. |  | Required: \{\} <br /> |
+| `definition` _[Definition](#definition)_ | The look and feel applied to the portal. |  | Required: \{\} <br /> |
+| `logo` _string_ | Logo displayed in the portal header. |  | Optional: \{\} <br /> |
+| `optionalLogo` _string_ | Alternate logo, used where the main logo does not fit. |  | Optional: \{\} <br /> |
+| `favicon` _string_ | Icon displayed by the browser for the portal. |  | Optional: \{\} <br /> |
+| `backgroundImage` _string_ | Image displayed behind the portal header. |  | Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/refs
 
 
@@ -3206,6 +3392,7 @@ _Appears in:_
 - [PortalLinkSpec](#portallinkspec)
 - [PortalListingSpec](#portallistingspec)
 - [PortalSpec](#portalspec)
+- [PortalThemeSpec](#portalthemespec)
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
 - [SubscriptionSpec](#subscriptionspec)
@@ -3347,7 +3534,9 @@ _Appears in:_
 - [PortalLinkStatus](#portallinkstatus)
 - [PortalListingStatus](#portallistingstatus)
 - [PortalStatus](#portalstatus)
+- [PortalThemeStatus](#portalthemestatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)

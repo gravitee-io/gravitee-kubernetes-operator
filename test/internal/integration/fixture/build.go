@@ -48,6 +48,7 @@ type Files struct {
 	PortalListing      string
 	PortalLink         string
 	Documentation      string
+	PortalTheme        string
 }
 
 type FSBuilder struct {
@@ -108,6 +109,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if dict := decodeIfDefined(f.Dictionary, &v1alpha1.Dictionary{}, dictionaryKind); dict != nil {
 		setupDictionary(obj, dict, suffix)
+	}
+
+	if thm := decodeIfDefined(f.PortalTheme, &v1alpha1.PortalTheme{}, portalThemeKind); thm != nil {
+		setupPortalTheme(obj, thm, suffix)
 	}
 
 	if prtl := decodeIfDefined(f.Portal, &v1alpha1.Portal{}, portalKind); prtl != nil {
@@ -240,6 +245,9 @@ func setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix str
 	if obj.Portal != nil {
 		obj.Portal.Spec.Context = obj.Context.GetNamespacedName()
 	}
+	if obj.PortalTheme != nil {
+		obj.PortalTheme.Spec.Context = obj.Context.GetNamespacedName()
+	}
 }
 
 func ensureNilContexts(obj *Objects) {
@@ -340,6 +348,9 @@ func setupPortal(obj *Objects, prtl **v1alpha1.Portal, suffix string) {
 	for i := range obj.Portal.Spec.Navigation {
 		obj.Portal.Spec.Navigation[i].Path = obj.navigationRoot + obj.Portal.Spec.Navigation[i].Path
 	}
+	if obj.Portal.Spec.Theme != nil {
+		obj.Portal.Spec.Theme.Name += suffix
+	}
 	if obj.Portal.Spec.Structure != nil {
 		navbar := obj.Portal.Spec.Structure.TopNavbar
 		for i := range navbar {
@@ -382,6 +393,13 @@ func setupDocumentation(obj *Objects, doc **v1alpha1.Documentation, suffix strin
 	if obj.Documentation.Spec.API != nil {
 		obj.Documentation.Spec.API.Name += suffix
 	}
+}
+
+func setupPortalTheme(obj *Objects, thm **v1alpha1.PortalTheme, suffix string) {
+	obj.PortalTheme = *thm
+	obj.PortalTheme.Name += suffix
+	obj.PortalTheme.Spec.Name += suffix
+	obj.PortalTheme.Namespace = constants.Namespace
 }
 
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
@@ -513,6 +531,11 @@ func (b *FSBuilder) WithPortalLink(file string) *FSBuilder {
 
 func (b *FSBuilder) WithDocumentation(file string) *FSBuilder {
 	b.files.Documentation = file
+	return b
+}
+
+func (b *FSBuilder) WithPortalTheme(file string) *FSBuilder {
+	b.files.PortalTheme = file
 	return b
 }
 

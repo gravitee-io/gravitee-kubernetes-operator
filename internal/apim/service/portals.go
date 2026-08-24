@@ -48,7 +48,11 @@ func (svc *Portals) createOrUpdate(
 	url := svc.AutomationTarget("portals").
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	dto := model.ToPortalDTO(prtl.Spec.Type, refs.NewNamespacedNameFromObject(prtl).HRID())
+	dto := model.ToPortalDTO(
+		prtl.Spec.Type,
+		refs.NewNamespacedNameFromObject(prtl).HRID(),
+		prtl.ActiveThemeHRID(),
+	)
 	importStatus := &portal.Status{}
 
 	if err := svc.HTTP.Put(url.String(), dto, &importStatus); err != nil {

@@ -56,6 +56,8 @@ const (
 	PortalLinkPortalField        IndexField = "portallink-portal"
 	DocumentationPortalField     IndexField = "documentation-portal"
 	DocumentationApiField        IndexField = "documentation-api"
+	PortalThemeContextField      IndexField = "portaltheme-context"
+	PortalThemeField             IndexField = "portal-theme"
 )
 
 func (f IndexField) String() string {
@@ -110,6 +112,10 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexDocumentationPortal))
 	collect(newIndexer(ctx, cache, &v1alpha1.Documentation{}, DocumentationApiField,
 		indexDocumentationApi))
+	collect(newIndexer(ctx, cache, &v1alpha1.PortalTheme{}, PortalThemeContextField,
+		indexPortalThemeManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.Portal{}, PortalThemeField,
+		indexPortalThemeRef))
 
 	return errors.NewAggregate(errs)
 }
@@ -347,6 +353,22 @@ func indexPortalManagementContexts(prtl *v1alpha1.Portal, fields *[]string) {
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(prtl, prtl.Spec.Context))
+}
+
+func indexPortalThemeRef(prtl *v1alpha1.Portal, fields *[]string) {
+	if !prtl.HasThemeRef() {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(prtl, prtl.GetThemeRef()))
+}
+
+func indexPortalThemeManagementContexts(thm *v1alpha1.PortalTheme, fields *[]string) {
+	if thm.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(thm, thm.Spec.Context))
 }
 
 func indexPortalListingPortal(listing *v1alpha1.PortalListing, fields *[]string) {

@@ -192,6 +192,11 @@ func PortalAccepted(prtl *v1alpha1.Portal) error {
 		k8s.MapConditions(prtl.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
+func PortalThemeAccepted(thm *v1alpha1.PortalTheme) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(thm.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
 func NotificationCompleted(notification *v1alpha1.Notification) error {
 	return Equals(reconcileCondition, false, notification.Status.IsFailed())
 }

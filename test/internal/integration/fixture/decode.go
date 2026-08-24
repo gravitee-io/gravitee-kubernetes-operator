@@ -47,6 +47,7 @@ var (
 	portalListingKind      = v1alpha1.GroupVersion.WithKind("PortalListing")
 	portalLinkKind         = v1alpha1.GroupVersion.WithKind("PortalLink")
 	documentationKind      = v1alpha1.GroupVersion.WithKind("Documentation")
+	portalThemeKind        = v1alpha1.GroupVersion.WithKind("PortalTheme")
 )
 
 func decodeIfDefined[T client.Object](path string, rcv T, kind schema.GroupVersionKind) *T {
