@@ -1,0 +1,21 @@
+---
+description: Kubebuilder operator conventions — idempotent reconcile, status subresource, finalizers, structured logging, watches, generated files
+alwaysApply: true
+---
+
+# Operator standards
+
+The authoritative rules live in `.agent/rules/operator-standards.md`, relative to the
+repository root. Read that file before changing a controller, a status update, or anything
+under `api/`. This stub deliberately keeps no copy of the rules.
+
+It covers idempotent level-triggered reconciliation and requeue semantics, status updates
+through the subresource with `ObservedGeneration`, finalizer naming and deletion races,
+structured logging via `log.FromContext(ctx)`, watch and predicate choices, and which
+generated files must never be hand-edited.
+
+Note the codegen requirement: after changing CRD or model types under `api/` run
+`make generate manifests reference`, and after changing Helm values run `make helm-reference`.
+CI checks all four targets, so a dirty tree fails the PR.
+
+@.agent/rules/operator-standards.md

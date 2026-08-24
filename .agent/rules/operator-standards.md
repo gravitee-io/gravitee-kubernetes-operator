@@ -21,7 +21,7 @@
 - Use finalizers only when external resources (APIM, cloud) need cleanup on CR deletion
 - Always check `DeletionTimestamp` before adding a finalizer to avoid racing with deletion
 - Remove the finalizer only after all cleanup is confirmed complete
-- Keep finalizer names namespaced: `core.gravitee.io/<purpose>`
+- Declare finalizer names as constants in `internal/core/keys.go`, following the existing `finalizers.gravitee.io/<purpose>` convention
 
 ## Logging
 

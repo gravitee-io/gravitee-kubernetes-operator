@@ -4,13 +4,11 @@
 @.agent/rules/operator-standards.md
 @.agent/rules/gateway-standards.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
 Gravitee Kubernetes Operator (GKO) is a Kubernetes operator built with **Kubebuilder/controller-runtime** that manages Gravitee API Management (APIM) resources through Custom Resource Definitions (CRDs). It allows users to define, deploy, and publish APIs to the Gravitee API Portal and Gateway declaratively.
 
-**Language:** Go 1.25.5 | **API Group:** `gravitee.io/v1alpha1` | **Module:** `github.com/gravitee-io/gravitee-kubernetes-operator`
+**Language:** Go 1.26 | **API Group:** `gravitee.io/v1alpha1` | **Module:** `github.com/gravitee-io/gravitee-kubernetes-operator`
 
 ## Build & Development Commands
 
@@ -72,6 +70,47 @@ Controllers use a **watch system** (`internal/watch/`) to react to changes in re
 
 Validation and mutation webhooks organized by resource type (`api/v2/`, `api/v4/`, `application/`, `mctx/`, `subscription/`, `group/`, `policygroups/`). Each has a `ctrl.go` (webhook handler) and `validate.go`. Controllers implement generic `admission.Validator[T]` / `admission.Defaulter[T]`; private `validateCreate` / `validateUpdate` / `validateDelete` take the concrete CRD type (e.g. `*v1alpha1.Application`) so they do not type-assert from `runtime.Object`.
 
+### APIM client (internal/apim/)
+
+Everything that talks to APIM goes through `internal/apim`. This is the layer that makes a CRD real, and it is where a new resource needs the most work.
+
+| Package | Role |
+|---------|------|
+| `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
+| `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
+| `internal/apim/service/` | One file per resource: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
+| `internal/apim/model/` | The **wire payloads** (`*DTO`) sent to and received from APIM, plus their `To*DTO` mappers |
+
+Controllers and webhooks never build a URL or a payload themselves. They obtain a client with `apim.FromContextRef(ctx, obj.ContextRef(), obj.GetNamespace())` and call a service method.
+
+#### Management API vs Automation API
+
+`client.NewURLs` builds four roots from the `ManagementContext`:
+
+| Target | Shape | Used by |
+|--------|-------|---------|
+| `AutomationTarget(path)` | `{base}/automation/organizations/{org}/environments/{env}{path}` | All HRID-managed resources (v4 APIs, applications, subscriptions, groups, shared policy groups, dictionaries, portals, documentations) |
+| `EnvV1Target(path)` | `{base}/management/organizations/{org}/environments/{env}{path}` | Legacy v2 API import, some read-only lookups |
+| `EnvV2Target(path)` | `{base}/management/v2/organizations/{org}/environments/{env}{path}` | Management API v2 reads |
+| `OrgTarget(path)` | `{base}/management/organizations/{org}{path}` | Org-level calls |
+
+Cloud contexts swap the base paths (`/apim/automation`, `/apim/rest`); a `spec.path` override on the context wins over both. **New resources are Automation API only** — do not add Management API endpoints for them.
+
+The Automation API is HRID-addressed: `PUT` on the collection with the payload carrying `hrid`, `DELETE`/`GET` on `{collection}/{hrid}`, and `?dryRun=true|false` on writes. HRIDs come from `refs.NewNamespacedNameFromObject(obj).HRID()` (namespace + name).
+
+Resources created before APIM 4.12 are still UUID-addressed. The service branches on the `AutomationAPIManaged` condition, sends the UUID in the HRID slot and sets `?hridContainsUUID=true`; on the first successful HRID-based write it calls `k8s.AddAutomationAPIManagedCondition(obj)` so subsequent reconciles use the HRID. Every service that supports the migration carries the same `get<Resource>ID` helper returning `(identifier, hridContainsUUID)`.
+
+#### DTOs are the API payload
+
+`internal/apim/model/` types are the **Automation API request and response bodies**, not comparison helpers. `SharedPolicyGroup.createOrUpdate` builds `model.ToSharePolicyGroupDTO(...)` and `PUT`s it; `GetByHRID` unmarshals the response into the same `SharedPolicyGroupDTO`. Drift detection is a *second consumer* of these types — that is the only reason `drift:` struct tags live on them.
+
+Mappers are plain functions in `internal/apim/model/` (`ToApplicationDTO`, `ToAPIV4DTO`, `ToSharePolicyGroupDTO`, `ToGroupDTO`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
+
+Two deviations worth knowing before copying a pattern:
+
+- **Application** `PUT`s `app.Spec` directly; `ApplicationDTO` exists for the typed `GET` response and for drift.
+- **Subscription** `PUT`s `AutomationSubscriptionDTO` (`apiHrid`/`applicationHrid`/`planHrid`) but compares on `SubscriptionDTO` (`apiId`/`applicationId`/`planId`).
+
 ### Drift detection
 
 Drift detection rejects admission **updates** when APIM was changed outside the operator while the CRD still reflects the old desired state. It is disabled globally by default (`DRIFT_DETECTION_ENABLED`, Helm `manager.driftDetection.enabled`) and can be overridden per resource with the `gravitee.io/drift-detection` annotation (`true` / `false`). Policy env vars: `DRIFT_DETECTION_POLICY`, `DRIFT_DETECTION_ON_REMOTE_MISSING`, `DRIFT_DETECTION_FETCH_FAILURE_POLICY` (`deny` | `warn` | `allow`).
@@ -83,7 +122,7 @@ Two packages are involved:
 | `internal/drift/` | Comparison engine: struct walk, equivalence registry, `Detect`, `Merge`, `Result.String` |
 | `internal/admission/drift/` | Admission glue: template compile, ref resolution, remote fetch, DTO mapping |
 
-`drift.Init()` must run at startup (`main.go`) and in unit/integration suites that exercise drift (`BeforeSuite`).
+`drift.Init()` must run at startup (`main.go`) and in any unit suite that exercises drift (`BeforeSuite`).
 
 #### Adding drift detection to a resource
 
@@ -104,23 +143,27 @@ Provide four callbacks:
 
 Reuse dependencies already resolved in `validateUpdate` (API, application, plan, etc.) inside closures passed to `getRemote` / `dtoMapper` — do not resolve them again (nil-deref risk).
 
-#### DTO design
+#### Drift tags on the DTO
 
-Define comparison DTOs in `internal/apim/model/` (e.g. `ApplicationDTO`, `SubscriptionDTO`). Tag fields with `drift:"<equivalence>"` struct tags:
+Do **not** define a DTO for drift. Reuse the resource's existing `internal/apim/model/` payload — the one the service already sends and receives (see [APIM client](#apim-client-internalapim)) — and add `drift:"<equivalence>"` struct tags to it. Drift tags are inert for JSON serialization, so tagging a live payload type is safe.
 
 | Tag | Use for |
 |-----|---------|
-| `ignore` | Server-managed or identity fields not in the CRD payload (`id`, `hrid`, `status` on applications) |
+| `ignore` | Server-managed or identity fields not in the CRD payload (`id`, `hrid`, `crossId`, `status`) |
 | `empty-is-nil` | Optional slices, maps, pointers, zero-value structs |
+| `empty-is-true` | Booleans APIM defaults to `true` when absent |
 | `trimmed` | Strings with insignificant whitespace |
 | `rfc3339` | Date-time strings (timezone-tolerant) |
+| `case-insensitive` | Enums APIM may echo back in a different case |
 | `unstructured` | `GenericStringMap` / `unstructured.Unstructured` JSON blobs |
+| `ignore-remote:A,B` | Strings where the listed remote values are server defaults |
+| `ignore-namespace-prefix` | Strings APIM prefixes with the namespace |
 
-Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of the **spec payload**; if APIM returns a field the DTO mapper never sets and both sides end up empty, comparison is a no-op — explicit `ignore` is optional belt-and-suspenders.
+Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of the **spec payload**; if APIM returns a field the mapper never sets and both sides end up empty, comparison is a no-op — explicit `ignore` is optional belt-and-suspenders.
 
 Add drift tags on nested `api/model/` types when the same struct is embedded in the DTO (e.g. TLS certificate fields on `application.ClientCertificate`).
 
-DTO Mapping is done the `api/model/` package.
+The equivalence registry is split in two: generic tags in `internal/drift/equivalences.go`, APIM-specific ones (`ignore-remote-only-metadata`, `ignore-unknown-crd-groups`) in `internal/apim/drift/equivalences.go`. Both are wired by `drift.Init()`.
 
 #### Merge semantics (why both old and new are compared)
 
@@ -134,33 +177,31 @@ See `internal/drift/types.go` (`Merge` comment) and `internal/drift/doc.go`.
 
 #### Testing
 
-- **Unit** (`test/unit/drift/`): table-driven `drift.Detect` tests for DTO equivalence / tag behaviour. Do not re-test the framework; test your DTO tags and `ToDTO()` parity. Call `drift.Init()` in the suite `BeforeSuite`.
-- **Integration** (`test/integration/admission/<resource>/`): apply fixtures, mutate APIM out-of-band, call `AdmissionCtrl.ValidateUpdate`, assert with `test/internal/integration/assert.DriftDetected`. Call `drift.Init()` in `SynchronizedBeforeSuite`. Use `labels.WithContext` when a `ManagementContext` is required.
+Unit only, in `test/unit/drift/apim/`: table-driven `drift.Detect` tests over your DTO, covering each tag you added and `To*DTO` parity. Do not re-test the framework. Call `drift.Init()` in the suite `BeforeSuite`. Behaviour against a live APIM belongs in the e2e repo (see [Testing](#testing)).
 
-Reference implementations: `internal/admission/application/validate.go`, `internal/admission/subscription/validate.go`, `test/unit/drift/application_detect_test.go`, `test/unit/drift/subscription_detect_test.go`.
+Reference implementations: `internal/admission/application/drift.go`, `internal/admission/subscription/drift.go`, `test/unit/drift/apim/`.
 
 ### Internal Packages (internal/)
 
-Key packages: `apim/` (APIM client logic), `core/` (shared interfaces), `env/` (config via env vars), `search/` (cache field indexers), `template/` (Go templating for CRD values), `watch/` (dynamic resource watching), `webhook/` (webhook server setup).
+Key packages: `apim/` (APIM client — see [APIM client](#apim-client-internalapim)), `core/` (shared interfaces), `env/` (config via env vars), `k8s/dynamic/` (unstructured resolution of referenced CRs, Secrets and ConfigMaps), `search/` (cache field indexers), `template/` (Go templating for CRD values — delimiters are ``[[`` / ``]]``, not the Go default, with `secret` and `configmap` functions: ``[[ secret `my-secret/token` ]]``), `watch/` (dynamic resource watching), `webhook/` (webhook server setup).
 
 ### Entry Point (main.go)
 
 Initializes controller-runtime manager, registers all controllers and webhooks based on feature flags (`ENABLE_GATEWAY_API`, `ENABLE_INGRESS`, `ENABLE_WEBHOOK`, `ENABLE_TEMPLATING`), optionally applies CRDs from embedded Helm chart (`APPLY_CRDS`).
 
-## Testing Patterns
+## Testing
 
-- **Unit tests** (`test/unit/`): Ginkgo v2 suites. Dot-imports for `ginkgo/v2` and `gomega` are allowed.
-- **Integration tests** (`test/integration/`): Ginkgo v2 suites requiring a running cluster. Use `test/internal/integration/fixture/` for building test fixtures from YAML files in `test/internal/integration/`. Use `test/internal/integration/constants/` for shared file paths and timeouts.
-- **E2E tests** (`test/platform-test/e2e/`): Playwright (TypeScript) suites running against a real cluster with APIM and the operator. Fixtures live in `test/platform-test/e2e/fixtures/`. Run via `make e2e` or `npm --prefix test/platform-test run e2e`.
-- **Helm tests** (`helm/gko/tests/`): helm-unittest YAML tests.
+**New work is unit tests here and e2e tests in the platform repo. Do not add integration tests.**
 
-Integration test fixtures are YAML manifests loaded via the fixture builder pattern:
-```go
-fixture.Builder().
-    AddSecret(constants.ContextSecretFile).
-    Build().
-    Apply()
-```
+| Layer | Where | What belongs there |
+|-------|-------|--------------------|
+| Unit | `test/unit/<area>/` in this repo | Pure logic: DTO mapping, drift tags, validation predicates, templating, helpers. Ginkgo v2; dot-imports for `ginkgo/v2` and `gomega` are allowed |
+| E2E | [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e) | Anything requiring a cluster or a live APIM: reconciliation, `.status`, admission rejection, drift, deletion |
+| Helm | `helm/gko/tests/` | helm-unittest YAML tests |
+
+In the e2e repo, operator-specific coverage goes in `apim/tests/gko/<area>/` with fixtures in `apim/fixtures/<area>/`; behaviour a customer could also reach through Terraform goes in `apim/tests/user-journeys/<persona>/<journey>/`. That repo carries its own `AGENTS.md` and a `write-e2e-test` skill — follow those, do not infer its conventions from this file.
+
+`test/integration/` and `test/platform-test/` still exist and still run in CI. Keep them green, but do not extend them.
 
 ## Code Generation
 

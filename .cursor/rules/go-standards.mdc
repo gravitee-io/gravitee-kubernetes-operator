@@ -1,0 +1,17 @@
+---
+description: Go coding standards for this repo — error handling, concurrency, style limits, test layout, forbidden dependencies
+alwaysApply: true
+---
+
+# Go standards
+
+The authoritative rules live in `.agent/rules/go-standards.md`, relative to the repository
+root. Read that file before writing or reviewing Go code here. This stub deliberately keeps
+no copy of the rules, so the file is the only place they are maintained.
+
+It covers error wrapping and `Err` sentinel naming, context and mutex handling, function
+length and cyclomatic complexity limits, the dot-import and import-order policy, where unit
+tests must live (`test/unit/<area>/`, never beside `controllers/**/internal`), and banned
+dependencies.
+
+@.agent/rules/go-standards.md
