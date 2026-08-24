@@ -2,100 +2,446 @@
 
 ## When to Use
 
-Use this skill when adding validation or defaulting webhooks for a CRD.
+Use this skill when adding validation or defaulting for a CRD at admission time.
 
-## Steps
+The webhook is the operator's only chance to reject bad input *before* it reaches the cluster, so
+the ordering of the checks is not cosmetic: each step depends on the previous one having succeeded.
+Section 3 is the part to get right.
 
-### 1. Create the Webhook Controller
+## 1. `internal/admission/<resource>/ctrl.go`
 
-Create `internal/admission/<resource>/ctrl.go`:
+A thin typed adapter. No logic lives here — it delegates to the private functions in `validate.go`
+and maps the accumulated errors.
 
 ```go
-package resource
+package myresource
 
-import (
-    "context"
-
-    "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-    ctrl "sigs.k8s.io/controller-runtime"
-    "sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-)
+var _ admission.Validator[*v1alpha1.MyResource] = AdmissionCtrl{}
+var _ admission.Defaulter[*v1alpha1.MyResource] = AdmissionCtrl{}
 
 type AdmissionCtrl struct{}
 
-func (a *AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
-    return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.MyResource{}).
-        WithValidator(a).
-        WithDefaulter(a).
-        Complete()
+func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.MyResource{}).
+		WithValidator(a).
+		WithDefaulter(a).
+		Complete()
 }
 
-// Implement admission.Validator[*v1alpha1.MyResource]
-func (a *AdmissionCtrl) ValidateCreate(ctx context.Context, obj *v1alpha1.MyResource) (admission.Warnings, error) {
-    return validate(ctx, obj)
+func (a AdmissionCtrl) Default(_ context.Context, obj *v1alpha1.MyResource) error {
+	return nil
 }
 
-func (a *AdmissionCtrl) ValidateUpdate(ctx context.Context, oldObj, newObj *v1alpha1.MyResource) (admission.Warnings, error) {
-    return validate(ctx, newObj)
+func (a AdmissionCtrl) ValidateCreate(
+	ctx context.Context, obj *v1alpha1.MyResource,
+) (admission.Warnings, error) {
+	return validateCreate(ctx, obj).Map()
 }
 
-func (a *AdmissionCtrl) ValidateDelete(ctx context.Context, obj *v1alpha1.MyResource) (admission.Warnings, error) {
-    return nil, nil
+func (a AdmissionCtrl) ValidateUpdate(
+	ctx context.Context, oldObj *v1alpha1.MyResource, newObj *v1alpha1.MyResource,
+) (admission.Warnings, error) {
+	if newObj.IsBeingDeleted() {
+		return admission.Warnings{}, nil
+	}
+
+	return validateUpdate(ctx, oldObj, newObj).Map()
 }
 
-// Implement admission.Defaulter[*v1alpha1.MyResource]
-func (a *AdmissionCtrl) Default(ctx context.Context, obj *v1alpha1.MyResource) error {
-    return nil
+func (a AdmissionCtrl) ValidateDelete(
+	ctx context.Context, obj *v1alpha1.MyResource,
+) (admission.Warnings, error) {
+	return validateDelete(ctx, obj).Map()
 }
 ```
 
-### 2. Create the Validation Logic
+Notes:
 
-Create `internal/admission/<resource>/validate.go`:
+- `admission.Validator[T]` / `admission.Defaulter[T]` are **controller-runtime** generics, not
+  project types. Because they are typed, the private functions take `*v1alpha1.MyResource`
+  directly — never type-assert from `runtime.Object`.
+- Keep the two `var _ =` assertions. They are what turns a signature mistake into a compile error.
+- Declare `Default` even when it is a no-op, so `WithDefaulter(a)` stays valid.
+- When nothing can reference the resource, `ValidateDelete` returns `admission.Warnings{}, nil`
+  directly and there is no `validateDelete` at all (subscription, group, dictionary, portal…).
+
+**The `IsBeingDeleted()` guard is in one of two places, and the codebase is split.** An update that
+only stamps a `deletionTimestamp` is not a spec change, so validating it would reject the deletion
+of a resource that is already invalid. Nine resources short-circuit in `ctrl.go` as above
+(subscription, group, mctx, dictionary, portal, portallisting, portallink, docs, resource); four
+do it as the first statement of `validateUpdate` in `validate.go` (application, policygroups,
+api/v2, api/v4). Follow whichever the resource you are copying from uses — do not add both.
+
+## 2. Register the webhook
+
+**In `main.go`**, inside `setupAdmissionWebhooks()`:
 
 ```go
-package resource
-
-import (
-    "context"
-
-    "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-    "sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-)
-
-func validate(ctx context.Context, obj *v1alpha1.MyResource) (admission.Warnings, error) {
-    var errs []error
-    // Add validation checks
-    return nil, errors.Join(errs...)
+if err := (&myresource.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+	setupLog.Error(err, "Unable to create webhook", "webhook", "MyResource")
+	os.Exit(1)
 }
 ```
 
-### 3. Register in main.go
+**In Helm.** This repo has no `+kubebuilder:webhook:` markers and does not generate webhook
+manifests — they are hand-written. Add an entry to
+`helm/gko/templates/webhook/validation-webhook.yaml`, and to `mutation-webhook.yaml` only if you
+implemented real defaulting:
 
-Add inside the `ENABLE_WEBHOOK` block:
+```yaml
+  - name: v1alpha1.gravitee.io.myresource
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-myresource
+        port: {{ .Values.manager.webhook.service.port }}
+    rules:
+      - operations: [CREATE, UPDATE, DELETE]
+        apiGroups: [gravitee.io]
+        apiVersions: [v1alpha1]
+        resources: ['myresources']
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
+    admissionReviewVersions:
+      - v1
+```
+
+The path is generated by controller-runtime as
+`/validate-<group with dots replaced by dashes>-<version>-<lowercase kind>`. A mismatch between
+the Helm path and the generated one fails closed with `failurePolicy: Fail`, so copy it carefully.
+Every existing entry registers all three operations — `CREATE`, `UPDATE`, `DELETE` — even where
+`ValidateDelete` returns nothing; keep that uniform rather than trimming the list. Follow the
+existing entries for the `namespaceSelector` block too; it is templated on `useAutoUniqueNames`.
+
+## 3. `internal/admission/<resource>/validate.go` — the order of checks
+
+Each function returns `*errors.AdmissionErrors` and accumulates, returning early when the
+accumulator is severe. No two resources have an identical chain, but they converge on the same
+shape: **cheap and local first, cluster next, remote last.** Here is what each one actually does
+today, so you can see the spread before picking a model:
+
+| Resource | `validateCreate`, in order |
+|---|---|
+| `policygroups` | template → ctxref → dry-run |
+| `application` | template → ctxref → `validateSettings` (resolves cert refs) → dry-run |
+| `group` | ctxref → dry-run *(no template step)* |
+| `api/v4` | `validateFlowsAndEndpoints` → `validateSharedPolicyGroups` → `base.ValidateCreate` → dry-run *(only if `HasContext()`)* |
+| `api/v2` | bail out entirely if the `gravitee.io/ingress-template` annotation is set → `base.ValidateCreate` → dry-run *(only if `HasContext()`)* |
+| `subscription` | template → kind → resolve API + app → API sync mode → API state → plan → api keys → app state → app settings → context refs → `endingAt` → mTLS *(no dry-run)* |
+| `mctx` | template → required fields + secret ref → APIM reachability *(warning on network failure)* |
+
+`base.ValidateCreate` (shared by both API versions) is itself: template → ctxref → plans →
+path conflict → resource refs → pages → notifications.
+
+`policygroups` is the closest thing to a plain template. Two deviations are worth knowing: `api/v4`
+runs its spec-shape checks *before* the template step, and `subscription` has no dry-run at all
+because its correctness is entirely a function of resources it resolved from the cluster.
+
+### `validateCreate`
 
 ```go
-if err := (&resource.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
-    setupLog.Error(err, "Unable to create webhook", "webhook", "MyResource")
-    os.Exit(1)
+func validateCreate(ctx context.Context, obj *v1alpha1.MyResource) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	// 1. Templates. Must be first: it also compiles [[ ]] values into the object,
+	//    so every later check sees resolved values.
+	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// 2. The management context exists in the cluster. No point calling APIM without it.
+	errs.Add(ctxref.Validate(ctx, obj))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// 3. Field-level and semantic validation of the spec alone: mutually exclusive
+	//    options, well-formed values, enum coherence.
+	errs.MergeWith(validateSettings(ctx, obj))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// 4. Cross-resource checks against the cluster, if the spec references anything.
+	//    Not every resource has this step.
+	errs.MergeWith(validateReferencedResources(ctx, obj))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// 5. APIM dry-run. The last and most expensive step; it is a network call.
+	errs.MergeWith(validateDryRun(ctx, obj))
+	return errs
 }
 ```
 
-### 4. Choose Validator, Defaulter, or Both
+**1 — Templates.** `admission.CompileAndValidateTemplate` calls `template.Compile(ctx, obj, false)`
+and turns a failure into a severe error. It mutates the object, which is precisely why it runs
+first: every subsequent check must see the resolved value, not the literal
+``[[ secret `my-secret/token` ]]``.
 
-- Use `WithValidator()` only if you need validation without defaults
-- Use `WithDefaulter()` only if you need mutation without validation
-- Use both when the resource needs both paths
-- Only implement the interfaces you register (compile will enforce this)
+**2 — Context ref.** `ctxref.Validate` is a no-op when the resource has no context
+(`HasContext()`), otherwise it asserts the `ManagementContext` resolves. Skip it and step 5 will
+fail with a nil-deref instead of a readable message.
 
-### 5. Create Admission Tests
+**3 — Spec-only checks.** Everything answerable from the object itself. Accumulate freely here —
+reporting three bad fields at once is better than three round-trips.
 
-Create tests in `test/integration/admission/<resource>/`:
-- Test that valid objects pass
-- Test that invalid objects are rejected with clear error messages
-- Test defaulting behavior if applicable
+**4 — Cluster checks.** Referenced CRs (`dynamic.ResolveAPI`, `dynamic.ResolveApplication`,
+`k8s.GetClient().Get`) and reverse lookups (`search.FindByFieldReferencing`). Anything requiring
+the API server but not APIM. Real instances: `api/v4`'s `validateSharedPolicyGroups`,
+`subscription`'s `resolveDependencies` and `validatePlan`, `base`'s `ValidateNoConflictingPath`
+and `validateResourceOrRefs`. Resources with no references — `policygroups`, `group` — simply
+have no step 4.
 
-### 6. Final Checks
+**5 — APIM dry-run.** Reuse the service's `DryRunCreateOrUpdate` on a deep copy, and map the
+response's own errors:
+
+```go
+func validateDryRun(ctx context.Context, obj *v1alpha1.MyResource) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	cp := obj.DeepCopy()
+	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
+
+	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(cp))
+
+	status, err := apimClient.MyResources.DryRunCreateOrUpdate(cp)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
+	for _, severe := range status.Errors.Severe {
+		errs.AddSevere(severe)
+	}
+	if errs.IsSevere() {
+		return errs
+	}
+	for _, warning := range status.Errors.Warning {
+		errs.AddWarning(warning)
+	}
+	return errs
+}
+```
+
+Always dry-run on a **deep copy**: `PopulateIDs` and ref resolution mutate the object, and the
+admission response must not carry those mutations unless they came from `Default`.
+
+### `validateUpdate`
+
+Eight of the eleven resources with an update path use the same four-step shape — what cannot
+change, then the whole create chain, then drift. Start here:
+
+```go
+func validateUpdate(
+	ctx context.Context,
+	oldObj *v1alpha1.MyResource,
+	newObj *v1alpha1.MyResource,
+) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	
+	// 1. Immutability, first because comparing two specs is free and "cannot change X
+	//    once created" is a better message than whatever APIM would return.
+	errs.MergeWith(validateImmutableFields(oldObj, newObj))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// 2. Update-only cluster checks: what would this change break for resources that
+	//    already reference this one? Only some resources have this.
+	errs.Add(base.ValidateSubscribedPlans(ctx, oldObj, newObj, search.MyResourceSubsField))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// 3. The whole create chain — templates, ctxref, spec, cluster, dry-run.
+	errs.MergeWith(validateCreate(ctx, newObj))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// 4. Drift, always last: it is the only check that can be disabled at runtime, and it
+	//    needs a spec that already passed everything else.
+	mergeDriftValidation(ctx, oldObj, newObj, errs)
+
+	return errs
+}
+```
+
+`dictionary`, `group` and `portal` are the minimal form of this — literally
+`errs := validateCreate(ctx, newObj)` then drift, with no immutability step. Note that those three
+keep `validateUpdate` in `drift.go` rather than `validate.go`, since drift is all it adds.
+
+**The three that do not delegate to `validateCreate`** — `application`, `policygroups` and
+`subscription` — re-run the chain inline because their update path needs extra checks interleaved
+at specific points, not appended: `application` runs `validateSettingsUpdate` between
+`validateSettings` and the cluster check, and gates the dry-run on
+`oldApp.GetSpec().Hash() != newApp.GetSpec().Hash()` so metadata-only updates skip the network
+call. Copy that shape only if you have the same need; duplicating the chain otherwise means the
+next person changes create and forgets update.
+
+### `validateDelete`
+
+Answer one question: would deleting this orphan something? Two shapes exist.
+
+```go
+// Remote consumers, from the CRD's own status:
+func validateDelete(_ context.Context, obj *v1alpha1.MyResource) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	if obj.Status.SubscriptionCount > 0 {
+		errs.AddSeveref("cannot delete %s, it still has active subscriptions", obj.GetName())
+	}
+	return errs
+}
+
+// In-cluster consumers, via a search indexer:
+func validateDelete(ctx context.Context, obj *v1alpha1.MyResource) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	if err := search.AssertNoMyResourceRef(ctx, obj); err != nil {
+		errs.AddSevere(err.Error())
+	}
+	return errs
+}
+```
+
+The indexer form needs a matching field indexer in `internal/search/indexer.go`. If nothing can
+reference the resource, skip `validate.go` entirely and return `admission.Warnings{}, nil` from
+`ValidateDelete` in `ctrl.go`, as subscription and group do. Leave `DELETE` in the Helm rule
+regardless.
+
+## 4. Severity and accumulation
+
+`internal/errors/admission.go`:
+
+| Call | Effect |
+|---|---|
+| `errs.AddSevere(msg)` / `AddSeveref(fmt, …)` | Rejects the request |
+| `errs.AddWarning(msg)` / `AddWarningf(fmt, …)` | Admits it, surfaces the text in `kubectl` output |
+| `errs.Add(err)` | Routes a `*AdmissionError` by its own severity; nil-safe |
+| `errs.MergeWith(other)` | Concatenates both lists; nil-safe |
+| `errs.IsSevere()` | The early-return predicate |
+| `errs.Map()` | `(admission.Warnings, error)` — **only the first severe error is returned** |
+
+Because `Map()` surfaces only `Severe[0]`, ordering is also a UX decision: the first severe error
+you add is the one the user reads. Add the most specific, most actionable one first.
+
+Use a warning when the operator can still proceed and the user may not be able to fix it right
+now — an unreachable APIM on `ManagementContext` create, a deprecated field. Use severe when
+reconciliation is guaranteed to fail.
+
+## 5. Defaulting
+
+`Default(ctx, obj)` mutates in place and returns an error only when it cannot compute the default.
+Keep it to filling blanks; it runs before validation, so anything it sets must still be valid.
+
+```go
+func (a AdmissionCtrl) Default(_ context.Context, obj *v1alpha1.MyResource) error {
+	for i := range obj.Spec.Items {
+		item := &obj.Spec.Items[i]
+		if item.Name == "" {
+			item.Name = obj.Spec.Name + "-" + strconv.Itoa(i)
+		}
+	}
+	return nil
+}
+```
+
+If defaulting needs to read the cluster, use `dynamic.Resolve*` — `mctx` resolves a Secret and
+parses the cloud token to fill `baseUrl`, `orgId` and `envId`.
+
+A defaulter that has no entry in `mutation-webhook.yaml` never runs in a real cluster, however
+green the unit tests are. Application is currently in that state; do not use it as the model for
+wiring a new one.
+
+## 6. Drift (update only)
+
+Only after the resource has a DTO and a `GetByHRID` in `internal/apim`. Put the glue in
+`internal/admission/<resource>/drift.go`:
+
+Ten resources have drift today. Seven expose a `mergeDriftValidation(ctx, old, new, errs)` helper
+here and call it as the last line of `validateUpdate`; that is the form to copy:
+
+```go
+func mergeDriftValidation(
+	ctx context.Context,
+	oldObj *v1alpha1.MyResource,
+	newObj *v1alpha1.MyResource,
+	errs *errors.AdmissionErrors,
+) {
+	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemote,
+		drift.MapDTO(toMyResourceDTO)))
+}
+
+// Required by the signature even when there is nothing to resolve.
+func resolveRefs(context.Context, *v1alpha1.MyResource) error {
+	return nil
+}
+
+func toMyResourceDTO(obj *v1alpha1.MyResource) model.MyResourceDTO {
+	return model.ToMyResourceDTO(obj.Spec.MyResource, refs.NewNamespacedNameFromObject(obj).HRID())
+}
+
+func getRemote(apimClient *apim.APIM, obj *v1alpha1.MyResource) (any, error) {
+	hrid := refs.NewNamespacedNameFromObject(obj).HRID()
+	remote, err := apimClient.MyResources.GetByHRID(hrid)
+	if err != nil {
+		return nil, err
+	}
+	return remote.MyResourceDTO, nil
+}
+```
+
+The getter above is the shape for a resource with no legacy UUIDs. On `application`, `api/v4` and
+`policygroups` it branches on `k8s.IsAutomationAPIManaged`, calls `PopulateIDs` and falls back to
+`GetByID` — carry that over only if the CRD can predate 4.12.
+
+Two variations you will see:
+
+- The other three — `dictionary`, `group` and `portal` — skip the helper and inline
+  `drift.ValidateDrift` in a three-line `validateUpdate` that lives in `drift.go` itself, because
+  drift is all they add to create.
+- When the APIM client comes from a **related** resource rather than the object's own context ref,
+  the helper resolves that resource first, fails severely if it cannot, and then calls
+  `drift.ValidateDriftWithContext` with a context-resolver closure. `portallisting` resolves its
+  portal this way; `subscription` uses the application's context. The remote getter is then built
+  by a closure over the already-resolved dependency (`getRemotePortalListing(prtl)`) so it is never
+  resolved twice.
+
+The DTO mapper and the remote getter must produce the **same struct type**, by value — note the
+getter reaching into the state wrapper for the embedded `.MyResourceDTO`. Full callback contract
+and tag reference: [AGENTS.md](../../AGENTS.md#drift-detection).
+
+## 7. Tests
+
+**Unit tests only in this repo**, under `test/unit/admission/` and `test/unit/drift/apim/` — the
+pure parts: field validation predicates, defaulting, immutability comparisons, DTO drift tags. Call
+`drift.Init()` in `BeforeSuite` for any suite touching drift.
+
+**Anything that needs a cluster or a live APIM goes to
+[`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e)**:
+rejection messages as a user sees them, dry-run behaviour, drift against a mutated APIM, deletion
+guards. Webhook coverage lives in `apim/tests/gko/admission-webhook/` with fixtures in
+`apim/fixtures/admission-webhook/<case>/`. That repo has its own `AGENTS.md` and a `write-e2e-test`
+skill — follow them there.
+
+Cover at minimum: a valid object is admitted; each severe check rejects with its own message;
+warnings do not reject; defaulting fills what it should. For drift, four cases — minimal and
+fully-populated specs updated in step with APIM (no drift), and the same two with APIM mutated
+out-of-band (drift detected).
+
+Do not add anything to `test/integration/`.
+
+## 8. Final checks
 
 ```bash
 make build

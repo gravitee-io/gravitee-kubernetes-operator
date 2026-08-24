@@ -4,9 +4,7 @@
 
 Use this skill when adding a new Custom Resource Definition to the operator.
 
-## Steps
-
-### 1. Define the Type
+## 1. Define the Type
 
 Create or edit a file in `api/v1alpha1/`:
 
@@ -28,9 +26,13 @@ type MyResourceList struct {
 }
 ```
 
+Put the domain model in `api/model/<resource>/` and embed it in the spec, the way the other
+resources do — that model is what the APIM DTO is mapped from, and keeping it separate from the
+Kubernetes wrapper is what makes `mapViaJSON` viable.
+
 Add kubebuilder validation markers on spec fields as needed.
 
-### 2. Register the Type
+## 2. Register the Type
 
 Add to the `SchemeBuilder` in `api/v1alpha1/package_markers.go`:
 
@@ -40,14 +42,17 @@ func init() {
 }
 ```
 
-### 3. Implement Core Interfaces
+## 3. Implement Core Interfaces
 
 Implement the interfaces in `internal/core/interface.go` that apply:
 - `Object` (all CRDs)
 - `Spec` / `Status`
 - `ContextAwareObject` (if the resource references a ManagementContext)
 
-### 4. Generate Code
+Resources synced through the Automation API also need `PopulateIDs(mCtx, automationAPIManaged)`
+and `GetID()`; the controller and the webhook both call them before every APIM request.
+
+## 4. Generate Code
 
 ```bash
 make generate manifests reference
@@ -55,25 +60,29 @@ make generate manifests reference
 
 Verify the generated CRD appears in `helm/gko/crds/gravitee.io/` and the API reference was updated.
 
-### 5. Create the Controller
+## 5. Create the APIM Client Layer and the Controller
 
-Follow the `add-controller` skill.
+Follow the `add-controller` skill. It covers the DTO and service in `internal/apim/{model,service}`
+before the reconciler itself — that ordering matters, the controller is the thin part.
 
-### 6. Create the Webhook (if needed)
+## 6. Create the Webhook (if needed)
 
 Follow the `add-webhook` skill.
 
-### 7. Add Integration Test Fixtures
+## 7. Add Search Indexers (if needed)
 
-Create YAML fixtures in `test/internal/integration/`:
-- A minimal valid CR
-- Variants for different test scenarios
+If other controllers need to look up this resource by field — or if this resource is referenced by
+others and those references must trigger a re-reconcile — add indexers in `internal/search/` and
+register them in `search.InitCache`. A `Watches(...)` without a matching indexer silently enqueues
+nothing.
 
-### 8. Add Search Indexers (if needed)
+## 8. Tests
 
-If other controllers need to look up this resource by field, add indexers in `internal/search/`.
+Unit tests in `test/unit/<area>/` for the pure logic. Everything requiring a cluster or a live APIM
+goes to [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e),
+with fixtures under `apim/fixtures/<area>/`. Do not add anything to `test/integration/`.
 
-### 9. Final Checks
+## 9. Final Checks
 
 ```bash
 make build

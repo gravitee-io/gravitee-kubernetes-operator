@@ -1,0 +1,29 @@
+---
+description: Gateway API controller rules — the Init/Resolve/Accept/Program pipeline, status conditions, conflicts, and the conformance evidence bar
+alwaysApply: true
+globs: controllers/gateway-api/**
+---
+
+# Gateway API standards
+
+The authoritative rules live in `.agent/rules/gateway-standards.md`, relative to the
+repository root. Read that file before touching anything under `controllers/gateway-api/`,
+`internal/k8s/gateway*.go` or `test/conformance/`. This stub deliberately keeps no copy of
+the rules.
+
+It covers the phased `Init -> Resolve -> Accept -> Program` chain and its conditions, route
+acceptance and `RouteParentStatus`, conflict detection, cross-namespace `ReferenceGrant`
+requirements, and the two route programming modes.
+
+Two points that change how work must be reported, and are easy to get wrong by not reading
+the file:
+
+- A passing build, linter and unit suite are **not** evidence about Gateway API behaviour;
+  none of them executes a reconcile. Unverified work must be reported as unverified.
+- Gateway API changes require `make conformance` to pass 3 consecutive times, and a test
+  already known to be flaky needs a measured failure-rate bound instead of a pass streak.
+  Read "Verifying a fix for a flaky test" before reporting any flaky fix as done.
+
+See `.agent/skills/run-conformance.md` for bootstrapping and running the suite locally.
+
+@.agent/rules/gateway-standards.md
