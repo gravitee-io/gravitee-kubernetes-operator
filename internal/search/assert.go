@@ -57,6 +57,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoPortalThemes(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -215,6 +219,56 @@ func assertNoPortals(ctx context.Context, ctxRef refs.NamespacedName, contextNam
 				"kubectl get portals.gravitee.io "+
 				kubectlCommand,
 			contextName, len(portals.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func assertNoPortalThemes(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	themes := &v1alpha1.PortalThemeList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		PortalThemeContextField,
+		ctxRef,
+		themes,
+	); err != nil {
+		return err
+	}
+
+	if len(themes.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d portal themes are relying on this context. "+
+				reviewMessage+
+				"kubectl get portalthemes.gravitee.io "+
+				kubectlCommand,
+			contextName, len(themes.Items), contextName,
+		)
+	}
+	return nil
+}
+
+// AssertNoPortalThemeRef blocks deletion of a PortalTheme while any Portal
+// still references it.
+func AssertNoPortalThemeRef(ctx context.Context, thm *v1alpha1.PortalTheme) error {
+	nsn := refs.NewNamespacedName(thm.Namespace, thm.Name)
+
+	portals := &v1alpha1.PortalList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		PortalThemeField,
+		nsn,
+		portals,
+	); err != nil {
+		return err
+	}
+
+	if len(portals.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d portals are using this theme. "+
+				reviewMessage+
+				"kubectl get portals.gravitee.io "+
+				"-A -o jsonpath='{.items[?(@.spec.themeRef.name==\"%s\")].metadata.name}'",
+			thm.Name, len(portals.Items), thm.Name,
 		)
 	}
 	return nil

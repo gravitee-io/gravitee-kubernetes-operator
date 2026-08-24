@@ -40,6 +40,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -228,6 +229,13 @@ func init() {
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("documentation-controller"),
 		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.DocumentationList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&portaltheme.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portaltheme-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalThemeList{}),
 	}).SetupWithManager(mgr))
 
 	go func() {

@@ -129,4 +129,32 @@ var _ = Describe("Create", labels.WithContext, func() {
 			return assert.ContainsInOrder("Portal navigation", expectedPaths, paths)
 		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
 	})
+
+	It("should create portal in APIM with its active theme", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortalTheme(constants.PortalThemeFile).
+			WithPortal(constants.PortalWithThemeFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build().
+			Apply()
+
+		By("expecting portal status to be completed")
+
+		Expect(assert.PortalAccepted(fixtures.Portal)).To(Succeed())
+
+		By("calling rest API, expecting the active theme to be resolved to its HRID")
+
+		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		themeHrid := refs.NewNamespacedNameFromObject(fixtures.PortalTheme).HRID()
+
+		Eventually(func() error {
+			prtl, prtlErr := apim.Portals.GetByHRID(hrid)
+			if prtlErr != nil {
+				return prtlErr
+			}
+			return assert.Equals("Portal active theme", themeHrid, prtl.ActiveThemeHRID)
+		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
+	})
 })

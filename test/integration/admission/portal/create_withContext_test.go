@@ -99,4 +99,31 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		Expect(warnings).ToNot(ContainElement(ContainSubstring("deprecated")))
 	})
+
+	It("should return severe error when themeRef is of an unsupported kind", func() {
+		prtl := fixture.
+			Builder().
+			WithPortal(constants.PortalWithThemeFile).
+			Build()
+
+		prtl.Portal.Spec.Theme.Kind = "ConsoleTheme"
+
+		_, err := admissionCtrl.ValidateCreate(ctx, prtl.Portal)
+
+		Expect(assert.NotNil("admission error", err)).To(Succeed())
+		Expect(err.Error()).To(ContainSubstring("only PortalTheme is supported"))
+	})
+
+	It("should accept themeRef with an explicit PortalTheme kind", func() {
+		prtl := fixture.
+			Builder().
+			WithPortal(constants.PortalWithThemeFile).
+			Build()
+
+		_, err := admissionCtrl.ValidateCreate(ctx, prtl.Portal)
+
+		if err != nil {
+			Expect(err.Error()).ToNot(ContainSubstring("PortalTheme is supported"))
+		}
+	})
 })

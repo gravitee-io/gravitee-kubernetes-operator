@@ -901,3 +901,18 @@ spec:
             description: Latest observed conditions.
             x-descriptors:
               - urn:alm:descriptor:io.kubernetes.conditions
+
+      # --- PortalTheme ---
+      - name: portalthemes.gravitee.io
+        version: v1alpha1
+        kind: PortalTheme
+        displayName: Portal Theme
+        description: >-
+          Defines the look and feel applied to the Gravitee Developer Portal
+          of an environment.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions

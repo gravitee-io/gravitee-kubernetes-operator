@@ -41,6 +41,7 @@ var _ = Describe("Portal Drift detection", func() {
 			model.ToPortalDTO(
 				completePortalCRD().Spec.Type,
 				refs.NewNamespacedNameFromObject(completePortalCRD()).HRID(),
+				completePortalCRD().ActiveThemeHRID(),
 			),
 		),
 		// Tests for the new structure field
@@ -53,6 +54,7 @@ var _ = Describe("Portal Drift detection", func() {
 			model.ToPortalDTO(
 				completePortalCRDWithStructure().Spec.Type,
 				refs.NewNamespacedNameFromObject(completePortalCRDWithStructure()).HRID(),
+				completePortalCRDWithStructure().ActiveThemeHRID(),
 			),
 		),
 	)

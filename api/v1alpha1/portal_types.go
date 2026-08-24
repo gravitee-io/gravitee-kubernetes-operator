@@ -37,6 +37,11 @@ type PortalSpec struct {
 	portal.Type `json:",inline"`
 	// Reference to a ManagementContext that determines which APIM instance this portal is synced to.
 	Context *refs.NamespacedName `json:"contextRef,omitempty"`
+	// Reference to the theme this portal uses, of kind PortalTheme when kind is omitted.
+	// Setting it activates that theme for the environment, leaving it unset deactivates
+	// whichever theme was active.
+	// +kubebuilder:validation:Optional
+	Theme *refs.NamespacedName `json:"themeRef,omitempty"`
 }
 
 func (spec *PortalSpec) Hash() string {
@@ -132,6 +137,31 @@ func (p *Portal) HasContext() bool {
 
 func (p *Portal) ContextRef() core.ObjectRef {
 	return p.Spec.Context
+}
+
+func (p *Portal) HasThemeRef() bool {
+	return p.Spec.Theme != nil
+}
+
+func (p *Portal) GetThemeRef() core.ObjectRef {
+	return p.Spec.Theme
+}
+
+// ActiveThemeHRID resolves themeRef to the HRID APIM addresses themes by, empty when the
+// portal references no theme.
+func (p *Portal) ActiveThemeHRID() string {
+	if p.Spec.Theme == nil {
+		return ""
+	}
+
+	ns := p.Spec.Theme.Namespace
+	if ns == "" {
+		ns = p.GetNamespace()
+	}
+
+	ref := refs.NewNamespacedName(ns, p.Spec.Theme.Name)
+
+	return ref.HRID()
 }
 
 func (p *Portal) GetEnvID() string {

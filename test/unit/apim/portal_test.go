@@ -21,6 +21,7 @@ import (
 
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
@@ -44,6 +45,23 @@ func newPortalSpec(structure *portal.NavigationStructure, navigation ...*nav.Nav
 		},
 	}
 }
+
+func newPortalWithTheme(ref *refs.NamespacedName) *v1alpha1.Portal {
+	prtl := newPortalSpec(nil)
+	prtl.Spec.Theme = ref
+	return prtl
+}
+
+var _ = Describe("Portal active theme", func() {
+	It("should be reflected in the spec hash", func() {
+		a := newPortalWithTheme(&refs.NamespacedName{Name: "theme-a"})
+		b := newPortalWithTheme(&refs.NamespacedName{Name: "theme-b"})
+		unset := newPortalWithTheme(nil)
+
+		Expect(a.Spec.Hash()).ToNot(Equal(b.Spec.Hash()))
+		Expect(unset.Spec.Hash()).ToNot(Equal(a.Spec.Hash()))
+	})
+})
 
 var _ = Describe("Portal spec", func() {
 	DescribeTable("deprecated navigation detection",

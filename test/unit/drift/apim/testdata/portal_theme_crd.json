@@ -1,0 +1,34 @@
+{
+  "apiVersion": "gravitee.io/v1alpha1",
+  "kind": "PortalTheme",
+  "metadata": {
+    "name": "my-theme",
+    "namespace": "default"
+  },
+  "spec": {
+    "name": "My Theme",
+    "contextRef": {
+      "name": "dev-ctx"
+    },
+    "definition": {
+      "customCss": ".drift { outline: 1px solid #123456; }",
+      "font": {
+        "fontFamily": "\"Inter\", sans-serif"
+      },
+      "color": {
+        "primary": "#123456",
+        "secondary": "#654321",
+        "tertiary": "#abcdef",
+        "error": "#ff0000",
+        "background": {
+          "page": "#ffffff",
+          "card": "#f4f4f4"
+        }
+      }
+    },
+    "logo": "data:image/svg+xml;base64,AAA=",
+    "optionalLogo": "data:image/svg+xml;base64,BBB=",
+    "favicon": "data:image/svg+xml;base64,CCC=",
+    "backgroundImage": "data:image/svg+xml;base64,DDD="
+  }
+}

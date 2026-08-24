@@ -16,6 +16,10 @@
         "displayName": "Alpha",
         "order": 1
       }
-    ]
+    ],
+    "themeRef": {
+      "name": "brand-theme",
+      "kind": "PortalTheme"
+    }
   }
 }

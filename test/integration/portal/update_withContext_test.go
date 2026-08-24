@@ -76,4 +76,47 @@ var _ = Describe("Update", labels.WithContext, func() {
 			return assert.Equals("Portal name", updated.Spec.Name, prtl.Name)
 		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
 	})
+
+	It("should release the active theme when themeRef is removed", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortalTheme(constants.PortalThemeFile).
+			WithPortal(constants.PortalWithThemeFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build().
+			Apply()
+
+		Expect(assert.PortalAccepted(fixtures.Portal)).To(Succeed())
+
+		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		themeHrid := refs.NewNamespacedNameFromObject(fixtures.PortalTheme).HRID()
+
+		By("calling rest API, expecting the theme to be active")
+
+		Eventually(func() error {
+			prtl, prtlErr := apim.Portals.GetByHRID(hrid)
+			if prtlErr != nil {
+				return prtlErr
+			}
+			return assert.Equals("Portal active theme", themeHrid, prtl.ActiveThemeHRID)
+		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
+
+		By("removing the theme reference")
+
+		updated := fixtures.Portal.DeepCopy()
+		updated.Spec.Theme = nil
+
+		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
+
+		By("calling rest API, expecting the theme to be released")
+
+		Eventually(func() error {
+			prtl, prtlErr := apim.Portals.GetByHRID(hrid)
+			if prtlErr != nil {
+				return prtlErr
+			}
+			return assert.Equals("Portal active theme", "", prtl.ActiveThemeHRID)
+		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
+	})
 })

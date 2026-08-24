@@ -42,6 +42,7 @@ type Objects struct {
 	PortalListing     *v1alpha1.PortalListing
 	PortalLink        *v1alpha1.PortalLink
 	Documentation     *v1alpha1.Documentation
+	PortalTheme       *v1alpha1.PortalTheme
 
 	randomSuffix   string
 	navigationRoot string

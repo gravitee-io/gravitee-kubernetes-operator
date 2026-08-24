@@ -53,6 +53,7 @@ import (
 	portalAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portal"
 	portalLinkAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallink"
 	portalListingAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallisting"
+	themeAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portaltheme"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -75,6 +76,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -384,6 +386,16 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for documentations")
 		os.Exit(1)
 	}
+
+	if err := (&portaltheme.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portaltheme-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.PortalThemeList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for portal themes")
+		os.Exit(1)
+	}
 }
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
@@ -592,6 +604,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (documentationAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (themeAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

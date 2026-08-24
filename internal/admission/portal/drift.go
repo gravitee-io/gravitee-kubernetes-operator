@@ -40,7 +40,11 @@ func resolveRefs(context.Context, *v1alpha1.Portal) error {
 }
 
 func toPortalDTO(prtl *v1alpha1.Portal) model.PortalDTO {
-	return model.ToPortalDTO(prtl.Spec.Type, refs.NewNamespacedNameFromObject(prtl).HRID())
+	return model.ToPortalDTO(
+		prtl.Spec.Type,
+		refs.NewNamespacedNameFromObject(prtl).HRID(),
+		prtl.ActiveThemeHRID(),
+	)
 }
 
 func getRemotePortal(apimClient *apim.APIM, prtl *v1alpha1.Portal) (any, error) {
