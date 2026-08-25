@@ -47,6 +47,7 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&GatewayClassParameters{}, &GatewayClassParametersList{},
 		&Group{}, &GroupList{},
 		&KafkaRoute{}, &KafkaRouteList{},
+		&AMContext{}, &AMContextList{},
 		&ManagementContext{}, &ManagementContextList{},
 		&Notification{}, &NotificationList{},
 		&Portal{}, &PortalList{},
