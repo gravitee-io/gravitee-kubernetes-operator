@@ -45,6 +45,12 @@ var ManagementContextGVR = schema.GroupVersionResource{
 	Resource: core.CRDManagementContextResource,
 }
 
+var AMContextGVR = schema.GroupVersionResource{
+	Group:    core.CRDGroup,
+	Version:  core.CRDVersion,
+	Resource: core.CRDAMContextResource,
+}
+
 var PortalGVR = schema.GroupVersionResource{
 	Group:    core.CRDGroup,
 	Version:  core.CRDVersion,
