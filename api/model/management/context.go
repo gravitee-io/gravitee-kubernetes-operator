@@ -21,6 +21,7 @@ import (
 )
 
 var _ core.ContextModel = &Context{}
+var _ core.CloudAwareContext = &Context{}
 
 // Auth, BasicAuth and Status live in api/model/context so AM can reuse them.
 // Aliases keep existing management.* call sites compiling.

@@ -102,7 +102,7 @@ func getAutomationPath(context core.ContextModel) string {
 	if context.GetPath() != nil {
 		return *context.GetPath()
 	}
-	if context.HasCloud() {
+	if cloud, ok := context.(core.CloudAwareContext); ok && cloud.HasCloud() {
 		return cloudAutomationBasePath
 	}
 	return automationBasePath
@@ -112,7 +112,7 @@ func getManagementPath(context core.ContextModel) string {
 	if context.GetPath() != nil {
 		return *context.GetPath()
 	}
-	if context.HasCloud() {
+	if cloud, ok := context.(core.CloudAwareContext); ok && cloud.HasCloud() {
 		return cloudManagementBasePath
 	}
 	return managementBasePath
