@@ -172,6 +172,13 @@ type ContextModel interface {
 	GetOrgID() string
 	HasAuthentication() bool
 	GetAuth() Auth
+}
+
+// CloudAwareContext is the Gravitee Cloud surface. APIM ManagementContext
+// implements it; AMContext does not.
+//
+// +k8s:deepcopy-gen=false
+type CloudAwareContext interface {
 	HasCloud() bool
 	GetCloud() Cloud
 	ConfigureCloud(url string, orgID string, envID string)
