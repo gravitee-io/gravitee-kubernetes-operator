@@ -12,23 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package management
-
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-type Status struct {
-	// Conditions describe the current conditions of the ManagementContext.
-	//
-	// Known condition types are:
-	// * "Accepted"
-	// * "ResolvedRefs"
-	//
-	// +optional
-	// +listType=map
-	// +listMapKey=type
-	// +kubebuilder:validation:MaxItems=8
-	// +kubebuilder:default={}
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
-}
+// +kubebuilder:object:generate=true
+// +groupName=gravitee.io/v1alpha1
+package context
