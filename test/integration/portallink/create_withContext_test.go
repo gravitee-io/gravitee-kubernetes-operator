@@ -19,6 +19,7 @@ import (
 
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -82,11 +83,11 @@ var _ = Describe("Create", labels.WithContext, func() {
 		By("calling rest API, expecting the link to round-trip")
 
 		apim := apim.NewClient(ctx)
-		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		parent := service.LinkParent{Portal: fixtures.Portal}
 		linkHrid := refs.NewNamespacedNameFromObject(fixtures.PortalLink).HRID()
 
 		Eventually(func() error {
-			link, linkErr := apim.Links.GetByHRID(portalHrid, linkHrid)
+			link, linkErr := apim.Links.GetByHRID(parent, linkHrid)
 			if linkErr != nil {
 				return linkErr
 			}

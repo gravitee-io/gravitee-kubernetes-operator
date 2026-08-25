@@ -189,6 +189,7 @@ const (
 	DocumentationDriftFullFile       = "apim/portal/documentation-drift-full.yml"
 
 	PortalLinkFile             = "apim/portal/portal-link.yml"
+	PortalLinkApiFile          = "apim/portal/portal-link-api.yml"
 	PortalLinkDriftMinimalFile = "apim/portal/portal-link-drift-minimal.yml"
 	PortalLinkDriftFullFile    = "apim/portal/portal-link-drift-full.yml"
 

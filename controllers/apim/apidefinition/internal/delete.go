@@ -38,6 +38,10 @@ func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
 		return err
 	}
 
+	if err := search.AssertNoApiPortalLinkRef(ctx, api); err != nil {
+		return err
+	}
+
 	if api.HasContext() {
 		if err := deleteWithContext(ctx, api); err != nil {
 			return err

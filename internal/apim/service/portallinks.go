@@ -22,8 +22,21 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gohttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
+
+// LinkParent identifies the owning resource of a PortalLink. A link is
+// attached to exactly one of a portal or an API; the parent determines which
+// automation endpoint the link is synced to. The HRID is computed from the
+// resolved object here in the service layer.
+type LinkParent struct {
+	// Portal is the owning portal, or nil when attached to an API.
+	Portal *v1alpha1.Portal
+	// API is the owning API, or nil when attached to a portal.
+	API core.ApiDefinitionObject
+}
 
 type Links struct {
 	*client.Client
@@ -35,27 +48,24 @@ func NewLinks(client *client.Client) *Links {
 
 func (svc *Links) CreateOrUpdate(
 	link *v1alpha1.PortalLink,
-	prtl *v1alpha1.Portal,
+	parent LinkParent,
 ) (portallink.Status, error) {
-	return svc.createOrUpdate(link, prtl, false)
+	return svc.createOrUpdate(link, parent, false)
 }
 
 func (svc *Links) DryRunCreateOrUpdate(
 	link *v1alpha1.PortalLink,
-	prtl *v1alpha1.Portal,
+	parent LinkParent,
 ) (portallink.Status, error) {
-	return svc.createOrUpdate(link, prtl, true)
+	return svc.createOrUpdate(link, parent, true)
 }
 
 func (svc *Links) createOrUpdate(
 	link *v1alpha1.PortalLink,
-	prtl *v1alpha1.Portal,
+	parent LinkParent,
 	dryRun bool,
 ) (portallink.Status, error) {
-	portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
-	url := svc.AutomationTarget("portals").
-		WithPath(portalHrid).
-		WithPath("links").
+	url := svc.linksTarget(parent).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
 	dto := model.ToPortalLinkDTO(link.Spec.Type, refs.NewNamespacedNameFromObject(link).HRID())
@@ -70,24 +80,32 @@ func (svc *Links) createOrUpdate(
 	return *importStatus, nil
 }
 
-func (svc *Links) Delete(link *v1alpha1.PortalLink, prtl *v1alpha1.Portal) error {
-	portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
+func (svc *Links) Delete(link *v1alpha1.PortalLink, parent LinkParent) error {
 	linkHrid := refs.NewNamespacedNameFromObject(link).HRID()
-	url := svc.AutomationTarget("portals").
-		WithPath(portalHrid).
-		WithPath("links").
-		WithPath(linkHrid)
+	url := svc.linksTarget(parent).WithPath(linkHrid)
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-func (svc *Links) GetByHRID(portalHrid, linkHrid string) (*model.PortalLinkState, error) {
-	url := svc.AutomationTarget("portals").
-		WithPath(portalHrid).
-		WithPath("links").
-		WithPath(linkHrid)
+func (svc *Links) GetByHRID(parent LinkParent, linkHrid string) (*model.PortalLinkState, error) {
+	url := svc.linksTarget(parent).WithPath(linkHrid)
 	link := new(model.PortalLinkState)
 	if err := svc.HTTP.Get(url.String(), link); err != nil {
 		return nil, err
 	}
 	return link, nil
+}
+
+// linksTarget builds the links collection URL nested under the owning portal
+// or API, computing the parent HRID from the resolved object.
+func (svc *Links) linksTarget(parent LinkParent) *gohttp.URL {
+	if parent.API != nil {
+		apiRef := refs.NewNamespacedName(parent.API.GetNamespace(), parent.API.GetName())
+		return svc.AutomationTarget("apis").
+			WithPath(apiRef.HRID()).
+			WithPath("links")
+	}
+	portalHrid := refs.NewNamespacedNameFromObject(parent.Portal).HRID()
+	return svc.AutomationTarget("portals").
+		WithPath(portalHrid).
+		WithPath("links")
 }

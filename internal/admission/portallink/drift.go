@@ -22,8 +22,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
 func mergeDriftValidation(
@@ -32,43 +32,35 @@ func mergeDriftValidation(
 	newLink *v1alpha1.PortalLink,
 	errs *errors.AdmissionErrors,
 ) {
-	prtl, err := dynamic.ResolvePortal(ctx, newLink.GetPortalRef(), newLink.GetNamespace())
-	if err != nil {
-		errs.AddSeveref(
-			"portal link [%s] references portal [%v] that can't be resolved",
-			newLink.GetName(), newLink.GetPortalRef(),
-		)
-		return
-	}
-	if !prtl.HasContext() {
-		errs.AddSeveref(
-			"referenced portal [%v] has no management context (spec.contextRef)",
-			newLink.GetPortalRef(),
-		)
+	target := resolveTarget(ctx, newLink, errs)
+	if errs.IsSevere() || target == nil {
 		return
 	}
 
 	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldLink, newLink,
-		func(ctx context.Context) (*apim.APIM, error) {
-			return apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
-		},
+		linkContextResolver(target),
 		resolveRefs,
-		getRemotePortalLink(prtl),
+		getRemotePortalLink(target.parent),
 		drift.MapDTO(func(link *v1alpha1.PortalLink) model.PortalLinkDTO {
 			return model.ToPortalLinkDTO(link.Spec.Type, refs.NewNamespacedNameFromObject(link).HRID())
 		}),
 	))
 }
 
+func linkContextResolver(target *dryRunTarget) drift.ContextResolver {
+	return func(ctx context.Context) (*apim.APIM, error) {
+		return apim.FromContextRef(ctx, target.contextRef, target.contextNs)
+	}
+}
+
 func resolveRefs(context.Context, *v1alpha1.PortalLink) error {
 	return nil
 }
 
-func getRemotePortalLink(prtl *v1alpha1.Portal) drift.RemoteObjectGetter[*v1alpha1.PortalLink] {
+func getRemotePortalLink(parent service.LinkParent) drift.RemoteObjectGetter[*v1alpha1.PortalLink] {
 	return func(apimClient *apim.APIM, link *v1alpha1.PortalLink) (any, error) {
-		portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
-		linkHrid := refs.NewNamespacedNameFromObject(link).HRID()
-		remote, err := apimClient.Links.GetByHRID(portalHrid, linkHrid)
+		hrid := refs.NewNamespacedNameFromObject(link).HRID()
+		remote, err := apimClient.Links.GetByHRID(parent, hrid)
 		if err != nil {
 			return nil, err
 		}
