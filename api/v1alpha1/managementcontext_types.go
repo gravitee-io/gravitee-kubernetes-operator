@@ -30,6 +30,7 @@ import (
 
 var _ core.ContextObject = &ManagementContext{}
 var _ core.ContextModel = &ManagementContext{}
+var _ core.CloudAwareContext = &ManagementContext{}
 var _ core.Spec = &ManagementContextSpec{}
 var _ core.Status = &ManagementContextStatus{}
 var _ core.ConditionAware = &ManagementContext{}

@@ -30,24 +30,27 @@ const cloudGateUrlTemplate = "https://%s.cloudgate.gravitee.io"
 
 // SetDefaults when cloud mode is enabled.
 func SetDefaults(ctx context.Context, contextObject *v1alpha1.ManagementContext) error {
-	if contextObject.HasCloud() && contextObject.GetCloud().IsEnabled() {
-		return defaultContextUsingCloudToken(ctx, contextObject)
+	if !contextObject.HasCloud() || !contextObject.GetCloud().IsEnabled() {
+		return nil
 	}
-
-	return nil
+	return defaultContextUsingCloudToken(ctx, contextObject, contextObject)
 }
 
-func defaultContextUsingCloudToken(ctx context.Context, contextObject core.ContextObject) error {
+func defaultContextUsingCloudToken(
+	ctx context.Context,
+	contextObject core.ContextObject,
+	cloud core.CloudAwareContext,
+) error {
 	var cloudToken string
 
-	if contextObject.GetCloud().HasSecretRef() {
-		secret, err := dynamic.ResolveSecret(ctx, contextObject.GetCloud().GetSecretRef(), contextObject.GetNamespace())
+	if cloud.GetCloud().HasSecretRef() {
+		secret, err := dynamic.ResolveSecret(ctx, cloud.GetCloud().GetSecretRef(), contextObject.GetNamespace())
 		if err != nil {
-			return gioerr.NewSeveref("secret [%v] doesn't exist in the cluster", contextObject.GetCloud().GetSecretRef())
+			return gioerr.NewSeveref("secret [%v] doesn't exist in the cluster", cloud.GetCloud().GetSecretRef())
 		}
 		cloudToken = string(secret.Data[core.CloudTokenSecretKey])
 	} else {
-		cloudToken = contextObject.GetCloud().GetToken()
+		cloudToken = cloud.GetCloud().GetToken()
 	}
 
 	jwtData, err := extractCloudTokenData(cloudToken)
@@ -83,7 +86,7 @@ func defaultContextUsingCloudToken(ctx context.Context, contextObject core.Conte
 		envID = contextObject.GetEnvID()
 	}
 
-	contextObject.ConfigureCloud(url, orgID, envID)
+	cloud.ConfigureCloud(url, orgID, envID)
 
 	return nil
 }
