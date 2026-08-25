@@ -19,6 +19,7 @@ const (
 	CRDVersion = "v1alpha1"
 
 	CRDManagementContextResource          = "managementcontexts"
+	CRDAMContextResource                  = "amcontexts"
 	CRDApplicationResource                = "applications"
 	CRDApiDefinitionResource              = "apidefinitions"
 	CRDApiV4DefinitionResource            = "apiv4definitions"
@@ -42,9 +43,11 @@ const (
 
 	NotificationFinalizer            = "finalizers.gravitee.io/notification"
 	ManagementContextSecretFinalizer = "finalizers.gravitee.io/managementcontextSecret"
+	AMContextSecretFinalizer         = "finalizers.gravitee.io/amcontextSecret"
 	ApiDefinitionFinalizer           = "finalizers.gravitee.io/apidefinitiondeletion"
 	ApiDefinitionTemplateFinalizer   = "finalizers.gravitee.io/apidefinitiontemplate"
 	ManagementContextFinalizer       = "finalizers.gravitee.io/managementcontextdeletion"
+	AMContextFinalizer               = "finalizers.gravitee.io/amcontextdeletion"
 	ApiResourceFinalizer             = "finalizers.gravitee.io/apiresource"
 	IngressFinalizer                 = "finalizers.gravitee.io/ingress"
 	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
