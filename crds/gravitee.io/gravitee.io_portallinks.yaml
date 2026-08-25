@@ -38,10 +38,10 @@ spec:
       schema:
         openAPIV3Schema:
           description: >-
-            PortalLink attaches an external navigation link to a Portal at a
-            chosen
+            PortalLink attaches an external navigation link to exactly one of a
+            Portal
 
-            location in the portal's...
+            (portalRef) or an API...
           properties:
             apiVersion:
               description: APIVersion defines the versioned schema of this representation of
@@ -56,15 +56,27 @@ spec:
             spec:
               description: PortalLinkSpec defines the desired state of a PortalLink.
               properties:
+                apiRef:
+                  description: Reference to the API this link is attached to.
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - name
+                  type: object
                 href:
                   description: The URL this link points to.
                   type: string
                 location:
                   description: >-
-                    The path in the portal's navigation hierarchy where this
-                    link should
+                    The path in the owning resource's navigation hierarchy where
+                    this link
 
-                    appear.
+                    should appear.
                   pattern: ^/
                   type: string
                 name:
@@ -93,8 +105,10 @@ spec:
               required:
                 - href
                 - name
-                - portalRef
               type: object
+              x-kubernetes-validations:
+                - message: exactly one of portalRef or apiRef must be set
+                  rule: has(self.portalRef) != has(self.apiRef)
             status:
               description: PortalLinkStatus defines the observed state of a PortalLink.
               properties:

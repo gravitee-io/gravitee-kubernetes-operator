@@ -33,6 +33,7 @@ var _ core.ConditionAware = &PortalLink{}
 
 // PortalLinkSpec defines the desired state of a PortalLink.
 // +kubebuilder:object:generate=true
+// +kubebuilder:validation:XValidation:rule="has(self.portalRef) != has(self.apiRef)",message="exactly one of portalRef or apiRef must be set"
 type PortalLinkSpec struct {
 	portallink.Type `json:",inline"`
 }
@@ -83,9 +84,10 @@ func (s *PortalLinkStatus) SetProcessingStatus(core.ProcessingStatus) {
 	// unused
 }
 
-// PortalLink attaches an external navigation link to a Portal at a chosen
-// location in the portal's navigation hierarchy. The APIM management
-// context is derived from the referenced Portal.
+// PortalLink attaches an external navigation link to exactly one of a Portal
+// (portalRef) or an API (apiRef) at a chosen location in the owning
+// resource's navigation hierarchy. The APIM management context is derived
+// from the referenced Portal or API.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Portal",type=string,JSONPath=`.spec.portalRef.name`
@@ -127,6 +129,18 @@ func (p *PortalLink) IsBeingDeleted() bool {
 
 func (p *PortalLink) GetPortalRef() core.ObjectRef {
 	return p.Spec.GetPortalRef()
+}
+
+func (p *PortalLink) GetApiRef() core.ObjectRef {
+	return p.Spec.GetApiRef()
+}
+
+func (p *PortalLink) IsPortalLink() bool {
+	return p.Spec.IsPortalLink()
+}
+
+func (p *PortalLink) IsApiLink() bool {
+	return p.Spec.IsApiLink()
 }
 
 func (p *PortalLink) GetConditions() map[string]metav1.Condition {

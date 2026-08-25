@@ -54,6 +54,7 @@ const (
 	PortalListingPortalField     IndexField = "portallisting-portal"
 	PortalListingApiField        IndexField = "portallisting-api"
 	PortalLinkPortalField        IndexField = "portallink-portal"
+	PortalLinkApiField           IndexField = "portallink-api"
 	DocumentationPortalField     IndexField = "documentation-portal"
 	DocumentationApiField        IndexField = "documentation-api"
 )
@@ -106,6 +107,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexPortalListingApis))
 	collect(newIndexer(ctx, cache, &v1alpha1.PortalLink{}, PortalLinkPortalField,
 		indexPortalLinkPortal))
+	collect(newIndexer(ctx, cache, &v1alpha1.PortalLink{}, PortalLinkApiField,
+		indexPortalLinkApi))
 	collect(newIndexer(ctx, cache, &v1alpha1.Documentation{}, DocumentationPortalField,
 		indexDocumentationPortal))
 	collect(newIndexer(ctx, cache, &v1alpha1.Documentation{}, DocumentationApiField,
@@ -360,7 +363,17 @@ func indexPortalListingApis(listing *v1alpha1.PortalListing, fields *[]string) {
 }
 
 func indexPortalLinkPortal(link *v1alpha1.PortalLink, fields *[]string) {
+	if !link.IsPortalLink() {
+		return
+	}
 	*fields = append(*fields, ensureNamespacedRef(link, link.GetPortalRef()))
+}
+
+func indexPortalLinkApi(link *v1alpha1.PortalLink, fields *[]string) {
+	if !link.IsApiLink() {
+		return
+	}
+	*fields = append(*fields, ensureNamespacedRef(link, link.GetApiRef()))
 }
 
 func indexDocumentationPortal(doc *v1alpha1.Documentation, fields *[]string) {
