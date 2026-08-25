@@ -4,6 +4,7 @@
 - [gravitee.io/v1alpha1](#graviteeiov1alpha1)
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
+- [gravitee.io/v1alpha1/context](#graviteeiov1alpha1context)
 - [gravitee.io/v1alpha1/dictionary](#graviteeiov1alpha1dictionary)
 - [gravitee.io/v1alpha1/docs](#graviteeiov1alpha1docs)
 - [gravitee.io/v1alpha1/gateway](#graviteeiov1alpha1gateway)
@@ -641,9 +642,6 @@ ManagementContextStatus defines the observed state of an API Context.
 _Appears in:_
 - [ManagementContext](#managementcontext)
 
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 
 
 #### Notification
@@ -2022,6 +2020,33 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/context
+
+
+
+
+
+
+#### BasicAuth
+
+
+
+
+
+
+
+_Appears in:_
+- [Auth](#auth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `username` _string_ |  |  | Required: \{\} <br /> |
+| `password` _string_ |  |  | Required: \{\} <br /> |
+
+
+
+
+
 ## gravitee.io/v1alpha1/dictionary
 
 
@@ -2779,39 +2804,8 @@ _Appears in:_
 
 
 
-#### Auth
 
 
-
-
-
-
-
-_Appears in:_
-- [Context](#context)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `bearerToken` _string_ | The bearer token used to authenticate against the API Management instance<br />(must be generated from an admin account) |  | Optional: \{\} <br /> |
-| `credentials` _[BasicAuth](#basicauth)_ | The Basic credentials used to authenticate against the API Management instance. |  |  |
-| `secretRef` _[NamespacedName](#namespacedname)_ | A secret reference holding either a "bearerToken" key for bearer token authentication<br />or "username" and "password" keys for basic authentication |  |  |
-
-
-#### BasicAuth
-
-
-
-
-
-
-
-_Appears in:_
-- [Auth](#auth)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `username` _string_ |  |  | Required: \{\} <br /> |
-| `password` _string_ |  |  | Required: \{\} <br /> |
 
 
 #### Cloud
@@ -2852,20 +2846,6 @@ _Appears in:_
 | `cloud` _[Cloud](#cloud)_ | Cloud when set (token or secretRef) this context will target Gravitee Cloud.<br />BaseUrl will be defaulted from token data if not set,<br />Auth is defaulted to use the token (bearerToken),<br />OrgID is extracted from the token,<br />EnvID is defaulted when the token contains exactly one environment. |  |  |
 
 
-#### Status
-
-
-
-
-
-
-
-_Appears in:_
-- [ManagementContextStatus](#managementcontextstatus)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 
 
 
