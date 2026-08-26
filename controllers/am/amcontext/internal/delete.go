@@ -22,6 +22,7 @@ import (
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -41,6 +42,9 @@ func Delete(
 
 		nsn := getSecretRef(instance)
 		if err := k8s.GetClient().Get(ctx, nsn, secret); err != nil {
+			if apierrors.IsNotFound(err) {
+				return nil
+			}
 			return gerrors.NewResolveRefError(err)
 		}
 
