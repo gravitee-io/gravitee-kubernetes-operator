@@ -239,11 +239,14 @@ Regenerates `helm/gko/README.md`.
 All four targets are checked in CI.
 
 ## Workflow
-I work plan-first. I write structured prompts in `prompts/` and expect
-a reviewed plan in `plans/` before any implementation.
+I work plan-first. Follow the [`safe-plan`](.agent/skills/safe-plan.md) skill.
+I write structured prompts in `prompts/` and expect a reviewed plan in
+`plans/` before any implementation.
 
 - Never implement directly from a prompt file. Always produce a plan first.
 - Plans are markdown files that I review and edit before implementation.
+- Challenge a Case or Issue: answer and stop. Do not edit the plan.
+- Agreed change: copy `plans/<slug>.md` to `plans/<slug>.revN.md`, then edit the live file.
 - When implementing, follow the plan strictly. Stop and ask if something
   doesn't match reality.
 
