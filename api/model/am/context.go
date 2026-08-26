@@ -64,6 +64,9 @@ func (c *Context) GetOrgID() string {
 }
 
 func (c *Context) GetSecretRef() core.ObjectRef {
+	if c.Auth == nil {
+		return nil
+	}
 	return c.Auth.SecretRef
 }
 
