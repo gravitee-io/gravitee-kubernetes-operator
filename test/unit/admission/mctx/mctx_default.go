@@ -56,9 +56,9 @@ var _ = Describe("cloud token defaults", func() {
 		Expect(underTest.Spec.OrgID).To(Equal(orgID))
 		Expect(underTest.Spec.EnvID).To(Equal(envID))
 		Expect(underTest.HasAuthentication()).To(BeTrue())
-		Expect(underTest.GetAuth().HasCredentials()).To(BeTrue())
-		Expect(underTest.GetAuth().GetCredentials().GetUsername()).To(Equal("admin"))
-		Expect(underTest.GetAuth().GetCredentials().GetPassword()).To(Equal("password"))
+		Expect(underTest.Spec.Auth.HasCredentials()).To(BeTrue())
+		Expect(underTest.Spec.Auth.GetCredentials().GetUsername()).To(Equal("admin"))
+		Expect(underTest.Spec.Auth.GetCredentials().GetPassword()).To(Equal("password"))
 	})
 
 	DescribeTable("with cloud token", func(given *management.Context, expectedUrl string) {

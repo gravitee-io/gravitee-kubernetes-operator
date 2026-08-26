@@ -97,14 +97,6 @@ func (in *Auth) GetBearerToken() string {
 	return in.BearerToken
 }
 
-func (in *Auth) HasCredentials() bool {
-	return false
-}
-
-func (in *Auth) GetCredentials() core.BasicAuth {
-	return nil
-}
-
 func (in *Auth) GetSecretRef() core.ObjectRef {
 	return in.SecretRef
 }
@@ -112,10 +104,6 @@ func (in *Auth) GetSecretRef() core.ObjectRef {
 func (in *Auth) SetSecretRef(ref core.ObjectRef) {
 	nsm := refs.NewNamespacedName(ref.GetNamespace(), ref.GetName())
 	in.SecretRef = &nsm
-}
-
-func (in *Auth) SetCredentials(_, _ string) {
-	// AM auth is bearer-only.
 }
 
 func (in *Auth) SetToken(token string) {

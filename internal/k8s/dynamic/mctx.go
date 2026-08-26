@@ -69,7 +69,9 @@ func InjectSecretIfAny(ctx context.Context, mCtx core.ContextObject) (*core.Cont
 
 		if mCtx.GetAuth() != nil {
 			mCtx.GetAuth().SetToken(bearerToken)
-			mCtx.GetAuth().SetCredentials(username, password)
+			if cred, ok := mCtx.GetAuth().(core.CredentialAuth); ok {
+				cred.SetCredentials(username, password)
+			}
 		}
 	}
 
