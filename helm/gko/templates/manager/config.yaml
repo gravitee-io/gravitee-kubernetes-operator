@@ -133,4 +133,4 @@ data:
   DRIFT_DETECTION_ENABLED: {{ quote .Values.manager.driftDetection.enabled }}
   DRIFT_DETECTION_POLICY: {{ .Values.manager.driftDetection.policy }}
   DRIFT_DETECTION_ON_REMOTE_MISSING: {{ .Values.manager.driftDetection.onRemoteMissing.policy }}
-  DRIFT_DETECTION_FETCH_FAILURE_POLICY: {{ .Values.manager.driftDetection.fetchFailurePolicy }}
+  DRIFT_DETECTION_ON_FETCH_FAILURE: {{ .Values.manager.driftDetection.onFetchFailure.policy }}

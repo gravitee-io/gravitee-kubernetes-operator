@@ -34,10 +34,10 @@ func (p DriftPolicy) String() string {
 
 // DriftDetection holds global drift detection settings loaded from the environment.
 type DriftDetection struct {
-	Enabled            bool
-	Policy             DriftPolicy
-	OnRemoteMissing    DriftPolicy
-	FetchFailurePolicy DriftPolicy
+	Enabled         bool
+	Policy          DriftPolicy
+	OnRemoteMissing DriftPolicy
+	OnFetchFailure  DriftPolicy
 }
 
 func parseDriftPolicy(key string, defaultValue DriftPolicy) DriftPolicy {

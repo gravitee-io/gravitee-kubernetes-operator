@@ -68,7 +68,7 @@ const (
 	DriftDetectionEnabled                = "DRIFT_DETECTION_ENABLED"
 	DriftDetectionPolicy                 = "DRIFT_DETECTION_POLICY"
 	DriftDetectionOnRemoteMissing        = "DRIFT_DETECTION_ON_REMOTE_MISSING"
-	DriftDetectionFetchFailurePolicy     = "DRIFT_DETECTION_FETCH_FAILURE_POLICY"
+	DriftDetectionOnFetchFailure         = "DRIFT_DETECTION_ON_FETCH_FAILURE"
 	MaxConcurrentReconcilesKey           = "MAX_CONCURRENT_RECONCILES"
 
 	// This default are applied when running the app locally.
@@ -189,7 +189,7 @@ func init() {
 	Config.DriftDetection.Enabled = os.Getenv(DriftDetectionEnabled) == TrueString // disabled by default
 	Config.DriftDetection.Policy = parseDriftPolicy(DriftDetectionPolicy, DriftPolicyDeny)
 	Config.DriftDetection.OnRemoteMissing = parseDriftPolicy(DriftDetectionOnRemoteMissing, DriftPolicyDeny)
-	Config.DriftDetection.FetchFailurePolicy = parseDriftPolicy(DriftDetectionFetchFailurePolicy, DriftPolicyDeny)
+	Config.DriftDetection.OnFetchFailure = parseDriftPolicy(DriftDetectionOnFetchFailure, DriftPolicyDeny)
 	Config.MaxConcurrentReconciles = parseInt(MaxConcurrentReconcilesKey, defaultMaxConcurrentReconciles)
 }
 

@@ -190,7 +190,7 @@ func main() {
 			log.Global.Info("Drift detection is enabled")
 			log.Global.Infof("Drift detection policy is: %s", env.Config.DriftDetection.Policy)
 			log.Global.Infof("Drift detection 'on missing remote' policy is: %s", env.Config.DriftDetection.OnRemoteMissing)
-			log.Global.Infof("Drift detection 'fetch failure' policy is: %s", env.Config.DriftDetection.FetchFailurePolicy)
+			log.Global.Infof("Drift detection 'on fetch failure' policy is: %s", env.Config.DriftDetection.OnFetchFailure)
 		} else {
 			log.Global.Info("Drift detection required webhooks to be enabled")
 			os.Exit(1)

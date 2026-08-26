@@ -113,7 +113,7 @@ Two deviations worth knowing before copying a pattern:
 
 ### Drift detection
 
-Drift detection rejects admission **updates** when APIM was changed outside the operator while the CRD still reflects the old desired state. It is disabled globally by default (`DRIFT_DETECTION_ENABLED`, Helm `manager.driftDetection.enabled`) and can be overridden per resource with the `gravitee.io/drift-detection` annotation (`true` / `false`). Policy env vars: `DRIFT_DETECTION_POLICY`, `DRIFT_DETECTION_ON_REMOTE_MISSING`, `DRIFT_DETECTION_FETCH_FAILURE_POLICY` (`deny` | `warn` | `allow`).
+Drift detection rejects admission **updates** when APIM was changed outside the operator while the CRD still reflects the old desired state. It is disabled globally by default (`DRIFT_DETECTION_ENABLED`, Helm `manager.driftDetection.enabled`) and can be overridden per resource with the `gravitee.io/drift-detection` annotation (`true` / `false`). Policy env vars: `DRIFT_DETECTION_POLICY`, `DRIFT_DETECTION_ON_REMOTE_MISSING`, `DRIFT_DETECTION_ON_FETCH_FAILURE` (`deny` | `warn` | `allow`).
 
 Two packages are involved:
 
@@ -137,7 +137,7 @@ errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldObj, newObj, resolveContex
 Provide four callbacks:
 
 1. **`RefResolver`** (`func(ctx context.Context, obj *v1alpha1.MyResource) error`) — resolve inlined references (Secrets, ConfigMaps, templates) on **both** old and new deep copies before comparison. Return a non-nil error to abort with a severe admission error (e.g. application client-certificate resolution in `resolveAppRefs`).
-2. **`RemoteObjectGetter`** (`func(*apim.APIM, *v1alpha1.MyResource) (any, error)`) — fetch the live APIM object. Branch on `k8s.IsAutomationAPIManaged` (HRID + Automation API) vs legacy (UUID + Management API). Return the APIM client error as-is (including HTTP 404). `ValidateDriftWithContext` uses `errors.IsNotFound` to apply `OnRemoteMissing` vs `FetchFailurePolicy`.
+2. **`RemoteObjectGetter`** (`func(*apim.APIM, *v1alpha1.MyResource) (any, error)`) — fetch the live APIM object. Branch on `k8s.IsAutomationAPIManaged` (HRID + Automation API) vs legacy (UUID + Management API). Return the APIM client error as-is (including HTTP 404). `ValidateDriftWithContext` uses `errors.IsNotFound` to apply `OnRemoteMissing` vs `OnFetchFailure`.
 3. **`DTOMapper`** — map each CRD copy to the **same struct type** returned by the remote getter. Use `drift.MapDTO(func(cr *v1alpha1.MyResource) model.MyDTO { ... })` for type safety. The DTO must represent what is (or would be) sent to APIM, not the raw CRD spec.
 4. **`ContextResolver`** (only for `ValidateDriftWithContext`) — when the CRD has no `ManagementContext` ref of its own but depends on a related resource's context (subscription → application).
 

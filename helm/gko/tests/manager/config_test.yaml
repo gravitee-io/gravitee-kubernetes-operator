@@ -172,7 +172,7 @@ tests:
           path: data.DRIFT_DETECTION_ON_REMOTE_MISSING
           value: deny
       - equal:
-          path: data.DRIFT_DETECTION_FETCH_FAILURE_POLICY
+          path: data.DRIFT_DETECTION_ON_FETCH_FAILURE
           value: deny
 
   - it: Should have drift detection enabled
@@ -193,7 +193,7 @@ tests:
           path: data.DRIFT_DETECTION_ON_REMOTE_MISSING
           value: deny
       - equal:
-          path: data.DRIFT_DETECTION_FETCH_FAILURE_POLICY
+          path: data.DRIFT_DETECTION_ON_FETCH_FAILURE
           value: deny
 
   - it: Should configure custom drift detection policies
@@ -204,7 +204,8 @@ tests:
           policy: warn
           onRemoteMissing:
             policy: allow
-          fetchFailurePolicy: warn
+          onFetchFailure:
+            policy: warn
     asserts:
       - equal:
           path: data.DRIFT_DETECTION_ENABLED
@@ -216,5 +217,5 @@ tests:
           path: data.DRIFT_DETECTION_ON_REMOTE_MISSING
           value: allow
       - equal:
-          path: data.DRIFT_DETECTION_FETCH_FAILURE_POLICY
+          path: data.DRIFT_DETECTION_ON_FETCH_FAILURE
           value: warn
