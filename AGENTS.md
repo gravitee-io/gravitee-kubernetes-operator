@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-Gravitee Kubernetes Operator (GKO) is a Kubernetes operator built with **Kubebuilder/controller-runtime** that manages Gravitee API Management (APIM) resources through Custom Resource Definitions (CRDs). It allows users to define, deploy, and publish APIs to the Gravitee API Portal and Gateway declaratively.
+Gravitee Kubernetes Operator (GKO) is a Kubernetes operator built with **Kubebuilder/controller-runtime** that manages Gravitee API Management (APIM) and Access Management (AM) resources through Custom Resource Definitions (CRDs). APIM resources deploy and publish APIs to the Gravitee API Portal and Gateway. AM resources start at `AMContext` (bearer-only connection to an AM instance).
 
 **Language:** Go 1.26 | **API Group:** `gravitee.io/v1alpha1` | **Module:** `github.com/gravitee-io/gravitee-kubernetes-operator`
 
@@ -32,6 +32,8 @@ make it                        # Run integration tests (Ginkgo, requires cluster
 
 # Run a single unit test suite
 go tool ginkgo test/unit/apim/...
+go tool ginkgo test/unit/am/...
+go tool ginkgo test/unit/predicate/...
 # Run a single integration test file (use --focus to filter by description)
 go tool ginkgo --focus "should ..." test/integration/apidefinition/v2/...
 
@@ -49,25 +51,29 @@ make run                       # Run operator locally (APPLY_CRDS=true ENABLE_GA
 All CRDs belong to the `gravitee.io` API group, version `v1alpha1`:
 
 - **APIM resources:** `ApiDefinition` (v2), `ApiV4Definition` (v4), `ManagementContext` (cluster-scoped), `ApiResource`, `Application`, `Subscription`, `Group`, `Notification`, `SharedPolicyGroup`
+- **AM resources:** `AMContext` (namespaced, bearer-only, no cloud). Later stories add IdentityProvider, SecurityDomain, Certificate, Reporter
 - **Gateway API resources:** `GatewayClassParameters`, plus standard `HTTPRoute`/`KafkaRoute`
 
 Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core interfaces that all CRD types implement are in `internal/core/interface.go` (`Object`, `Spec`, `Status`, `ContextAwareObject`, etc.).
 
 ### Controllers (controllers/)
 
-Two controller families, each under `controllers/`:
+Three controller families, each under `controllers/`:
 - **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription)
+- **`am/`** — `amcontext` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
 Each controller follows the standard Kubebuilder reconciler pattern:
 - `*_controller.go` — `Reconciler` struct with `Reconcile()` and `SetupWithManager()`
 - `internal/` subpackage — `update.go`, `delete.go`, `status.go` for reconciliation logic
 
-Controllers use a **watch system** (`internal/watch/`) to react to changes in related resources (contexts, resources, groups, notifications). The `predicate.LastSpecHashPredicate` prevents reconciliation when the spec hasn't changed.
+Controllers use a **watch system** (`internal/watch/`) to react to changes in related resources (contexts, resources, groups, notifications). The `predicate.LastSpecHashPredicate` prevents reconciliation when the spec hasn't changed. **Add a Create and Update case for every new CRD type** next to `ManagementContext` / `AMContext`; unknown types default to `false` and never reconcile.
 
 ### Admission Webhooks (internal/admission/)
 
-Validation and mutation webhooks organized by resource type (`api/v2/`, `api/v4/`, `application/`, `mctx/`, `subscription/`, `group/`, `policygroups/`). Each has a `ctrl.go` (webhook handler) and `validate.go`. Controllers implement generic `admission.Validator[T]` / `admission.Defaulter[T]`; private `validateCreate` / `validateUpdate` / `validateDelete` take the concrete CRD type (e.g. `*v1alpha1.Application`) so they do not type-assert from `runtime.Object`.
+Validation and mutation webhooks organized by resource type (`api/v2/`, `api/v4/`, `application/`, `mctx/`, `amctx/`, `subscription/`, `group/`, `policygroups/`). Each has a `ctrl.go` (webhook handler) and `validate.go`. Controllers implement generic `admission.Validator[T]` / `admission.Defaulter[T]`; private `validateCreate` / `validateUpdate` / `validateDelete` take the concrete CRD type (e.g. `*v1alpha1.Application`) so they do not type-assert from `runtime.Object`.
+
+AMContext: AM unreachable (network error) → **warning, admit**. Bad token or unknown org/env → reject. Probe is `GET /organizations/{org}/environments/{env}/domains?size=1`; HTTP 200 is the whole contract.
 
 ### APIM client (internal/apim/)
 
@@ -81,6 +87,18 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | `internal/apim/model/` | The **wire payloads** (`*DTO`) sent to and received from APIM, plus their `To*DTO` mappers |
 
 Controllers and webhooks never build a URL or a payload themselves. They obtain a client with `apim.FromContextRef(ctx, obj.ContextRef(), obj.GetNamespace())` and call a service method.
+
+### AM client (internal/am/)
+
+Sibling of `internal/apim`, not a fork. Bearer-only, no cloud. Talks to AM's Automation API.
+
+| Package | Role |
+|---------|------|
+| `internal/am/am.go` | The `AM` facade, built per reconcile from an `AMContext` |
+| `internal/am/client/` | HTTP client + `AutomationTarget` `{base}/automation/organizations/{org}/environments/{env}` |
+| `internal/am/service/` | One file per resource. Today: `Domains.Probe()` |
+
+Auth is `bearerToken` / `secretRef` only — no `credentials` field. Controllers obtain a client with `am.FromContextRef(ctx, obj.ContextRef(), obj.GetNamespace())`. New AM resources stay Automation API only.
 
 #### Management API vs Automation API
 
@@ -182,7 +200,7 @@ Reference implementations: `internal/admission/application/drift.go`, `internal/
 
 ### Internal Packages (internal/)
 
-Key packages: `apim/` (APIM client — see [APIM client](#apim-client-internalapim)), `core/` (shared interfaces), `env/` (config via env vars), `k8s/dynamic/` (unstructured resolution of referenced CRs, Secrets and ConfigMaps), `search/` (cache field indexers), `template/` (Go templating for CRD values — delimiters are ``[[`` / ``]]``, not the Go default, with `secret` and `configmap` functions: ``[[ secret `my-secret/token` ]]``), `watch/` (dynamic resource watching), `webhook/` (webhook server setup).
+Key packages: `apim/` (APIM client — see [APIM client](#apim-client-internalapim)), `am/` (AM client — see [AM client](#am-client-internalam)), `core/` (shared interfaces), `env/` (config via env vars), `k8s/dynamic/` (unstructured resolution of referenced CRs, Secrets and ConfigMaps), `search/` (cache field indexers), `template/` (Go templating for CRD values — delimiters are ``[[`` / ``]]``, not the Go default, with `secret` and `configmap` functions: ``[[ secret `my-secret/token` ]]``), `watch/` (dynamic resource watching), `webhook/` (webhook server setup).
 
 ### Entry Point (main.go)
 
@@ -195,10 +213,10 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 | Layer | Where | What belongs there |
 |-------|-------|--------------------|
 | Unit | `test/unit/<area>/` in this repo | Pure logic: DTO mapping, drift tags, validation predicates, templating, helpers. Ginkgo v2; dot-imports for `ginkgo/v2` and `gomega` are allowed |
-| E2E | [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e) | Anything requiring a cluster or a live APIM: reconciliation, `.status`, admission rejection, drift, deletion |
+| E2E | [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e) | Anything requiring a cluster or a live APIM/AM: reconciliation, `.status`, admission rejection, drift, deletion |
 | Helm | `helm/gko/tests/` | helm-unittest YAML tests |
 
-In the e2e repo, operator-specific coverage goes in `apim/tests/gko/<area>/` with fixtures in `apim/fixtures/<area>/`; behaviour a customer could also reach through Terraform goes in `apim/tests/user-journeys/<persona>/<journey>/`. That repo carries its own `AGENTS.md` and a `write-e2e-test` skill — follow those, do not infer its conventions from this file.
+In the e2e repo, APIM operator coverage goes in `apim/tests/gko/<area>/`; AM operator coverage goes in `am/tests/gko/<area>/` (AMContext lives there). Behaviour a customer could also reach through Terraform goes in `apim/tests/user-journeys/<persona>/<journey>/`. That repo carries its own `AGENTS.md` and a `write-e2e-test` skill — follow those, do not infer its conventions from this file.
 
 `test/integration/` still exists and still runs in CI. Keep it green, but do not extend it.
 
