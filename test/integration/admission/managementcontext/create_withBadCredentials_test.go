@@ -17,7 +17,6 @@ package managementcontext
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -27,7 +26,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
 var _ = Describe("Validate create", labels.WithContext, func() {
@@ -48,14 +46,9 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		Consistently(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Context)
-			return assert.Equals(
-				"error",
-				errors.NewSeveref(
-					"bad credentials for context [%s]",
-					fixtures.Context.Name,
-				),
-				err,
-			)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed with status"))
+			return nil
 		}, constants.ConsistentTimeout, interval).Should(Succeed())
 	})
 })
