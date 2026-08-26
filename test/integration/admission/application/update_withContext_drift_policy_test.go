@@ -44,7 +44,7 @@ var _ = Describe("Validate drift policies", labels.WithContext, func() {
 		env.Config.DriftDetection.Enabled = true
 		env.Config.DriftDetection.Policy = env.DriftPolicyDeny
 		env.Config.DriftDetection.OnRemoteMissing = env.DriftPolicyDeny
-		env.Config.DriftDetection.FetchFailurePolicy = env.DriftPolicyDeny
+		env.Config.DriftDetection.OnFetchFailure = env.DriftPolicyDeny
 	})
 
 	AfterEach(func() {

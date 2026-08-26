@@ -208,8 +208,9 @@ manager:
     onRemoteMissing:
       ## @param manager.driftDetection.onRemoteMissing.policy Policy when the admission controller does not find the resource on the remote (HTTP 404). Same values as `manager.driftDetection.policy` (`deny`, `warn`, or `allow`), except no differences are logged. `warn` and `allow` let the controller recreate the resource on the remote.
       policy: deny
-    ## @param manager.driftDetection.fetchFailurePolicy Policy if fetching the remote state fails (non-404 errors or network): `deny` blocks the update with an error message; `warn` displays a kubectl warning but allows the update; `allow` logs the error as a warning in the controller logs only.
-    fetchFailurePolicy: deny
+    onFetchFailure:
+      ## @param manager.driftDetection.onFetchFailure.policy Policy if fetching the remote state fails (non-404 errors or network): `deny` blocks the update with an error message; `warn` displays a kubectl warning but allows the update; `allow` logs the error as a warning in the controller logs only.
+      policy: deny
 
 ## @section Ingress Controller
 ## @descriptionStart

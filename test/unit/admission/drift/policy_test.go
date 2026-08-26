@@ -37,7 +37,7 @@ var _ = Describe("Drift policies fetch policies", func() {
 		original = env.Config.DriftDetection
 		env.Config.DriftDetection.Enabled = true
 		env.Config.DriftDetection.OnRemoteMissing = env.DriftPolicyDeny
-		env.Config.DriftDetection.FetchFailurePolicy = env.DriftPolicyDeny
+		env.Config.DriftDetection.OnFetchFailure = env.DriftPolicyDeny
 	})
 
 	AfterEach(func() {
@@ -67,9 +67,9 @@ var _ = Describe("Drift policies fetch policies", func() {
 		Entry("allow reports nothing", env.DriftPolicyAllow, false, false),
 	)
 
-	DescribeTable("non-404 fetch failure uses FetchFailurePolicy",
+	DescribeTable("non-404 fetch failure uses OnFetchFailure",
 		func(policy env.DriftPolicy, expectSevere, expectWarning bool) {
-			env.Config.DriftDetection.FetchFailurePolicy = policy
+			env.Config.DriftDetection.OnFetchFailure = policy
 			errs := validateWithRemoteError(stderrors.New("connection refused"))
 
 			if expectSevere {

@@ -35,7 +35,7 @@ func applyRemoteFetchPolicy(obj client.Object, err error, errs *errors.Admission
 		return
 	}
 	applyPolicy(
-		env.Config.DriftDetection.FetchFailurePolicy,
+		env.Config.DriftDetection.OnFetchFailure,
 		func() string {
 			return fmt.Sprintf("failed to fetch remote [%s] [%s] during drift detection: %s", kind, ref, err.Error())
 		},
