@@ -31,13 +31,14 @@ func toHttpAuth(management core.ContextModel) *http.Auth {
 }
 
 func toBasicAuth(auth core.Auth) *http.BasicAuth {
-	if auth == nil || !auth.HasCredentials() {
+	cred, ok := auth.(core.CredentialAuth)
+	if !ok || !cred.HasCredentials() {
 		return nil
 	}
 
 	return &http.BasicAuth{
-		Username: auth.GetCredentials().GetUsername(),
-		Password: auth.GetCredentials().GetPassword(),
+		Username: cred.GetCredentials().GetUsername(),
+		Password: cred.GetCredentials().GetPassword(),
 	}
 }
 

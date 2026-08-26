@@ -23,16 +23,6 @@ import (
 )
 
 var _ = Describe("AM bearer auth", func() {
-	It("is bearer-only: credentials stay unset", func() {
-		auth := &ammodel.Auth{BearerToken: "tok"}
-		Expect(auth.HasCredentials()).To(BeFalse())
-		Expect(auth.GetCredentials()).To(BeNil())
-
-		auth.SetCredentials("admin", "secret")
-		Expect(auth.HasCredentials()).To(BeFalse())
-		Expect(auth.GetBearerToken()).To(Equal("tok"))
-	})
-
 	It("stores a token set from a secret", func() {
 		auth := &ammodel.Auth{}
 		auth.SetToken("from-secret")

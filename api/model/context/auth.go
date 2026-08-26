@@ -20,6 +20,7 @@ import (
 )
 
 var _ core.Auth = &Auth{}
+var _ core.CredentialAuth = &Auth{}
 var _ core.BasicAuth = &BasicAuth{}
 
 type Auth struct {
