@@ -19,7 +19,7 @@ import (
 )
 
 type Status struct {
-	// Conditions describe the current conditions of the ManagementContext.
+	// Conditions describe the current conditions of the context.
 	//
 	// Known condition types are:
 	// * "Accepted"

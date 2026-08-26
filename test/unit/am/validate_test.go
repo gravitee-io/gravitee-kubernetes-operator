@@ -83,6 +83,7 @@ var _ = Describe("AMContext admission", func() {
 		Entry("empty org", func(o *v1alpha1.AMContext) { o.Spec.OrgID = "" }, "[orgId]", "mandatory"),
 		Entry("empty env", func(o *v1alpha1.AMContext) { o.Spec.EnvID = "" }, "[envId]", "mandatory"),
 		Entry("missing auth", func(o *v1alpha1.AMContext) { o.Spec.Auth = nil }, "[auth]", "mandatory"),
+		Entry("empty auth", func(o *v1alpha1.AMContext) { o.Spec.Auth = &ammodel.Auth{} }, "[auth]", "bearerToken or secretRef"),
 	)
 
 	DescribeTable("maps AM HTTP status to admission outcome",
@@ -104,10 +105,10 @@ var _ = Describe("AMContext admission", func() {
 			}
 		},
 		Entry("200 admits", http.StatusOK, "", ""),
-		Entry("401 is bad credentials", http.StatusUnauthorized, "bad credentials", ""),
-		Entry("400 is unknown org/env", http.StatusBadRequest, "invalid organization or environment", ""),
-		Entry("403 is unknown org/env", http.StatusForbidden, "invalid organization or environment", ""),
-		Entry("404 is unknown org/env", http.StatusNotFound, "invalid organization or environment", ""),
+		Entry("401 passes status", http.StatusUnauthorized, "failed with status 401", ""),
+		Entry("400 passes status", http.StatusBadRequest, "failed with status 400", ""),
+		Entry("403 passes status", http.StatusForbidden, "failed with status 403", ""),
+		Entry("404 passes status", http.StatusNotFound, "failed with status 404", ""),
 	)
 
 	It("sends a Bearer token and probes /domains?size=1", func() {

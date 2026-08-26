@@ -16,8 +16,6 @@ package amctx
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"regexp"
 	"strings"
 
@@ -74,6 +72,9 @@ func validateRequiredField(obj *v1alpha1.AMContext) *gerrors.AdmissionError {
 	if !obj.HasAuthentication() {
 		return gerrors.NewSevere("[auth] is mandatory")
 	}
+	if obj.Spec.Auth.BearerToken == "" && !obj.HasSecretRef() {
+		return gerrors.NewSevere("[auth] bearerToken or secretRef is mandatory")
+	}
 	return nil
 }
 
@@ -110,28 +111,8 @@ func validateContextIsAvailable(ctx context.Context, obj *v1alpha1.AMContext) *g
 			obj.GetURL(),
 		)
 	}
-	if gerrors.IsUnauthorized(err) {
-		return gerrors.NewSeveref(
-			"bad credentials for context [%s]",
-			obj.GetName(),
-		)
-	}
-	if isUnknownOrgOrEnv(err) {
-		return gerrors.NewSevere("invalid organization or environment")
-	}
 	if err != nil {
 		return gerrors.NewSevere(err.Error())
 	}
 	return nil
-}
-
-func isUnknownOrgOrEnv(err error) bool {
-	if gerrors.IsNotFound(err) || gerrors.IsBadRequest(err) {
-		return true
-	}
-	serverError := &gerrors.ServerError{}
-	if errors.As(err, serverError) {
-		return serverError.StatusCode == http.StatusForbidden
-	}
-	return false
 }
