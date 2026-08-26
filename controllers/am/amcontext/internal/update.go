@@ -35,8 +35,8 @@ func CreateOrUpdate(
 	ctx context.Context,
 	instance *v1alpha1.AMContext,
 ) error {
-	dereferencedSecrete := ""
-	if instance.ObjectMeta.Annotations == nil { // just for the tests to pass
+	dereferencedSecret := ""
+	if instance.ObjectMeta.Annotations == nil {
 		instance.ObjectMeta.Annotations = map[string]string{}
 	}
 
@@ -49,11 +49,11 @@ func CreateOrUpdate(
 		}
 
 		secretRef := fmt.Sprintf("%s/%s", nsn.Namespace, nsn.Name)
-		if instance.ObjectMeta.Annotations[LastSecretReferenceName] == "" {
-			instance.ObjectMeta.Annotations[LastSecretReferenceName] = secretRef
-		} else if instance.ObjectMeta.Annotations[LastSecretReferenceName] != secretRef {
-			dereferencedSecrete = secretRef
+		old := instance.ObjectMeta.Annotations[LastSecretReferenceName]
+		if old != "" && old != secretRef {
+			dereferencedSecret = old
 		}
+		instance.ObjectMeta.Annotations[LastSecretReferenceName] = secretRef
 
 		if !util.ContainsFinalizer(secret, core.AMContextSecretFinalizer) {
 			util.AddFinalizer(secret, core.AMContextSecretFinalizer)
@@ -62,20 +62,20 @@ func CreateOrUpdate(
 			}
 		}
 	} else {
-		dereferencedSecrete = instance.ObjectMeta.Annotations[LastSecretReferenceName]
+		dereferencedSecret = instance.ObjectMeta.Annotations[LastSecretReferenceName]
 		instance.ObjectMeta.Annotations[LastSecretReferenceName] = ""
 	}
 
-	if dereferencedSecrete != "" {
-		return dereferenceSecret(ctx, dereferencedSecrete)
+	if dereferencedSecret != "" {
+		return dereferenceSecret(ctx, dereferencedSecret)
 	}
 
 	return nil
 }
 
-func dereferenceSecret(ctx context.Context, dereferencedSecrete string) error {
+func dereferenceSecret(ctx context.Context, dereferencedSecret string) error {
 	secret := &v1.Secret{}
-	ss := strings.Split(dereferencedSecrete, "/")
+	ss := strings.Split(dereferencedSecret, "/")
 	nsn := types.NamespacedName{Namespace: ss[0], Name: ss[1]}
 	if err := k8s.GetClient().Get(ctx, nsn, secret); err != nil {
 		return gerrors.NewResolveRefError(err)
