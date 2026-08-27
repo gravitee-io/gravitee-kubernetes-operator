@@ -29,7 +29,6 @@ npx --yes -p @commitlint/cli -p @commitlint/config-conventional \
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
 make it                        # Run integration tests (Ginkgo, requires cluster) — test/integration/...
-make e2e                       # Run e2e tests (Playwright) — test/platform-test/
 
 # Run a single unit test suite
 go tool ginkgo test/unit/apim/...
@@ -201,7 +200,7 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 
 In the e2e repo, operator-specific coverage goes in `apim/tests/gko/<area>/` with fixtures in `apim/fixtures/<area>/`; behaviour a customer could also reach through Terraform goes in `apim/tests/user-journeys/<persona>/<journey>/`. That repo carries its own `AGENTS.md` and a `write-e2e-test` skill — follow those, do not infer its conventions from this file.
 
-`test/integration/` and `test/platform-test/` still exist and still run in CI. Keep them green, but do not extend them.
+`test/integration/` still exists and still runs in CI. Keep it green, but do not extend it.
 
 ## Code Generation
 

@@ -18,10 +18,6 @@ UT_ARGS ?= ""
 unit:  ## Run unit tests
 	go tool ginkgo $(UT_ARGS) test/unit/...
 
-.PHONY: e2e
-e2e:  ## Run all end to end tests (Playwright)
-	npm --prefix test/platform-test run e2e
-
 CONFORMANCE_TIMEOUT ?= 30m
 CONFORMANCE_JUNIT_FILE ?= /tmp/junit/reports/conformance.xml
 CONFORMANCE_RERUN ?= 2
