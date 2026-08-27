@@ -54,11 +54,11 @@ var _ = Describe("Create", labels.WithContext, func() {
 		By("calling rest API, expecting the declared visibility to be applied to the link")
 
 		apim := apim.NewClient(ctx)
-		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		parent := service.LinkParent{Portal: fixtures.Portal}
 		linkHrid := refs.NewNamespacedNameFromObject(fixtures.PortalLink).HRID()
 
 		Eventually(func() error {
-			link, linkErr := apim.Links.GetByHRID(portalHrid, linkHrid)
+			link, linkErr := apim.Links.GetByHRID(parent, linkHrid)
 			if linkErr != nil {
 				return linkErr
 			}
