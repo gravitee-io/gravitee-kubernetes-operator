@@ -117,7 +117,7 @@ func validateContextIsAvailable(ctx context.Context, context core.ContextObject)
 		)
 	}
 
-	if err != nil {
+	if errors.IsUnauthorized(err) || errors.IsBadRequest(err) {
 		return errors.NewSevere(err.Error())
 	}
 
