@@ -20,6 +20,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallink"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -119,7 +120,7 @@ func validateNameDrift(
 
 	setLinkName(newLink, remoteName)
 
-	_, err := apimClient.Links.CreateOrUpdate(newLink, fixtures.Portal)
+	_, err := apimClient.Links.CreateOrUpdate(newLink, service.LinkParent{Portal: fixtures.Portal})
 	Expect(err).ToNot(HaveOccurred())
 
 	setLinkName(newLink, localCRDName)
