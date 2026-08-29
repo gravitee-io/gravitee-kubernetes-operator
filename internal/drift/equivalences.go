@@ -52,12 +52,15 @@ func InitRegistry() {
 }
 
 const (
-	ignoreOnlyRemote = "remote"
-	ignoreOnlyCRD    = "crd"
+	ignoreOnlyRemote  = "remote"
+	ignoreOnlyCRD     = "crd"
+	ignoreOnlyStripNS = "strip-ns"
 )
 
 // IgnoreOnlyArgs ignores items present only on one side, chosen by ctx.FuncArgs[0]
 // ("remote" or "crd"). Items must implement Keyed.
+// If FuncArgs contain "strip-ns", keys are compared after stripping
+// the namespace prefix and remaining membership is compared as a set.
 func IgnoreOnlyArgs(crd any, remote any, ctx DriftContext) Equivalence {
 	eq := EmptyIsNilLen(crd, remote, DriftContext{})
 	if eq.Equivalent == Equivalent {
@@ -69,17 +72,21 @@ func IgnoreOnlyArgs(crd any, remote any, ctx DriftContext) Equivalence {
 		return cannotCompare
 	}
 
-	crdIDs, ok := asKeyed(crd)
+	crdItems, ok := asKeyed(crd)
 	if !ok {
 		return cannotCompare
 	}
-	remoteIDs, ok := asKeyed(remote)
+	remoteItems, ok := asKeyed(remote)
 	if !ok {
 		return cannotCompare
 	}
 
-	crdNames := keys(crdIDs)
-	remoteNames := keys(remoteIDs)
+	stripNS := slices.Contains(ctx.FuncArgs[1:], ignoreOnlyStripNS)
+	crdNames := keys(crdItems, ctx.Namespace, stripNS)
+	remoteNames := keys(remoteItems, ctx.Namespace, stripNS)
+	if stripNS {
+		return ignoreOnlySetCompare(side, crdNames, remoteNames)
+	}
 	filter := itemsOnlyFilterFunc(onlyOnSide(side, crdNames, remoteNames))
 	if filter == nil {
 		return cannotCompare
@@ -88,6 +95,22 @@ func IgnoreOnlyArgs(crd any, remote any, ctx DriftContext) Equivalence {
 		return Equivalence{Equivalent: CannotCompare, RemoteItemsFilterFunc: filter}
 	}
 	return Equivalence{Equivalent: CannotCompare, CRDItemsFilterFunc: filter}
+}
+
+func ignoreOnlySetCompare(side string, crdNames, remoteNames []string) Equivalence {
+	only := onlyOnSide(side, crdNames, remoteNames)
+	left, right := crdNames, remoteNames
+	if side == ignoreOnlyCRD {
+		left = difference(crdNames, only)
+	} else {
+		right = difference(remoteNames, only)
+	}
+	slices.Sort(left)
+	slices.Sort(right)
+	if slices.Equal(left, right) {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+	return Equivalence{Equivalent: Inequivalent, Skip: true}
 }
 
 func ignoreOnlySide(args []string) (string, bool) {
@@ -132,8 +155,8 @@ func itemsOnlyFilterFunc(onlyIDs []string) ItemsFilterFunc {
 		filtered := make([]any, 0, v.Len())
 		for i := 0; i < v.Len(); i++ {
 			item := v.Index(i).Interface()
-			if id, ok := item.(Keyed); ok {
-				if slices.Contains(onlyIDs, id.MatchKey()) {
+			if keyed, ok := item.(Keyed); ok {
+				if slices.Contains(onlyIDs, keyed.MatchKey()) {
 					continue
 				}
 			}
@@ -151,21 +174,29 @@ func asKeyed(items any) ([]Keyed, bool) {
 		return []Keyed{}, true
 	}
 	v := reflect.ValueOf(items)
-	ids := make([]Keyed, v.Len())
+	keyed := make([]Keyed, v.Len())
 	for i := 0; i < v.Len(); i++ {
-		id, ok := v.Index(i).Interface().(Keyed)
+		item, ok := v.Index(i).Interface().(Keyed)
 		if !ok {
 			return nil, false
 		}
-		ids[i] = id
+		keyed[i] = item
 	}
-	return ids, true
+	return keyed, true
 }
 
-func keys(items []Keyed) []string {
+func keys(items []Keyed, namespace string, stripNS bool) []string {
 	names := make([]string, len(items))
+	prefix := ""
+	if stripNS && namespace != "" {
+		prefix = namespace + "-"
+	}
 	for i, item := range items {
-		names[i] = item.MatchKey()
+		name := item.MatchKey()
+		if prefix != "" {
+			name = strings.TrimPrefix(name, prefix)
+		}
+		names[i] = name
 	}
 	return names
 }
@@ -176,10 +207,8 @@ func IgnoreRemoteArgs(crd any, remote any, context DriftContext) Equivalence {
 	if e.Equivalent == Inequivalent {
 		rs := asString(remote)
 		if context.FuncArgs != nil {
-			for _, arg := range context.FuncArgs {
-				if arg == rs {
-					return Equivalence{Equivalent: Equivalent}
-				}
+			if slices.Contains(context.FuncArgs, rs) {
+				return Equivalence{Equivalent: Equivalent}
 			}
 		}
 	}

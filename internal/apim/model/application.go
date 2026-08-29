@@ -28,12 +28,18 @@ type ApplicationDTO struct {
 	Settings      *ApplicationSettingsDTO  `json:"settings,omitempty" drift:"empty-is-nil"`
 	Background    string                   `json:"background,omitempty"`
 	Domain        string                   `json:"domain,omitempty"`
-	Groups        []string                 `json:"groups,omitempty" drift:"ignore-unknown-crd-groups"`
+	Groups        []ApplicationGroup       `json:"groups,omitempty" drift:"ignore-only:crd,strip-ns"`
 	Picture       string                   `json:"picture,omitempty"`
 	PictureURL    string                   `json:"pictureUrl,omitempty"`
 	NotifyMembers *bool                    `json:"notifyMembers" drift:"empty-is-nil"`
 	Metadata      []ApplicationMetadataDTO `json:"metadata" drift:"empty-is-nil"`
 	Members       []ApplicationMemberDTO   `json:"members" drift:"ignore-only:crd"`
+}
+
+type ApplicationGroup string
+
+func (g ApplicationGroup) MatchKey() string {
+	return string(g)
 }
 
 type ApplicationSettingsDTO struct {

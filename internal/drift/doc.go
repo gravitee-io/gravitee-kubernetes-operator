@@ -82,7 +82,7 @@
 //   - ignore-remote (string): ignores difference if remote value matches any of the tag arguments.
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
 //   - ignore-only (slice): filters items present only on the side given by the tag argument (remote or crd).
-//   - ignore-unknown-crd-groups (slice, APIM registry): removes CRD-only strings, then compares with namespace prefix ignored.
+//     With strip-ns, remaining keys are compared as a set after stripping the namespace prefix.
 //   - unstructured (struct): for unstructured types; hoists "object" child fields to root via PostFunc.
 //
 // # Drift Tag Function Arguments
@@ -114,14 +114,17 @@
 //
 // ### ignore-only
 //
-// Syntax: `drift:"ignore-only:remote"` or `drift:"ignore-only:crd"`
+// Syntax: `drift:"ignore-only:remote"` or `drift:"ignore-only:crd"` or `drift:"ignore-only:crd,strip-ns"`
 //
 // Filters slice items that exist only on the named side before item comparison.
 // Items must implement [Keyed].
+// With `strip-ns`, keys are compared after stripping the namespace prefix
+// and remaining membership is compared as a set (Skip).
 //
 // Example:
 //
 //	Metadata []*APIV4MetadataEntryDTO `json:"metadata" drift:"ignore-only:remote"`
+//	Groups   []APIGroup               `json:"groups" drift:"ignore-only:crd,strip-ns"`
 //
 // ### ignore-namespace-prefix
 //

@@ -15,12 +15,10 @@
 package drift
 
 import (
-	driftapim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/drift"
 	driftlib "github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 )
 
 func Init() {
 	driftlib.InitRegistry()
 	driftlib.InitEnableCheck()
-	driftapim.InitRegistry()
 }

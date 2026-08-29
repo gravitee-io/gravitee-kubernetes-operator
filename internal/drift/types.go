@@ -61,7 +61,7 @@ type Equivalence struct {
 	CRDItemsFilterFunc ItemsFilterFunc
 }
 
-// Keyed identifies a slice item by a stable string so only-on-one-side
+// Keyed identifies a slice item by a stable key so only-on-one-side
 // items can be filtered before comparison.
 type Keyed interface {
 	MatchKey() string

@@ -33,7 +33,7 @@ type APIV4DTO struct {
 	Properties                       []*APIV4PropertyDTO                             `json:"properties" drift:"empty-is-nil"`
 	Metadata                         []*APIV4MetadataEntryDTO                        `json:"metadata" drift:"ignore-only:remote"`
 	Resources                        []*APIV4ResourceDTO                             `json:"resources" drift:"empty-is-nil"`
-	Groups                           []string                                        `json:"groups" drift:"ignore-unknown-crd-groups"`
+	Groups                           []APIGroup                                      `json:"groups" drift:"ignore-only:crd,strip-ns"`
 	Categories                       []APICategory                                   `json:"categories" drift:"ignore-only:crd"`
 	NotifyMembers                    bool                                            `json:"notifyMembers" drift:"empty-is-true"`
 	Description                      *string                                         `json:"description,omitempty"`
@@ -82,6 +82,12 @@ func (c APICategory) MatchKey() string {
 	return string(c)
 }
 
+type APIGroup string
+
+func (g APIGroup) MatchKey() string {
+	return string(g)
+}
+
 type APIV4ResourceDTO struct {
 	Enabled       bool                    `json:"enabled"`
 	Name          *string                 `json:"name,omitempty"`
@@ -111,8 +117,8 @@ type APIV4FailoverDTO struct {
 }
 
 type APIV4ConsoleNotificationDTO struct {
-	Events []string `json:"events" drift:"empty-is-nil"`
-	Groups []string `json:"groups" drift:"ignore-unknown-crd-groups"`
+	Events []string    `json:"events" drift:"empty-is-nil"`
+	Groups []APIGroup `json:"groups" drift:"ignore-only:crd,strip-ns"`
 }
 
 type APIV4NavigationPathDTO struct {

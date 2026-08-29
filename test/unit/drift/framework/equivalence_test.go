@@ -586,6 +586,10 @@ type withIgnoreOnlyCRD struct {
 	Items []namedItem `json:"items" drift:"ignore-only:crd"`
 }
 
+type withIgnoreOnlyCRDStripNS struct {
+	Items []namedItem `json:"items" drift:"ignore-only:crd,strip-ns"`
+}
+
 var _ = Describe("IgnoreOnlyArgs", func() {
 	remoteCtx := drift.DriftContext{FuncArgs: []string{"remote"}}
 	crdCtx := drift.DriftContext{FuncArgs: []string{"crd"}}
@@ -693,5 +697,11 @@ var _ = Describe("IgnoreOnlyArgs", func() {
 		crd := withIgnoreOnlyCRD{Items: []namedItem{{ID: "owner"}, {ID: "local-only"}}}
 		remote := withIgnoreOnlyCRD{Items: []namedItem{{ID: "owner"}}}
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect ignores namespace prefix with strip-ns", func() {
+		crd := withIgnoreOnlyCRDStripNS{Items: []namedItem{{ID: "group1"}, {ID: "crd-only"}}}
+		remote := withIgnoreOnlyCRDStripNS{Items: []namedItem{{ID: "test-namespace-group1"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, "test-namespace"))
 	})
 })
