@@ -34,7 +34,7 @@ type APIV4DTO struct {
 	Metadata                         []*APIV4MetadataEntryDTO                        `json:"metadata" drift:"ignore-only:remote"`
 	Resources                        []*APIV4ResourceDTO                             `json:"resources" drift:"empty-is-nil"`
 	Groups                           []string                                        `json:"groups" drift:"ignore-unknown-crd-groups"`
-	Categories                       []string                                        `json:"categories" drift:"empty-is-nil"`
+	Categories                       []APICategory                                   `json:"categories" drift:"ignore-only:crd"`
 	NotifyMembers                    bool                                            `json:"notifyMembers" drift:"empty-is-true"`
 	Description                      *string                                         `json:"description,omitempty"`
 	DefinitionVersion                base.DefinitionVersion                          `json:"definitionVersion,omitempty" drift:"ignore"`
@@ -74,6 +74,12 @@ type APIV4MetadataEntryDTO struct {
 
 func (m APIV4MetadataEntryDTO) MatchKey() string {
 	return m.Name
+}
+
+type APICategory string
+
+func (c APICategory) MatchKey() string {
+	return string(c)
 }
 
 type APIV4ResourceDTO struct {

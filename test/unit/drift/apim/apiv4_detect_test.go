@@ -57,7 +57,7 @@ var _ = Describe("API v4 Drift detection", func() {
 					Mode: "DEFAULT",
 				},
 				Groups:           []string{},
-				Categories:       []string{},
+				Categories:       []model.APICategory{},
 				Flows:            []*model.APIV4FlowDTO{},
 				Members:          []*model.APIV4MemberDTO{},
 				PortalNavigation: []*model.APIV4NavigationPathDTO{},
@@ -105,6 +105,14 @@ var _ = Describe("API v4 Drift detection", func() {
 						"gravitee-developers",
 					},
 				},
+			},
+		),
+		Entry("crd-only categories ignored",
+			model.APIV4DTO{
+				Categories: []model.APICategory{"shared", "crd-only"},
+			},
+			model.APIV4DTO{
+				Categories: []model.APICategory{"shared"},
 			},
 		),
 		Entry("crd-only members ignored",
