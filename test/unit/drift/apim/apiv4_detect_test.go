@@ -107,6 +107,19 @@ var _ = Describe("API v4 Drift detection", func() {
 				},
 			},
 		),
+		Entry("crd-only members ignored",
+			model.APIV4DTO{
+				Members: []*model.APIV4MemberDTO{
+					{Source: "memory", SourceID: "admin", Role: "OWNER"},
+					{Source: "memory", SourceID: "local-only", Role: "USER"},
+				},
+			},
+			model.APIV4DTO{
+				Members: []*model.APIV4MemberDTO{
+					{Source: "memory", SourceID: "admin", Role: "OWNER"},
+				},
+			},
+		),
 		Entry("empty reporters equivalent to true",
 			model.APIV4DTO{
 				Analytics: nil,

@@ -50,7 +50,7 @@ type APIV4DTO struct {
 	ResponseTemplates                map[string]map[string]*APIV4ResponseTemplateDTO `json:"responseTemplates,omitempty"`
 	AllowedInApiProducts             *bool                                           `json:"allowedInApiProducts,omitempty"`
 	AllowMultiJwtOauth2Subscriptions *bool                                           `json:"allowMultiJwtOauth2Subscriptions,omitempty"`
-	Members                          []*APIV4MemberDTO                               `json:"members,omitempty" drift:"empty-is-nil"`
+	Members                          []*APIV4MemberDTO                               `json:"members,omitempty" drift:"ignore-only:crd"`
 	Failover                         *APIV4FailoverDTO                               `json:"failover,omitempty"`
 	PortalNavigation                 []*APIV4NavigationPathDTO                       `json:"portalNavigation,omitempty" drift:"empty-is-nil"`
 	ConsoleNotification              *APIV4ConsoleNotificationDTO                    `json:"consoleNotification,omitempty"`
@@ -119,6 +119,10 @@ type APIV4MemberDTO struct {
 	Source   string `json:"source"`
 	SourceID string `json:"sourceId"`
 	Role     string `json:"role,omitempty"`
+}
+
+func (m APIV4MemberDTO) MatchKey() string {
+	return m.Source + ":" + m.SourceID
 }
 
 type APIV4GenericListenerDTO struct {

@@ -33,7 +33,7 @@ type ApplicationDTO struct {
 	PictureURL    string                   `json:"pictureUrl,omitempty"`
 	NotifyMembers *bool                    `json:"notifyMembers" drift:"empty-is-nil"`
 	Metadata      []ApplicationMetadataDTO `json:"metadata" drift:"empty-is-nil"`
-	Members       []ApplicationMemberDTO   `json:"members" drift:"empty-is-nil"`
+	Members       []ApplicationMemberDTO   `json:"members" drift:"ignore-only:crd"`
 }
 
 type ApplicationSettingsDTO struct {
@@ -83,6 +83,10 @@ type ApplicationMemberDTO struct {
 	Source   string `json:"source"`
 	SourceID string `json:"sourceId"`
 	Role     string `json:"role,omitempty"`
+}
+
+func (m ApplicationMemberDTO) MatchKey() string {
+	return m.Source + ":" + m.SourceID
 }
 
 type ApplicationMetaData struct {
