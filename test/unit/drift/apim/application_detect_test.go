@@ -39,6 +39,19 @@ var _ = Describe("Application Drift detection", func() {
 			completeApplicationDTO(),
 			model.ToApplicationDTO(completeApplicationCRD().Spec),
 		),
+		Entry("crd-only members ignored",
+			model.ApplicationDTO{
+				Members: []model.ApplicationMemberDTO{
+					{Source: "memory", SourceID: "admin", Role: "ADMIN"},
+					{Source: "memory", SourceID: "local-only", Role: "USER"},
+				},
+			},
+			model.ApplicationDTO{
+				Members: []model.ApplicationMemberDTO{
+					{Source: "memory", SourceID: "admin", Role: "ADMIN"},
+				},
+			},
+		),
 		Entry("equivalent struct",
 			model.ApplicationDTO{
 				Members: nil,

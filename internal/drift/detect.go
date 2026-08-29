@@ -60,7 +60,23 @@ func assertRootIsStruct(crd any, remote any) {
 	}
 }
 
+func derefIfPointer(v any) any {
+	if v == nil {
+		return nil
+	}
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Pointer {
+		return v
+	}
+	if rv.IsNil() {
+		return nil
+	}
+	return rv.Elem().Interface()
+}
+
 func detectStruct(crd any, remote any, this *Result, ordered bool) {
+	crd = derefIfPointer(crd)
+	remote = derefIfPointer(remote)
 	t, bothNil := getTypeOrSkip(crd, remote)
 	if bothNil {
 		return
