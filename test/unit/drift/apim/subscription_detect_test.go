@@ -40,7 +40,7 @@ var _ = Describe("Subscription Drift detection", func() {
 				ApiID:    "api-id",
 				AppID:    "app-id",
 				EndingAt: "2023-08-25T23:43:16Z",
-				ApiKeys:  []model.ApiKeySpec{{Key: "key1", ExpireAt: new("2024-08-25T23:43:16-00:00")}},
+				ApiKeys:  []model.ApiKeyDTO{{Key: "key1", ExpireAt: new("2024-08-25T23:43:16-00:00")}},
 			},
 			model.SubscriptionDTO{
 				ID:         "default-sub-id",
@@ -48,18 +48,18 @@ var _ = Describe("Subscription Drift detection", func() {
 				AppID:      "default-app-id",
 				StartingAt: "2023-07-24T20:43:16-03:00",
 				EndingAt:   "2023-08-25T22:43:16-01:00",
-				ApiKeys:    []model.ApiKeySpec{{Key: "key1", ExpireAt: new("2024-08-25T23:43:16+00:00")}},
+				ApiKeys:    []model.ApiKeyDTO{{Key: "key1", ExpireAt: new("2024-08-25T23:43:16+00:00")}},
 			},
 		),
 		Entry("crd-only api keys ignored",
 			model.SubscriptionDTO{
-				ApiKeys: []model.ApiKeySpec{
+				ApiKeys: []model.ApiKeyDTO{
 					{Key: "key1"},
 					{Key: "crd-only"},
 				},
 			},
 			model.SubscriptionDTO{
-				ApiKeys: []model.ApiKeySpec{
+				ApiKeys: []model.ApiKeyDTO{
 					{Key: "key1"},
 				},
 			},
@@ -67,7 +67,7 @@ var _ = Describe("Subscription Drift detection", func() {
 		Entry("empty collections",
 			model.SubscriptionDTO{},
 			model.SubscriptionDTO{
-				ApiKeys:  []model.ApiKeySpec{},
+				ApiKeys:  []model.ApiKeyDTO{},
 				Metadata: map[string]string{},
 			},
 		),
