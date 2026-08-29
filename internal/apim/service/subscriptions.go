@@ -62,15 +62,15 @@ func (svc *Subscriptions) Import(spec model.SubscriptionDTO,
 }
 
 // Subscribe For tests purposes only.
-func (svc *Subscriptions) Subscribe(apiID, appID, planID string) (*model.SubscriptionResponse, error) {
+func (svc *Subscriptions) Subscribe(apiID, appID, planID string) (*model.SubscriptionResponseDTO, error) {
 	url := svc.EnvV2Target("apis").WithPath(apiID).WithPath("subscriptions")
 
-	request := &model.SubscriptionRequest{
+	request := &model.SubscriptionRequestDTO{
 		AppID:  appID,
 		PlanID: planID,
 	}
 
-	response := new(model.SubscriptionResponse)
+	response := new(model.SubscriptionResponseDTO)
 
 	if err := svc.HTTP.Post(url.String(), request, response); err != nil {
 		return nil, err

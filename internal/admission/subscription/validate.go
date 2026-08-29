@@ -59,7 +59,7 @@ func validateUpdate(
 
 	validateMTLS(newSub, plan, app, errs)
 
-	mergeDriftValidation(ctx, oldSub, newSub, api, app, plan, errs)
+	mergeDriftValidation(ctx, oldSub, newSub, api, app, errs)
 
 	return errs
 }
