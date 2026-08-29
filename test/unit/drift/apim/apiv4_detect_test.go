@@ -58,7 +58,7 @@ var _ = Describe("API v4 Drift detection", func() {
 				FlowExecution: &model.APIV4FlowExecutionDTO{
 					Mode: "DEFAULT",
 				},
-				Groups:           []string{},
+				Groups:           []model.APIGroup{},
 				Categories:       []model.APICategory{},
 				Flows:            []*model.APIV4FlowDTO{},
 				Members:          []*model.APIV4MemberDTO{},
@@ -74,18 +74,18 @@ var _ = Describe("API v4 Drift detection", func() {
 				},
 				ConsoleNotification: &model.APIV4ConsoleNotificationDTO{
 					Events: []string{},
-					Groups: []string{},
+					Groups: []model.APIGroup{},
 				},
 			},
 		),
 		Entry("differing collections equivalences",
 			model.APIV4DTO{
-				Groups: []string{
+				Groups: []model.APIGroup{
 					"other",
 					"developers",
 				},
 				ConsoleNotification: &model.APIV4ConsoleNotificationDTO{
-					Groups: []string{
+					Groups: []model.APIGroup{
 						"other",
 						"developers",
 					},
@@ -99,11 +99,11 @@ var _ = Describe("API v4 Drift detection", func() {
 						Format:       "STRING",
 					},
 				},
-				Groups: []string{
+				Groups: []model.APIGroup{
 					"gravitee-developers",
 				},
 				ConsoleNotification: &model.APIV4ConsoleNotificationDTO{
-					Groups: []string{
+					Groups: []model.APIGroup{
 						"gravitee-developers",
 					},
 				},

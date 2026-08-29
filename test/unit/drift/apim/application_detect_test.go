@@ -55,13 +55,13 @@ var _ = Describe("Application Drift detection", func() {
 		Entry("equivalent struct",
 			model.ApplicationDTO{
 				Members: nil,
-				Groups:  []string{"foo", "bar"},
+				Groups:  []model.ApplicationGroup{"foo", "bar"},
 			},
 			model.ApplicationDTO{
 				ID:            "123456",
 				HRID:          "my-app",
 				Status:        "ACTIVE",
-				Groups:        []string{"namespace-bar"},
+				Groups:        []model.ApplicationGroup{"namespace-bar"},
 				Members:       make([]model.ApplicationMemberDTO, 0),
 				Metadata:      make([]model.ApplicationMetadataDTO, 0),
 				Settings:      &model.ApplicationSettingsDTO{},
