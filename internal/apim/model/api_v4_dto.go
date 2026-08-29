@@ -117,7 +117,7 @@ type APIV4FailoverDTO struct {
 }
 
 type APIV4ConsoleNotificationDTO struct {
-	Events []string    `json:"events" drift:"empty-is-nil"`
+	Events []string   `json:"events" drift:"empty-is-nil"`
 	Groups []APIGroup `json:"groups" drift:"ignore-only:crd,strip-ns"`
 }
 

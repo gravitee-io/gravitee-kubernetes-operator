@@ -23,22 +23,47 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-// ToSubscriptionDTO maps a subscription CR and its API/application to the
-// Automation payload. Each of the three identity fields (subscription, API,
-// application) is independently HRID or UUID — a new subscription against a
-// pre-4.12 API is a valid mix.
+// ToSubscriptionDTO maps a subscription CR and its API/application for Import.
+// Each identity (subscription, API, application) is independently HRID or UUID —
+// a new subscription against a pre-4.12 API is a valid mix.
+// StartingAt is omitted: it is APIM-managed (see SubscriptionDTO drift tag).
 func ToSubscriptionDTO(
 	sub *v1alpha1.Subscription,
 	api core.ApiDefinitionObject,
 	app core.ApplicationObject,
 ) SubscriptionDTO {
+	dto := subscriptionSpecDTO(sub)
+	dto.ID = subscriptionRef(sub)
+	dto.ApiID = apiRef(api)
+	dto.AppID = appRef(app)
+	dto.PlanID = planRef(api, sub.Spec.Plan)
+	return dto
+}
+
+// ToSubscriptionDTOForDrift maps identities to match the remote GET.
+// Management v2 (legacy subscription) returns UUIDs only. Automation returns
+// the same mixed HRID/UUID shape as ToSubscriptionDTO.
+func ToSubscriptionDTOForDrift(
+	sub *v1alpha1.Subscription,
+	api core.ApiDefinitionObject,
+	app core.ApplicationObject,
+) SubscriptionDTO {
+	if !SubscriptionUsesUUID(sub) {
+		return ToSubscriptionDTO(sub, api, app)
+	}
+	dto := subscriptionSpecDTO(sub)
+	dto.ID = sub.Status.ID
+	dto.ApiID = api.GetID()
+	dto.AppID = app.GetID()
+	if plan := api.GetPlan(sub.Spec.Plan); plan != nil {
+		dto.PlanID = plan.GetID()
+	}
+	return dto
+}
+
+func subscriptionSpecDTO(sub *v1alpha1.Subscription) SubscriptionDTO {
 	spec := sub.Spec
 	return SubscriptionDTO{
-		ID:                    subscriptionRef(sub),
-		ApiID:                 apiRef(api),
-		AppID:                 appRef(app),
-		PlanID:                planRef(api, spec.Plan),
-		StartingAt:            sub.Status.StartedAt,
 		EndingAt:              utils.SafeDereference(spec.EndingAt),
 		Metadata:              spec.Metadata,
 		ApiKeys:               mapViaJSON[[]ApiKeyDTO](spec.ApiKeys),
@@ -59,6 +84,12 @@ func APIUsesUUID(api core.ApiDefinitionObject) bool {
 
 func ApplicationUsesUUID(app core.ApplicationObject) bool {
 	return app.GetID() != "" && !k8s.IsAutomationAPIManaged(app)
+}
+
+// SubscriptionRemoteUsesLegacyAPI is true when the subscription is HRID-addressed
+// but the API is a pre-4.12 UUID resource. GET must use GetByHRIDWithLegacyAPI.
+func SubscriptionRemoteUsesLegacyAPI(sub *v1alpha1.Subscription, api core.ApiDefinitionObject) bool {
+	return !SubscriptionUsesUUID(sub) && APIUsesUUID(api)
 }
 
 func subscriptionRef(sub *v1alpha1.Subscription) string {

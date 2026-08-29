@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -31,7 +32,7 @@ type Predicate func(object runtime.Object) bool
 var unsupported []Predicate
 
 func InitEnableCheck() {
-	unsupported = append(unsupported, isLegacyGroup)
+	unsupported = append(unsupported, isLegacyGroup, isSubscriptionOnV2API)
 }
 
 func IsDriftEnabled(crd runtime.Object) bool {
@@ -64,4 +65,16 @@ func isLegacyGroup(obj runtime.Object) bool {
 	}
 	// not a group, pass
 	return false
+}
+
+func isSubscriptionOnV2API(obj runtime.Object) bool {
+	sub, ok := obj.(*v1alpha1.Subscription)
+	if !ok {
+		return false
+	}
+	kind := sub.GetApiRef().GetKind()
+	if kind == "" {
+		return false
+	}
+	return dynamic.ResourceFromKind(kind) == core.CRDApiDefinitionResource
 }

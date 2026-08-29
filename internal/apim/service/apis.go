@@ -193,8 +193,8 @@ func (svc *APIs) Deploy(id string) error {
 }
 
 func getApiID(api core.ApiDefinitionObject) (string, bool) {
-	if k8s.IsAutomationAPIManaged(api) {
-		return refs.NewNamespacedNameFromObject(api).HRID(), false
+	if model.APIUsesUUID(api) {
+		return api.GetID(), true
 	}
-	return api.GetID(), true
+	return refs.NewNamespacedNameFromObject(api).HRID(), false
 }
