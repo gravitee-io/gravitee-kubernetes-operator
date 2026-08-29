@@ -32,6 +32,10 @@ type ApiKeySpec struct {
 	ExpireAt *string `json:"expireAt,omitempty" drift:"rfc3339"`
 }
 
+func (k ApiKeySpec) MatchKey() string {
+	return k.Key
+}
+
 type SubscriptionDTO struct {
 	ID                    string                              `json:"id" drift:"ignore-namespace-prefix"`
 	ApiID                 string                              `json:"apiId" drift:"ignore-namespace-prefix"`
@@ -40,7 +44,7 @@ type SubscriptionDTO struct {
 	StartingAt            string                              `json:"startingAt" drift:"ignore"` // remote only, so need to ignore
 	EndingAt              string                              `json:"endingAt" drift:"rfc3339"`
 	Metadata              map[string]string                   `json:"metadata,omitempty" drift:"empty-is-nil"`
-	ApiKeys               []ApiKeySpec                        `json:"apiKeys,omitempty" drift:"empty-is-nil"`
+	ApiKeys               []ApiKeySpec                        `json:"apiKeys,omitempty" drift:"ignore-only:crd"`
 	ConsumerConfiguration *subscription.ConsumerConfiguration `json:"consumerConfiguration,omitempty"`
 }
 
