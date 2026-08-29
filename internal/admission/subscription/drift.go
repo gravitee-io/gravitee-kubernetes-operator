@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//         http://www.apache.org/LICENSE-2.0
+//         http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,9 +52,16 @@ func remoteSubscriptionGetter(api core.ApiDefinitionObject) drift.RemoteObjectGe
 			}
 			return *remoteSub, nil
 		}
-		apiNSName := refs.NewNamespacedNameFromObject(api)
-		subNSName := refs.NewNamespacedNameFromObject(sub)
-		remoteSub, err := apimClient.Subscription.GetByHRID(apiNSName.HRID(), subNSName.HRID())
+		subHRID := refs.NewNamespacedNameFromObject(sub).HRID()
+		if model.SubscriptionRemoteUsesLegacyAPI(sub, api) {
+			remoteSub, err := apimClient.Subscription.GetByHRIDWithLegacyAPI(api.GetID(), subHRID)
+			if err != nil {
+				return nil, err
+			}
+			return *remoteSub, nil
+		}
+		apiHRID := refs.NewNamespacedNameFromObject(api).HRID()
+		remoteSub, err := apimClient.Subscription.GetByHRID(apiHRID, subHRID)
 		if err != nil {
 			return nil, err
 		}
@@ -77,6 +84,6 @@ func dtoMapper(
 	app core.ApplicationObject,
 ) drift.DTOMapper[*v1alpha1.Subscription] {
 	return func(sub *v1alpha1.Subscription) any {
-		return model.ToSubscriptionDTO(sub, api, app)
+		return model.ToSubscriptionDTOForDrift(sub, api, app)
 	}
 }
