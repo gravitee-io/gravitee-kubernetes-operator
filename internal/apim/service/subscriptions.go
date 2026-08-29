@@ -124,7 +124,7 @@ func (svc *Subscriptions) GetByID(apiID, subscriptionID string) (*model.Subscrip
 
 func (svc *Subscriptions) Delete(api core.ApiDefinitionObject, subscription *v1alpha1.Subscription) error {
 	subID, setHridWithUUID := getSubID(subscription)
-	apiID, apisetHridWithUUID := getApiID(api)
+	apiID, apisetHridWithUUID := subscriptionAPIID(api)
 
 	url := svc.AutomationTarget("apis").
 		WithPath(apiID).
@@ -152,10 +152,15 @@ func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]model.ApiK
 }
 
 func getSubID(subscription *v1alpha1.Subscription) (string, bool) {
-	if k8s.IsAutomationAPIManaged(subscription) {
-		return refs.NewNamespacedNameFromObject(subscription).HRID(), false
+	if model.SubscriptionUsesUUID(subscription) {
+		return subscription.Status.ID, true
 	}
-	// Legacy mode => managed by UUIDs
-	// Generated GKO side
-	return subscription.Status.ID, true
+	return refs.NewNamespacedNameFromObject(subscription).HRID(), false
+}
+
+func subscriptionAPIID(api core.ApiDefinitionObject) (string, bool) {
+	if model.APIUsesUUID(api) {
+		return api.GetID(), true
+	}
+	return refs.NewNamespacedNameFromObject(api).HRID(), false
 }
