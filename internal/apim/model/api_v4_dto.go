@@ -31,7 +31,7 @@ type APIV4DTO struct {
 	Labels                           []string                                        `json:"labels" drift:"empty-is-nil"`
 	Visibility                       base.ApiVisibility                              `json:"visibility,omitempty"`
 	Properties                       []*APIV4PropertyDTO                             `json:"properties" drift:"empty-is-nil"`
-	Metadata                         []*APIV4MetadataEntryDTO                        `json:"metadata" drift:"ignore-remote-only-metadata"`
+	Metadata                         []*APIV4MetadataEntryDTO                        `json:"metadata" drift:"ignore-only:remote"`
 	Resources                        []*APIV4ResourceDTO                             `json:"resources" drift:"empty-is-nil"`
 	Groups                           []string                                        `json:"groups" drift:"ignore-unknown-crd-groups"`
 	Categories                       []string                                        `json:"categories" drift:"empty-is-nil"`
@@ -70,6 +70,10 @@ type APIV4MetadataEntryDTO struct {
 	BaseMetadata `json:",inline"`
 	Key          string              `json:"key"`
 	Format       base.MetadataFormat `json:"format"`
+}
+
+func (m APIV4MetadataEntryDTO) MatchKey() string {
+	return m.Name
 }
 
 type APIV4ResourceDTO struct {

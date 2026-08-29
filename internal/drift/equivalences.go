@@ -48,6 +48,126 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.Struct, IgnoreSkip)
 	RegisterEquivalenceFunc("unstructured", reflect.Struct, DefaultEquivalencePostPullUpObjectChildren)
 	RegisterEquivalenceFunc("unstructured", reflect.Slice, DefaultEquivalencePostPullUpObjectChildren)
+	RegisterEquivalenceFunc("ignore-only", reflect.Slice, IgnoreOnlyArgs)
+}
+
+const (
+	ignoreOnlyRemote = "remote"
+	ignoreOnlyCRD    = "crd"
+)
+
+// IgnoreOnlyArgs ignores items present only on one side, chosen by ctx.FuncArgs[0]
+// ("remote" or "crd"). Items must implement Keyed.
+func IgnoreOnlyArgs(crd any, remote any, ctx DriftContext) Equivalence {
+	eq := EmptyIsNilLen(crd, remote, DriftContext{})
+	if eq.Equivalent == Equivalent {
+		return eq
+	}
+	cannotCompare := Equivalence{Equivalent: CannotCompare}
+	side, ok := ignoreOnlySide(ctx.FuncArgs)
+	if !ok {
+		return cannotCompare
+	}
+
+	crdIDs, ok := asKeyed(crd)
+	if !ok {
+		return cannotCompare
+	}
+	remoteIDs, ok := asKeyed(remote)
+	if !ok {
+		return cannotCompare
+	}
+
+	crdNames := keys(crdIDs)
+	remoteNames := keys(remoteIDs)
+	filter := itemsOnlyFilterFunc(onlyOnSide(side, crdNames, remoteNames))
+	if filter == nil {
+		return cannotCompare
+	}
+	if side == ignoreOnlyRemote {
+		return Equivalence{Equivalent: CannotCompare, RemoteItemsFilterFunc: filter}
+	}
+	return Equivalence{Equivalent: CannotCompare, CRDItemsFilterFunc: filter}
+}
+
+func ignoreOnlySide(args []string) (string, bool) {
+	if len(args) == 0 {
+		return "", false
+	}
+	switch args[0] {
+	case ignoreOnlyRemote, ignoreOnlyCRD:
+		return args[0], true
+	default:
+		return "", false
+	}
+}
+
+func onlyOnSide(side string, crdNames, remoteNames []string) []string {
+	if side == ignoreOnlyRemote {
+		return difference(remoteNames, crdNames)
+	}
+	return difference(crdNames, remoteNames)
+}
+
+func difference(from, without []string) []string {
+	only := make([]string, 0)
+	for _, name := range from {
+		if slices.Contains(without, name) {
+			continue
+		}
+		only = append(only, name)
+	}
+	return only
+}
+
+func itemsOnlyFilterFunc(onlyIDs []string) ItemsFilterFunc {
+	if len(onlyIDs) == 0 {
+		return nil
+	}
+	return func(items any) []any {
+		if items == nil {
+			return nil
+		}
+		v := reflect.ValueOf(items)
+		filtered := make([]any, 0, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			item := v.Index(i).Interface()
+			if id, ok := item.(Keyed); ok {
+				if slices.Contains(onlyIDs, id.MatchKey()) {
+					continue
+				}
+			}
+			filtered = append(filtered, item)
+		}
+		if len(filtered) == 0 {
+			return nil
+		}
+		return filtered
+	}
+}
+
+func asKeyed(items any) ([]Keyed, bool) {
+	if items == nil {
+		return []Keyed{}, true
+	}
+	v := reflect.ValueOf(items)
+	ids := make([]Keyed, v.Len())
+	for i := 0; i < v.Len(); i++ {
+		id, ok := v.Index(i).Interface().(Keyed)
+		if !ok {
+			return nil, false
+		}
+		ids[i] = id
+	}
+	return ids, true
+}
+
+func keys(items []Keyed) []string {
+	names := make([]string, len(items))
+	for i, item := range items {
+		names[i] = item.MatchKey()
+	}
+	return names
 }
 
 // IgnoreRemoteArgs ignores the remote difference if the remote string is in the context.FuncArgs.

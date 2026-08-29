@@ -162,7 +162,7 @@ Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of t
 
 Add drift tags on nested `api/model/` types when the same struct is embedded in the DTO (e.g. TLS certificate fields on `application.ClientCertificate`).
 
-The equivalence registry is split in two: generic tags in `internal/drift/equivalences.go`, APIM-specific ones (`ignore-remote-only-metadata`, `ignore-unknown-crd-groups`) in `internal/apim/drift/equivalences.go`. Both are wired by `drift.Init()`.
+The equivalence registry is split in two: generic tags in `internal/drift/equivalences.go`, APIM-specific ones (`ignore-unknown-crd-groups`) in `internal/apim/drift/equivalences.go`. Both are wired by `drift.Init()`.
 
 #### Merge semantics (why both old and new are compared)
 

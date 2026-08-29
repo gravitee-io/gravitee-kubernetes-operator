@@ -57,6 +57,14 @@ type Equivalence struct {
 	PostFunc PostEquivalenceFunc
 	// RemoteItemsFilterFunc is a function that filters remote items
 	RemoteItemsFilterFunc ItemsFilterFunc
+	// CRDItemsFilterFunc is a function that filters CRD items
+	CRDItemsFilterFunc ItemsFilterFunc
+}
+
+// Keyed identifies a slice item by a stable string so only-on-one-side
+// items can be filtered before comparison.
+type Keyed interface {
+	MatchKey() string
 }
 
 // EquivalenceFunc is a function that compares two values and returns an Equivalence.

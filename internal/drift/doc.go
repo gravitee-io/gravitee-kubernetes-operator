@@ -63,6 +63,7 @@
 //   - [Equivalence.Skip]: if true, children of this node are not compared
 //   - [Equivalence.PostFunc]: optional hook called after children are processed
 //   - [Equivalence.RemoteItemsFilterFunc]: optional function to filter remote slice items before comparison
+//   - [Equivalence.CRDItemsFilterFunc]: optional function to filter CRD slice items before comparison
 //
 // Registered names (see [InitRegistry]):
 //
@@ -80,8 +81,8 @@
 //   - case-insensitive (string): compares strings case-insensitively.
 //   - ignore-remote (string): ignores difference if remote value matches any of the tag arguments.
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
-//   - ignore-remote-only-metadata (slice): filters out remote-only Metadata items before comparison.
-//   - ignore-unknown-crd-groups (slice): removes CRD-only strings, then compares with namespace prefix ignored.
+//   - ignore-only (slice): filters items present only on the side given by the tag argument (remote or crd).
+//   - ignore-unknown-crd-groups (slice, APIM registry): removes CRD-only strings, then compares with namespace prefix ignored.
 //   - unstructured (struct): for unstructured types; hoists "object" child fields to root via PostFunc.
 //
 // # Drift Tag Function Arguments
@@ -110,6 +111,17 @@
 //
 //	// Ignore if remote is "AUTO" or "DEFAULT"
 //	QOS v4.QOS `json:"qos,omitempty" drift:"ignore-remote:AUTO,DEFAULT"`
+//
+// ### ignore-only
+//
+// Syntax: `drift:"ignore-only:remote"` or `drift:"ignore-only:crd"`
+//
+// Filters slice items that exist only on the named side before item comparison.
+// Items must implement [Keyed].
+//
+// Example:
+//
+//	Metadata []*APIV4MetadataEntryDTO `json:"metadata" drift:"ignore-only:remote"`
 //
 // ### ignore-namespace-prefix
 //
