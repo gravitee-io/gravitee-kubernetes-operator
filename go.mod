@@ -9,7 +9,7 @@ require (
 	github.com/onsi/gomega v1.40.0
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/zeebo/xxh3 v1.0.2
-	golang.org/x/exp v0.0.0-20260820142414-ca536658362e
+	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.36.4
 	k8s.io/client-go v0.36.4
