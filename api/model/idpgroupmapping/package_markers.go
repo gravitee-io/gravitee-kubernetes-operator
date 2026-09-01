@@ -12,28 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+// +kubebuilder:object:generate=true
+// +groupName=gravitee.io/v1alpha1
+package idpgroupmapping
 
-type Env struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type Group struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-type GroupStatus struct {
-	Members uint `json:"members"`
-}
-
-type Category struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-type PaginatedGroups struct {
-	Data []Group        `json:"data"`
-	Page PaginationData `json:"page"`
-}
+// placeholder files for package level markers

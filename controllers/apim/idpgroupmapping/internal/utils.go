@@ -12,28 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package internal
 
-type Env struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+)
+
+func containsGroupMapping(groupMappings []model.GroupMapping, condition string, groups []string) bool {
+	for _, gm := range groupMappings {
+		if gm.Condition == condition && equalStringSlices(gm.Groups, groups) {
+			return true
+		}
+	}
+	return false
 }
 
-type Group struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
+func equalStringSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
 
-type GroupStatus struct {
-	Members uint `json:"members"`
-}
+	stringMap := make(map[string]bool)
+	for _, item := range a {
+		stringMap[item] = true
+	}
 
-type Category struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
+	for _, item := range b {
+		if !stringMap[item] {
+			return false
+		}
+	}
 
-type PaginatedGroups struct {
-	Data []Group        `json:"data"`
-	Page PaginationData `json:"page"`
+	return true
 }

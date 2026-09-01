@@ -43,6 +43,7 @@ type APIM struct {
 	Links             *service.Links
 	Documentations    *service.Documentations
 	Env               *service.Env
+	Configuration     *service.Configuration
 
 	Context core.ContextModel
 }
@@ -94,6 +95,7 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		Links:             service.NewLinks(c),
 		Documentations:    service.NewDocumentations(c),
 		Env:               service.NewEnv(c),
+		Configuration:     service.NewConfiguration(c),
 		Context:           context,
 	}, nil
 }
