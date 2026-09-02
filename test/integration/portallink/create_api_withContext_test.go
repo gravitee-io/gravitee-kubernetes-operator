@@ -15,30 +15,21 @@
 package portallink
 
 import (
-	"context"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 )
 
-var _ = Describe("Create", labels.WithContext, func() {
-	timeout := constants.EventualTimeout
-	interval := constants.Interval
-	ctx := context.Background()
-
-	It("should create portal link in APIM", func() {
+var _ = Describe("Create (API-attached)", labels.WithContext, func() {
+	It("should create an API-attached portal link in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
-			WithPortalLink(constants.PortalLinkFile).
+			WithAPIv4(constants.ApiV4WithContextFile).
+			WithPortalLink(constants.PortalLinkApiFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
@@ -47,25 +38,5 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		Expect(assert.PortalLinkAccepted(fixtures.PortalLink)).To(Succeed())
 		Expect(assert.ManagedByAutomationAPI(fixtures.PortalLink)).To(Succeed())
-
-		By("calling rest API, expecting the link to round-trip")
-
-		apim := apim.NewClient(ctx)
-		parent := service.LinkParent{Portal: fixtures.Portal}
-		linkHrid := refs.NewNamespacedNameFromObject(fixtures.PortalLink).HRID()
-
-		Eventually(func() error {
-			link, linkErr := apim.Links.GetByHRID(parent, linkHrid)
-			if linkErr != nil {
-				return linkErr
-			}
-			if err := assert.NotEmptyString("id", link.ID); err != nil {
-				return err
-			}
-			if err := assert.Equals("Portal link href", fixtures.PortalLink.Spec.Href, link.Href); err != nil {
-				return err
-			}
-			return assert.Equals("Portal link location", *fixtures.PortalLink.Spec.Location, link.Location)
-		}, timeout, interval).Should(Succeed(), fixtures.PortalLink.Name)
 	})
 })

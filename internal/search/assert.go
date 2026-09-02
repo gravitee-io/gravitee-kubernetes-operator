@@ -304,11 +304,26 @@ func AssertNoPortalListingRef(ctx context.Context, prtl *v1alpha1.Portal) error 
 // still references it.
 func AssertNoPortalLinkRef(ctx context.Context, prtl *v1alpha1.Portal) error {
 	nsn := refs.NewNamespacedName(prtl.Namespace, prtl.Name)
+	return assertNoPortalLinks(ctx, PortalLinkPortalField, nsn, "portal", prtl.Name, "portalRef")
+}
 
+// AssertNoApiPortalLinkRef blocks deletion of an API while any PortalLink is
+// still attached to it.
+func AssertNoApiPortalLinkRef(ctx context.Context, api core.ApiDefinitionObject) error {
+	nsn := refs.NewNamespacedName(api.GetNamespace(), api.GetName())
+	return assertNoPortalLinks(ctx, PortalLinkApiField, nsn, "API", api.GetName(), "apiRef")
+}
+
+func assertNoPortalLinks(
+	ctx context.Context,
+	field IndexField,
+	nsn refs.NamespacedName,
+	ownerKind, ownerName, jsonPathRef string,
+) error {
 	links := &v1alpha1.PortalLinkList{}
 	if err := FindByFieldReferencing(
 		ctx,
-		PortalLinkPortalField,
+		field,
 		nsn,
 		links,
 	); err != nil {
@@ -317,11 +332,11 @@ func AssertNoPortalLinkRef(ctx context.Context, prtl *v1alpha1.Portal) error {
 
 	if len(links.Items) > 0 {
 		return fmt.Errorf(
-			"[%s] cannot be deleted because %d portal links are relying on this portal. "+
+			"[%s] cannot be deleted because %d portal links are relying on this %s. "+
 				reviewMessage+
 				"kubectl get portallinks.gravitee.io "+
-				"-A -o jsonpath='{.items[?(@.spec.portalRef.name==\"%s\")].metadata.name}'",
-			prtl.Name, len(links.Items), prtl.Name,
+				"-A -o jsonpath='{.items[?(@.spec.%s.name==\"%s\")].metadata.name}'",
+			ownerName, len(links.Items), ownerKind, jsonPathRef, ownerName,
 		)
 	}
 

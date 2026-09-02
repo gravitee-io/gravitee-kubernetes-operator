@@ -721,9 +721,10 @@ A Portal is an environment-level object carrying its own navigation hierarchy.
 
 
 
-PortalLink attaches an external navigation link to a Portal at a chosen
-location in the portal's navigation hierarchy. The APIM management
-context is derived from the referenced Portal.
+PortalLink attaches an external navigation link to exactly one of a Portal
+(portalRef) or an API (apiRef) at a chosen location in the owning
+resource's navigation hierarchy. The APIM management context is derived
+from the referenced Portal or API.
 
 
 
@@ -751,11 +752,12 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this link is attached to. |  | Required: \{\} <br /> |
 | `name` _string_ | Display name of the link. |  | Required: \{\} <br /> |
 | `href` _string_ | The URL this link points to. |  | Required: \{\} <br /> |
-| `location` _string_ | The path in the portal's navigation hierarchy where this link should<br />appear. The link is only visible on the portal if this matches a path<br />defined in the Portal's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
+| `location` _string_ | The path in the owning resource's navigation hierarchy where this link<br />should appear. The link is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
 | `order` _integer_ | Optional display order of this link relative to its siblings at the<br />same location. |  | Optional: \{\} <br /> |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this link is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+| `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this link is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 
 
 #### PortalLinkStatus
@@ -3159,8 +3161,9 @@ _Appears in:_
 
 
 Type defines the specification of a PortalLink resource.
-It attaches an external navigation link to a portal at a chosen location
-in the portal's navigation hierarchy.
+A PortalLink attaches an external navigation link to exactly one of a
+Portal (portalRef) or an API (apiRef) at a chosen location in the owning
+resource's navigation hierarchy.
 
 
 
@@ -3169,11 +3172,12 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this link is attached to. |  | Required: \{\} <br /> |
 | `name` _string_ | Display name of the link. |  | Required: \{\} <br /> |
 | `href` _string_ | The URL this link points to. |  | Required: \{\} <br /> |
-| `location` _string_ | The path in the portal's navigation hierarchy where this link should<br />appear. The link is only visible on the portal if this matches a path<br />defined in the Portal's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
+| `location` _string_ | The path in the owning resource's navigation hierarchy where this link<br />should appear. The link is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
 | `order` _integer_ | Optional display order of this link relative to its siblings at the<br />same location. |  | Optional: \{\} <br /> |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this link is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+| `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this link is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 
 
 

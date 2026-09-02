@@ -20,21 +20,19 @@ import (
 )
 
 // Type defines the specification of a PortalLink resource.
-// It attaches an external navigation link to a portal at a chosen location
-// in the portal's navigation hierarchy.
+// A PortalLink attaches an external navigation link to exactly one of a
+// Portal (portalRef) or an API (apiRef) at a chosen location in the owning
+// resource's navigation hierarchy.
 type Type struct {
-	// Reference to the Portal this link is attached to.
-	// +kubebuilder:validation:Required
-	Portal refs.NamespacedName `json:"portalRef"`
 	// Display name of the link.
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 	// The URL this link points to.
 	// +kubebuilder:validation:Required
 	Href string `json:"href"`
-	// The path in the portal's navigation hierarchy where this link should
-	// appear. The link is only visible on the portal if this matches a path
-	// defined in the Portal's navigation.
+	// The path in the owning resource's navigation hierarchy where this link
+	// should appear. The link is only visible if this matches a path defined
+	// in the Portal's or API's navigation.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Pattern=`^/`
 	Location *string `json:"location,omitempty"`
@@ -42,8 +40,36 @@ type Type struct {
 	// same location.
 	// +kubebuilder:validation:Optional
 	Order *int32 `json:"order,omitempty"`
+	// Reference to the Portal this link is attached to.
+	// Mutually exclusive with apiRef; exactly one of the two must be set.
+	// +kubebuilder:validation:Optional
+	Portal *refs.NamespacedName `json:"portalRef,omitempty"`
+	// Reference to the API this link is attached to. Only v4 APIs
+	// (ApiV4Definition) are supported by the next-gen portal; the referenced
+	// kind defaults to ApiV4Definition when left empty.
+	// Mutually exclusive with portalRef; exactly one of the two must be set.
+	// +kubebuilder:validation:Optional
+	API *refs.NamespacedName `json:"apiRef,omitempty"`
+}
+
+func (t *Type) IsPortalLink() bool {
+	return t.Portal != nil
+}
+
+func (t *Type) IsApiLink() bool {
+	return t.API != nil
 }
 
 func (t *Type) GetPortalRef() core.ObjectRef {
-	return &t.Portal
+	if t.Portal == nil {
+		return nil
+	}
+	return t.Portal
+}
+
+func (t *Type) GetApiRef() core.ObjectRef {
+	if t.API == nil {
+		return nil
+	}
+	return t.API
 }

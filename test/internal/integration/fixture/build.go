@@ -374,7 +374,12 @@ func setupPortalLink(obj *Objects, link **v1alpha1.PortalLink, suffix string) {
 	obj.PortalLink = *link
 	obj.PortalLink.Name += suffix
 	obj.PortalLink.Namespace = constants.Namespace
-	obj.PortalLink.Spec.Portal.Name += suffix
+	if obj.PortalLink.Spec.Portal != nil {
+		obj.PortalLink.Spec.Portal.Name += suffix
+	}
+	if obj.PortalLink.Spec.API != nil {
+		obj.PortalLink.Spec.API.Name += suffix
+	}
 	if obj.PortalLink.Spec.Location != nil {
 		obj.PortalLink.Spec.Location = new(obj.navigationRoot + *obj.PortalLink.Spec.Location)
 	}

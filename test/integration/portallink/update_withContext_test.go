@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -50,11 +51,11 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("calling rest API, expecting to find portal link")
 
 		apim := apim.NewClient(ctx)
-		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		parent := service.LinkParent{Portal: fixtures.Portal}
 		linkHrid := refs.NewNamespacedNameFromObject(fixtures.PortalLink).HRID()
 
 		Eventually(func() error {
-			link, linkErr := apim.Links.GetByHRID(portalHrid, linkHrid)
+			link, linkErr := apim.Links.GetByHRID(parent, linkHrid)
 			if linkErr != nil {
 				return linkErr
 			}
@@ -72,7 +73,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("calling rest API, expecting link location to be up to date")
 
 		Eventually(func() error {
-			link, linkErr := apim.Links.GetByHRID(portalHrid, linkHrid)
+			link, linkErr := apim.Links.GetByHRID(parent, linkHrid)
 			if linkErr != nil {
 				return linkErr
 			}

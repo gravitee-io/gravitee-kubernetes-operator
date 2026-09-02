@@ -17,8 +17,8 @@ package portallink
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallink"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -27,52 +27,51 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Validate update", labels.WithContext, func() {
+var _ = Describe("Validate create — mutual exclusion", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := adm.AdmissionCtrl{}
 
-	It("should return severe error when portalRef is changed", func() {
+	It("should return severe error when neither portalRef nor apiRef is set", func() {
 		link := fixture.
 			Builder().
 			WithPortalLink(constants.PortalLinkFile).
 			Build()
 
-		updated := link.PortalLink.DeepCopy()
-		updated.Spec.Portal.Name += "-repointed"
+		link.PortalLink.Spec.Portal = nil
+		link.PortalLink.Spec.API = nil
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, link.PortalLink, updated)
-			return assert.SevereError(
-				errors.NewSeveref(
-					"portalRef is immutable; the link cannot be moved to a different portal "+
-						"(from [%s] to [%s])",
-					link.PortalLink.Spec.Portal.String(), updated.Spec.Portal.String(),
-				),
-				err,
-			)
+			_, err := admissionCtrl.ValidateCreate(ctx, link.PortalLink)
+			return assert.NotNil("admission error", err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 
-	It("should return severe error when apiRef is changed", func() {
+	It("should return severe error when both portalRef and apiRef are set", func() {
+		link := fixture.
+			Builder().
+			WithPortalLink(constants.PortalLinkFile).
+			Build()
+
+		link.PortalLink.Spec.API = &refs.NamespacedName{Name: "some-api"}
+
+		Eventually(func() error {
+			_, err := admissionCtrl.ValidateCreate(ctx, link.PortalLink)
+			return assert.NotNil("admission error", err)
+		}, constants.EventualTimeout, interval).Should(Succeed())
+	})
+
+	It("should return severe error when apiRef is not a v4 API kind", func() {
 		link := fixture.
 			Builder().
 			WithPortalLink(constants.PortalLinkApiFile).
 			Build()
 
-		updated := link.PortalLink.DeepCopy()
-		updated.Spec.API.Name += "-repointed"
+		link.PortalLink.Spec.API.Kind = "ApiDefinition"
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, link.PortalLink, updated)
-			return assert.SevereError(
-				errors.NewSeveref(
-					"apiRef is immutable; the link cannot be moved to a different API "+
-						"(from [%s] to [%s])",
-					link.PortalLink.Spec.API.String(), updated.Spec.API.String(),
-				),
-				err,
-			)
+			_, err := admissionCtrl.ValidateCreate(ctx, link.PortalLink)
+			return assert.NotNil("admission error", err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 })
