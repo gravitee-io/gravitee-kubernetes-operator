@@ -46,9 +46,9 @@ func (a AdmissionCtrl) ValidateCreate(
 }
 
 func (a AdmissionCtrl) ValidateDelete(
-	_ context.Context, _ *v1alpha1.PortalTheme,
+	ctx context.Context, obj *v1alpha1.PortalTheme,
 ) (admission.Warnings, error) {
-	return admission.Warnings{}, nil
+	return validateDelete(ctx, obj).Map()
 }
 
 func (a AdmissionCtrl) ValidateUpdate(

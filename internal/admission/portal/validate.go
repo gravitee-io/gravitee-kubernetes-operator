@@ -48,12 +48,13 @@ func validateCreate(ctx context.Context, prtl *v1alpha1.Portal) *errors.Admissio
 		return errs
 	}
 
-	errs.MergeWith(validateThemeRef(ctx, prtl))
+	thm, themeErrs := resolveThemeRef(ctx, prtl)
+	errs.MergeWith(themeErrs)
 	if errs.IsSevere() {
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, prtl))
+	errs.MergeWith(validateDryRun(ctx, prtl, thm))
 	return errs
 }
 
@@ -77,23 +78,27 @@ func validateThemeKind(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	return errs
 }
 
-// validateThemeRef resolves the referenced PortalTheme, which the automation dry run
-// echoes back without resolving.
-func validateThemeRef(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
+// resolveThemeRef reads the referenced PortalTheme, which the automation dry run
+// echoes back without resolving. It returns a nil theme when the portal activates none.
+func resolveThemeRef(
+	ctx context.Context, prtl *v1alpha1.Portal,
+) (*v1alpha1.PortalTheme, *errors.AdmissionErrors) {
 	errs := errors.NewAdmissionErrors()
 
 	if !prtl.HasThemeRef() {
-		return errs
+		return nil, errs
 	}
 
-	if _, err := dynamic.ResolvePortalTheme(ctx, prtl.GetThemeRef(), prtl.GetNamespace()); err != nil {
+	thm, err := dynamic.ResolvePortalTheme(ctx, prtl.GetThemeRef(), prtl.GetNamespace())
+	if err != nil {
 		errs.AddSeveref(
 			"portal [%s] references theme [%v] that can't be resolved",
 			prtl.GetName(), prtl.GetThemeRef(),
 		)
+		return nil, errs
 	}
 
-	return errs
+	return thm, errs
 }
 
 func validateNavigation(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
@@ -113,7 +118,9 @@ func validateNavigation(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	return errs
 }
 
-func validateDryRun(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
+func validateDryRun(
+	ctx context.Context, prtl *v1alpha1.Portal, thm *v1alpha1.PortalTheme,
+) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	cp := prtl.DeepCopy()
@@ -124,7 +131,7 @@ func validateDryRun(ctx context.Context, prtl *v1alpha1.Portal) *errors.Admissio
 		return errs
 	}
 
-	status, err := apimClient.Portals.DryRunCreateOrUpdate(cp)
+	status, err := apimClient.Portals.DryRunCreateOrUpdate(cp, thm)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

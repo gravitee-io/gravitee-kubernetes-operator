@@ -21,7 +21,20 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
+
+// validateDelete keeps a theme that portals still activate from being deleted, so that
+// the rejection is reported to whoever runs the delete rather than to the reconcile loop.
+func validateDelete(ctx context.Context, thm *v1alpha1.PortalTheme) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	if err := search.AssertNoPortalThemeRef(ctx, thm); err != nil {
+		errs.AddSevere(err.Error())
+	}
+
+	return errs
+}
 
 func validateCreate(ctx context.Context, thm *v1alpha1.PortalTheme) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
@@ -57,13 +70,7 @@ func validateDryRun(ctx context.Context, thm *v1alpha1.PortalTheme) *errors.Admi
 		return errs
 	}
 
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
-	}
-
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
+	errs.MergeWith(errors.NewAdmissionErrorsFromStatus(status.Errors))
 
 	return errs
 }

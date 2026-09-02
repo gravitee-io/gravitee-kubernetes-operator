@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
 func CreateOrUpdate(ctx context.Context, prtl *v1alpha1.Portal) error {
@@ -30,11 +31,16 @@ func CreateOrUpdate(ctx context.Context, prtl *v1alpha1.Portal) error {
 		)
 	}
 
+	thm, err := resolveTheme(ctx, prtl)
+	if err != nil {
+		return err
+	}
+
 	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
 	if err != nil {
 		return err
 	}
-	status, err := apimClient.Portals.CreateOrUpdate(prtl)
+	status, err := apimClient.Portals.CreateOrUpdate(prtl, thm)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
@@ -45,4 +51,15 @@ func CreateOrUpdate(ctx context.Context, prtl *v1alpha1.Portal) error {
 	prtl.Status.EnvID = status.EnvID
 
 	return nil
+}
+
+// resolveTheme reads the referenced theme from the cluster so that a portal is never
+// synced with a theme GKO does not know about. A theme that cannot be read surfaces as
+// a ResolvedRefs condition set to false, and the reconcile is retried.
+func resolveTheme(ctx context.Context, prtl *v1alpha1.Portal) (*v1alpha1.PortalTheme, error) {
+	if !prtl.HasThemeRef() {
+		return nil, nil
+	}
+
+	return dynamic.ResolvePortalTheme(ctx, prtl.GetThemeRef(), prtl.GetNamespace())
 }

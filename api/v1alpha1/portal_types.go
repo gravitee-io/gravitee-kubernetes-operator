@@ -150,16 +150,14 @@ func (p *Portal) GetThemeRef() core.ObjectRef {
 // ActiveThemeHRID resolves themeRef to the HRID APIM addresses themes by, empty when the
 // portal references no theme.
 func (p *Portal) ActiveThemeHRID() string {
-	if p.Spec.Theme == nil {
+	if !p.HasThemeRef() {
 		return ""
 	}
 
-	ns := p.Spec.Theme.Namespace
-	if ns == "" {
-		ns = p.GetNamespace()
+	ref := refs.NewNamespacedNameFromObjectRef(p.Spec.Theme)
+	if ref.IsMissingNamespace() {
+		ref.SetNamespace(p.GetNamespace())
 	}
-
-	ref := refs.NewNamespacedName(ns, p.Spec.Theme.Name)
 
 	return ref.HRID()
 }
