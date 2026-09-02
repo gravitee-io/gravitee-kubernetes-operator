@@ -33,16 +33,19 @@ func NewPortals(client *client.Client) *Portals {
 	return &Portals{Client: client}
 }
 
-func (svc *Portals) CreateOrUpdate(prtl *v1alpha1.Portal) (portal.Status, error) {
-	return svc.createOrUpdate(prtl, false)
+// CreateOrUpdate syncs a portal, activating the theme the caller resolved beforehand.
+// A nil theme leaves the portal with the default look and feel.
+func (svc *Portals) CreateOrUpdate(prtl *v1alpha1.Portal, thm *v1alpha1.PortalTheme) (portal.Status, error) {
+	return svc.createOrUpdate(prtl, thm, false)
 }
 
-func (svc *Portals) DryRunCreateOrUpdate(prtl *v1alpha1.Portal) (portal.Status, error) {
-	return svc.createOrUpdate(prtl, true)
+func (svc *Portals) DryRunCreateOrUpdate(prtl *v1alpha1.Portal, thm *v1alpha1.PortalTheme) (portal.Status, error) {
+	return svc.createOrUpdate(prtl, thm, true)
 }
 
 func (svc *Portals) createOrUpdate(
 	prtl *v1alpha1.Portal,
+	thm *v1alpha1.PortalTheme,
 	dryRun bool,
 ) (portal.Status, error) {
 	url := svc.AutomationTarget("portals").
@@ -51,7 +54,7 @@ func (svc *Portals) createOrUpdate(
 	dto := model.ToPortalDTO(
 		prtl.Spec.Type,
 		refs.NewNamespacedNameFromObject(prtl).HRID(),
-		prtl.ActiveThemeHRID(),
+		activeThemeHRID(thm),
 	)
 	importStatus := &portal.Status{}
 
@@ -62,6 +65,15 @@ func (svc *Portals) createOrUpdate(
 	k8s.AddAutomationAPIManagedCondition(prtl)
 
 	return *importStatus, nil
+}
+
+// activeThemeHRID is the HRID of a theme known to exist in the cluster,
+// empty when the portal activates none.
+func activeThemeHRID(thm *v1alpha1.PortalTheme) string {
+	if thm == nil {
+		return ""
+	}
+	return refs.NewNamespacedNameFromObject(thm).HRID()
 }
 
 func (svc *Portals) Delete(prtl *v1alpha1.Portal) error {

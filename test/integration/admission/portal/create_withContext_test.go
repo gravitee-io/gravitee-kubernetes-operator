@@ -114,16 +114,36 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		Expect(err.Error()).To(ContainSubstring("only PortalTheme is supported"))
 	})
 
-	It("should accept themeRef with an explicit PortalTheme kind", func() {
-		prtl := fixture.
+	It("should return severe error when themeRef cannot be resolved", func() {
+		fixtures := fixture.
 			Builder().
 			WithPortal(constants.PortalWithThemeFile).
+			WithContext(constants.ContextWithCredentialsFile).
 			Build()
 
-		_, err := admissionCtrl.ValidateCreate(ctx, prtl.Portal)
+		By("applying the context only, leaving the referenced theme missing")
 
-		if err != nil {
-			Expect(err.Error()).ToNot(ContainSubstring("PortalTheme is supported"))
-		}
+		prtl := fixtures.Portal
+		fixtures.Portal = nil
+		fixtures.Apply()
+
+		_, err := admissionCtrl.ValidateCreate(ctx, prtl)
+
+		Expect(assert.NotNil("admission error", err)).To(Succeed())
+		Expect(err.Error()).To(ContainSubstring("can't be resolved"))
+	})
+
+	It("should accept themeRef pointing at an existing PortalTheme", func() {
+		fixtures := fixture.
+			Builder().
+			WithPortalTheme(constants.PortalThemeFile).
+			WithPortal(constants.PortalWithThemeFile).
+			WithContext(constants.ContextWithCredentialsFile).
+			Build().
+			Apply()
+
+		_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Portal)
+
+		Expect(err).ToNot(HaveOccurred())
 	})
 })

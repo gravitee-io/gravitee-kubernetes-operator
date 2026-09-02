@@ -50,6 +50,7 @@ type Interface interface {
 	WatchNotifications(index search.IndexField) *handler.Funcs
 	WatchGroups(index search.IndexField) *handler.Funcs
 	WatchPortals(index search.IndexField) *handler.Funcs
+	WatchPortalThemes(index search.IndexField) *handler.Funcs
 	WatchApis(index search.IndexField) *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
 }
@@ -171,6 +172,16 @@ func (w *Type) WatchGroups(index search.IndexField) *handler.Funcs {
 // WatchPortals can be used to trigger a reconciliation when a Portal is created or
 // updated on resources that reference it (e.g. PortalListings).
 func (w *Type) WatchPortals(index search.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
+	}
+}
+
+// WatchPortalThemes can be used to trigger a reconciliation when a PortalTheme is
+// created or updated on resources that reference it (e.g. Portals), so that a portal
+// waiting on a missing theme is synced as soon as the theme lands.
+func (w *Type) WatchPortalThemes(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),

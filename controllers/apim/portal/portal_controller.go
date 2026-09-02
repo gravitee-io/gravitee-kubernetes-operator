@@ -118,7 +118,8 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	newController := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Portal{}).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.PortalContextField))
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.PortalContextField)).
+		Watches(&v1alpha1.PortalTheme{}, r.Watcher.WatchPortalThemes(search.PortalThemeField))
 
 	if env.Config.EnableTemplating {
 		newController.

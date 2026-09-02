@@ -29,6 +29,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
 func pathsOf(navigation []*prtlmodel.NavigationEntry) []string {
@@ -156,5 +157,53 @@ var _ = Describe("Create", labels.WithContext, func() {
 			}
 			return assert.Equals("Portal active theme", themeHrid, prtl.ActiveThemeHRID)
 		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
+	})
+
+	It("should not create portal in APIM while its theme is missing", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortalTheme(constants.PortalThemeFile).
+			WithPortal(constants.PortalWithThemeFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build()
+
+		By("applying the context only, holding back the theme the portal activates")
+
+		themeCRD, portalCRD := fixtures.PortalTheme, fixtures.Portal
+		fixtures.PortalTheme, fixtures.Portal = nil, nil
+		fixtures.Apply()
+
+		Expect(manager.Client().Create(ctx, portalCRD)).To(Succeed())
+
+		By("expecting the portal to report its theme ref as unresolved")
+
+		Eventually(func() error {
+			if err := manager.GetLatest(ctx, portalCRD); err != nil {
+				return err
+			}
+			return assert.IsUnresolved(portalCRD)
+		}, timeout, interval).Should(Succeed(), portalCRD.Name)
+
+		By("calling rest API, expecting the portal not to be created")
+
+		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(portalCRD).HRID()
+
+		_, err := apim.Portals.GetByHRID(hrid)
+		Expect(assert.NotFoundError(err)).To(Succeed())
+
+		By("creating the missing theme, expecting the portal to be synced")
+
+		Expect(manager.Client().Create(ctx, themeCRD)).To(Succeed())
+
+		themeHrid := refs.NewNamespacedNameFromObject(themeCRD).HRID()
+
+		Eventually(func() error {
+			prtl, prtlErr := apim.Portals.GetByHRID(hrid)
+			if prtlErr != nil {
+				return prtlErr
+			}
+			return assert.Equals("Portal active theme", themeHrid, prtl.ActiveThemeHRID)
+		}, timeout, interval).Should(Succeed(), portalCRD.Name)
 	})
 })

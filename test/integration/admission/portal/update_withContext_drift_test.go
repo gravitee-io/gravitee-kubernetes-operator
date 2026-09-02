@@ -115,7 +115,7 @@ func validateNameDrift(
 
 	setName(newPortal, remoteName)
 
-	_, err := apimClient.Portals.CreateOrUpdate(newPortal)
+	_, err := apimClient.Portals.CreateOrUpdate(newPortal, nil)
 	Expect(err).ToNot(HaveOccurred())
 
 	setName(newPortal, localCRDName)

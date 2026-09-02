@@ -17,6 +17,7 @@ package errors
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -42,6 +43,22 @@ func NewAdmissionErrors() *AdmissionErrors {
 		Severe:  make([]*AdmissionError, 0),
 		Warning: make([]*AdmissionError, 0),
 	}
+}
+
+// NewAdmissionErrorsFromStatus maps the errors an APIM dry run reports
+// onto admission errors, so callers can merge them with their own.
+func NewAdmissionErrorsFromStatus(reported status.Errors) *AdmissionErrors {
+	errs := NewAdmissionErrors()
+
+	for _, severe := range reported.Severe {
+		errs.AddSevere(severe)
+	}
+
+	for _, warning := range reported.Warning {
+		errs.AddWarning(warning)
+	}
+
+	return errs
 }
 
 func (errs *AdmissionErrors) Map() (admission.Warnings, error) {
