@@ -161,6 +161,28 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
+      - amcontexts
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - amcontexts/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - amcontexts/status
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
       - managementcontexts
     verbs:
       - get

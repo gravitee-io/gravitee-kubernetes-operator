@@ -89,6 +89,7 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 	collect(newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4SharedPolicyGroupsField,
 		indexApiV4FlowsSharedPolicyGroupsRefs))
 	collect(newIndexer(ctx, cache, &v1alpha1.ManagementContext{}, SecretRefField, indexManagementContextSecrets))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMContext{}, SecretRefField, indexAMContextSecrets))
 	collect(newIndexer(ctx, cache, &v1.Ingress{}, ApiTemplateField, indexApiTemplate))
 	collect(newIndexer(ctx, cache, &v1.Ingress{}, TLSSecretField, indexTLSSecret))
 	collect(newIndexer(ctx, cache, &v1alpha1.Application{}, AppContextField, indexApplicationManagementContexts))
@@ -174,6 +175,12 @@ func indexApiV4ManagementContexts(api *v1alpha1.ApiV4Definition, fields *[]strin
 }
 
 func indexManagementContextSecrets(context *v1alpha1.ManagementContext, fields *[]string) {
+	if context.Spec.HasSecretRef() {
+		*fields = append(*fields, ensureNamespacedRef(context, context.Spec.SecretRef()))
+	}
+}
+
+func indexAMContextSecrets(context *v1alpha1.AMContext, fields *[]string) {
 	if context.Spec.HasSecretRef() {
 		*fields = append(*fields, ensureNamespacedRef(context, context.Spec.SecretRef()))
 	}

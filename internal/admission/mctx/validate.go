@@ -117,14 +117,7 @@ func validateContextIsAvailable(ctx context.Context, context core.ContextObject)
 		)
 	}
 
-	if errors.IsUnauthorized(err) {
-		return errors.NewSeveref(
-			"bad credentials for context [%s]",
-			context.GetName(),
-		)
-	}
-
-	if errors.IsBadRequest(err) {
+	if errors.IsUnauthorized(err) || errors.IsBadRequest(err) {
 		return errors.NewSevere(err.Error())
 	}
 

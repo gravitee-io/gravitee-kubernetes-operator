@@ -2,8 +2,10 @@
 
 ## Packages
 - [gravitee.io/v1alpha1](#graviteeiov1alpha1)
+- [gravitee.io/v1alpha1/am](#graviteeiov1alpha1am)
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
+- [gravitee.io/v1alpha1/context](#graviteeiov1alpha1context)
 - [gravitee.io/v1alpha1/dictionary](#graviteeiov1alpha1dictionary)
 - [gravitee.io/v1alpha1/docs](#graviteeiov1alpha1docs)
 - [gravitee.io/v1alpha1/gateway](#graviteeiov1alpha1gateway)
@@ -30,6 +32,7 @@
 Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 
 ### Resource Types
+- [AMContext](#amcontext)
 - [ApiDefinition](#apidefinition)
 - [ApiResource](#apiresource)
 - [ApiV4Definition](#apiv4definition)
@@ -48,6 +51,54 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [SharedPolicyGroup](#sharedpolicygroup)
 - [Subscription](#subscription)
 
+
+
+#### AMContext
+
+
+
+
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AMContext` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AMContextSpec](#amcontextspec)_ |  |  |  |
+| `status` _[AMContextStatus](#amcontextstatus)_ |  |  |  |
+
+
+#### AMContextSpec
+
+
+
+AMContextSpec is a cloud-free, bearer-only copy of ManagementContext.
+
+
+
+_Appears in:_
+- [AMContext](#amcontext)
+
+
+
+#### AMContextStatus
+
+
+
+AMContextStatus defines the observed state of an AM Context.
+
+
+
+_Appears in:_
+- [AMContext](#amcontext)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the context.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 
 
 #### ApiDefinition
@@ -643,9 +694,6 @@ ManagementContextStatus defines the observed state of an API Context.
 _Appears in:_
 - [ManagementContext](#managementcontext)
 
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 
 
 #### Notification
@@ -1054,6 +1102,50 @@ _Appears in:_
 | `endingAt` _string_ | The expiry date for the subscription (no date means no expiry) |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Subscription.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | This value is `Completed` if the sync with APIM succeeded, Failed otherwise. *** DEPRECATED *** |  |  |
+
+
+
+## gravitee.io/v1alpha1/am
+
+
+
+
+#### Auth
+
+
+
+Auth authenticates against AM's Automation API. There is no credentials field:
+AM's Automation API is bearer-only.
+
+
+
+_Appears in:_
+- [Context](#context)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `bearerToken` _string_ | The bearer token used to authenticate against the AM Automation API. |  | Optional: \{\} <br /> |
+| `secretRef` _[NamespacedName](#namespacedname)_ | A secret reference holding a "bearerToken" key. |  |  |
+
+
+#### Context
+
+
+
+Context is a cloud-free, bearer-only connection to an Access Management instance.
+
+
+
+_Appears in:_
+- [AMContextSpec](#amcontextspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `baseUrl` _string_ | The URL of an Access Management API instance. |  | Optional: \{\} <br /> |
+| `path` _string_ | Allows to override the context path that will be appended to the baseURL.<br />This can be used when reverse proxying AM with URL rewrite. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | An existing organization id targeted by the context on the AM instance. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | An existing environment id targeted by the context within the organization. |  | Optional: \{\} <br /> |
+| `auth` _[Auth](#auth)_ | Auth is bearer-token only: an inline bearerToken or a secretRef holding key bearerToken. |  |  |
 
 
 
@@ -2087,6 +2179,47 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/context
+
+
+
+
+
+
+#### BasicAuth
+
+
+
+
+
+
+
+_Appears in:_
+- [Auth](#auth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `username` _string_ |  |  | Required: \{\} <br /> |
+| `password` _string_ |  |  | Required: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [AMContextStatus](#amcontextstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the context.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/dictionary
 
 
@@ -2844,39 +2977,8 @@ _Appears in:_
 
 
 
-#### Auth
 
 
-
-
-
-
-
-_Appears in:_
-- [Context](#context)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `bearerToken` _string_ | The bearer token used to authenticate against the API Management instance<br />(must be generated from an admin account) |  | Optional: \{\} <br /> |
-| `credentials` _[BasicAuth](#basicauth)_ | The Basic credentials used to authenticate against the API Management instance. |  |  |
-| `secretRef` _[NamespacedName](#namespacedname)_ | A secret reference holding either a "bearerToken" key for bearer token authentication<br />or "username" and "password" keys for basic authentication |  |  |
-
-
-#### BasicAuth
-
-
-
-
-
-
-
-_Appears in:_
-- [Auth](#auth)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `username` _string_ |  |  | Required: \{\} <br /> |
-| `password` _string_ |  |  | Required: \{\} <br /> |
 
 
 #### Cloud
@@ -2917,20 +3019,6 @@ _Appears in:_
 | `cloud` _[Cloud](#cloud)_ | Cloud when set (token or secretRef) this context will target Gravitee Cloud.<br />BaseUrl will be defaulted from token data if not set,<br />Auth is defaulted to use the token (bearerToken),<br />OrgID is extracted from the token,<br />EnvID is defaulted when the token contains exactly one environment. |  |  |
 
 
-#### Status
-
-
-
-
-
-
-
-_Appears in:_
-- [ManagementContextStatus](#managementcontextstatus)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 
 
 
@@ -3382,6 +3470,7 @@ _Appears in:_
 - [ApiRef](#apiref)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
 - [ApplicationSpec](#applicationspec)
+- [Auth](#auth)
 - [Auth](#auth)
 - [Cloud](#cloud)
 - [Console](#console)

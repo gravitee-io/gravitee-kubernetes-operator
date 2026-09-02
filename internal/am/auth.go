@@ -12,23 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package management
+package am
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
-type Status struct {
-	// Conditions describe the current conditions of the ManagementContext.
-	//
-	// Known condition types are:
-	// * "Accepted"
-	// * "ResolvedRefs"
-	//
-	// +optional
-	// +listType=map
-	// +listMapKey=type
-	// +kubebuilder:validation:MaxItems=8
-	// +kubebuilder:default={}
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+func toHttpAuth(ctx core.ContextModel) *http.Auth {
+	if !ctx.HasAuthentication() {
+		return nil
+	}
+	return &http.Auth{
+		Token: toBearer(ctx.GetAuth()),
+	}
+}
+
+func toBearer(auth core.Auth) http.BearerToken {
+	if auth == nil || auth.GetBearerToken() == "" {
+		return ""
+	}
+	return http.BearerToken(auth.GetBearerToken())
 }

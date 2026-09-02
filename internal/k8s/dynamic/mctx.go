@@ -40,15 +40,18 @@ func ResolveContext(ctx context.Context, ref core.ObjectRef, parentNs string) (c
 }
 
 func InjectSecretIfAny(ctx context.Context, mCtx core.ContextObject) (*core.ContextObject, error) {
-	if mCtx.HasSecretRef() || (mCtx.HasCloud() && mCtx.GetCloud().HasSecretRef()) {
+	cloud, cloudAware := mCtx.(core.CloudAwareContext)
+	hasCloud := cloudAware && cloud.HasCloud()
+
+	if mCtx.HasSecretRef() || (hasCloud && cloud.GetCloud().HasSecretRef()) {
 		var name string
 		var namespace string
 		if mCtx.HasSecretRef() {
 			name = mCtx.GetSecretRef().GetName()
 			namespace = mCtx.GetSecretRef().GetNamespace()
 		} else {
-			name = mCtx.GetCloud().GetSecretRef().GetName()
-			namespace = mCtx.GetCloud().GetSecretRef().GetNamespace()
+			name = cloud.GetCloud().GetSecretRef().GetName()
+			namespace = cloud.GetCloud().GetSecretRef().GetNamespace()
 		}
 
 		secret, err := ResolveSecret(ctx, &refs.NamespacedName{Name: name, Namespace: namespace}, mCtx.GetNamespace())
@@ -56,7 +59,7 @@ func InjectSecretIfAny(ctx context.Context, mCtx core.ContextObject) (*core.Cont
 			return nil, err
 		}
 		var bearerToken string
-		if mCtx.HasCloud() {
+		if hasCloud {
 			bearerToken = string(secret.Data[core.CloudTokenSecretKey])
 		} else {
 			bearerToken = string(secret.Data[core.BearerTokenSecretKey])
@@ -66,7 +69,9 @@ func InjectSecretIfAny(ctx context.Context, mCtx core.ContextObject) (*core.Cont
 
 		if mCtx.GetAuth() != nil {
 			mCtx.GetAuth().SetToken(bearerToken)
-			mCtx.GetAuth().SetCredentials(username, password)
+			if cred, ok := mCtx.GetAuth().(core.CredentialAuth); ok {
+				cred.SetCredentials(username, password)
+			}
 		}
 	}
 

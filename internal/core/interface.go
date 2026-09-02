@@ -172,6 +172,13 @@ type ContextModel interface {
 	GetOrgID() string
 	HasAuthentication() bool
 	GetAuth() Auth
+}
+
+// CloudAwareContext is the Gravitee Cloud surface. APIM ManagementContext
+// implements it; AMContext does not.
+//
+// +k8s:deepcopy-gen=false
+type CloudAwareContext interface {
 	HasCloud() bool
 	GetCloud() Cloud
 	ConfigureCloud(url string, orgID string, envID string)
@@ -186,12 +193,20 @@ type ContextObject interface {
 // +k8s:deepcopy-gen=false
 type Auth interface {
 	GetBearerToken() string
-	HasCredentials() bool
-	GetCredentials() BasicAuth
 	GetSecretRef() ObjectRef
-	SetCredentials(username, password string)
 	SetToken(token string)
 	SetSecretRef(ref ObjectRef)
+}
+
+// CredentialAuth is username/password auth. ManagementContext implements it;
+// AMContext does not. HasCredentials is presence, not capability.
+//
+// +k8s:deepcopy-gen=false
+type CredentialAuth interface {
+	Auth
+	HasCredentials() bool
+	GetCredentials() BasicAuth
+	SetCredentials(username, password string)
 }
 
 // +k8s:deepcopy-gen=false
