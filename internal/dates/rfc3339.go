@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package drift
+package dates
 
-import (
-	driftlib "github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
-)
+import "time"
 
-func Init() {
-	driftlib.InitRegistry()
-	driftlib.InitEnableCheck()
+// ParseRFC3339 parses RFC3339, then RFC3339Nano if needed.
+func ParseRFC3339(value string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, value)
+	if err == nil {
+		return t, nil
+	}
+	return time.Parse(time.RFC3339Nano, value)
 }

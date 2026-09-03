@@ -18,16 +18,12 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func mergeDriftValidation(
@@ -36,7 +32,6 @@ func mergeDriftValidation(
 	newSub *v1alpha1.Subscription,
 	api core.ApiDefinitionObject,
 	app core.ApplicationObject,
-	plan core.PlanModel,
 	errs *errors.AdmissionErrors,
 ) {
 	errs.MergeWith(
@@ -44,26 +39,33 @@ func mergeDriftValidation(
 			resolveContext(app),
 			resolveRefs,
 			remoteSubscriptionGetter(api),
-			dtoMapper(api, app, plan)),
+			dtoMapper(api, app)),
 	)
 }
 
 func remoteSubscriptionGetter(api core.ApiDefinitionObject) drift.RemoteObjectGetter[*v1alpha1.Subscription] {
 	return func(apimClient *apim.APIM, sub *v1alpha1.Subscription) (any, error) {
-		if k8s.IsAutomationAPIManaged(sub) {
-			apiNSName := refs.NewNamespacedNameFromObject(api)
-			subNSName := refs.NewNamespacedNameFromObject(sub)
-			remoteSub, err := apimClient.Subscription.GetByHRID(apiNSName.HRID(), subNSName.HRID())
-			if err != nil {
-				return nil, err
-			}
-			return *remoteSub, nil
+		subHRID := refs.NewNamespacedNameFromObject(sub).HRID()
+		var (
+			remoteSub *model.SubscriptionDTO
+			err       error
+		)
+
+		switch {
+		case model.SubscriptionUsesUUID(sub) && model.APIUsesUUID(api):
+			remoteSub, err = apimClient.Subscription.GetWithUUID(api.GetID(), sub.Status.ID)
+		case model.SubscriptionUsesUUID(sub):
+			apiHRID := refs.NewNamespacedNameFromObject(api).HRID()
+			remoteSub, err = apimClient.Subscription.GetByHRIDWithSubUUID(apiHRID, sub.Status.ID)
+		case model.SubscriptionRemoteUsesLegacyAPI(sub, api):
+			remoteSub, err = apimClient.Subscription.GetByHRIDWithAPIUUID(api.GetID(), subHRID)
+		default:
+			apiHRID := refs.NewNamespacedNameFromObject(api).HRID()
+			remoteSub, err = apimClient.Subscription.GetByHRID(apiHRID, subHRID)
 		}
-		remoteSub, err := apimClient.Subscription.GetByID(api.GetID(), sub.Status.ID)
 		if err != nil {
 			return nil, err
 		}
-
 		return *remoteSub, nil
 	}
 }
@@ -78,46 +80,11 @@ func resolveContext(app core.ContextAwareObject) drift.ContextResolver {
 	}
 }
 
-func dtoMapper(api core.ApiDefinitionObject, app core.ApplicationObject, plan core.PlanModel) drift.DTOMapper[*v1alpha1.Subscription] {
+func dtoMapper(
+	api core.ApiDefinitionObject,
+	app core.ApplicationObject,
+) drift.DTOMapper[*v1alpha1.Subscription] {
 	return func(sub *v1alpha1.Subscription) any {
-		if k8s.IsAutomationAPIManaged(sub) {
-			apiNSName := refs.NewNamespacedNameFromObject(api)
-			appNSName := refs.NewNamespacedNameFromObject(app)
-			subNSName := refs.NewNamespacedNameFromObject(sub)
-			return model.SubscriptionDTO{
-				ID:                    subNSName.HRID(),
-				ApiID:                 apiNSName.HRID(),
-				AppID:                 appNSName.HRID(),
-				PlanID:                hrid.NameToValidHRID(sub.Spec.Plan),
-				StartingAt:            sub.Status.StartedAt,
-				EndingAt:              utils.SafeDereference(sub.Spec.EndingAt),
-				Metadata:              sub.Spec.Metadata,
-				ApiKeys:               mapApiKey(sub.Spec.ApiKeys),
-				ConsumerConfiguration: sub.Spec.ConsumerConfiguration.DeepCopy(),
-			}
-		}
-		// Legacy
-		return model.SubscriptionDTO{
-			ID:                    sub.Status.ID,
-			ApiID:                 api.GetID(),
-			AppID:                 app.GetID(),
-			PlanID:                plan.GetID(),
-			StartingAt:            sub.Status.StartedAt,
-			EndingAt:              utils.SafeDereference(sub.Spec.EndingAt),
-			Metadata:              sub.Spec.Metadata,
-			ApiKeys:               mapApiKey(sub.Spec.ApiKeys),
-			ConsumerConfiguration: sub.Spec.ConsumerConfiguration.DeepCopy(),
-		}
+		return model.ToSubscriptionDTOForDrift(sub, api, app)
 	}
-}
-
-func mapApiKey(keys []subscription.ApiKeySpec) []model.ApiKeySpec {
-	apiKeys := make([]model.ApiKeySpec, len(keys))
-	for i, key := range keys {
-		apiKeys[i] = model.ApiKeySpec{
-			Key:      key.Key,
-			ExpireAt: key.ExpireAt,
-		}
-	}
-	return apiKeys
 }

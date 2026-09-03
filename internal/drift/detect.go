@@ -60,7 +60,23 @@ func assertRootIsStruct(crd any, remote any) {
 	}
 }
 
+func derefIfPointer(v any) any {
+	if v == nil {
+		return nil
+	}
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Pointer {
+		return v
+	}
+	if rv.IsNil() {
+		return nil
+	}
+	return rv.Elem().Interface()
+}
+
 func detectStruct(crd any, remote any, this *Result, ordered bool) {
+	crd = derefIfPointer(crd)
+	remote = derefIfPointer(remote)
 	t, bothNil := getTypeOrSkip(crd, remote)
 	if bothNil {
 		return
@@ -96,8 +112,15 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 				}
 				continue
 			}
+			crdPairToDetect := crdPair
+			if equivalent.CRDItemsFilterFunc != nil {
+				filtered := equivalent.CRDItemsFilterFunc(crdPair.Interface)
+				crdPairToDetect = valuePair{
+					Value:     reflect.ValueOf(filtered),
+					Interface: filtered,
+				}
+			}
 			remotePairToDetect := remotePair
-			// apply filter on remote
 			if equivalent.RemoteItemsFilterFunc != nil {
 				filtered := equivalent.RemoteItemsFilterFunc(remotePair.Interface)
 				remotePairToDetect = valuePair{
@@ -105,8 +128,7 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 					Interface: filtered,
 				}
 			}
-			// process all items
-			detectItems(property, crdPair.Value, remotePairToDetect.Value, this, ordered, equivalent.PostFunc)
+			detectItems(property, crdPairToDetect.Value, remotePairToDetect.Value, this, ordered, equivalent.PostFunc)
 		case fieldType.Kind() == reflect.Map:
 			equivalenceFunc := equivalenceRegistry.Get(driftFunc.Name, fieldType.Kind())
 			this.context.FuncArgs = driftFunc.Args

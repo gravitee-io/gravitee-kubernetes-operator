@@ -15,8 +15,12 @@
 package model
 
 import (
+	"strings"
+	"time"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/dates"
 )
 
 type ApplicationDTO struct {
@@ -28,12 +32,18 @@ type ApplicationDTO struct {
 	Settings      *ApplicationSettingsDTO  `json:"settings,omitempty" drift:"empty-is-nil"`
 	Background    string                   `json:"background,omitempty"`
 	Domain        string                   `json:"domain,omitempty"`
-	Groups        []string                 `json:"groups,omitempty" drift:"ignore-unknown-crd-groups"`
+	Groups        []ApplicationGroup       `json:"groups,omitempty" drift:"ignore-only:crd,strip-ns"`
 	Picture       string                   `json:"picture,omitempty"`
 	PictureURL    string                   `json:"pictureUrl,omitempty"`
 	NotifyMembers *bool                    `json:"notifyMembers" drift:"empty-is-nil"`
 	Metadata      []ApplicationMetadataDTO `json:"metadata" drift:"empty-is-nil"`
-	Members       []ApplicationMemberDTO   `json:"members" drift:"empty-is-nil"`
+	Members       []ApplicationMemberDTO   `json:"members" drift:"ignore-only:crd"`
+}
+
+type ApplicationGroup string
+
+func (g ApplicationGroup) MatchKey() string {
+	return string(g)
 }
 
 type ApplicationSettingsDTO struct {
@@ -55,7 +65,7 @@ type ApplicationOAuthClientSettingsDTO struct {
 
 type ApplicationTLSSettingsDTO struct {
 	ClientCertificate  string                            `json:"clientCertificate,omitempty" drift:"trimmed"`
-	ClientCertificates []ApplicationClientCertificateDTO `json:"clientCertificates,omitempty" drift:"empty-is-nil"`
+	ClientCertificates []ApplicationClientCertificateDTO `json:"clientCertificates,omitempty" drift:"ignore-only:crd,expired,scheduled"`
 }
 
 type ApplicationClientCertificateDTO struct {
@@ -65,6 +75,28 @@ type ApplicationClientCertificateDTO struct {
 	StartsAt string                        `json:"startsAt,omitempty" drift:"rfc3339"`
 	EndsAt   string                        `json:"endsAt,omitempty" drift:"rfc3339"`
 	Encoded  bool                          `json:"encoded,omitempty"`
+}
+
+// Expired reports whether EndsAt is set and already in the past.
+// Missing or unparseable EndsAt is treated as not expired.
+func (c ApplicationClientCertificateDTO) Expired() bool {
+	t, err := dates.ParseRFC3339(c.EndsAt)
+	return err == nil && time.Now().After(t)
+}
+
+// Scheduled reports whether StartsAt is set and still in the future.
+// Missing or unparseable StartsAt is treated as not scheduled.
+func (c ApplicationClientCertificateDTO) Scheduled() bool {
+	t, err := dates.ParseRFC3339(c.StartsAt)
+	return err == nil && time.Now().Before(t)
+}
+
+// MatchKey identifies the certificate for ignore-only comparison.
+func (c ApplicationClientCertificateDTO) MatchKey() string {
+	if c.Name != "" {
+		return c.Name
+	}
+	return strings.TrimSpace(c.Content)
 }
 
 type ApplicationCertificateRefDTO struct {
@@ -83,6 +115,10 @@ type ApplicationMemberDTO struct {
 	Source   string `json:"source"`
 	SourceID string `json:"sourceId"`
 	Role     string `json:"role,omitempty"`
+}
+
+func (m ApplicationMemberDTO) MatchKey() string {
+	return m.Source + ":" + m.SourceID
 }
 
 type ApplicationMetaData struct {

@@ -57,6 +57,26 @@ type Equivalence struct {
 	PostFunc PostEquivalenceFunc
 	// RemoteItemsFilterFunc is a function that filters remote items
 	RemoteItemsFilterFunc ItemsFilterFunc
+	// CRDItemsFilterFunc is a function that filters CRD items
+	CRDItemsFilterFunc ItemsFilterFunc
+}
+
+// Keyed identifies a slice item by a stable key so only-on-one-side
+// items can be filtered before comparison.
+type Keyed interface {
+	MatchKey() string
+}
+
+// Expiring is implemented by slice items that can fall out of APIM GET
+// responses once their validity window has ended.
+type Expiring interface {
+	Expired() bool
+}
+
+// Schedulable is implemented by slice items that can fall out of APIM GET
+// responses while their validity window has not started yet.
+type Schedulable interface {
+	Scheduled() bool
 }
 
 // EquivalenceFunc is a function that compares two values and returns an Equivalence.

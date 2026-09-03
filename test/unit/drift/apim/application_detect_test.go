@@ -39,16 +39,29 @@ var _ = Describe("Application Drift detection", func() {
 			completeApplicationDTO(),
 			model.ToApplicationDTO(completeApplicationCRD().Spec),
 		),
+		Entry("crd-only members ignored",
+			model.ApplicationDTO{
+				Members: []model.ApplicationMemberDTO{
+					{Source: "memory", SourceID: "admin", Role: "ADMIN"},
+					{Source: "memory", SourceID: "local-only", Role: "USER"},
+				},
+			},
+			model.ApplicationDTO{
+				Members: []model.ApplicationMemberDTO{
+					{Source: "memory", SourceID: "admin", Role: "ADMIN"},
+				},
+			},
+		),
 		Entry("equivalent struct",
 			model.ApplicationDTO{
 				Members: nil,
-				Groups:  []string{"foo", "bar"},
+				Groups:  []model.ApplicationGroup{"foo", "bar"},
 			},
 			model.ApplicationDTO{
 				ID:            "123456",
 				HRID:          "my-app",
 				Status:        "ACTIVE",
-				Groups:        []string{"namespace-bar"},
+				Groups:        []model.ApplicationGroup{"namespace-bar"},
 				Members:       make([]model.ApplicationMemberDTO, 0),
 				Metadata:      make([]model.ApplicationMetadataDTO, 0),
 				Settings:      &model.ApplicationSettingsDTO{},
@@ -133,6 +146,45 @@ var _ = Describe("Application Drift detection", func() {
 				},
 			},
 		),
+		Entry("expired cert omitted from remote is not drift",
+			model.ApplicationDTO{
+				Settings: &model.ApplicationSettingsDTO{
+					TLS: &model.ApplicationTLSSettingsDTO{
+						ClientCertificates: []model.ApplicationClientCertificateDTO{
+							{Name: "expired", Content: "CERT-A", EndsAt: "2000-01-01T00:00:00Z"},
+							{Name: "active", Content: "CERT-B", EndsAt: "2099-01-01T00:00:00Z"},
+						},
+					},
+				},
+			},
+			model.ApplicationDTO{
+				Settings: &model.ApplicationSettingsDTO{
+					TLS: &model.ApplicationTLSSettingsDTO{
+						ClientCertificates: []model.ApplicationClientCertificateDTO{
+							{Name: "active", Content: "CERT-B", EndsAt: "2099-01-01T00:00:00Z"},
+						},
+					},
+				},
+			},
+		),
+		Entry("scheduled cert omitted from remote is not drift",
+			model.ApplicationDTO{
+				Settings: &model.ApplicationSettingsDTO{
+					TLS: &model.ApplicationTLSSettingsDTO{
+						ClientCertificates: []model.ApplicationClientCertificateDTO{
+							{Name: "scheduled", Content: "CERT-A", StartsAt: "2099-01-01T00:00:00Z"},
+						},
+					},
+				},
+			},
+			model.ApplicationDTO{
+				Settings: &model.ApplicationSettingsDTO{
+					TLS: &model.ApplicationTLSSettingsDTO{
+						ClientCertificates: []model.ApplicationClientCertificateDTO{},
+					},
+				},
+			},
+		),
 		Entry("listed certificates equivalent, start/end date",
 			model.ApplicationDTO{
 				Settings: &model.ApplicationSettingsDTO{
@@ -140,7 +192,7 @@ var _ = Describe("Application Drift detection", func() {
 						ClientCertificates: []model.ApplicationClientCertificateDTO{
 							{
 								StartsAt: "2023-07-25T02:43:16+03:00",
-								EndsAt:   "2023-08-25T23:43:16Z",
+								EndsAt:   "2099-08-25T23:43:16Z",
 							},
 						},
 					},
@@ -152,7 +204,7 @@ var _ = Describe("Application Drift detection", func() {
 						ClientCertificates: []model.ApplicationClientCertificateDTO{
 							{
 								StartsAt: "2023-07-24T20:43:16-03:00",
-								EndsAt:   "2023-08-25T23:43:16-00:00",
+								EndsAt:   "2099-08-25T23:43:16-00:00",
 							},
 						},
 					},

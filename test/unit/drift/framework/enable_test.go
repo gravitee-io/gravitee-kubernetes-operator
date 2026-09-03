@@ -35,22 +35,30 @@ var _ = Describe("Drift enablement", func() {
 	})
 
 	DescribeTable(
-		"unsupported predicate always excludes (legacy group)",
+		"unsupported predicate always excludes (subscription on definition-v2 API)",
 		func(cfg bool, annotatedValue *string) {
 			env.Config.DriftDetection.Enabled = cfg
 
-			g := &v1alpha1.Group{}
+			sub := &v1alpha1.Subscription{}
+			sub.Spec.API.Kind = "ApiDefinition"
 			if annotatedValue != nil {
-				g.Annotations = map[string]string{core.DriftDetectionAnnotation: *annotatedValue}
+				sub.Annotations = map[string]string{core.DriftDetectionAnnotation: *annotatedValue}
 			}
 
-			Expect(drift.IsDriftEnabled(g)).To(BeFalse())
+			Expect(drift.IsDriftEnabled(sub)).To(BeFalse())
 		},
 		Entry("config=true, annotation=true", true, new(env.TrueString)),
 		Entry("config=true, annotation=false", true, new(env.FalseString)),
 		Entry("config=true, annotation missing", true, nil),
 		Entry("config=false, annotation=true", false, new(env.TrueString)),
 	)
+
+	It("keeps drift enabled for a subscription on a v4 API", func() {
+		env.Config.DriftDetection.Enabled = true
+		sub := &v1alpha1.Subscription{}
+		sub.Spec.API.Kind = "ApiV4Definition"
+		Expect(drift.IsDriftEnabled(sub)).To(BeTrue())
+	})
 
 	DescribeTable(
 		"supported CRD uses annotation if present, otherwise falls back to config",

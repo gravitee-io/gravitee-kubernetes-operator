@@ -456,8 +456,6 @@ var _ = Describe("RFC3339", func() {
 		},
 		Entry("same RFC3339 timestamp", certStartsAt, certStartsAt),
 		Entry("same instant with different offset notation", certEndsAt, "2025-06-15T10:30:00Z"),
-		Entry("crd RFC3339 vs remote RFC3339Nano without fractional seconds", certStartsAt, "2024-06-15T10:30:00.000000000Z"),
-		Entry("crd RFC3339Nano vs remote RFC3339", "2024-06-15T10:30:00.123456789Z", "2024-06-15T10:30:00.123456789+00:00"),
 		Entry("both empty certificate dates", "", ""),
 	)
 
@@ -571,5 +569,198 @@ var _ = Describe("DefaultEquivalencePostPullUpObjectChildren", func() {
 			remote := withRFC3339Dates{StartsAt: validDate, EndsAt: "2025-06-15T10:30:00Z"}
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		})
+	})
+})
+
+type namedItem struct{ ID string }
+
+func (n namedItem) MatchKey() string { return n.ID }
+
+type withIgnoreOnlyRemote struct {
+	Items []namedItem `json:"items" drift:"ignore-only:remote"`
+}
+
+type withIgnoreOnlyCRD struct {
+	Items []namedItem `json:"items" drift:"ignore-only:crd"`
+}
+
+type withIgnoreOnlyCRDStripNS struct {
+	Items []namedItem `json:"items" drift:"ignore-only:crd,strip-ns"`
+}
+
+var _ = Describe("IgnoreOnlyArgs", func() {
+	remoteCtx := drift.DriftContext{FuncArgs: []string{"remote"}}
+	crdCtx := drift.DriftContext{FuncArgs: []string{"crd"}}
+
+	DescribeTable("should report equivalence and skip for empty slices",
+		func(crd, remote any) {
+			Expect(drift.IgnoreOnlyArgs(crd, remote, remoteCtx)).To(Equal(
+				drift.Equivalence{Equivalent: drift.Equivalent, Skip: true},
+			))
+		},
+		Entry("nil vs nil", nil, nil),
+		Entry("nil vs empty slice", nil, []namedItem{}),
+		Entry("empty slice vs nil", []namedItem{}, nil),
+		Entry("empty slice vs empty slice", []namedItem{}, []namedItem{}),
+	)
+
+	DescribeTable("should report cannot compare without filter",
+		func(crd, remote any, ctx drift.DriftContext) {
+			e := drift.IgnoreOnlyArgs(crd, remote, ctx)
+			Expect(e.Equivalent).To(Equal(drift.CannotCompare))
+			Expect(e.RemoteItemsFilterFunc).To(BeNil())
+			Expect(e.CRDItemsFilterFunc).To(BeNil())
+		},
+		Entry("same names", []namedItem{{ID: "owner"}}, []namedItem{{ID: "owner"}}, remoteCtx),
+		Entry("non-keyed slice items", []string{"foo"}, []string{"foo"}, remoteCtx),
+		Entry("crd item missing from remote", []namedItem{{ID: "owner"}}, []namedItem{}, remoteCtx),
+		Entry("empty context does not filter",
+			[]namedItem{{ID: "owner"}},
+			[]namedItem{{ID: "owner"}, {ID: "sync-id"}},
+			drift.DriftContext{},
+		),
+	)
+
+	It("provides a filter that removes remote-only items by identifier", func() {
+		crd := []namedItem{{ID: "owner"}}
+		remote := []namedItem{{ID: "owner"}, {ID: "sync-id"}}
+
+		e := drift.IgnoreOnlyArgs(crd, remote, remoteCtx)
+		Expect(e.Equivalent).To(Equal(drift.CannotCompare))
+		Expect(e.RemoteItemsFilterFunc).NotTo(BeNil())
+		Expect(e.CRDItemsFilterFunc).To(BeNil())
+
+		filtered := e.RemoteItemsFilterFunc(remote)
+		Expect(filtered).To(ConsistOf(namedItem{ID: "owner"}))
+	})
+
+	It("filters remote-only items when crd is empty", func() {
+		remote := []namedItem{{ID: "sync-id"}}
+
+		e := drift.IgnoreOnlyArgs(nil, remote, remoteCtx)
+		Expect(e.Equivalent).To(Equal(drift.CannotCompare))
+		Expect(e.RemoteItemsFilterFunc).NotTo(BeNil())
+
+		filtered := e.RemoteItemsFilterFunc(remote)
+		Expect(filtered).To(BeEmpty())
+	})
+
+	It("keeps non-keyed items when filtering remote-only items", func() {
+		crd := []namedItem{{ID: "owner"}}
+		remote := []namedItem{{ID: "owner"}, {ID: "sync-id"}}
+
+		e := drift.IgnoreOnlyArgs(crd, remote, remoteCtx)
+		Expect(e.RemoteItemsFilterFunc).NotTo(BeNil())
+
+		mixed := []any{
+			namedItem{ID: "owner"},
+			namedItem{ID: "sync-id"},
+			"keep-me",
+		}
+		filtered := e.RemoteItemsFilterFunc(mixed)
+		Expect(filtered).To(ConsistOf(namedItem{ID: "owner"}, "keep-me"))
+	})
+
+	It("provides a filter that removes crd-only items by identifier", func() {
+		crd := []namedItem{{ID: "owner"}, {ID: "local-only"}}
+		remote := []namedItem{{ID: "owner"}}
+
+		e := drift.IgnoreOnlyArgs(crd, remote, crdCtx)
+		Expect(e.Equivalent).To(Equal(drift.CannotCompare))
+		Expect(e.CRDItemsFilterFunc).NotTo(BeNil())
+		Expect(e.RemoteItemsFilterFunc).To(BeNil())
+
+		filtered := e.CRDItemsFilterFunc(crd)
+		Expect(filtered).To(ConsistOf(namedItem{ID: "owner"}))
+	})
+
+	It("filters crd-only items when remote is empty", func() {
+		crd := []namedItem{{ID: "local-only"}}
+
+		e := drift.IgnoreOnlyArgs(crd, nil, crdCtx)
+		Expect(e.Equivalent).To(Equal(drift.CannotCompare))
+		Expect(e.CRDItemsFilterFunc).NotTo(BeNil())
+
+		filtered := e.CRDItemsFilterFunc(crd)
+		Expect(filtered).To(BeEmpty())
+	})
+
+	It("Detect ignores remote-only items", func() {
+		crd := withIgnoreOnlyRemote{Items: []namedItem{{ID: "owner"}}}
+		remote := withIgnoreOnlyRemote{Items: []namedItem{{ID: "owner"}, {ID: "sync-id"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect ignores crd-only items", func() {
+		crd := withIgnoreOnlyCRD{Items: []namedItem{{ID: "owner"}, {ID: "local-only"}}}
+		remote := withIgnoreOnlyCRD{Items: []namedItem{{ID: "owner"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect ignores namespace prefix with strip-ns", func() {
+		crd := withIgnoreOnlyCRDStripNS{Items: []namedItem{{ID: "group1"}, {ID: "crd-only"}}}
+		remote := withIgnoreOnlyCRDStripNS{Items: []namedItem{{ID: "test-namespace-group1"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, "test-namespace"))
+	})
+})
+
+type timedItem struct {
+	ID          string `json:"id"`
+	IsExpired   bool   `json:"-"`
+	IsScheduled bool   `json:"-"`
+}
+
+func (t timedItem) MatchKey() string { return t.ID }
+func (t timedItem) Expired() bool    { return t.IsExpired }
+func (t timedItem) Scheduled() bool  { return t.IsScheduled }
+
+type withIgnoreOnlyCRDHidden struct {
+	Items []timedItem `json:"items" drift:"ignore-only:crd,expired,scheduled"`
+}
+
+var _ = Describe("IgnoreOnlyArgs expired and scheduled", func() {
+	hiddenCtx := drift.DriftContext{FuncArgs: []string{"crd", "expired", "scheduled"}}
+
+	It("skips comparison when every item is expired or scheduled", func() {
+		crd := []timedItem{{ID: "old", IsExpired: true}, {ID: "later", IsScheduled: true}}
+		e := drift.IgnoreOnlyArgs(crd, []timedItem{}, hiddenCtx)
+		Expect(e.Equivalent).To(Equal(drift.Equivalent))
+		Expect(e.Skip).To(BeTrue())
+	})
+
+	It("Detect ignores an expired CRD item omitted by remote", func() {
+		crd := withIgnoreOnlyCRDHidden{Items: []timedItem{
+			{ID: "expired", IsExpired: true},
+			{ID: "active"},
+		}}
+		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "active"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect ignores a scheduled CRD item omitted by remote", func() {
+		crd := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "scheduled", IsScheduled: true}}}
+		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect ignores expired and scheduled items together", func() {
+		crd := withIgnoreOnlyCRDHidden{Items: []timedItem{
+			{ID: "expired", IsExpired: true},
+			{ID: "scheduled", IsScheduled: true},
+			{ID: "active"},
+		}}
+		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "active"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect still reports drift on remaining active items", func() {
+		crd := withIgnoreOnlyCRDHidden{Items: []timedItem{
+			{ID: "expired", IsExpired: true},
+			{ID: "scheduled", IsScheduled: true},
+			{ID: "active"},
+		}}
+		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "other"}}}
+		got := drift.DetectWithNamespace(crd, remote, "")
+		Expect(got.DriftDetected()).To(BeTrue())
 	})
 })

@@ -56,8 +56,8 @@ var _ = Describe("API v4 Drift detection", func() {
 				FlowExecution: &model.APIV4FlowExecutionDTO{
 					Mode: "DEFAULT",
 				},
-				Groups:           []string{},
-				Categories:       []string{},
+				Groups:           []model.APIGroup{},
+				Categories:       []model.APICategory{},
 				Flows:            []*model.APIV4FlowDTO{},
 				Members:          []*model.APIV4MemberDTO{},
 				PortalNavigation: []*model.APIV4NavigationPathDTO{},
@@ -72,18 +72,18 @@ var _ = Describe("API v4 Drift detection", func() {
 				},
 				ConsoleNotification: &model.APIV4ConsoleNotificationDTO{
 					Events: []string{},
-					Groups: []string{},
+					Groups: []model.APIGroup{},
 				},
 			},
 		),
 		Entry("differing collections equivalences",
 			model.APIV4DTO{
-				Groups: []string{
+				Groups: []model.APIGroup{
 					"other",
 					"developers",
 				},
 				ConsoleNotification: &model.APIV4ConsoleNotificationDTO{
-					Groups: []string{
+					Groups: []model.APIGroup{
 						"other",
 						"developers",
 					},
@@ -97,13 +97,34 @@ var _ = Describe("API v4 Drift detection", func() {
 						Format:       "STRING",
 					},
 				},
-				Groups: []string{
+				Groups: []model.APIGroup{
 					"gravitee-developers",
 				},
 				ConsoleNotification: &model.APIV4ConsoleNotificationDTO{
-					Groups: []string{
+					Groups: []model.APIGroup{
 						"gravitee-developers",
 					},
+				},
+			},
+		),
+		Entry("crd-only categories ignored",
+			model.APIV4DTO{
+				Categories: []model.APICategory{"shared", "crd-only"},
+			},
+			model.APIV4DTO{
+				Categories: []model.APICategory{"shared"},
+			},
+		),
+		Entry("crd-only members ignored",
+			model.APIV4DTO{
+				Members: []*model.APIV4MemberDTO{
+					{Source: "memory", SourceID: "admin", Role: "OWNER"},
+					{Source: "memory", SourceID: "local-only", Role: "USER"},
+				},
+			},
+			model.APIV4DTO{
+				Members: []*model.APIV4MemberDTO{
+					{Source: "memory", SourceID: "admin", Role: "OWNER"},
 				},
 			},
 		),

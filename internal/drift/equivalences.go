@@ -18,7 +18,8 @@ import (
 	"reflect"
 	"slices"
 	"strings"
-	"time"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/dates"
 )
 
 const (
@@ -48,6 +49,246 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.Struct, IgnoreSkip)
 	RegisterEquivalenceFunc("unstructured", reflect.Struct, DefaultEquivalencePostPullUpObjectChildren)
 	RegisterEquivalenceFunc("unstructured", reflect.Slice, DefaultEquivalencePostPullUpObjectChildren)
+	RegisterEquivalenceFunc("ignore-only", reflect.Slice, IgnoreOnlyArgs)
+}
+
+const (
+	ignoreOnlyRemote    = "remote"
+	ignoreOnlyCRD       = "crd"
+	ignoreOnlyStripNS   = "strip-ns"
+	ignoreOnlyExpired   = "expired"
+	ignoreOnlyScheduled = "scheduled"
+)
+
+// IgnoreOnlyArgs ignores items present only on one side, chosen by ctx.FuncArgs[0]
+// ("remote" or "crd"). Items must implement Keyed.
+// If FuncArgs contain "strip-ns", keys are compared after stripping
+// the namespace prefix and remaining membership is compared as a set.
+// If FuncArgs contain "expired" and/or "scheduled", items implementing
+// [Expiring] / [Schedulable] that match are dropped before comparison.
+func IgnoreOnlyArgs(crd any, remote any, ctx DriftContext) Equivalence {
+	eq := EmptyIsNilLen(crd, remote, DriftContext{})
+	if eq.Equivalent == Equivalent {
+		return eq
+	}
+	cannotCompare := Equivalence{Equivalent: CannotCompare}
+	side, ok := ignoreOnlySide(ctx.FuncArgs)
+	if !ok {
+		return cannotCompare
+	}
+
+	crdItems, ok := asKeyed(crd)
+	if !ok {
+		return cannotCompare
+	}
+	remoteItems, ok := asKeyed(remote)
+	if !ok {
+		return cannotCompare
+	}
+
+	crdItems = dropHiddenKeyed(crdItems, ctx.FuncArgs)
+	remoteItems = dropHiddenKeyed(remoteItems, ctx.FuncArgs)
+	if len(crdItems) == 0 && len(remoteItems) == 0 {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+
+	stripNS := slices.Contains(ctx.FuncArgs[1:], ignoreOnlyStripNS)
+	crdNames := keys(crdItems, ctx.Namespace, stripNS)
+	remoteNames := keys(remoteItems, ctx.Namespace, stripNS)
+	if stripNS {
+		return ignoreOnlySetCompare(side, crdNames, remoteNames)
+	}
+
+	return ignoreOnlyFilters(side, ctx.FuncArgs, onlyOnSide(side, crdNames, remoteNames))
+}
+
+func ignoreOnlySetCompare(side string, crdNames, remoteNames []string) Equivalence {
+	only := onlyOnSide(side, crdNames, remoteNames)
+	left, right := crdNames, remoteNames
+	if side == ignoreOnlyCRD {
+		left = difference(crdNames, only)
+	} else {
+		right = difference(remoteNames, only)
+	}
+	slices.Sort(left)
+	slices.Sort(right)
+	if slices.Equal(left, right) {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+	return Equivalence{Equivalent: Inequivalent, Skip: true}
+}
+
+func ignoreOnlySide(args []string) (string, bool) {
+	if len(args) == 0 {
+		return "", false
+	}
+	switch args[0] {
+	case ignoreOnlyRemote, ignoreOnlyCRD:
+		return args[0], true
+	default:
+		return "", false
+	}
+}
+
+func onlyOnSide(side string, crdNames, remoteNames []string) []string {
+	if side == ignoreOnlyRemote {
+		return difference(remoteNames, crdNames)
+	}
+	return difference(crdNames, remoteNames)
+}
+
+func difference(from, without []string) []string {
+	only := make([]string, 0)
+	for _, name := range from {
+		if slices.Contains(without, name) {
+			continue
+		}
+		only = append(only, name)
+	}
+	return only
+}
+
+func ignoreOnlyFilters(side string, args, onlyIDs []string) Equivalence {
+	hiddenFilter := hiddenItemsFilterFunc(args)
+	namedSideFilter := composeFilters(hiddenFilter, itemsOnlyFilterFunc(onlyIDs))
+	if namedSideFilter == nil {
+		return Equivalence{Equivalent: CannotCompare}
+	}
+	eq := Equivalence{Equivalent: CannotCompare}
+	if side == ignoreOnlyRemote {
+		eq.CRDItemsFilterFunc = hiddenFilter
+		eq.RemoteItemsFilterFunc = namedSideFilter
+		return eq
+	}
+	eq.CRDItemsFilterFunc = namedSideFilter
+	eq.RemoteItemsFilterFunc = hiddenFilter
+	return eq
+}
+
+func composeFilters(first, second ItemsFilterFunc) ItemsFilterFunc {
+	if first == nil {
+		return second
+	}
+	if second == nil {
+		return first
+	}
+	return func(items any) []any {
+		return second(first(items))
+	}
+}
+
+func dropHiddenKeyed(items []Keyed, args []string) []Keyed {
+	wantExpired := slices.Contains(args, ignoreOnlyExpired)
+	wantScheduled := slices.Contains(args, ignoreOnlyScheduled)
+	if !wantExpired && !wantScheduled {
+		return items
+	}
+	out := make([]Keyed, 0, len(items))
+	for _, item := range items {
+		if hiddenByArgs(item, wantExpired, wantScheduled) {
+			continue
+		}
+		out = append(out, item)
+	}
+	return out
+}
+
+func hiddenItemsFilterFunc(args []string) ItemsFilterFunc {
+	wantExpired := slices.Contains(args, ignoreOnlyExpired)
+	wantScheduled := slices.Contains(args, ignoreOnlyScheduled)
+	if !wantExpired && !wantScheduled {
+		return nil
+	}
+	return func(items any) []any {
+		if items == nil {
+			return nil
+		}
+		v := reflect.ValueOf(items)
+		filtered := make([]any, 0, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			item := v.Index(i).Interface()
+			if hiddenByArgs(item, wantExpired, wantScheduled) {
+				continue
+			}
+			filtered = append(filtered, item)
+		}
+		if len(filtered) == 0 {
+			return nil
+		}
+		return filtered
+	}
+}
+
+func hiddenByArgs(item any, wantExpired, wantScheduled bool) bool {
+	if wantExpired {
+		if e, ok := item.(Expiring); ok && e.Expired() {
+			return true
+		}
+	}
+	if wantScheduled {
+		if s, ok := item.(Schedulable); ok && s.Scheduled() {
+			return true
+		}
+	}
+	return false
+}
+
+func itemsOnlyFilterFunc(onlyIDs []string) ItemsFilterFunc {
+	if len(onlyIDs) == 0 {
+		return nil
+	}
+	return func(items any) []any {
+		if items == nil {
+			return nil
+		}
+		v := reflect.ValueOf(items)
+		filtered := make([]any, 0, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			item := v.Index(i).Interface()
+			if keyed, ok := item.(Keyed); ok {
+				if slices.Contains(onlyIDs, keyed.MatchKey()) {
+					continue
+				}
+			}
+			filtered = append(filtered, item)
+		}
+		if len(filtered) == 0 {
+			return nil
+		}
+		return filtered
+	}
+}
+
+func asKeyed(items any) ([]Keyed, bool) {
+	if items == nil {
+		return []Keyed{}, true
+	}
+	v := reflect.ValueOf(items)
+	keyed := make([]Keyed, v.Len())
+	for i := 0; i < v.Len(); i++ {
+		item, ok := v.Index(i).Interface().(Keyed)
+		if !ok {
+			return nil, false
+		}
+		keyed[i] = item
+	}
+	return keyed, true
+}
+
+func keys(items []Keyed, namespace string, stripNS bool) []string {
+	names := make([]string, len(items))
+	prefix := ""
+	if stripNS && namespace != "" {
+		prefix = namespace + "-"
+	}
+	for i, item := range items {
+		name := item.MatchKey()
+		if prefix != "" {
+			name = strings.TrimPrefix(name, prefix)
+		}
+		names[i] = name
+	}
+	return names
 }
 
 // IgnoreRemoteArgs ignores the remote difference if the remote string is in the context.FuncArgs.
@@ -56,10 +297,8 @@ func IgnoreRemoteArgs(crd any, remote any, context DriftContext) Equivalence {
 	if e.Equivalent == Inequivalent {
 		rs := asString(remote)
 		if context.FuncArgs != nil {
-			for _, arg := range context.FuncArgs {
-				if arg == rs {
-					return Equivalence{Equivalent: Equivalent}
-				}
+			if slices.Contains(context.FuncArgs, rs) {
+				return Equivalence{Equivalent: Equivalent}
 			}
 		}
 	}
@@ -114,11 +353,11 @@ func RFC3339(crd any, remote any, _ DriftContext) Equivalence {
 	if crdString == "" && remoteString == "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	crdRFC3339time, err := parseRFC3339(crdString)
+	crdRFC3339time, err := dates.ParseRFC3339(crdString)
 	if err != nil {
 		return Equivalence{Equivalent: Inequivalent, Reason: err}
 	}
-	remoteRFC3339time, err := parseRFC3339(remoteString)
+	remoteRFC3339time, err := dates.ParseRFC3339(remoteString)
 	if err != nil {
 		return Equivalence{Equivalent: Inequivalent, Reason: err}
 	}
@@ -271,14 +510,6 @@ func DefaultEquivalence(crd any, remote any, _ DriftContext) Equivalence {
 
 func toZero(v any) any {
 	return reflect.Zero(reflect.TypeOf(v)).Interface()
-}
-
-func parseRFC3339(value string) (time.Time, error) {
-	t, err := time.Parse(time.RFC3339, value)
-	if err == nil {
-		return t, nil
-	}
-	return time.Parse(time.RFC3339Nano, value)
 }
 
 // asString returns the string representation of the value. Works with pure strings and typed-strings (e.g., enum)

@@ -30,6 +30,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	httputil "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
 const (
@@ -80,27 +81,24 @@ func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
 	return api, nil
 }
 
-func (svc *APIs) GetV4ByID(apiID string) (*v4.Api, error) {
-	url := svc.EnvV2Target("apis").WithPath(apiID)
-	resp := new(v4.Api)
-
-	if err := svc.HTTP.Get(url.String(), &resp); err != nil {
-		return nil, err
-	}
-
-	return resp, nil
-}
-
 // GetV4ByHRID fetches a V4 API from the Automation API by HRID. For test purposes only.
 func (svc *APIs) GetV4ByHRID(hrid string) (*model.APIV4DTO, error) {
-	url := svc.AutomationTarget("apis").WithPath(hrid)
+	return svc.getV4(svc.AutomationTarget("apis").WithPath(hrid))
+}
 
+// GetV4WithUUID fetches a pre-Automation V4 API from the Automation API by UUID.
+// For test purposes only.
+func (svc *APIs) GetV4WithUUID(apiID string) (*model.APIV4DTO, error) {
+	url := svc.AutomationTarget("apis").WithPath(apiID).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	return svc.getV4(url)
+}
+
+func (svc *APIs) getV4(url *httputil.URL) (*model.APIV4DTO, error) {
 	resp := new(model.APIV4DTO)
-
 	if err := svc.HTTP.Get(url.String(), resp); err != nil {
 		return nil, err
 	}
-
 	return resp, nil
 }
 
@@ -193,8 +191,8 @@ func (svc *APIs) Deploy(id string) error {
 }
 
 func getApiID(api core.ApiDefinitionObject) (string, bool) {
-	if k8s.IsAutomationAPIManaged(api) {
-		return refs.NewNamespacedNameFromObject(api).HRID(), false
+	if model.APIUsesUUID(api) {
+		return api.GetID(), true
 	}
-	return api.GetID(), true
+	return refs.NewNamespacedNameFromObject(api).HRID(), false
 }

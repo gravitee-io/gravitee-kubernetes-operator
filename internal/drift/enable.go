@@ -20,7 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -31,7 +31,7 @@ type Predicate func(object runtime.Object) bool
 var unsupported []Predicate
 
 func InitEnableCheck() {
-	unsupported = append(unsupported, isLegacyGroup)
+	unsupported = append(unsupported, isSubscriptionOnV2API)
 }
 
 func IsDriftEnabled(crd runtime.Object) bool {
@@ -54,14 +54,14 @@ func IsDriftEnabled(crd runtime.Object) bool {
 	return env.Config.DriftDetection.Enabled
 }
 
-func isLegacyGroup(obj runtime.Object) bool {
-	if g, ok := obj.(*v1alpha1.Group); ok {
-		if k8s.IsAutomationAPIManaged(g) {
-			return false
-		}
-		// we don't the drift detection for legacy groups
-		return true
+func isSubscriptionOnV2API(obj runtime.Object) bool {
+	sub, ok := obj.(*v1alpha1.Subscription)
+	if !ok {
+		return false
 	}
-	// not a group, pass
-	return false
+	kind := sub.GetApiRef().GetKind()
+	if kind == "" {
+		return false
+	}
+	return dynamic.ResourceFromKind(kind) == core.CRDApiDefinitionResource
 }

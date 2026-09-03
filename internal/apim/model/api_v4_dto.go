@@ -31,10 +31,10 @@ type APIV4DTO struct {
 	Labels                           []string                                        `json:"labels" drift:"empty-is-nil"`
 	Visibility                       base.ApiVisibility                              `json:"visibility,omitempty"`
 	Properties                       []*APIV4PropertyDTO                             `json:"properties" drift:"empty-is-nil"`
-	Metadata                         []*APIV4MetadataEntryDTO                        `json:"metadata" drift:"ignore-remote-only-metadata"`
+	Metadata                         []*APIV4MetadataEntryDTO                        `json:"metadata" drift:"ignore-only:remote"`
 	Resources                        []*APIV4ResourceDTO                             `json:"resources" drift:"empty-is-nil"`
-	Groups                           []string                                        `json:"groups" drift:"ignore-unknown-crd-groups"`
-	Categories                       []string                                        `json:"categories" drift:"empty-is-nil"`
+	Groups                           []APIGroup                                      `json:"groups" drift:"ignore-only:crd,strip-ns"`
+	Categories                       []APICategory                                   `json:"categories" drift:"ignore-only:crd"`
 	NotifyMembers                    bool                                            `json:"notifyMembers" drift:"empty-is-true"`
 	Description                      *string                                         `json:"description,omitempty"`
 	DefinitionVersion                base.DefinitionVersion                          `json:"definitionVersion,omitempty" drift:"ignore"`
@@ -50,7 +50,7 @@ type APIV4DTO struct {
 	ResponseTemplates                map[string]map[string]*APIV4ResponseTemplateDTO `json:"responseTemplates,omitempty"`
 	AllowedInApiProducts             *bool                                           `json:"allowedInApiProducts,omitempty"`
 	AllowMultiJwtOauth2Subscriptions *bool                                           `json:"allowMultiJwtOauth2Subscriptions,omitempty"`
-	Members                          []*APIV4MemberDTO                               `json:"members,omitempty" drift:"empty-is-nil"`
+	Members                          []*APIV4MemberDTO                               `json:"members,omitempty" drift:"ignore-only:crd"`
 	Failover                         *APIV4FailoverDTO                               `json:"failover,omitempty"`
 	PortalNavigation                 []*APIV4NavigationPathDTO                       `json:"portalNavigation,omitempty" drift:"empty-is-nil"`
 	ConsoleNotification              *APIV4ConsoleNotificationDTO                    `json:"consoleNotification,omitempty"`
@@ -70,6 +70,22 @@ type APIV4MetadataEntryDTO struct {
 	BaseMetadata `json:",inline"`
 	Key          string              `json:"key"`
 	Format       base.MetadataFormat `json:"format"`
+}
+
+func (m APIV4MetadataEntryDTO) MatchKey() string {
+	return m.Name
+}
+
+type APICategory string
+
+func (c APICategory) MatchKey() string {
+	return string(c)
+}
+
+type APIGroup string
+
+func (g APIGroup) MatchKey() string {
+	return string(g)
 }
 
 type APIV4ResourceDTO struct {
@@ -101,8 +117,8 @@ type APIV4FailoverDTO struct {
 }
 
 type APIV4ConsoleNotificationDTO struct {
-	Events []string `json:"events" drift:"empty-is-nil"`
-	Groups []string `json:"groups" drift:"ignore-unknown-crd-groups"`
+	Events []string   `json:"events" drift:"empty-is-nil"`
+	Groups []APIGroup `json:"groups" drift:"ignore-only:crd,strip-ns"`
 }
 
 type APIV4NavigationPathDTO struct {
@@ -115,6 +131,10 @@ type APIV4MemberDTO struct {
 	Source   string `json:"source"`
 	SourceID string `json:"sourceId"`
 	Role     string `json:"role,omitempty"`
+}
+
+func (m APIV4MemberDTO) MatchKey() string {
+	return m.Source + ":" + m.SourceID
 }
 
 type APIV4GenericListenerDTO struct {
