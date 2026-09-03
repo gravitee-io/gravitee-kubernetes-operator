@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	httputil "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
 const (
@@ -55,20 +56,15 @@ func (svc *Applications) Search(query string, status string) ([]model.Applicatio
 	return *applications, nil
 }
 
-// GetByID For tests purposes only.
-func (svc *Applications) GetByID(appID string) (*model.ApplicationDTO, error) {
+// GetWithUUID fetches a pre-Automation application from the Automation API by UUID.
+// For test purposes only.
+func (svc *Applications) GetWithUUID(appID string) (*model.ApplicationDTO, error) {
 	if appID == "" {
 		return nil, errors.NewNotFoundError()
 	}
-
-	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
-	app := new(model.ApplicationDTO)
-
-	if err := svc.HTTP.Get(url.String(), app); err != nil {
-		return nil, err
-	}
-
-	return app, nil
+	url := svc.AutomationTarget(applicationsPath).WithPath(appID).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	return svc.getApplication(url)
 }
 
 // GetMetadataByApplicationID For tests purposes only.
@@ -89,13 +85,14 @@ func (svc *Applications) GetMetadataByApplicationID(appID string) (*[]model.Appl
 
 // GetByHRID For test purposes only.
 func (svc *Applications) GetByHRID(hrid string) (*model.ApplicationDTO, error) {
-	url := svc.AutomationTarget(applicationsPath).WithPath(hrid)
-	app := new(model.ApplicationDTO)
+	return svc.getApplication(svc.AutomationTarget(applicationsPath).WithPath(hrid))
+}
 
+func (svc *Applications) getApplication(url *httputil.URL) (*model.ApplicationDTO, error) {
+	app := new(model.ApplicationDTO)
 	if err := svc.HTTP.Get(url.String(), app); err != nil {
 		return nil, err
 	}
-
 	return app, nil
 }
 

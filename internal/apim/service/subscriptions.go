@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	httputil "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
@@ -81,9 +82,44 @@ func (svc *Subscriptions) Subscribe(apiID, appID, planID string) (*model.Subscri
 
 // GetByHRID For tests purposes only.
 func (svc *Subscriptions) GetByHRID(apiHRID, subscriptionHRID string) (*model.SubscriptionDTO, error) {
-	url := svc.AutomationTarget("apis").WithPath(apiHRID).
-		WithPath("subscriptions").WithPath(subscriptionHRID)
+	return svc.getSubscription(svc.subscriptionURL(apiHRID, subscriptionHRID))
+}
 
+// GetByHRIDWithAPIUUID fetches an HRID-addressed subscription under a pre-Automation API UUID.
+// For tests purposes only.
+func (svc *Subscriptions) GetByHRIDWithAPIUUID(
+	apiUUID, subscriptionHRID string,
+) (*model.SubscriptionDTO, error) {
+	url := svc.subscriptionURL(apiUUID, subscriptionHRID).
+		WithQueryParam("hridContainsApiUUID", strconv.FormatBool(true))
+	return svc.getSubscription(url)
+}
+
+// GetByHRIDWithSubUUID fetches a pre-Automation subscription UUID under an HRID-addressed API.
+// For tests purposes only.
+func (svc *Subscriptions) GetByHRIDWithSubUUID(
+	apiHRID, subscriptionUUID string,
+) (*model.SubscriptionDTO, error) {
+	url := svc.subscriptionURL(apiHRID, subscriptionUUID).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	return svc.getSubscription(url)
+}
+
+// GetWithUUID fetches a pre-Automation subscription and API by UUID from the Automation API.
+// For tests purposes only.
+func (svc *Subscriptions) GetWithUUID(apiUUID, subscriptionUUID string) (*model.SubscriptionDTO, error) {
+	url := svc.subscriptionURL(apiUUID, subscriptionUUID).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true)).
+		WithQueryParam("hridContainsApiUUID", strconv.FormatBool(true))
+	return svc.getSubscription(url)
+}
+
+func (svc *Subscriptions) subscriptionURL(apiPath, subscriptionPath string) *httputil.URL {
+	return svc.AutomationTarget("apis").WithPath(apiPath).
+		WithPath("subscriptions").WithPath(subscriptionPath)
+}
+
+func (svc *Subscriptions) getSubscription(url *httputil.URL) (*model.SubscriptionDTO, error) {
 	sub := new(model.AutomationSubscriptionDTO)
 
 	if err := svc.HTTP.Get(url.String(), sub); err != nil {
@@ -91,35 +127,6 @@ func (svc *Subscriptions) GetByHRID(apiHRID, subscriptionHRID string) (*model.Su
 	}
 
 	return sub.ToLegacy(), nil
-}
-
-// GetByHRIDWithLegacyAPI For tests purposes only.
-func (svc *Subscriptions) GetByHRIDWithLegacyAPI(
-	apiUUID, subscriptionHRID string) (*model.SubscriptionDTO, error) {
-	url := svc.AutomationTarget("apis").WithPath(apiUUID).
-		WithPath("subscriptions").WithPath(subscriptionHRID).WithQueryParam("hridContainsApiUUID", "true")
-
-	sub := new(model.AutomationSubscriptionDTO)
-
-	if err := svc.HTTP.Get(url.String(), sub); err != nil {
-		return nil, err
-	}
-
-	return sub.ToLegacy(), nil
-}
-
-// GetByID For tests purposes only.
-func (svc *Subscriptions) GetByID(apiID, subscriptionID string) (*model.SubscriptionDTO, error) {
-	url := svc.EnvV2Target("apis").WithPath(apiID).
-		WithPath("subscriptions").WithPath(subscriptionID)
-
-	sub := new(model.SubscriptionDTO)
-
-	if err := svc.HTTP.Get(url.String(), sub); err != nil {
-		return nil, err
-	}
-
-	return sub, nil
 }
 
 func (svc *Subscriptions) Delete(api core.ApiDefinitionObject, subscription *v1alpha1.Subscription) error {

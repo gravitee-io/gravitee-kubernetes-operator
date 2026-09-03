@@ -41,7 +41,7 @@ func ToSubscriptionDTO(
 }
 
 // ToSubscriptionDTOForDrift maps identities to match the remote GET.
-// Management v2 (legacy subscription) returns UUIDs only. Automation returns
+// Management API (legacy subscription) returns UUIDs only. Automation returns
 // the same mixed HRID/UUID shape as ToSubscriptionDTO.
 func ToSubscriptionDTOForDrift(
 	sub *v1alpha1.Subscription,
@@ -87,7 +87,7 @@ func ApplicationUsesUUID(app core.ApplicationObject) bool {
 }
 
 // SubscriptionRemoteUsesLegacyAPI is true when the subscription is HRID-addressed
-// but the API is a pre-4.12 UUID resource. GET must use GetByHRIDWithLegacyAPI.
+// but the API is a pre-4.12 UUID resource. GET must use GetByHRIDWithAPIUUID.
 func SubscriptionRemoteUsesLegacyAPI(sub *v1alpha1.Subscription, api core.ApiDefinitionObject) bool {
 	return !SubscriptionUsesUUID(sub) && APIUsesUUID(api)
 }

@@ -26,6 +26,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	httputil "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
 const (
@@ -41,43 +42,43 @@ func NewSharedPolicyGroup(client *client.Client) *SharedPolicyGroup {
 	return &SharedPolicyGroup{Client: client}
 }
 
-// GetByID For tests purposes only.
-func (svc *SharedPolicyGroup) GetByID(id string) (*model.SharedPolicyGroupDTO, error) {
+// GetWithUUID fetches a pre-Automation shared policy group from the Automation API by UUID.
+// For test purposes only.
+func (svc *SharedPolicyGroup) GetWithUUID(id string) (*model.SharedPolicyGroupDTO, error) {
 	if id == "" {
 		return nil, errors.NewNotFoundError()
 	}
-
-	url := svc.EnvV2Target(sharedPolicyGroupsPath).WithPath(id)
-	sg := new(model.SharedPolicyGroupDTO)
-
-	if err := svc.HTTP.Get(url.String(), sg); err != nil {
-		return nil, err
-	}
-
-	return sg, nil
+	url := svc.AutomationTarget(sharedPolicyGroupsPath).WithPath(id).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	return svc.getSharedPolicyGroup(url)
 }
 
 // GetAutomationSpecByHRID fetches the automation API spec shape. For test purposes only.
 func (svc *SharedPolicyGroup) GetAutomationSpecByHRID(hrid string) (*sharedpolicygroups.SharedPolicyGroup, error) {
 	url := svc.AutomationTarget(sharedPolicyGroupsPath).WithPath(hrid)
-	sg := new(sharedpolicygroups.SharedPolicyGroup)
-
-	if err := svc.HTTP.Get(url.String(), sg); err != nil {
-		return nil, err
-	}
-
-	return sg, nil
+	return svc.getAutomationSpec(url)
 }
 
 // GetByHRID For test purposes only.
 func (svc *SharedPolicyGroup) GetByHRID(hrid string) (*model.SharedPolicyGroupDTO, error) {
-	url := svc.AutomationTarget(sharedPolicyGroupsPath).WithPath(hrid)
-	sg := new(model.SharedPolicyGroupDTO)
+	return svc.getSharedPolicyGroup(svc.AutomationTarget(sharedPolicyGroupsPath).WithPath(hrid))
+}
 
+func (svc *SharedPolicyGroup) getSharedPolicyGroup(url *httputil.URL) (*model.SharedPolicyGroupDTO, error) {
+	sg := new(model.SharedPolicyGroupDTO)
 	if err := svc.HTTP.Get(url.String(), sg); err != nil {
 		return nil, err
 	}
+	return sg, nil
+}
 
+func (svc *SharedPolicyGroup) getAutomationSpec(
+	url *httputil.URL,
+) (*sharedpolicygroups.SharedPolicyGroup, error) {
+	sg := new(sharedpolicygroups.SharedPolicyGroup)
+	if err := svc.HTTP.Get(url.String(), sg); err != nil {
+		return nil, err
+	}
 	return sg, nil
 }
 
