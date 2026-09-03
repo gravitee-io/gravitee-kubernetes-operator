@@ -21,7 +21,7 @@
             "name": "Foo",
             "content": "CERTIFICATE",
             "startsAt": "2023-07-25T20:43:16-03:00",
-            "endsAt": "2024-07-25T20:43:16-03:00",
+            "endsAt": "2099-07-25T20:43:16-03:00",
             "encoded": true,
             "ref": {
               "kind": "secrets",
