@@ -15,8 +15,12 @@
 package model
 
 import (
+	"strings"
+	"time"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/dates"
 )
 
 type ApplicationDTO struct {
@@ -61,7 +65,7 @@ type ApplicationOAuthClientSettingsDTO struct {
 
 type ApplicationTLSSettingsDTO struct {
 	ClientCertificate  string                            `json:"clientCertificate,omitempty" drift:"trimmed"`
-	ClientCertificates []ApplicationClientCertificateDTO `json:"clientCertificates,omitempty" drift:"empty-is-nil"`
+	ClientCertificates []ApplicationClientCertificateDTO `json:"clientCertificates,omitempty" drift:"ignore-only:crd,expired,scheduled"`
 }
 
 type ApplicationClientCertificateDTO struct {
@@ -71,6 +75,28 @@ type ApplicationClientCertificateDTO struct {
 	StartsAt string                        `json:"startsAt,omitempty" drift:"rfc3339"`
 	EndsAt   string                        `json:"endsAt,omitempty" drift:"rfc3339"`
 	Encoded  bool                          `json:"encoded,omitempty"`
+}
+
+// Expired reports whether EndsAt is set and already in the past.
+// Missing or unparseable EndsAt is treated as not expired.
+func (c ApplicationClientCertificateDTO) Expired() bool {
+	t, err := dates.ParseRFC3339(c.EndsAt)
+	return err == nil && time.Now().After(t)
+}
+
+// Scheduled reports whether StartsAt is set and still in the future.
+// Missing or unparseable StartsAt is treated as not scheduled.
+func (c ApplicationClientCertificateDTO) Scheduled() bool {
+	t, err := dates.ParseRFC3339(c.StartsAt)
+	return err == nil && time.Now().Before(t)
+}
+
+// MatchKey identifies the certificate for ignore-only comparison.
+func (c ApplicationClientCertificateDTO) MatchKey() string {
+	if c.Name != "" {
+		return c.Name
+	}
+	return strings.TrimSpace(c.Content)
 }
 
 type ApplicationCertificateRefDTO struct {
