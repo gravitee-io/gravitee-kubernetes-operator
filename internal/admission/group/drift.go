@@ -16,13 +16,12 @@ package group
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -46,14 +45,26 @@ func toGroupPayload(grp *v1alpha1.Group) model.GroupDTO {
 }
 
 func getRemoteGroup(apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
-	grp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(grp))
-	hrid, legacy := service.GetGroupID(grp)
-	if legacy {
-		return nil, fmt.Errorf("drift detection is not supported for legacy Group [%s]", grp.GetRef())
+	automation := k8s.IsAutomationAPIManaged(grp)
+	grp.PopulateIDs(apimClient.Context, automation)
+	var (
+		remote model.GroupState
+		err    error
+	)
+	if !automation && grp.GetID() != "" {
+		remote, err = apimClient.Env.GetGroupWithUUID(grp.GetID())
+	} else {
+		remote, err = apimClient.Env.GetGroupByHRID(groupHRID(grp))
 	}
-	remote, err := apimClient.Env.GetGroupByHRID(hrid)
 	if err != nil {
 		return nil, err
 	}
 	return remote.GroupDTO, nil
+}
+
+func groupHRID(grp *v1alpha1.Group) string {
+	if grp.Spec.HRID != "" {
+		return grp.Spec.HRID
+	}
+	return refs.NewNamespacedNameFromObject(grp).HRID()
 }

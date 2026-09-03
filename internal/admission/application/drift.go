@@ -17,6 +17,7 @@ package application
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -46,16 +47,23 @@ func resolveAppRefs(ctx context.Context, app *v1alpha1.Application) error {
 func getRemoteApp(apimClient *apim.APIM, app *v1alpha1.Application) (any, error) {
 	automation := k8s.IsAutomationAPIManaged(app)
 	app.PopulateIDs(apimClient.Context, automation)
-	if automation {
-		remoteApp, err := apimClient.Applications.GetByHRID(app.Spec.HRID)
+	if !automation && app.GetID() != "" {
+		remoteApp, err := apimClient.Applications.GetWithUUID(app.GetID())
 		if err != nil {
 			return nil, err
 		}
 		return *remoteApp, nil
 	}
-	remoteApp, err := apimClient.Applications.GetByID(app.Spec.ID)
+	remoteApp, err := apimClient.Applications.GetByHRID(appHRID(app))
 	if err != nil {
 		return nil, err
 	}
 	return *remoteApp, nil
+}
+
+func appHRID(app *v1alpha1.Application) string {
+	if app.Spec.HRID != "" {
+		return app.Spec.HRID
+	}
+	return refs.NewNamespacedNameFromObject(app).HRID()
 }
