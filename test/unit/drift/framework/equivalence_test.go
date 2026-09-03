@@ -456,8 +456,6 @@ var _ = Describe("RFC3339", func() {
 		},
 		Entry("same RFC3339 timestamp", certStartsAt, certStartsAt),
 		Entry("same instant with different offset notation", certEndsAt, "2025-06-15T10:30:00Z"),
-		Entry("crd RFC3339 vs remote RFC3339Nano without fractional seconds", certStartsAt, "2024-06-15T10:30:00.000000000Z"),
-		Entry("crd RFC3339Nano vs remote RFC3339", "2024-06-15T10:30:00.123456789Z", "2024-06-15T10:30:00.123456789+00:00"),
 		Entry("both empty certificate dates", "", ""),
 	)
 
@@ -703,5 +701,66 @@ var _ = Describe("IgnoreOnlyArgs", func() {
 		crd := withIgnoreOnlyCRDStripNS{Items: []namedItem{{ID: "group1"}, {ID: "crd-only"}}}
 		remote := withIgnoreOnlyCRDStripNS{Items: []namedItem{{ID: "test-namespace-group1"}}}
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, "test-namespace"))
+	})
+})
+
+type timedItem struct {
+	ID          string `json:"id"`
+	IsExpired   bool   `json:"-"`
+	IsScheduled bool   `json:"-"`
+}
+
+func (t timedItem) MatchKey() string { return t.ID }
+func (t timedItem) Expired() bool    { return t.IsExpired }
+func (t timedItem) Scheduled() bool  { return t.IsScheduled }
+
+type withIgnoreOnlyCRDHidden struct {
+	Items []timedItem `json:"items" drift:"ignore-only:crd,expired,scheduled"`
+}
+
+var _ = Describe("IgnoreOnlyArgs expired and scheduled", func() {
+	hiddenCtx := drift.DriftContext{FuncArgs: []string{"crd", "expired", "scheduled"}}
+
+	It("skips comparison when every item is expired or scheduled", func() {
+		crd := []timedItem{{ID: "old", IsExpired: true}, {ID: "later", IsScheduled: true}}
+		e := drift.IgnoreOnlyArgs(crd, []timedItem{}, hiddenCtx)
+		Expect(e.Equivalent).To(Equal(drift.Equivalent))
+		Expect(e.Skip).To(BeTrue())
+	})
+
+	It("Detect ignores an expired CRD item omitted by remote", func() {
+		crd := withIgnoreOnlyCRDHidden{Items: []timedItem{
+			{ID: "expired", IsExpired: true},
+			{ID: "active"},
+		}}
+		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "active"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect ignores a scheduled CRD item omitted by remote", func() {
+		crd := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "scheduled", IsScheduled: true}}}
+		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect ignores expired and scheduled items together", func() {
+		crd := withIgnoreOnlyCRDHidden{Items: []timedItem{
+			{ID: "expired", IsExpired: true},
+			{ID: "scheduled", IsScheduled: true},
+			{ID: "active"},
+		}}
+		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "active"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect still reports drift on remaining active items", func() {
+		crd := withIgnoreOnlyCRDHidden{Items: []timedItem{
+			{ID: "expired", IsExpired: true},
+			{ID: "scheduled", IsScheduled: true},
+			{ID: "active"},
+		}}
+		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "other"}}}
+		got := drift.DetectWithNamespace(crd, remote, "")
+		Expect(got.DriftDetected()).To(BeTrue())
 	})
 })

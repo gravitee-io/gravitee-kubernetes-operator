@@ -83,6 +83,8 @@
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
 //   - ignore-only (slice): filters items present only on the side given by the tag argument (remote or crd).
 //     With strip-ns, remaining keys are compared as a set after stripping the namespace prefix.
+//     With expired and/or scheduled, items implementing [Expiring] / [Schedulable] are dropped first
+//     (APIM omits those client certificates from GET responses).
 //   - unstructured (struct): for unstructured types; hoists "object" child fields to root via PostFunc.
 //
 // # Drift Tag Function Arguments
@@ -115,16 +117,22 @@
 // ### ignore-only
 //
 // Syntax: `drift:"ignore-only:remote"` or `drift:"ignore-only:crd"` or `drift:"ignore-only:crd,strip-ns"`
+// or `drift:"ignore-only:crd,expired,scheduled"`
 //
 // Filters slice items that exist only on the named side before item comparison.
 // Items must implement [Keyed].
 // With `strip-ns`, keys are compared after stripping the namespace prefix
 // and remaining membership is compared as a set (Skip).
+// With `expired`, items implementing [Expiring] whose [Expiring.Expired] is true are
+// dropped on both sides (GKO-2221: APIM omits expired client certificates).
+// With `scheduled`, items implementing [Schedulable] whose [Schedulable.Scheduled] is true
+// are dropped on both sides (GKO-2228: APIM omits future-startsAt certificates).
 //
 // Example:
 //
 //	Metadata []*APIV4MetadataEntryDTO `json:"metadata" drift:"ignore-only:remote"`
 //	Groups   []APIGroup               `json:"groups" drift:"ignore-only:crd,strip-ns"`
+//	ClientCertificates []ApplicationClientCertificateDTO `json:"clientCertificates,omitempty" drift:"ignore-only:crd,expired,scheduled"`
 //
 // ### ignore-namespace-prefix
 //
