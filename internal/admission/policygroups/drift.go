@@ -51,16 +51,16 @@ func getRemoteSharedPolicyGroup(
 	apimClient *apim.APIM,
 	spg *v1alpha1.SharedPolicyGroup,
 ) (any, error) {
-	spg.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(spg))
-	id, legacy := sharedPolicyGroupID(spg)
+	automation := k8s.IsAutomationAPIManaged(spg)
+	spg.PopulateIDs(apimClient.Context, automation)
 	var (
 		remote *model.SharedPolicyGroupDTO
 		err    error
 	)
-	if legacy {
-		remote, err = apimClient.SharedPolicyGroup.GetByID(id)
+	if !automation && spg.GetID() != "" {
+		remote, err = apimClient.SharedPolicyGroup.GetWithUUID(spg.GetID())
 	} else {
-		remote, err = apimClient.SharedPolicyGroup.GetByHRID(id)
+		remote, err = apimClient.SharedPolicyGroup.GetByHRID(sharedPolicyGroupHRID(spg))
 	}
 	if err != nil {
 		return nil, err
@@ -68,9 +68,9 @@ func getRemoteSharedPolicyGroup(
 	return *remote, nil
 }
 
-func sharedPolicyGroupID(spg *v1alpha1.SharedPolicyGroup) (string, bool) {
-	if k8s.IsAutomationAPIManaged(spg) {
-		return refs.NewNamespacedNameFromObject(spg).HRID(), false
+func sharedPolicyGroupHRID(spg *v1alpha1.SharedPolicyGroup) string {
+	if spg.Spec.HRID != "" {
+		return spg.Spec.HRID
 	}
-	return spg.GetID(), true
+	return refs.NewNamespacedNameFromObject(spg).HRID()
 }

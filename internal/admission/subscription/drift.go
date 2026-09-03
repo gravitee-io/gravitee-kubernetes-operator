@@ -45,23 +45,24 @@ func mergeDriftValidation(
 
 func remoteSubscriptionGetter(api core.ApiDefinitionObject) drift.RemoteObjectGetter[*v1alpha1.Subscription] {
 	return func(apimClient *apim.APIM, sub *v1alpha1.Subscription) (any, error) {
-		if model.SubscriptionUsesUUID(sub) {
-			remoteSub, err := apimClient.Subscription.GetByID(api.GetID(), sub.Status.ID)
-			if err != nil {
-				return nil, err
-			}
-			return *remoteSub, nil
-		}
 		subHRID := refs.NewNamespacedNameFromObject(sub).HRID()
-		if model.SubscriptionRemoteUsesLegacyAPI(sub, api) {
-			remoteSub, err := apimClient.Subscription.GetByHRIDWithLegacyAPI(api.GetID(), subHRID)
-			if err != nil {
-				return nil, err
-			}
-			return *remoteSub, nil
+		var (
+			remoteSub *model.SubscriptionDTO
+			err       error
+		)
+
+		switch {
+		case model.SubscriptionUsesUUID(sub) && model.APIUsesUUID(api):
+			remoteSub, err = apimClient.Subscription.GetWithUUID(api.GetID(), sub.Status.ID)
+		case model.SubscriptionUsesUUID(sub):
+			apiHRID := refs.NewNamespacedNameFromObject(api).HRID()
+			remoteSub, err = apimClient.Subscription.GetByHRIDWithSubUUID(apiHRID, sub.Status.ID)
+		case model.SubscriptionRemoteUsesLegacyAPI(sub, api):
+			remoteSub, err = apimClient.Subscription.GetByHRIDWithAPIUUID(api.GetID(), subHRID)
+		default:
+			apiHRID := refs.NewNamespacedNameFromObject(api).HRID()
+			remoteSub, err = apimClient.Subscription.GetByHRID(apiHRID, subHRID)
 		}
-		apiHRID := refs.NewNamespacedNameFromObject(api).HRID()
-		remoteSub, err := apimClient.Subscription.GetByHRID(apiHRID, subHRID)
 		if err != nil {
 			return nil, err
 		}

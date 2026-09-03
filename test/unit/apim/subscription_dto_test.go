@@ -122,9 +122,9 @@ var _ = Describe("ToSubscriptionDTO", func() {
 		},
 		Entry("HRID sub + V4 managed API → GetByHRID",
 			newSub("e2e-sub-jwt-v4", "", false), newAPI(true), false),
-		Entry("HRID sub + V2 UUID API → GetByHRIDWithLegacyAPI",
+		Entry("HRID sub + V2 UUID API → GetByHRIDWithAPIUUID",
 			newSub("e2e-sub-jwt-v2", "", false), newV2API(), true),
-		Entry("legacy UUID sub + V2 API → GetByID, not legacy-API HRID",
+		Entry("legacy UUID sub + V2 API → GetWithUUID",
 			newSub("e2e-sub-jwt-v2", "sub-uuid-1", false), newV2API(), false),
 	)
 

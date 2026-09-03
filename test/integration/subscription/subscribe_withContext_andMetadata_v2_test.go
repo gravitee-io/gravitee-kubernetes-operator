@@ -72,7 +72,7 @@ var _ = Describe("Subscription metadata management with v2 API", labels.WithCont
 
 		Eventually(func() error {
 			subHrid := refs.NewNamespacedNameFromObject(fixtures.Subscription).HRID()
-			sub, err := client.Subscriptions.GetByHRIDWithLegacyAPI(
+			sub, err := client.Subscriptions.GetByHRIDWithAPIUUID(
 				fixtures.API.Status.ID,
 				subHrid,
 			)
@@ -97,7 +97,7 @@ var _ = Describe("Subscription metadata management with v2 API", labels.WithCont
 
 		Eventually(func() error {
 			subHrid := refs.NewNamespacedNameFromObject(fixtures.Subscription).HRID()
-			sub, err := client.Subscriptions.GetByHRIDWithLegacyAPI(
+			sub, err := client.Subscriptions.GetByHRIDWithAPIUUID(
 				fixtures.API.Status.ID,
 				subHrid,
 			)

@@ -35,24 +35,6 @@ var _ = Describe("Drift enablement", func() {
 	})
 
 	DescribeTable(
-		"unsupported predicate always excludes (legacy group)",
-		func(cfg bool, annotatedValue *string) {
-			env.Config.DriftDetection.Enabled = cfg
-
-			g := &v1alpha1.Group{}
-			if annotatedValue != nil {
-				g.Annotations = map[string]string{core.DriftDetectionAnnotation: *annotatedValue}
-			}
-
-			Expect(drift.IsDriftEnabled(g)).To(BeFalse())
-		},
-		Entry("config=true, annotation=true", true, new(env.TrueString)),
-		Entry("config=true, annotation=false", true, new(env.FalseString)),
-		Entry("config=true, annotation missing", true, nil),
-		Entry("config=false, annotation=true", false, new(env.TrueString)),
-	)
-
-	DescribeTable(
 		"unsupported predicate always excludes (subscription on definition-v2 API)",
 		func(cfg bool, annotatedValue *string) {
 			env.Config.DriftDetection.Enabled = cfg

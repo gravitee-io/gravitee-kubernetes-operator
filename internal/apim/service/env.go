@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	httputil "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
@@ -103,9 +104,20 @@ func (svc *Env) Get() (*model.Env, error) {
 	return env, nil
 }
 
-// GetGroupByHRID gets a group by its hrid.
+// GetGroupByHRID gets a group by HRID from the Automation API.
 func (svc *Env) GetGroupByHRID(hrid string) (model.GroupState, error) {
 	url := svc.AutomationTarget("groups").WithPath(hrid)
+	return svc.getGroup(url)
+}
+
+// GetGroupWithUUID gets a pre-Automation group by UUID from the Automation API.
+func (svc *Env) GetGroupWithUUID(id string) (model.GroupState, error) {
+	url := svc.AutomationTarget("groups").WithPath(id).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	return svc.getGroup(url)
+}
+
+func (svc *Env) getGroup(url *httputil.URL) (model.GroupState, error) {
 	grp := new(model.GroupState)
 	if err := svc.HTTP.Get(url.String(), grp); err != nil {
 		return model.GroupState{}, err
