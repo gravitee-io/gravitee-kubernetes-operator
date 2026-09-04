@@ -5,7 +5,8 @@
     {
       "path": "/projects/alpha",
       "displayName": "Alpha",
-      "order": 1
+      "order": 1,
+      "visibility": "PRIVATE"
     }
   ],
   "activeThemeHrid": "default-brand-theme"

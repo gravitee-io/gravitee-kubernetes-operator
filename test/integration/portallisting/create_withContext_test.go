@@ -17,6 +17,7 @@ package portallisting
 import (
 	"context"
 
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -32,6 +33,41 @@ var _ = Describe("Create", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	ctx := context.Background()
+
+	It("should create portal listing in APIM with a declared per-entry visibility", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithAPIv4(constants.ApiV4WithContextFile).
+			WithPortal(constants.PortalFileDeprecated).
+			WithPortalListing(constants.PortalListingFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build()
+
+		fixtures.PortalListing.Spec.APIs[0].Visibility = new(nav.Private)
+
+		fixtures.Apply()
+
+		By("expecting portal listing status to be completed")
+
+		Expect(assert.PortalListingAccepted(fixtures.PortalListing)).To(Succeed())
+
+		By("calling rest API, expecting the declared visibility to round-trip on the entry")
+
+		apim := apim.NewClient(ctx)
+		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		listingHrid := refs.NewNamespacedNameFromObject(fixtures.PortalListing).HRID()
+
+		Eventually(func() error {
+			listing, listingErr := apim.Listings.GetByHRID(portalHrid, listingHrid)
+			if listingErr != nil {
+				return listingErr
+			}
+			if err := assert.NotEmptySlice("Portal listing apis", listing.APIs); err != nil {
+				return err
+			}
+			return assert.Equals("Portal listing entry visibility", nav.Private, listing.APIs[0].Visibility)
+		}, timeout, interval).Should(Succeed(), fixtures.PortalListing.Name)
+	})
 
 	It("should create portal listing in APIM and persist apis in list order", func() {
 		fixtures := fixture.Builder().

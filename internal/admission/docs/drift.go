@@ -69,13 +69,14 @@ func getRemoteDocumentation(parent service.DocumentationParent) drift.RemoteObje
 			return nil, err
 		}
 		return model.DocumentationDTO{
-			HRID:     remote.HRID,
-			Name:     remote.Name,
-			PageType: remote.PageType,
-			Content:  remote.Content,
-			Location: remote.Location,
-			Order:    remote.Order,
-			Area:     remote.Area,
+			HRID:       remote.HRID,
+			Name:       remote.Name,
+			PageType:   remote.PageType,
+			Content:    remote.Content,
+			Location:   remote.Location,
+			Order:      remote.Order,
+			Area:       remote.Area,
+			Visibility: remote.Visibility,
 		}, nil
 	}
 }

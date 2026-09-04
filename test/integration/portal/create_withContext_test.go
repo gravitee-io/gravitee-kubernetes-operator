@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	prtlmodel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -84,6 +85,55 @@ var _ = Describe("Create", labels.WithContext, func() {
 				return fmt.Errorf("expected portal structure to be set, got none")
 			}
 			return assert.ContainsInOrder("Portal top navbar", expectedPaths, pathsOfDTO(prtl.Structure.TopNavbar))
+		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
+	})
+
+	It("should round-trip a declared entry visibility and leave an undeclared one unset", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortal(constants.PortalFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build()
+
+		// Only the first entry declares a visibility. The second is left alone so the
+		// assertion below covers both halves of the contract in one round-trip.
+		navbar := fixtures.Portal.Spec.Structure.TopNavbar
+		navbar[0].Visibility = new(nav.Private)
+
+		fixtures.Apply()
+
+		By("expecting portal status to be completed")
+
+		Expect(assert.PortalAccepted(fixtures.Portal)).To(Succeed())
+
+		By("calling rest API, expecting the declared visibility to round-trip and the undeclared one to stay unset")
+
+		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		declaredPath, undeclaredPath := navbar[0].Path, navbar[1].Path
+
+		Eventually(func() error {
+			prtl, prtlErr := apim.Portals.GetByHRID(hrid)
+			if prtlErr != nil {
+				return prtlErr
+			}
+			if prtl.Structure == nil {
+				return fmt.Errorf("expected portal structure to be set, got none")
+			}
+			visibilityByPath := make(map[string]nav.Visibility, len(prtl.Structure.TopNavbar))
+			for _, entry := range prtl.Structure.TopNavbar {
+				visibilityByPath[entry.Path] = entry.Visibility
+			}
+			if err := assert.Equals(
+				"Portal top navbar declared visibility", nav.Private, visibilityByPath[declaredPath],
+			); err != nil {
+				return err
+			}
+			// GKO omits visibility when the CRD leaves it unset, so APIM has nothing to
+			// echo back for this entry and resolves it from the parent at materialisation.
+			return assert.Equals(
+				"Portal top navbar undeclared visibility", nav.Visibility(""), visibilityByPath[undeclaredPath],
+			)
 		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
 	})
 

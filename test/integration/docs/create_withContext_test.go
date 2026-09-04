@@ -18,6 +18,7 @@ import (
 	"context"
 
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	. "github.com/onsi/ginkgo/v2"
@@ -66,6 +67,73 @@ var _ = Describe("Create", labels.WithContext, func() {
 			}
 			// No spec.area in the fixture: GKO omits the field, APIM falls back to TOP_NAVBAR.
 			return assert.Equals("Documentation area", documentation.TopNavbar, doc.Area)
+		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
+	})
+
+	It("should inherit the parent folder visibility when the page declares none", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortal(constants.PortalFile).
+			WithDocumentation(constants.DocumentationPortalFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build()
+
+		// The folder the page is filed under is private; the page itself says nothing.
+		// GKO must omit visibility so APIM resolves it from the parent — sending PUBLIC
+		// by default would be rejected here by the parent-must-be-public rule.
+		fixtures.Portal.Spec.Structure.TopNavbar[0].Visibility = new(nav.Private)
+
+		fixtures.Apply()
+
+		By("expecting documentation status to be completed")
+
+		Expect(assert.DocumentationAccepted(fixtures.Documentation)).To(Succeed())
+
+		By("calling rest API, expecting the page to have inherited PRIVATE from its folder")
+
+		apimClient := apim.NewClient(ctx)
+		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
+
+		Eventually(func() error {
+			doc, docErr := apimClient.Documentations.GetByHRID(
+				service.DocumentationParent{Portal: fixtures.Portal}, docHrid,
+			)
+			if docErr != nil {
+				return docErr
+			}
+			return assert.Equals("Documentation visibility", nav.Private, doc.Visibility)
+		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
+	})
+
+	It("should create a portal-attached documentation page with a declared visibility", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortal(constants.PortalFile).
+			WithDocumentation(constants.DocumentationPortalFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build()
+
+		fixtures.Documentation.Spec.Visibility = new(nav.Private)
+
+		fixtures.Apply()
+
+		By("expecting documentation status to be completed")
+
+		Expect(assert.DocumentationAccepted(fixtures.Documentation)).To(Succeed())
+
+		By("calling rest API, expecting the declared visibility to be applied to the page")
+
+		apimClient := apim.NewClient(ctx)
+		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
+
+		Eventually(func() error {
+			doc, docErr := apimClient.Documentations.GetByHRID(
+				service.DocumentationParent{Portal: fixtures.Portal}, docHrid,
+			)
+			if docErr != nil {
+				return docErr
+			}
+			return assert.Equals("Documentation visibility", nav.Private, doc.Visibility)
 		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
 	})
 

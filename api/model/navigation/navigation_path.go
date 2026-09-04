@@ -29,4 +29,10 @@ type NavigationPath struct {
 	// Listing a path explicitly is the only way to attach an order.
 	// +kubebuilder:validation:Optional
 	Order *int32 `json:"order,omitempty"`
+	// Whether this entry is shown to anonymous visitors of the portal.
+	// Left unset, APIM resolves it: the entry inherits the visibility of its
+	// parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under
+	// a PRIVATE parent is rejected.
+	// +kubebuilder:validation:Optional
+	Visibility *Visibility `json:"visibility,omitempty"`
 }

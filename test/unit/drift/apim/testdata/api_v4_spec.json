@@ -383,7 +383,8 @@
     {
       "path": "/guides",
       "displayName": "Guides",
-      "order": 1
+      "order": 1,
+      "visibility": "PRIVATE"
     }
   ],
   "consoleNotification": {

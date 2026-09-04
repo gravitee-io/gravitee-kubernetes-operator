@@ -4,7 +4,8 @@
     {
       "apiHrid": "default-api-v4-with-context",
       "location": "/projects/alpha",
-      "order": 1
+      "order": 1,
+      "visibility": "PRIVATE"
     }
   ]
 }

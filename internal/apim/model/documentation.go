@@ -16,6 +16,7 @@ package model
 
 import (
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
@@ -32,6 +33,8 @@ type DocumentationDTO struct {
 	Order    *int32                 `json:"order,omitempty"`
 	// Unset is omitted so that APIM applies its own TOP_NAVBAR default.
 	Area documentation.PageArea `json:"area,omitempty" drift:"ignore-remote:TOP_NAVBAR"`
+	// Unset is omitted so that APIM resolves the visibility from the parent folder.
+	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
 }
 
 type DocumentationState struct {
