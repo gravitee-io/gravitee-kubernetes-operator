@@ -21,6 +21,7 @@
 package docs
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -64,6 +65,11 @@ func (in *Type) DeepCopyInto(out *Type) {
 	if in.Area != nil {
 		in, out := &in.Area, &out.Area
 		*out = new(PageArea)
+		**out = **in
+	}
+	if in.Visibility != nil {
+		in, out := &in.Visibility, &out.Visibility
+		*out = new(navigation.Visibility)
 		**out = **in
 	}
 	if in.Portal != nil {

@@ -14,7 +14,8 @@
       "topNavbar": [
         {
           "path": "/projects/alpha",
-          "displayName": "Alpha"
+          "displayName": "Alpha",
+          "visibility": "PRIVATE"
         }
       ]
     },

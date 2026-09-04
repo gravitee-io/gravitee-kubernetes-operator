@@ -15,6 +15,7 @@
 package apim
 
 import (
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -56,6 +57,18 @@ var _ = Describe("Portal Drift detection", func() {
 				refs.NewNamespacedNameFromObject(completePortalCRDWithStructure()).HRID(),
 				completePortalCRDWithStructure().ActiveThemeHRID(),
 			),
+		),
+		Entry("unset visibility equivalent to any remote visibility resolved by APIM",
+			model.PortalDTO{
+				Structure: &model.NavigationStructureDTO{
+					TopNavbar: []*model.NavigationEntryDTO{{Path: "/alpha"}},
+				},
+			},
+			model.PortalDTO{
+				Structure: &model.NavigationStructureDTO{
+					TopNavbar: []*model.NavigationEntryDTO{{Path: "/alpha", Visibility: nav.Private}},
+				},
+			},
 		),
 	)
 

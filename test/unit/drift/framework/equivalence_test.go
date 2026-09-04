@@ -257,6 +257,57 @@ var _ = Describe("IgnoreRemoteArgs", func() {
 	})
 })
 
+var _ = Describe("IgnoreUnset", func() {
+	type namedString string
+
+	DescribeTable("should report equivalence",
+		func(crd, remote any) {
+			Expect(drift.IgnoreUnset(crd, remote, drift.DriftContext{})).To(Equal(
+				drift.Equivalence{Equivalent: drift.Equivalent},
+			))
+		},
+		Entry("equal strings", "PRIVATE", "PRIVATE"),
+		Entry("both nil", nil, nil),
+		Entry("both empty", "", ""),
+		Entry("unset crd vs remote value", "", "PUBLIC"),
+		Entry("unset crd vs any other remote value", "", "PRIVATE"),
+		Entry("nil crd vs remote value", nil, "PUBLIC"),
+		Entry("unset named string vs remote value", namedString(""), namedString("PUBLIC")),
+	)
+
+	DescribeTable("should report inequivalence",
+		func(crd, remote any) {
+			Expect(drift.IgnoreUnset(crd, remote, drift.DriftContext{})).To(Equal(
+				drift.Equivalence{Equivalent: drift.Inequivalent},
+			))
+		},
+		Entry("set crd vs different remote", "PRIVATE", "PUBLIC"),
+		Entry("set crd vs unset remote", "PRIVATE", ""),
+		Entry("set crd vs nil remote", "PRIVATE", nil),
+		Entry("set named string vs different remote", namedString("PRIVATE"), namedString("PUBLIC")),
+	)
+
+	It("treats an unset crd value as equivalent through Detect", func() {
+		type withIgnoreUnset struct {
+			Visibility string `json:"visibility" drift:"ignore-unset"`
+		}
+		crd := withIgnoreUnset{}
+		remote := withIgnoreUnset{Visibility: "PRIVATE"}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("detects drift when the crd value is set and the remote value changed", func() {
+		type withIgnoreUnset struct {
+			Visibility string `json:"visibility" drift:"ignore-unset"`
+		}
+		crd := withIgnoreUnset{Visibility: "PRIVATE"}
+		remote := withIgnoreUnset{Visibility: "PUBLIC"}
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`visibility: "PRIVATE" != "PUBLIC"`))
+	})
+})
+
 var _ = Describe("CaseInsensitive drift tags", func() {
 	DescribeTable("should report equivalence", func(a, b any) {
 		e := drift.CaseInsensitive(a, b, drift.DriftContext{})

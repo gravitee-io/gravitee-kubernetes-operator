@@ -16,6 +16,7 @@ package apim
 
 import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
@@ -116,6 +117,14 @@ var _ = Describe("API v4 Drift detection", func() {
 					Enabled:                true,
 					ReporterMetricsEnabled: new(true),
 				},
+			},
+		),
+		Entry("unset portal navigation visibility equivalent to any remote visibility resolved by APIM",
+			model.APIV4DTO{
+				PortalNavigation: []*model.APIV4NavigationPathDTO{{Path: "/guides"}},
+			},
+			model.APIV4DTO{
+				PortalNavigation: []*model.APIV4NavigationPathDTO{{Path: "/guides", Visibility: nav.Private}},
 			},
 		),
 	)

@@ -15,6 +15,7 @@
 package model
 
 import (
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
 )
 
@@ -28,9 +29,10 @@ type PortalDTO struct {
 }
 
 type NavigationPathDTO struct {
-	Path        string  `json:"path"`
-	DisplayName *string `json:"displayName,omitempty"`
-	Order       *int32  `json:"order,omitempty"`
+	Path        string         `json:"path"`
+	DisplayName *string        `json:"displayName,omitempty"`
+	Order       *int32         `json:"order,omitempty"`
+	Visibility  nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
 }
 
 type NavigationStructureDTO struct {
@@ -38,8 +40,9 @@ type NavigationStructureDTO struct {
 }
 
 type NavigationEntryDTO struct {
-	Path        string  `json:"path"`
-	DisplayName *string `json:"displayName,omitempty"`
+	Path        string         `json:"path"`
+	DisplayName *string        `json:"displayName,omitempty"`
+	Visibility  nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
 }
 
 type PortalState struct {

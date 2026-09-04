@@ -15,6 +15,7 @@
 package apim
 
 import (
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -39,6 +40,12 @@ var _ = Describe("PortalLink Drift detection", func() {
 		Entry("equal struct from CRD mapping",
 			completePortalLinkDTO(),
 			model.ToPortalLinkDTO(completePortalLinkCRD().Spec.Type, refs.NewNamespacedNameFromObject(completePortalLinkCRD()).HRID()),
+		),
+		Entry("unset visibility equivalent to any remote visibility resolved by APIM",
+			model.PortalLinkDTO{},
+			model.PortalLinkDTO{
+				Visibility: nav.Private,
+			},
 		),
 	)
 
