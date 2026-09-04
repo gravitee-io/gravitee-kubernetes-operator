@@ -14,7 +14,8 @@
       {
         "path": "/projects/alpha",
         "displayName": "Alpha",
-        "order": 1
+        "order": 1,
+        "visibility": "PRIVATE"
       }
     ],
     "themeRef": {

@@ -156,6 +156,7 @@ Do **not** define a DTO for drift. Reuse the resource's existing `internal/apim/
 | `case-insensitive` | Enums APIM may echo back in a different case |
 | `unstructured` | `GenericStringMap` / `unstructured.Unstructured` JSON blobs |
 | `ignore-remote:A,B` | Strings where the listed remote values are server defaults |
+| `ignore-unset` | Strings the CRD may leave unset, which APIM then resolves to an operator-unpredictable value (portal `visibility`) |
 | `ignore-namespace-prefix` | Strings APIM prefixes with the namespace |
 
 Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of the **spec payload**; if APIM returns a field the mapper never sets and both sides end up empty, comparison is a no-op — explicit `ignore` is optional belt-and-suspenders.

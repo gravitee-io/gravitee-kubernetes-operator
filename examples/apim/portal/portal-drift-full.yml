@@ -25,10 +25,14 @@ spec:
     topNavbar:
       - path: /projects/alpha
         displayName: Alpha
+        visibility: PUBLIC
       - path: /projects/alpha/docs
         displayName: Docs
+        visibility: PUBLIC
       - path: /projects/alpha/src
         displayName: Source
+        visibility: PUBLIC
       - path: /projects/beta
         displayName: Beta
+        visibility: PUBLIC
       - path: /archive/2024

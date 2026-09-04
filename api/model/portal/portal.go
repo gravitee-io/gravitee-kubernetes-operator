@@ -29,6 +29,12 @@ type NavigationEntry struct {
 	// is the only way to attach a display name to it.
 	// +kubebuilder:validation:Optional
 	DisplayName *string `json:"displayName,omitempty"`
+	// Whether this entry is shown to anonymous visitors of the portal.
+	// Left unset, APIM resolves it: the entry inherits the visibility of its
+	// parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under
+	// a PRIVATE parent is rejected.
+	// +kubebuilder:validation:Optional
+	Visibility *nav.Visibility `json:"visibility,omitempty"`
 }
 
 // NavigationStructure groups a portal's navigation by portal area. Each area

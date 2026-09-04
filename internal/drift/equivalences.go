@@ -33,6 +33,7 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("trimmed", reflect.String, Trimmed)
 	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
 	RegisterEquivalenceFunc("ignore-remote", reflect.String, IgnoreRemoteArgs)
+	RegisterEquivalenceFunc("ignore-unset", reflect.String, IgnoreUnset)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
@@ -62,6 +63,18 @@ func IgnoreRemoteArgs(crd any, remote any, context DriftContext) Equivalence {
 				}
 			}
 		}
+	}
+	return e
+}
+
+// IgnoreUnset ignores the difference when the CRD side carries no value. It is
+// meant for fields APIM resolves on its own when the payload omits them and
+// whose resolved value the operator cannot predict — a CRD that states nothing
+// cannot drift. A CRD value that is set is compared as usual.
+func IgnoreUnset(crd any, remote any, context DriftContext) Equivalence {
+	e := DefaultEquivalence(crd, remote, context)
+	if e.Equivalent == Inequivalent && asString(crd) == "" {
+		return Equivalence{Equivalent: Equivalent}
 	}
 	return e
 }

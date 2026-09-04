@@ -15,6 +15,7 @@
 package portallisting
 
 import (
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
@@ -52,6 +53,12 @@ type ApiEntry struct {
 	// location. The position in the list is also preserved.
 	// +kubebuilder:validation:Optional
 	Order *int32 `json:"order,omitempty"`
+	// Whether this entry is shown to anonymous visitors of the portal.
+	// Left unset, APIM resolves it: the entry inherits the visibility of its
+	// parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under
+	// a PRIVATE parent is rejected.
+	// +kubebuilder:validation:Optional
+	Visibility *nav.Visibility `json:"visibility,omitempty"`
 }
 
 func (t *Type) GetPortalRef() core.ObjectRef {

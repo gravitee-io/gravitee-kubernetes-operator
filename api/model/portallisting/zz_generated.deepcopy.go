@@ -21,6 +21,7 @@
 package portallisting
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,6 +32,11 @@ func (in *ApiEntry) DeepCopyInto(out *ApiEntry) {
 	if in.Order != nil {
 		in, out := &in.Order, &out.Order
 		*out = new(int32)
+		**out = **in
+	}
+	if in.Visibility != nil {
+		in, out := &in.Visibility, &out.Visibility
+		*out = new(navigation.Visibility)
 		**out = **in
 	}
 }

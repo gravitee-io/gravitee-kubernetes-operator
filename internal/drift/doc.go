@@ -79,6 +79,7 @@
 //   - rfc3339 (string): compares instants; accepts RFC3339 and RFC3339Nano inputs.
 //   - case-insensitive (string): compares strings case-insensitively.
 //   - ignore-remote (string): ignores difference if remote value matches any of the tag arguments.
+//   - ignore-unset (string): ignores difference if the CRD value is unset; a set CRD value is compared.
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
 //   - ignore-remote-only-metadata (slice): filters out remote-only Metadata items before comparison.
 //   - ignore-unknown-crd-groups (slice): removes CRD-only strings, then compares with namespace prefix ignored.
@@ -110,6 +111,20 @@
 //
 //	// Ignore if remote is "AUTO" or "DEFAULT"
 //	QOS v4.QOS `json:"qos,omitempty" drift:"ignore-remote:AUTO,DEFAULT"`
+//
+// ### ignore-unset
+//
+// Syntax: `drift:"ignore-unset"`
+//
+// Ignores the difference when the CRD value is unset. Use it for fields APIM resolves
+// itself when the payload omits them and whose resolved value the operator cannot
+// predict, so that a CRD stating nothing never reports drift. A CRD value that is set
+// is compared as usual, so a real remote change is still caught.
+//
+// Example:
+//
+//	// Next-gen portal visibility: APIM inherits it from the parent folder when omitted
+//	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
 //
 // ### ignore-namespace-prefix
 //

@@ -411,6 +411,7 @@ _Appears in:_
 | `location` _string_ | The path in the owning resource's navigation hierarchy where this page<br />should appear. The page is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
 | `order` _integer_ | Optional display order of this page relative to its siblings at the same<br />location. |  | Optional: \{\} <br /> |
 | `area` _[PageArea](#pagearea)_ | The area of the portal where this page is displayed. Defaults to<br />TOP_NAVBAR when left empty. Setting HOMEPAGE makes this page the portal<br />homepage, replacing any homepage previously defined for that portal. |  | Enum: [TOP_NAVBAR HOMEPAGE] <br />Optional: \{\} <br /> |
+| `visibility` _[Visibility](#visibility)_ | Whether this entry is shown to anonymous visitors of the portal.<br />Left unset, APIM resolves it: the entry inherits the visibility of its<br />parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under<br />a PRIVATE parent is rejected. |  | Enum: [PUBLIC PRIVATE] <br />Optional: \{\} <br /> |
 | `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this documentation page is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 | `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this documentation page is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 
@@ -756,6 +757,7 @@ _Appears in:_
 | `href` _string_ | The URL this link points to. |  | Required: \{\} <br /> |
 | `location` _string_ | The path in the portal's navigation hierarchy where this link should<br />appear. The link is only visible on the portal if this matches a path<br />defined in the Portal's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
 | `order` _integer_ | Optional display order of this link relative to its siblings at the<br />same location. |  | Optional: \{\} <br /> |
+| `visibility` _[Visibility](#visibility)_ | Whether this entry is shown to anonymous visitors of the portal.<br />Left unset, APIM resolves it: the entry inherits the visibility of its<br />parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under<br />a PRIVATE parent is rejected. |  | Enum: [PUBLIC PRIVATE] <br />Optional: \{\} <br /> |
 
 
 #### PortalLinkStatus
@@ -2356,6 +2358,7 @@ _Appears in:_
 | `location` _string_ | The path in the owning resource's navigation hierarchy where this page<br />should appear. The page is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
 | `order` _integer_ | Optional display order of this page relative to its siblings at the same<br />location. |  | Optional: \{\} <br /> |
 | `area` _[PageArea](#pagearea)_ | The area of the portal where this page is displayed. Defaults to<br />TOP_NAVBAR when left empty. Setting HOMEPAGE makes this page the portal<br />homepage, replacing any homepage previously defined for that portal. |  | Enum: [TOP_NAVBAR HOMEPAGE] <br />Optional: \{\} <br /> |
+| `visibility` _[Visibility](#visibility)_ | Whether this entry is shown to anonymous visitors of the portal.<br />Left unset, APIM resolves it: the entry inherits the visibility of its<br />parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under<br />a PRIVATE parent is rejected. |  | Enum: [PUBLIC PRIVATE] <br />Optional: \{\} <br /> |
 | `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this documentation page is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 | `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this documentation page is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 
@@ -2957,6 +2960,33 @@ _Appears in:_
 | `path` _string_ | A slash-separated path defining the navigation hierarchy.<br />Intermediate folders are implicitly created by APIM if not listed explicitly. |  | Pattern: `^/` <br />Required: \{\} <br /> |
 | `displayName` _string_ | Optional human-friendly label for this node. Listing a path explicitly<br />is the only way to attach a display name to it. |  | Optional: \{\} <br /> |
 | `order` _integer_ | Optional display order of this node relative to its siblings at the same level.<br />Listing a path explicitly is the only way to attach an order. |  | Optional: \{\} <br /> |
+| `visibility` _[Visibility](#visibility)_ | Whether this entry is shown to anonymous visitors of the portal.<br />Left unset, APIM resolves it: the entry inherits the visibility of its<br />parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under<br />a PRIVATE parent is rejected. |  | Enum: [PUBLIC PRIVATE] <br />Optional: \{\} <br /> |
+
+
+#### Visibility
+
+_Underlying type:_ _string_
+
+Visibility tells whether a navigation entry of the next-gen portal is shown
+to anonymous visitors. Left unset, APIM resolves it: the entry inherits the
+visibility of its parent folder, and a root entry defaults to PUBLIC.
+
+_Validation:_
+- Enum: [PUBLIC PRIVATE]
+
+_Appears in:_
+- [ApiEntry](#apientry)
+- [DocumentationSpec](#documentationspec)
+- [NavigationEntry](#navigationentry)
+- [NavigationPath](#navigationpath)
+- [PortalLinkSpec](#portallinkspec)
+- [Type](#type)
+- [Type](#type)
+
+| Field | Description |
+| --- | --- |
+| `PUBLIC` |  |
+| `PRIVATE` |  |
 
 
 
@@ -3070,6 +3100,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `path` _string_ | A slash-separated path defining the navigation hierarchy.<br />Intermediate folders are implicitly created by APIM if not listed explicitly. |  | Pattern: `^/` <br />Required: \{\} <br /> |
 | `displayName` _string_ | Optional human-friendly label for this node. Listing a path explicitly<br />is the only way to attach a display name to it. |  | Optional: \{\} <br /> |
+| `visibility` _[Visibility](#visibility)_ | Whether this entry is shown to anonymous visitors of the portal.<br />Left unset, APIM resolves it: the entry inherits the visibility of its<br />parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under<br />a PRIVATE parent is rejected. |  | Enum: [PUBLIC PRIVATE] <br />Optional: \{\} <br /> |
 
 
 #### NavigationStructure
@@ -3174,6 +3205,7 @@ _Appears in:_
 | `href` _string_ | The URL this link points to. |  | Required: \{\} <br /> |
 | `location` _string_ | The path in the portal's navigation hierarchy where this link should<br />appear. The link is only visible on the portal if this matches a path<br />defined in the Portal's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
 | `order` _integer_ | Optional display order of this link relative to its siblings at the<br />same location. |  | Optional: \{\} <br /> |
+| `visibility` _[Visibility](#visibility)_ | Whether this entry is shown to anonymous visitors of the portal.<br />Left unset, APIM resolves it: the entry inherits the visibility of its<br />parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under<br />a PRIVATE parent is rejected. |  | Enum: [PUBLIC PRIVATE] <br />Optional: \{\} <br /> |
 
 
 
@@ -3199,6 +3231,7 @@ _Appears in:_
 | `ref` _[NamespacedName](#namespacedname)_ | Reference to the API to publish. Only v4 APIs (ApiV4Definition) are<br />supported by the next-gen portal; the referenced kind defaults to<br />ApiV4Definition when left empty. |  | Required: \{\} <br /> |
 | `location` _string_ | The path in the portal's navigation where this API should appear.<br />The API is only visible on the portal if this matches a path defined<br />in the Portal's navigation. |  | Pattern: `^/` <br />Required: \{\} <br /> |
 | `order` _integer_ | Optional display order of this API relative to its siblings at the same<br />location. The position in the list is also preserved. |  | Optional: \{\} <br /> |
+| `visibility` _[Visibility](#visibility)_ | Whether this entry is shown to anonymous visitors of the portal.<br />Left unset, APIM resolves it: the entry inherits the visibility of its<br />parent folder, and a root entry defaults to PUBLIC. A PUBLIC entry under<br />a PRIVATE parent is rejected. |  | Enum: [PUBLIC PRIVATE] <br />Optional: \{\} <br /> |
 
 
 #### Status

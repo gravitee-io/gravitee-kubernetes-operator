@@ -84,4 +84,49 @@ var _ = Describe("Create with portalNavigation", labels.WithContext, func() {
 			}, paths)
 		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 	})
+
+	It("should round-trip a declared entry visibility and leave an undeclared one unset", func() {
+		fixtures := fixture.Builder().
+			WithAPIv4(constants.ApiV4WithContextFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build()
+
+		fixtures.APIv4.Spec.PortalNavigation = []*nav.NavigationPath{
+			{Path: "/guides", Visibility: new(nav.Private)},
+			{Path: "/reference"},
+		}
+
+		fixtures.Apply()
+
+		By("expecting API V4 status to be completed")
+
+		Expect(assert.ApiV4Completed(fixtures.APIv4)).To(Succeed())
+		Expect(assert.ApiV4Accepted(fixtures.APIv4)).To(Succeed())
+
+		By("calling rest API, expecting the declared visibility to round-trip and the undeclared one to stay unset")
+
+		client := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID()
+
+		Eventually(func() error {
+			api, apiErr := client.APIs.GetV4ByHRID(hrid)
+			if apiErr != nil {
+				return apiErr
+			}
+			visibilityByPath := make(map[string]nav.Visibility, len(api.PortalNavigation))
+			for _, path := range api.PortalNavigation {
+				visibilityByPath[path.Path] = path.Visibility
+			}
+			if err := assert.Equals(
+				"API V4 portalNavigation declared visibility", nav.Private, visibilityByPath["/guides"],
+			); err != nil {
+				return err
+			}
+			// GKO omits visibility when the CRD leaves it unset, so APIM has nothing to
+			// echo back and resolves it from the parent at materialisation.
+			return assert.Equals(
+				"API V4 portalNavigation undeclared visibility", nav.Visibility(""), visibilityByPath["/reference"],
+			)
+		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
+	})
 })

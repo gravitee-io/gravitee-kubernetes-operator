@@ -89,6 +89,12 @@ spec:
                         required:
                           - name
                         type: object
+                      visibility:
+                        description: Whether this entry is shown to anonymous visitors of the portal.
+                        enum:
+                          - PUBLIC
+                          - PRIVATE
+                        type: string
                     required:
                       - location
                       - ref

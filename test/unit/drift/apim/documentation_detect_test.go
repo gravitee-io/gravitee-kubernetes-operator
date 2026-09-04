@@ -16,6 +16,7 @@ package apim
 
 import (
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
@@ -44,6 +45,12 @@ var _ = Describe("Documentation Drift detection", func() {
 			model.DocumentationDTO{},
 			model.DocumentationDTO{
 				Area: documentation.TopNavbar,
+			},
+		),
+		Entry("unset visibility equivalent to any remote visibility resolved by APIM",
+			model.DocumentationDTO{},
+			model.DocumentationDTO{
+				Visibility: nav.Private,
 			},
 		),
 	)
