@@ -201,108 +201,63 @@ var _ = Describe("IgnoreNamespacePrefix", func() {
 	)
 })
 
-var _ = Describe("IgnoreRemoteArgs", func() {
+var _ = Describe("IgnoreRemoteDefault", func() {
 	type namedString string
+
+	args := func(values ...string) drift.DriftContext {
+		return drift.DriftContext{FuncArgs: values}
+	}
 
 	DescribeTable("should report equivalence",
 		func(crd, remote any, ctx drift.DriftContext) {
-			Expect(drift.IgnoreRemoteArgs(crd, remote, ctx)).To(Equal(
+			Expect(drift.IgnoreRemoteDefault(crd, remote, ctx)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
-		Entry("equal strings without args", "foo", "foo", drift.DriftContext{}),
-		Entry("equal strings with unused args", "foo", "foo", drift.DriftContext{FuncArgs: []string{"bar"}}),
-		Entry("both nil", nil, nil, drift.DriftContext{}),
-		Entry("both empty", "", "", drift.DriftContext{}),
-		Entry("remote listed in FuncArgs", "foo", "bar", drift.DriftContext{FuncArgs: []string{"bar"}}),
-		Entry("remote listed among several FuncArgs", "foo", "published", drift.DriftContext{FuncArgs: []string{"draft", "published"}}),
-		Entry("nil crd vs remote listed in FuncArgs", nil, "bar", drift.DriftContext{FuncArgs: []string{"bar"}}),
-		Entry("empty crd vs remote listed in FuncArgs", "", "bar", drift.DriftContext{FuncArgs: []string{"bar"}}),
-		Entry("named string type remote listed in FuncArgs", namedString(""), namedString("bar"), drift.DriftContext{FuncArgs: []string{"bar"}}),
+		Entry("equal strings", "PRIVATE", "PRIVATE", args("PUBLIC")),
+		Entry("both empty", "", "", args("PUBLIC")),
+		Entry("both nil", nil, nil, args("PUBLIC")),
+		Entry("unset crd vs listed remote default", "", "PUBLIC", args("PUBLIC")),
+		Entry("unset crd vs second listed default", "", "PRIVATE", args("PUBLIC", "PRIVATE")),
+		Entry("unset named string vs listed default", namedString(""), namedString("PUBLIC"), args("PUBLIC")),
 	)
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote any, ctx drift.DriftContext) {
-			Expect(drift.IgnoreRemoteArgs(crd, remote, ctx)).To(Equal(
+			Expect(drift.IgnoreRemoteDefault(crd, remote, ctx)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
-		Entry("different strings without args", "foo", "bar", drift.DriftContext{}),
-		Entry("different strings with nil FuncArgs", "foo", "bar", drift.DriftContext{FuncArgs: nil}),
-		Entry("different strings with empty FuncArgs", "foo", "bar", drift.DriftContext{FuncArgs: []string{}}),
-		Entry("remote not listed in FuncArgs", "foo", "bar", drift.DriftContext{FuncArgs: []string{"baz"}}),
-		Entry("crd listed in FuncArgs is not ignored", "foo", "bar", drift.DriftContext{FuncArgs: []string{"foo"}}),
-		Entry("nil vs remote not listed", nil, "bar", drift.DriftContext{FuncArgs: []string{"foo"}}),
-		Entry("non-empty vs nil remote", "foo", nil, drift.DriftContext{FuncArgs: []string{"foo"}}),
+		Entry("set crd vs listed remote default", "PRIVATE", "PUBLIC", args("PUBLIC")),
+		Entry("unset crd vs unlisted remote", "", "PRIVATE", args("PUBLIC")),
+		Entry("set crd vs unset remote", "PRIVATE", "", args("PUBLIC")),
+		Entry("unset crd with nil FuncArgs", "", "PUBLIC", drift.DriftContext{}),
+		Entry("unset crd with empty FuncArgs", "", "PUBLIC", args()),
+		Entry("crd listed in FuncArgs is not ignored", "PUBLIC", "PRIVATE", args("PUBLIC")),
+		Entry("set named string vs listed default", namedString("PRIVATE"), namedString("PUBLIC"), args("PUBLIC")),
 	)
 
-	It("treats a remote listed in the ignore-remote tag as equivalent through Detect", func() {
-		type withIgnoreRemote struct {
-			Status string `json:"status" drift:"ignore-remote:PUBLISHED"`
+	It("treats an unset crd value against a listed default as equivalent through Detect", func() {
+		type withTag struct {
+			Visibility string `json:"visibility" drift:"ignore-remote-default:PUBLIC"`
 		}
-		crd := withIgnoreRemote{Status: "DRAFT"}
-		remote := withIgnoreRemote{Status: "PUBLISHED"}
-		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+		expectNoDrift(drift.DetectWithNamespace(withTag{}, withTag{Visibility: "PUBLIC"}, ""))
 	})
 
-	It("detects drift when the remote value is not listed in the ignore-remote tag", func() {
-		type withIgnoreRemote struct {
-			Status string `json:"status" drift:"ignore-remote:PUBLISHED"`
+	It("detects drift when the crd is unset and the remote is not a listed default", func() {
+		type withTag struct {
+			Visibility string `json:"visibility" drift:"ignore-remote-default:PUBLIC"`
 		}
-		crd := withIgnoreRemote{Status: "DRAFT"}
-		remote := withIgnoreRemote{Status: "ARCHIVED"}
-		result := drift.DetectWithNamespace(crd, remote, "")
+		result := drift.DetectWithNamespace(withTag{}, withTag{Visibility: "PRIVATE"}, "")
 		Expect(result.DriftDetected()).To(BeTrue())
-		Expect(result.String()).To(ContainSubstring(`status: "DRAFT" != "ARCHIVED"`))
-	})
-})
-
-var _ = Describe("IgnoreUnset", func() {
-	type namedString string
-
-	DescribeTable("should report equivalence",
-		func(crd, remote any) {
-			Expect(drift.IgnoreUnset(crd, remote, drift.DriftContext{})).To(Equal(
-				drift.Equivalence{Equivalent: drift.Equivalent},
-			))
-		},
-		Entry("equal strings", "PRIVATE", "PRIVATE"),
-		Entry("both nil", nil, nil),
-		Entry("both empty", "", ""),
-		Entry("unset crd vs remote value", "", "PUBLIC"),
-		Entry("unset crd vs any other remote value", "", "PRIVATE"),
-		Entry("nil crd vs remote value", nil, "PUBLIC"),
-		Entry("unset named string vs remote value", namedString(""), namedString("PUBLIC")),
-	)
-
-	DescribeTable("should report inequivalence",
-		func(crd, remote any) {
-			Expect(drift.IgnoreUnset(crd, remote, drift.DriftContext{})).To(Equal(
-				drift.Equivalence{Equivalent: drift.Inequivalent},
-			))
-		},
-		Entry("set crd vs different remote", "PRIVATE", "PUBLIC"),
-		Entry("set crd vs unset remote", "PRIVATE", ""),
-		Entry("set crd vs nil remote", "PRIVATE", nil),
-		Entry("set named string vs different remote", namedString("PRIVATE"), namedString("PUBLIC")),
-	)
-
-	It("treats an unset crd value as equivalent through Detect", func() {
-		type withIgnoreUnset struct {
-			Visibility string `json:"visibility" drift:"ignore-unset"`
-		}
-		crd := withIgnoreUnset{}
-		remote := withIgnoreUnset{Visibility: "PRIVATE"}
-		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+		Expect(result.String()).To(ContainSubstring(`visibility: "" != "PRIVATE"`))
 	})
 
-	It("detects drift when the crd value is set and the remote value changed", func() {
-		type withIgnoreUnset struct {
-			Visibility string `json:"visibility" drift:"ignore-unset"`
+	It("detects drift when the crd is set and the remote carries the default", func() {
+		type withTag struct {
+			Visibility string `json:"visibility" drift:"ignore-remote-default:PUBLIC"`
 		}
-		crd := withIgnoreUnset{Visibility: "PRIVATE"}
-		remote := withIgnoreUnset{Visibility: "PUBLIC"}
-		result := drift.DetectWithNamespace(crd, remote, "")
+		result := drift.DetectWithNamespace(withTag{Visibility: "PRIVATE"}, withTag{Visibility: "PUBLIC"}, "")
 		Expect(result.DriftDetected()).To(BeTrue())
 		Expect(result.String()).To(ContainSubstring(`visibility: "PRIVATE" != "PUBLIC"`))
 	})

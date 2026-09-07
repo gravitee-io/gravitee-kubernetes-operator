@@ -32,9 +32,11 @@ type DocumentationDTO struct {
 	Location string                 `json:"location,omitempty"`
 	Order    *int32                 `json:"order,omitempty"`
 	// Unset is omitted so that APIM applies its own TOP_NAVBAR default.
-	Area documentation.PageArea `json:"area,omitempty" drift:"ignore-remote:TOP_NAVBAR"`
-	// Unset is omitted so that APIM resolves the visibility from the parent folder.
-	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
+	Area documentation.PageArea `json:"area,omitempty" drift:"ignore-remote-default:TOP_NAVBAR"`
+	// Unset is omitted so that APIM resolves the visibility from the parent folder,
+	// which lives in the referenced Portal or API — out of reach of this mapper — so
+	// every value APIM may resolve to is accepted while the CRD declares none.
+	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default:PUBLIC,PRIVATE"`
 }
 
 type DocumentationState struct {

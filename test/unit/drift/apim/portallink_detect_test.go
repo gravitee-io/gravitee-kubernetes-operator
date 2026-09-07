@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("PortalLink Drift detection", func() {
@@ -48,6 +49,14 @@ var _ = Describe("PortalLink Drift detection", func() {
 			},
 		),
 	)
+
+	It("detects drift when the CRD declares a visibility and the remote differs", func() {
+		crd := model.PortalLinkDTO{Visibility: nav.Public}
+		remote := model.PortalLinkDTO{Visibility: nav.Private}
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`visibility: PUBLIC != PRIVATE`))
+	})
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {

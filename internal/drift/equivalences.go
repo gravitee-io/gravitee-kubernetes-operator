@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	emptyIsNilName = "empty-is-nil"
-	ignoreName     = "ignore"
+	emptyIsNilName          = "empty-is-nil"
+	ignoreName              = "ignore"
+	ignoreRemoteDefaultName = "ignore-remote-default"
 )
 
 // InitRegistry initializes the equivalence registry.
@@ -32,8 +33,7 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.String, Ignore)
 	RegisterEquivalenceFunc("trimmed", reflect.String, Trimmed)
 	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
-	RegisterEquivalenceFunc("ignore-remote", reflect.String, IgnoreRemoteArgs)
-	RegisterEquivalenceFunc("ignore-unset", reflect.String, IgnoreUnset)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.String, IgnoreRemoteDefault)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
@@ -51,29 +51,14 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("unstructured", reflect.Slice, DefaultEquivalencePostPullUpObjectChildren)
 }
 
-// IgnoreRemoteArgs ignores the remote difference if the remote string is in the context.FuncArgs.
-func IgnoreRemoteArgs(crd any, remote any, context DriftContext) Equivalence {
+// IgnoreRemoteDefault ignores a difference only when the CRD leaves the field unset
+// AND the remote carries one of the server defaults listed in context.FuncArgs. It is
+// meant for fields APIM resolves itself when the payload omits them: a CRD that states
+// nothing cannot drift towards a value APIM was free to pick, while a CRD value that is
+// set is always compared, and a remote value the tag does not list is always drift.
+func IgnoreRemoteDefault(crd any, remote any, context DriftContext) Equivalence {
 	e := DefaultEquivalence(crd, remote, context)
-	if e.Equivalent == Inequivalent {
-		rs := asString(remote)
-		if context.FuncArgs != nil {
-			for _, arg := range context.FuncArgs {
-				if arg == rs {
-					return Equivalence{Equivalent: Equivalent}
-				}
-			}
-		}
-	}
-	return e
-}
-
-// IgnoreUnset ignores the difference when the CRD side carries no value. It is
-// meant for fields APIM resolves on its own when the payload omits them and
-// whose resolved value the operator cannot predict — a CRD that states nothing
-// cannot drift. A CRD value that is set is compared as usual.
-func IgnoreUnset(crd any, remote any, context DriftContext) Equivalence {
-	e := DefaultEquivalence(crd, remote, context)
-	if e.Equivalent == Inequivalent && asString(crd) == "" {
+	if e.Equivalent == Inequivalent && asString(crd) == "" && slices.Contains(context.FuncArgs, asString(remote)) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return e

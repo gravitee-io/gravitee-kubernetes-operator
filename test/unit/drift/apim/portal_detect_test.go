@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Portal Drift detection", func() {
@@ -58,19 +59,53 @@ var _ = Describe("Portal Drift detection", func() {
 				completePortalCRDWithStructure().ActiveThemeHRID(),
 			),
 		),
-		Entry("unset visibility equivalent to any remote visibility resolved by APIM",
+		Entry("unset visibility resolved to PUBLIC matches the remote",
 			model.PortalDTO{
 				Structure: &model.NavigationStructureDTO{
 					TopNavbar: []*model.NavigationEntryDTO{{Path: "/alpha"}},
 				},
-			},
+			}.WithResolvedVisibility(),
 			model.PortalDTO{
 				Structure: &model.NavigationStructureDTO{
-					TopNavbar: []*model.NavigationEntryDTO{{Path: "/alpha", Visibility: nav.Private}},
+					TopNavbar: []*model.NavigationEntryDTO{{Path: "/alpha", Visibility: nav.Public}},
 				},
-			},
+			}.WithResolvedVisibility(),
+		),
+		Entry("unset visibility under a PRIVATE parent matches the inherited remote",
+			model.PortalDTO{
+				Structure: &model.NavigationStructureDTO{
+					TopNavbar: []*model.NavigationEntryDTO{
+						{Path: "/alpha", Visibility: nav.Private},
+						{Path: "/alpha/docs"},
+					},
+				},
+			}.WithResolvedVisibility(),
+			model.PortalDTO{
+				Structure: &model.NavigationStructureDTO{
+					TopNavbar: []*model.NavigationEntryDTO{
+						{Path: "/alpha", Visibility: nav.Private},
+						{Path: "/alpha/docs", Visibility: nav.Private},
+					},
+				},
+			}.WithResolvedVisibility(),
 		),
 	)
+
+	It("detects a console-side flip of an entry the CRD leaves unset", func() {
+		crd := model.PortalDTO{
+			Structure: &model.NavigationStructureDTO{
+				TopNavbar: []*model.NavigationEntryDTO{{Path: "/alpha"}},
+			},
+		}.WithResolvedVisibility()
+		remote := model.PortalDTO{
+			Structure: &model.NavigationStructureDTO{
+				TopNavbar: []*model.NavigationEntryDTO{{Path: "/alpha", Visibility: nav.Private}},
+			},
+		}
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`visibility: PUBLIC != PRIVATE`))
+	})
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {

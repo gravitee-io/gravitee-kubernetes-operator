@@ -173,11 +173,16 @@ Do **not** define a DTO for drift. Reuse the resource's existing `internal/apim/
 | `rfc3339` | Date-time strings (timezone-tolerant) |
 | `case-insensitive` | Enums APIM may echo back in a different case |
 | `unstructured` | `GenericStringMap` / `unstructured.Unstructured` JSON blobs |
-| `ignore-remote:A,B` | Strings where the listed remote values are server defaults |
-| `ignore-unset` | Strings the CRD may leave unset, which APIM then resolves to an operator-unpredictable value (portal `visibility`) |
+| `ignore-remote-default:A,B` | Strings the CRD may leave unset, which APIM then resolves to one of the listed server defaults (`flowMode`, documentation `area`, cross-resource portal `visibility`) |
 | `ignore-namespace-prefix` | Strings APIM prefixes with the namespace |
 
 Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of the **spec payload**; if APIM returns a field the mapper never sets and both sides end up empty, comparison is a no-op — explicit `ignore` is optional belt-and-suspenders.
+
+Prefer resolving the expected value on the operator side over tagging, when the CRD carries
+enough information to predict it: `PortalDTO`/`APIV4DTO` navigation `visibility` is resolved by
+`WithResolvedVisibility()` in the admission drift mappers (`internal/apim/model/navigation_visibility.go`)
+and compared exactly. Apply such normalisation **in the drift mapper only** — the payload the
+service sends must keep the field omitted, or APIM loses its own resolution step.
 
 Add drift tags on nested `api/model/` types when the same struct is embedded in the DTO (e.g. TLS certificate fields on `application.ClientCertificate`).
 

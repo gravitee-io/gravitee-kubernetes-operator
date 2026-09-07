@@ -59,7 +59,7 @@ func resolveApiV4Refs(ctx context.Context, api *v1alpha1.ApiV4Definition) error 
 }
 
 func toAPIV4DTO(api *v1alpha1.ApiV4Definition) model.APIV4DTO {
-	return model.ToAPIV4DTO(&api.Spec.Api)
+	return model.ToAPIV4DTO(&api.Spec.Api).WithResolvedVisibility()
 }
 
 func getRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (any, error) {
@@ -68,14 +68,14 @@ func getRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (any, 
 		if err != nil {
 			return nil, err
 		}
-		return model.ToAPIV4DTO(remote), nil
+		return model.ToAPIV4DTO(remote).WithResolvedVisibility(), nil
 	}
 	hrid := apiHRID(api)
 	remote, err := apimClient.APIs.GetV4ByHRID(hrid)
 	if err != nil {
 		return nil, err
 	}
-	return *remote, nil
+	return remote.WithResolvedVisibility(), nil
 }
 
 func apiHRID(api *v1alpha1.ApiV4Definition) string {

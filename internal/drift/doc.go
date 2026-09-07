@@ -78,8 +78,8 @@
 //   - trimmed (string): compares strings after [strings.TrimSpace].
 //   - rfc3339 (string): compares instants; accepts RFC3339 and RFC3339Nano inputs.
 //   - case-insensitive (string): compares strings case-insensitively.
-//   - ignore-remote (string): ignores difference if remote value matches any of the tag arguments.
-//   - ignore-unset (string): ignores difference if the CRD value is unset; a set CRD value is compared.
+//   - ignore-remote-default (string): ignores a difference only when the CRD value is
+//     unset and the remote carries one of the tag arguments (a server default).
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
 //   - ignore-remote-only-metadata (slice): filters out remote-only Metadata items before comparison.
 //   - ignore-unknown-crd-groups (slice): removes CRD-only strings, then compares with namespace prefix ignored.
@@ -96,35 +96,28 @@
 //
 // ## Functions with Arguments
 //
-// ### ignore-remote
+// ### ignore-remote-default
 //
-// Syntax: `drift:"ignore-remote:value1,value2,..."`
+// Syntax: `drift:"ignore-remote-default:value1,value2,..."`
 //
-// Ignores differences if the remote value matches any of the specified arguments.
-// Useful for fields that have a known default value in APIM that may differ from
-// the CRD representation.
-//
-// Example:
-//
-//	// Ignore if remote is "DEFAULT"
-//	FlowMode v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote:DEFAULT"`
-//
-//	// Ignore if remote is "AUTO" or "DEFAULT"
-//	QOS v4.QOS `json:"qos,omitempty" drift:"ignore-remote:AUTO,DEFAULT"`
-//
-// ### ignore-unset
-//
-// Syntax: `drift:"ignore-unset"`
-//
-// Ignores the difference when the CRD value is unset. Use it for fields APIM resolves
-// itself when the payload omits them and whose resolved value the operator cannot
-// predict, so that a CRD stating nothing never reports drift. A CRD value that is set
-// is compared as usual, so a real remote change is still caught.
+// Ignores a difference only when the CRD leaves the field unset AND the remote value is
+// one of the listed arguments. Use it for fields APIM resolves itself when the payload
+// omits them: the arguments enumerate the values APIM may resolve to. A CRD value that is
+// set is always compared, and a remote value the tag does not list is always drift.
 //
 // Example:
 //
-//	// Next-gen portal visibility: APIM inherits it from the parent folder when omitted
-//	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
+//	// APIM applies DEFAULT when the payload omits the flow mode
+//	Mode v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:DEFAULT"`
+//
+//	// APIM resolves an omitted next-gen portal visibility from the parent folder, which
+//	// lives in another resource here, so both values it may pick are accepted
+//	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default:PUBLIC,PRIVATE"`
+//
+// Where the operator can see the whole ancestor chain — Portal.structure.topNavbar,
+// ApiV4Definition.portalNavigation — the expected visibility is resolved instead, by
+// [github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model.PortalDTO.WithResolvedVisibility],
+// and the field is compared exactly with no tag at all.
 //
 // ### ignore-namespace-prefix
 //

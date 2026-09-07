@@ -110,7 +110,7 @@ type APIV4NavigationPathDTO struct {
 	Path        string         `json:"path"`
 	DisplayName *string        `json:"displayName,omitempty"`
 	Order       *int32         `json:"order,omitempty"`
-	Visibility  nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
+	Visibility  nav.Visibility `json:"visibility,omitempty"`
 }
 
 type APIV4MemberDTO struct {
@@ -230,7 +230,7 @@ type APIV4EndpointGroupDTO struct {
 }
 
 type APIV4FlowExecutionDTO struct {
-	Mode          v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote:DEFAULT"`
+	Mode          v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:DEFAULT"`
 	MatchRequired bool        `json:"matchRequired"`
 }
 

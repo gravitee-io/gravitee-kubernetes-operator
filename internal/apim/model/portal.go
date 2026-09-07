@@ -32,7 +32,7 @@ type NavigationPathDTO struct {
 	Path        string         `json:"path"`
 	DisplayName *string        `json:"displayName,omitempty"`
 	Order       *int32         `json:"order,omitempty"`
-	Visibility  nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
+	Visibility  nav.Visibility `json:"visibility,omitempty"`
 }
 
 type NavigationStructureDTO struct {
@@ -42,7 +42,7 @@ type NavigationStructureDTO struct {
 type NavigationEntryDTO struct {
 	Path        string         `json:"path"`
 	DisplayName *string        `json:"displayName,omitempty"`
-	Visibility  nav.Visibility `json:"visibility,omitempty" drift:"ignore-unset"`
+	Visibility  nav.Visibility `json:"visibility,omitempty"`
 }
 
 type PortalState struct {

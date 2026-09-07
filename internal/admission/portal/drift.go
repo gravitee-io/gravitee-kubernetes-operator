@@ -44,7 +44,7 @@ func toPortalDTO(prtl *v1alpha1.Portal) model.PortalDTO {
 		prtl.Spec.Type,
 		refs.NewNamespacedNameFromObject(prtl).HRID(),
 		prtl.ActiveThemeHRID(),
-	)
+	).WithResolvedVisibility()
 }
 
 func getRemotePortal(apimClient *apim.APIM, prtl *v1alpha1.Portal) (any, error) {
@@ -53,5 +53,5 @@ func getRemotePortal(apimClient *apim.APIM, prtl *v1alpha1.Portal) (any, error) 
 	if err != nil {
 		return nil, err
 	}
-	return remote.PortalDTO, nil
+	return remote.PortalDTO.WithResolvedVisibility(), nil
 }
