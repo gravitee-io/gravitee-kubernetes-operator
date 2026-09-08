@@ -17,9 +17,9 @@ package service
 import (
 	"strconv"
 
-	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -94,15 +94,6 @@ func (svc *Listings) GetByHRID(portalHrid, listingHrid string) (*model.PortalLis
 	return listing, nil
 }
 
-// visibilityOf flattens the optional CRD visibility. Left unset, the field is
-// omitted from the payload so that APIM resolves it from the parent folder.
-func visibilityOf(v *nav.Visibility) nav.Visibility {
-	if v == nil {
-		return ""
-	}
-	return *v
-}
-
 func ToPortalListingDTO(listing *v1alpha1.PortalListing) *model.PortalListingDTO {
 	dto := &model.PortalListingDTO{
 		HRID: refs.NewNamespacedNameFromObject(listing).HRID(),
@@ -120,7 +111,7 @@ func ToPortalListingDTO(listing *v1alpha1.PortalListing) *model.PortalListingDTO
 			ApiHrid:    apiRef.HRID(),
 			Location:   entry.Location,
 			Order:      entry.Order,
-			Visibility: visibilityOf(entry.Visibility),
+			Visibility: utils.SafeDereference(entry.Visibility),
 		})
 	}
 

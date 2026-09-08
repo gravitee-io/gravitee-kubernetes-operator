@@ -220,6 +220,9 @@ var _ = Describe("IgnoreRemoteDefault", func() {
 		Entry("unset crd vs listed remote default", "", "PUBLIC", args("PUBLIC")),
 		Entry("unset crd vs second listed default", "", "PRIVATE", args("PUBLIC", "PRIVATE")),
 		Entry("unset named string vs listed default", namedString(""), namedString("PUBLIC"), args("PUBLIC")),
+		Entry("unset crd vs any remote with nil FuncArgs", "", "PUBLIC", drift.DriftContext{}),
+		Entry("unset crd vs any remote with empty FuncArgs", "", "PRIVATE", args()),
+		Entry("unset named string vs any remote with no args", namedString(""), namedString("PRIVATE"), drift.DriftContext{}),
 	)
 
 	DescribeTable("should report inequivalence",
@@ -231,9 +234,8 @@ var _ = Describe("IgnoreRemoteDefault", func() {
 		Entry("set crd vs listed remote default", "PRIVATE", "PUBLIC", args("PUBLIC")),
 		Entry("unset crd vs unlisted remote", "", "PRIVATE", args("PUBLIC")),
 		Entry("set crd vs unset remote", "PRIVATE", "", args("PUBLIC")),
-		Entry("unset crd with nil FuncArgs", "", "PUBLIC", drift.DriftContext{}),
-		Entry("unset crd with empty FuncArgs", "", "PUBLIC", args()),
 		Entry("crd listed in FuncArgs is not ignored", "PUBLIC", "PRIVATE", args("PUBLIC")),
+		Entry("set crd vs different remote with no args", "PRIVATE", "PUBLIC", drift.DriftContext{}),
 		Entry("set named string vs listed default", namedString("PRIVATE"), namedString("PUBLIC"), args("PUBLIC")),
 	)
 
@@ -256,6 +258,22 @@ var _ = Describe("IgnoreRemoteDefault", func() {
 	It("detects drift when the crd is set and the remote carries the default", func() {
 		type withTag struct {
 			Visibility string `json:"visibility" drift:"ignore-remote-default:PUBLIC"`
+		}
+		result := drift.DetectWithNamespace(withTag{Visibility: "PRIVATE"}, withTag{Visibility: "PUBLIC"}, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`visibility: "PRIVATE" != "PUBLIC"`))
+	})
+
+	It("treats an unset crd value as equivalent to any remote value when the tag has no args", func() {
+		type withTag struct {
+			Visibility string `json:"visibility" drift:"ignore-remote-default"`
+		}
+		expectNoDrift(drift.DetectWithNamespace(withTag{}, withTag{Visibility: "PRIVATE"}, ""))
+	})
+
+	It("detects drift when the crd is set and the tag has no args", func() {
+		type withTag struct {
+			Visibility string `json:"visibility" drift:"ignore-remote-default"`
 		}
 		result := drift.DetectWithNamespace(withTag{Visibility: "PRIVATE"}, withTag{Visibility: "PUBLIC"}, "")
 		Expect(result.DriftDetected()).To(BeTrue())

@@ -36,7 +36,7 @@ type DocumentationDTO struct {
 	// Unset is omitted so that APIM resolves the visibility from the parent folder,
 	// which lives in the referenced Portal or API — out of reach of this mapper — so
 	// every value APIM may resolve to is accepted while the CRD declares none.
-	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default:PUBLIC,PRIVATE"`
+	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default"`
 }
 
 type DocumentationState struct {

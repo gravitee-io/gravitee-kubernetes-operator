@@ -78,8 +78,9 @@
 //   - trimmed (string): compares strings after [strings.TrimSpace].
 //   - rfc3339 (string): compares instants; accepts RFC3339 and RFC3339Nano inputs.
 //   - case-insensitive (string): compares strings case-insensitively.
-//   - ignore-remote-default (string): ignores a difference only when the CRD value is
-//     unset and the remote carries one of the tag arguments (a server default).
+//   - ignore-remote-default (string): ignores a difference when the CRD value is unset;
+//     with no arguments any remote value is accepted, with arguments only a listed
+//     remote value (a server default) is.
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
 //   - ignore-remote-only-metadata (slice): filters out remote-only Metadata items before comparison.
 //   - ignore-unknown-crd-groups (slice): removes CRD-only strings, then compares with namespace prefix ignored.
@@ -98,12 +99,14 @@
 //
 // ### ignore-remote-default
 //
-// Syntax: `drift:"ignore-remote-default:value1,value2,..."`
+// Syntax: `drift:"ignore-remote-default"` or `drift:"ignore-remote-default:value1,value2,..."`
 //
-// Ignores a difference only when the CRD leaves the field unset AND the remote value is
-// one of the listed arguments. Use it for fields APIM resolves itself when the payload
-// omits them: the arguments enumerate the values APIM may resolve to. A CRD value that is
-// set is always compared, and a remote value the tag does not list is always drift.
+// Ignores a difference when the CRD leaves the field unset. With no arguments, any
+// remote value is accepted — use this when the CRD carries no information to predict
+// what APIM resolves the field to. With arguments, only a remote value listed among
+// them is accepted, and any other remote value is drift — use this when the CRD's
+// silence should only cover specific, known server defaults. Either way, a CRD value
+// that is set is always compared.
 //
 // Example:
 //
@@ -111,8 +114,8 @@
 //	Mode v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:DEFAULT"`
 //
 //	// APIM resolves an omitted next-gen portal visibility from the parent folder, which
-//	// lives in another resource here, so both values it may pick are accepted
-//	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default:PUBLIC,PRIVATE"`
+//	// lives in another resource here — any value APIM may resolve to is accepted
+//	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default"`
 //
 // Where the operator can see the whole ancestor chain — Portal.structure.topNavbar,
 // ApiV4Definition.portalNavigation — the expected visibility is resolved instead, by

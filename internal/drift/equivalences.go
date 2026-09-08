@@ -51,15 +51,19 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("unstructured", reflect.Slice, DefaultEquivalencePostPullUpObjectChildren)
 }
 
-// IgnoreRemoteDefault ignores a difference only when the CRD leaves the field unset
-// AND the remote carries one of the server defaults listed in context.FuncArgs. It is
-// meant for fields APIM resolves itself when the payload omits them: a CRD that states
-// nothing cannot drift towards a value APIM was free to pick, while a CRD value that is
-// set is always compared, and a remote value the tag does not list is always drift.
+// IgnoreRemoteDefault ignores a difference when the CRD leaves the field unset AND the
+// remote value is accepted: with no tag arguments any remote value is accepted, with
+// arguments only a remote value listed among them is. It is meant for fields APIM
+// resolves itself when the payload omits them: a CRD that states nothing cannot drift
+// towards a value APIM was free to pick, while a CRD value that is set is always
+// compared, and — when arguments are given — a remote value they do not list is always
+// drift.
 func IgnoreRemoteDefault(crd any, remote any, context DriftContext) Equivalence {
 	e := DefaultEquivalence(crd, remote, context)
-	if e.Equivalent == Inequivalent && asString(crd) == "" && slices.Contains(context.FuncArgs, asString(remote)) {
-		return Equivalence{Equivalent: Equivalent}
+	if e.Equivalent == Inequivalent && asString(crd) == "" {
+		if len(context.FuncArgs) == 0 || slices.Contains(context.FuncArgs, asString(remote)) {
+			return Equivalence{Equivalent: Equivalent}
+		}
 	}
 	return e
 }
