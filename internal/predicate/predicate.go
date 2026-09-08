@@ -31,6 +31,8 @@ type LastSpecHashPredicate struct {
 }
 
 // Create returns true if the Create event should be processed.
+//
+//revive:disable-next-line:cyclomatic -- type switch dispatch, not complex logic
 func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 	if e.Object.GetDeletionTimestamp() != nil {
 		return true
@@ -94,6 +96,8 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 }
 
 // Update implements default UpdateEvent filter for validating spec hash change.
+//
+//revive:disable-next-line:cyclomatic -- type switch dispatch, not complex logic
 func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	if e.ObjectOld == nil || e.ObjectNew == nil {
 		return false
