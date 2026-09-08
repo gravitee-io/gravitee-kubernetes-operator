@@ -17,12 +17,9 @@ package portallink
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -30,16 +27,16 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
-var _ = Describe("Delete", labels.WithContext, func() {
+var _ = Describe("Delete API guard", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	ctx := context.Background()
 
-	It("should delete portal link in APIM", func() {
+	It("should block API deletion while a portal link references it", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithPortal(constants.PortalFile).
-			WithPortalLink(constants.PortalLinkFile).
+			WithAPIv4(constants.ApiV4WithContextFile).
+			WithPortalLink(constants.PortalLinkApiFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
@@ -48,23 +45,20 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 		Expect(assert.PortalLinkAccepted(fixtures.PortalLink)).To(Succeed())
 
-		By("calling rest API, expecting to find portal link")
+		By("deleting the API")
 
-		apim := apim.NewClient(ctx)
-		parent := service.LinkParent{Portal: fixtures.Portal}
-		linkHrid := refs.NewNamespacedNameFromObject(fixtures.PortalLink).HRID()
+		Expect(manager.Client().Delete(ctx, fixtures.APIv4)).To(Succeed())
 
-		Eventually(func() error {
-			link, linkErr := apim.Links.GetByHRID(parent, linkHrid)
-			if linkErr != nil {
-				return linkErr
-			}
-			return assert.NotEmptyString("id", link.ID)
-		}, timeout, interval).Should(Succeed(), fixtures.PortalLink.Name)
+		By("expecting to still find the API while the link references it")
 
-		By("deleting portal link")
+		checkUntil := constants.ConsistentTimeout
+		Consistently(func() error {
+			return manager.GetLatest(ctx, fixtures.APIv4)
+		}, checkUntil, interval).Should(Succeed())
 
-		Expect(manager.Client().Delete(ctx, fixtures.PortalLink.DeepCopy())).To(Succeed())
+		By("deleting the portal link")
+
+		Expect(manager.Client().Delete(ctx, fixtures.PortalLink)).To(Succeed())
 
 		By("expecting portal link to be deleted from k8s")
 
@@ -72,11 +66,10 @@ var _ = Describe("Delete", labels.WithContext, func() {
 			return assert.Deleted(ctx, "PortalLink", fixtures.PortalLink)
 		}, timeout, interval).Should(Succeed(), fixtures.PortalLink.Name)
 
-		By("calling rest API, expecting not to find portal link")
+		By("expecting the API to have been deleted once unreferenced")
 
 		Eventually(func() error {
-			_, linkErr := apim.Links.GetByHRID(parent, linkHrid)
-			return assert.NotFoundError(linkErr)
-		}, timeout, interval).Should(Succeed(), fixtures.PortalLink.Name)
+			return assert.Deleted(ctx, "ApiV4Definition", fixtures.APIv4)
+		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 	})
 })

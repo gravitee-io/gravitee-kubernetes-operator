@@ -21,7 +21,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -31,23 +30,21 @@ func Delete(ctx context.Context, link *v1alpha1.PortalLink) error {
 		return nil
 	}
 
-	ns := link.Namespace
-
-	prtl, err := dynamic.ResolvePortal(ctx, link.GetPortalRef(), ns)
+	parent, err := resolveParent(ctx, link)
 	if err != nil {
-		// Parent Portal already gone: nothing left to sync against, let the finalizer be removed.
+		// Parent already gone: nothing left to sync against, let the finalizer be removed.
 		if apierrors.IsNotFound(err) {
 			return nil
 		}
 		return err
 	}
 
-	if !prtl.HasContext() {
+	if !parent.hasContext {
 		// Nothing was ever synced to APIM without a context; let the finalizer be removed.
 		return nil
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
+	apimClient, err := apim.FromContextRef(ctx, parent.contextRef, parent.contextNs)
 	if err != nil {
 		// ManagementContext already gone: APIM is unreachable, let the finalizer be removed.
 		if apierrors.IsNotFound(err) {
@@ -56,7 +53,7 @@ func Delete(ctx context.Context, link *v1alpha1.PortalLink) error {
 		return err
 	}
 
-	if err := gerrors.IgnoreNotFound(apimClient.Links.Delete(link, prtl)); err != nil {
+	if err := gerrors.IgnoreNotFound(apimClient.Links.Delete(link, parent.parent)); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
