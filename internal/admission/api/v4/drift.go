@@ -68,7 +68,7 @@ func getRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (any, 
 		if err != nil {
 			return nil, err
 		}
-		return model.ToAPIV4DTO(remote).WithResolvedVisibility(), nil
+		return remote.WithResolvedVisibility(), nil
 	}
 	hrid := apiHRID(api)
 	remote, err := apimClient.APIs.GetV4ByHRID(hrid)
