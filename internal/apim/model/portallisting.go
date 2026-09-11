@@ -14,7 +14,10 @@
 
 package model
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallisting"
+import (
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallisting"
+)
 
 type PortalListingDTO struct {
 	HRID string                     `json:"hrid,omitempty"`
@@ -25,6 +28,10 @@ type PortalListingApiEntryDTO struct {
 	ApiHrid  string `json:"apiHrid,omitempty"`
 	Location string `json:"location,omitempty"`
 	Order    *int32 `json:"order,omitempty"`
+	// Unset is omitted so that APIM resolves the visibility from the parent folder,
+	// which lives in the referenced Portal or API — out of reach of this mapper — so
+	// every value APIM may resolve to is accepted while the CRD declares none.
+	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default"`
 }
 
 type PortalListingState struct {

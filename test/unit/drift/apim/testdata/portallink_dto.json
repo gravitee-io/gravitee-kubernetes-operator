@@ -3,5 +3,6 @@
   "name": "My Link",
   "href": "https://example.com",
   "location": "/projects/alpha",
-  "order": 1
+  "order": 1,
+  "visibility": "PRIVATE"
 }

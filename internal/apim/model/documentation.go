@@ -16,6 +16,7 @@ package model
 
 import (
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
@@ -31,7 +32,11 @@ type DocumentationDTO struct {
 	Location string                 `json:"location,omitempty"`
 	Order    *int32                 `json:"order,omitempty"`
 	// Unset is omitted so that APIM applies its own TOP_NAVBAR default.
-	Area documentation.PageArea `json:"area,omitempty" drift:"ignore-remote:TOP_NAVBAR"`
+	Area documentation.PageArea `json:"area,omitempty" drift:"ignore-remote-default:TOP_NAVBAR"`
+	// Unset is omitted so that APIM resolves the visibility from the parent folder,
+	// which lives in the referenced Portal or API — out of reach of this mapper — so
+	// every value APIM may resolve to is accepted while the CRD declares none.
+	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default"`
 }
 
 type DocumentationState struct {

@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	emptyIsNilName = "empty-is-nil"
-	ignoreName     = "ignore"
+	emptyIsNilName          = "empty-is-nil"
+	ignoreName              = "ignore"
+	ignoreRemoteDefaultName = "ignore-remote-default"
 )
 
 // InitRegistry initializes the equivalence registry.
@@ -32,7 +33,7 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.String, Ignore)
 	RegisterEquivalenceFunc("trimmed", reflect.String, Trimmed)
 	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
-	RegisterEquivalenceFunc("ignore-remote", reflect.String, IgnoreRemoteArgs)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.String, IgnoreRemoteDefault)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
@@ -50,17 +51,18 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("unstructured", reflect.Slice, DefaultEquivalencePostPullUpObjectChildren)
 }
 
-// IgnoreRemoteArgs ignores the remote difference if the remote string is in the context.FuncArgs.
-func IgnoreRemoteArgs(crd any, remote any, context DriftContext) Equivalence {
+// IgnoreRemoteDefault ignores a difference when the CRD leaves the field unset AND the
+// remote value is accepted: with no tag arguments any remote value is accepted, with
+// arguments only a remote value listed among them is. It is meant for fields APIM
+// resolves itself when the payload omits them: a CRD that states nothing cannot drift
+// towards a value APIM was free to pick, while a CRD value that is set is always
+// compared, and — when arguments are given — a remote value they do not list is always
+// drift.
+func IgnoreRemoteDefault(crd any, remote any, context DriftContext) Equivalence {
 	e := DefaultEquivalence(crd, remote, context)
-	if e.Equivalent == Inequivalent {
-		rs := asString(remote)
-		if context.FuncArgs != nil {
-			for _, arg := range context.FuncArgs {
-				if arg == rs {
-					return Equivalence{Equivalent: Equivalent}
-				}
-			}
+	if e.Equivalent == Inequivalent && asString(crd) == "" {
+		if len(context.FuncArgs) == 0 || slices.Contains(context.FuncArgs, asString(remote)) {
+			return Equivalence{Equivalent: Equivalent}
 		}
 	}
 	return e

@@ -16,9 +16,11 @@ package apim
 
 import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("API v4 Drift detection", func() {
@@ -118,7 +120,49 @@ var _ = Describe("API v4 Drift detection", func() {
 				},
 			},
 		),
+		Entry("unset portal navigation visibility resolved to PUBLIC matches the remote",
+			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+				{Path: "/alpha"},
+			}}.WithResolvedVisibility(),
+			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+				{Path: "/alpha", Visibility: nav.Public},
+			}}.WithResolvedVisibility(),
+		),
+		Entry("unset portal navigation visibility under a PRIVATE parent matches the inherited remote",
+			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+				{Path: "/alpha", Visibility: nav.Private},
+				{Path: "/alpha/docs"},
+			}}.WithResolvedVisibility(),
+			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+				{Path: "/alpha", Visibility: nav.Private},
+				{Path: "/alpha/docs", Visibility: nav.Private},
+			}}.WithResolvedVisibility(),
+		),
+		Entry("unset flow mode equivalent to the DEFAULT the remote resolves",
+			model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{}},
+			model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeDefault}},
+		),
 	)
+
+	It("compares a flow mode the CRD sets against the remote default", func() {
+		crd := model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeBestMatch}}
+		remote := model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeDefault}}
+		result := drift.DetectWithNamespace(crd, remote, "gravitee")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`mode: BEST_MATCH != DEFAULT`))
+	})
+
+	It("detects a console-side flip of a portal navigation entry the CRD leaves unset", func() {
+		crd := model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+			{Path: "/alpha"},
+		}}.WithResolvedVisibility()
+		remote := model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+			{Path: "/alpha", Visibility: nav.Private},
+		}}
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`visibility: PUBLIC != PRIVATE`))
+	})
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {

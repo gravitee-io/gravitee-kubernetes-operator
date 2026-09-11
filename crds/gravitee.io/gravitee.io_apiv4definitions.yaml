@@ -1557,6 +1557,12 @@ spec:
                         description: A slash-separated path defining the navigation hierarchy.
                         pattern: ^/
                         type: string
+                      visibility:
+                        description: Whether this entry is shown to anonymous visitors of the portal.
+                        enum:
+                          - PUBLIC
+                          - PRIVATE
+                        type: string
                     required:
                       - path
                     type: object

@@ -15,11 +15,13 @@
 package apim
 
 import (
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("PortalListing Drift detection", func() {
@@ -40,7 +42,27 @@ var _ = Describe("PortalListing Drift detection", func() {
 			completePortalListingDTO(),
 			*service.ToPortalListingDTO(completePortalListingCRD()),
 		),
+		Entry("unset visibility equivalent to any remote visibility resolved by APIM",
+			model.PortalListingDTO{
+				APIs: []model.PortalListingApiEntryDTO{{ApiHrid: "default-api", Location: "/alpha"}},
+			},
+			model.PortalListingDTO{
+				APIs: []model.PortalListingApiEntryDTO{{ApiHrid: "default-api", Location: "/alpha", Visibility: nav.Private}},
+			},
+		),
 	)
+
+	It("detects drift when the CRD declares a visibility and the remote differs", func() {
+		crd := model.PortalListingDTO{
+			APIs: []model.PortalListingApiEntryDTO{{ApiHrid: "default-api", Location: "/alpha", Visibility: nav.Public}},
+		}
+		remote := model.PortalListingDTO{
+			APIs: []model.PortalListingApiEntryDTO{{ApiHrid: "default-api", Location: "/alpha", Visibility: nav.Private}},
+		}
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`visibility: PUBLIC != PRIVATE`))
+	})
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {

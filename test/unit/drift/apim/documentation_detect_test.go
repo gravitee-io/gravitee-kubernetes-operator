@@ -16,10 +16,12 @@ package apim
 
 import (
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Documentation Drift detection", func() {
@@ -46,7 +48,29 @@ var _ = Describe("Documentation Drift detection", func() {
 				Area: documentation.TopNavbar,
 			},
 		),
+		Entry("unset visibility equivalent to any remote visibility resolved by APIM",
+			model.DocumentationDTO{},
+			model.DocumentationDTO{
+				Visibility: nav.Private,
+			},
+		),
 	)
+
+	It("compares an area the CRD sets against the remote default", func() {
+		crd := model.DocumentationDTO{Area: documentation.Homepage}
+		remote := model.DocumentationDTO{Area: documentation.TopNavbar}
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`area: HOMEPAGE != TOP_NAVBAR`))
+	})
+
+	It("detects drift when the CRD declares a visibility and the remote differs", func() {
+		crd := model.DocumentationDTO{Visibility: nav.Public}
+		remote := model.DocumentationDTO{Visibility: nav.Private}
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`visibility: PUBLIC != PRIVATE`))
+	})
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {

@@ -73,11 +73,12 @@ func getRemotePortalLink(prtl *v1alpha1.Portal) drift.RemoteObjectGetter[*v1alph
 			return nil, err
 		}
 		return model.PortalLinkDTO{
-			HRID:     remote.HRID,
-			Name:     remote.Name,
-			Href:     remote.Href,
-			Location: remote.Location,
-			Order:    remote.Order,
+			HRID:       remote.HRID,
+			Name:       remote.Name,
+			Href:       remote.Href,
+			Location:   remote.Location,
+			Order:      remote.Order,
+			Visibility: remote.Visibility,
 		}, nil
 	}
 }

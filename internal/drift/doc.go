@@ -78,7 +78,9 @@
 //   - trimmed (string): compares strings after [strings.TrimSpace].
 //   - rfc3339 (string): compares instants; accepts RFC3339 and RFC3339Nano inputs.
 //   - case-insensitive (string): compares strings case-insensitively.
-//   - ignore-remote (string): ignores difference if remote value matches any of the tag arguments.
+//   - ignore-remote-default (string): ignores a difference when the CRD value is unset;
+//     with no arguments any remote value is accepted, with arguments only a listed
+//     remote value (a server default) is.
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
 //   - ignore-remote-only-metadata (slice): filters out remote-only Metadata items before comparison.
 //   - ignore-unknown-crd-groups (slice): removes CRD-only strings, then compares with namespace prefix ignored.
@@ -95,21 +97,30 @@
 //
 // ## Functions with Arguments
 //
-// ### ignore-remote
+// ### ignore-remote-default
 //
-// Syntax: `drift:"ignore-remote:value1,value2,..."`
+// Syntax: `drift:"ignore-remote-default"` or `drift:"ignore-remote-default:value1,value2,..."`
 //
-// Ignores differences if the remote value matches any of the specified arguments.
-// Useful for fields that have a known default value in APIM that may differ from
-// the CRD representation.
+// Ignores a difference when the CRD leaves the field unset. With no arguments, any
+// remote value is accepted — use this when the CRD carries no information to predict
+// what APIM resolves the field to. With arguments, only a remote value listed among
+// them is accepted, and any other remote value is drift — use this when the CRD's
+// silence should only cover specific, known server defaults. Either way, a CRD value
+// that is set is always compared.
 //
 // Example:
 //
-//	// Ignore if remote is "DEFAULT"
-//	FlowMode v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote:DEFAULT"`
+//	// APIM applies DEFAULT when the payload omits the flow mode
+//	Mode v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:DEFAULT"`
 //
-//	// Ignore if remote is "AUTO" or "DEFAULT"
-//	QOS v4.QOS `json:"qos,omitempty" drift:"ignore-remote:AUTO,DEFAULT"`
+//	// APIM resolves an omitted next-gen portal visibility from the parent folder, which
+//	// lives in another resource here — any value APIM may resolve to is accepted
+//	Visibility nav.Visibility `json:"visibility,omitempty" drift:"ignore-remote-default"`
+//
+// Where the operator can see the whole ancestor chain — Portal.structure.topNavbar,
+// ApiV4Definition.portalNavigation — the expected visibility is resolved instead, by
+// [github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model.PortalDTO.WithResolvedVisibility],
+// and the field is compared exactly with no tag at all.
 //
 // ### ignore-namespace-prefix
 //

@@ -17,6 +17,7 @@ package portallink
 import (
 	"context"
 
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -32,6 +33,37 @@ var _ = Describe("Create", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	ctx := context.Background()
+
+	It("should create portal link in APIM with its declared visibility", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortal(constants.PortalFile).
+			WithPortalLink(constants.PortalLinkFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build()
+
+		fixtures.PortalLink.Spec.Visibility = new(nav.Private)
+
+		fixtures.Apply()
+
+		By("expecting portal link status to be completed")
+
+		Expect(assert.PortalLinkAccepted(fixtures.PortalLink)).To(Succeed())
+
+		By("calling rest API, expecting the declared visibility to be applied to the link")
+
+		apim := apim.NewClient(ctx)
+		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		linkHrid := refs.NewNamespacedNameFromObject(fixtures.PortalLink).HRID()
+
+		Eventually(func() error {
+			link, linkErr := apim.Links.GetByHRID(portalHrid, linkHrid)
+			if linkErr != nil {
+				return linkErr
+			}
+			return assert.Equals("Portal link visibility", nav.Private, link.Visibility)
+		}, timeout, interval).Should(Succeed(), fixtures.PortalLink.Name)
+	})
 
 	It("should create portal link in APIM", func() {
 		fixtures := fixture.Builder().

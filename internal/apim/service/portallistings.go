@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -107,9 +108,10 @@ func ToPortalListingDTO(listing *v1alpha1.PortalListing) *model.PortalListingDTO
 		}
 		apiRef := refs.NewNamespacedName(ns, entry.Ref.Name)
 		dto.APIs = append(dto.APIs, model.PortalListingApiEntryDTO{
-			ApiHrid:  apiRef.HRID(),
-			Location: entry.Location,
-			Order:    entry.Order,
+			ApiHrid:    apiRef.HRID(),
+			Location:   entry.Location,
+			Order:      entry.Order,
+			Visibility: utils.SafeDereference(entry.Visibility),
 		})
 	}
 

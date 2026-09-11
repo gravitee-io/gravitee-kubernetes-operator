@@ -24,3 +24,4 @@ spec:
   href: "https://docs.example.com"
   location: /foo
   order: 4
+  visibility: PUBLIC

@@ -17,6 +17,7 @@ package model
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
@@ -106,9 +107,10 @@ type APIV4ConsoleNotificationDTO struct {
 }
 
 type APIV4NavigationPathDTO struct {
-	Path        string  `json:"path"`
-	DisplayName *string `json:"displayName,omitempty"`
-	Order       *int32  `json:"order,omitempty"`
+	Path        string         `json:"path"`
+	DisplayName *string        `json:"displayName,omitempty"`
+	Order       *int32         `json:"order,omitempty"`
+	Visibility  nav.Visibility `json:"visibility,omitempty"`
 }
 
 type APIV4MemberDTO struct {
@@ -228,7 +230,7 @@ type APIV4EndpointGroupDTO struct {
 }
 
 type APIV4FlowExecutionDTO struct {
-	Mode          v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote:DEFAULT"`
+	Mode          v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:DEFAULT"`
 	MatchRequired bool        `json:"matchRequired"`
 }
 

@@ -122,6 +122,12 @@ spec:
                     - OPENAPI
                     - ASYNCAPI
                   type: string
+                visibility:
+                  description: Whether this entry is shown to anonymous visitors of the portal.
+                  enum:
+                    - PUBLIC
+                    - PRIVATE
+                  type: string
               required:
                 - content
                 - name
