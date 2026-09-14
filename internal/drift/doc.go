@@ -176,9 +176,7 @@
 // gravitee.io/drift-detection annotation with values "true" or "false".
 //
 // Additionally, some resource types are unsupported or disabled by default:
-//   - Legacy Group resources (non-Automation API) are unsupported
 //   - Subscriptions bound to a definition-v2 ApiDefinition are unsupported
-//   - Portal, Documentation, and PortalListing resources are disabled by default
 //
 // See [InitEnableCheck] and [IsDriftEnabled] for the predicate system.
 //
