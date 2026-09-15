@@ -31,13 +31,17 @@ type GroupDTO struct {
 	HRID          string   `json:"hrid,omitempty" drift:"ignore"`
 	Name          string   `json:"name"`
 	NotifyMembers bool     `json:"notifyMembers" drift:"ignore"` // send empty returns true, so need to ignore
-	Members       []Member `json:"members" drift:"empty-is-nil"`
+	Members       []Member `json:"members" drift:"ignore-only:crd"`
 }
 
 type Member struct {
 	Source   string                     `json:"source"`
 	SourceID string                     `json:"sourceId"`
 	Roles    map[group.RoleScope]string `json:"roles"`
+}
+
+func (m Member) MatchKey() string {
+	return m.Source + ":" + m.SourceID
 }
 
 func ToGroupDTO(grp group.Type) GroupDTO {

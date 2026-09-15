@@ -48,6 +48,33 @@ var _ = Describe("Group Drift detection", func() {
 				Members:       make([]model.Member, 0),
 			},
 		),
+		Entry("crd-only members ignored",
+			model.GroupDTO{
+				Name: "My Group",
+				Members: []model.Member{
+					{Source: "gravitee", SourceID: "admin"},
+					{Source: "memory", SourceID: "local-only"},
+				},
+			},
+			model.GroupDTO{
+				Name: "My Group",
+				Members: []model.Member{
+					{Source: "gravitee", SourceID: "admin"},
+				},
+			},
+		),
+		Entry("crd members against empty remote are ignored",
+			model.GroupDTO{
+				Name: "e2e-group-no-roles",
+				Members: []model.Member{
+					{Source: "gravitee", SourceID: "admin"},
+				},
+			},
+			model.GroupDTO{
+				Name:    "e2e-group-no-roles",
+				Members: []model.Member{},
+			},
+		),
 	)
 
 	Describe("All properties regression test", func() {
