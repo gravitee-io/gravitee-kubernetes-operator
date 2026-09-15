@@ -31,6 +31,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle/ref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	v1 "k8s.io/api/networking/v1"
 
@@ -42,12 +43,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/kafkaroute"
 
+	amctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amctx"
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
 	documentationAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
-	amctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amctx"
 	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
@@ -202,6 +203,9 @@ func main() {
 	}
 	// Always init as user may force at the CRD level
 	drift.Init()
+
+	// Init the type registry for references
+	ref.Init()
 
 	//+kubebuilder:scaffold:builder
 

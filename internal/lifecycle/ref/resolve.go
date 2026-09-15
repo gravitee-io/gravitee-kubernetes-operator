@@ -16,13 +16,10 @@ package ref
 
 import (
 	"context"
-	"fmt"
-
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func ObjectKey(ref *refs.NamespacedName, parentNs string) types.NamespacedName {
@@ -37,14 +34,17 @@ func ObjectKey(ref *refs.NamespacedName, parentNs string) types.NamespacedName {
 	return types.NamespacedName{Namespace: ns, Name: name}
 }
 
-func Resolve(ctx context.Context, kindName string, nsn types.NamespacedName) (client.Object, error) {
-	kind, ok := Lookup(kindName)
+func Resolve(ctx context.Context, tagSpec TagSpec, nsn types.NamespacedName) (any, error) {
+	kind, ok := Lookup(tagSpec.Kind)
 	if !ok {
-		return nil, fmt.Errorf("%w: %s", ErrUnknownKind, kindName)
+		return nil, NewWrappedError("resolve", tagSpec.Kind, "", ErrUnknownKind)
 	}
+
 	obj := kind.New()
 	if err := k8s.GetClient().Get(ctx, nsn, obj); err != nil {
-		return nil, err
+		return nil, NewWrappedError("resolve", tagSpec.Kind, "", err)
 	}
-	return obj, nil
+
+	return kind.Extract(obj, tagSpec.Key)
+
 }

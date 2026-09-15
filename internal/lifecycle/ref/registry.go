@@ -16,47 +16,74 @@
 package ref
 
 import (
-	"errors"
+	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-var (
-	ErrNotImplemented = errors.New("lifecycle/ref: not implemented")
-	ErrUnknownKind    = errors.New("lifecycle/ref: unknown kind")
-)
-
 type ObjectFactory func() client.Object
 
 // ExtractFunc pulls a value out of a fetched object (e.g. secret data key).
-// Nil on RefKind means the whole object is the resolved value.
+// Nil on Kind means the whole object is the resolved value.
 type ExtractFunc func(obj client.Object, key string) (any, error)
 
-type RefKind struct {
+type Kind struct {
 	New     ObjectFactory
 	Extract ExtractFunc
 }
 
-var kinds = map[string]RefKind{}
+var kinds = map[string]Kind{}
 
-func Register(name string, new ObjectFactory, extract ExtractFunc) {
-	kinds[name] = RefKind{New: new, Extract: extract}
+func Register(name string, factory ObjectFactory, extract ExtractFunc) {
+	if name == "" {
+		panic("lifecycle/ref: empty kind name")
+	}
+	if factory == nil {
+		panic("lifecycle/ref: nil ObjectFactory")
+	}
+	if extract == nil {
+		panic("lifecycle/ref: nil ExtractFunc")
+	}
+	kinds[name] = Kind{New: factory, Extract: extract}
 }
 
-func Lookup(name string) (RefKind, bool) {
+func Lookup(name string) (Kind, bool) {
 	k, ok := kinds[name]
+	if !ok && !strings.HasSuffix(name, "s") {
+		k, ok = kinds[name+"s"]
+	} else if !ok {
+		k, ok = kinds[strings.TrimSuffix(name, "s")]
+	}
 	return k, ok
 }
 
 // Init registers known kinds. Call once at process start. Do not register AMSecurityDomain until that CRD exists.
 func Init() {
-	Register("amcontext", func() client.Object { return &v1alpha1.AMContext{} }, nil)
+	Register("amcontext", func() client.Object { return &v1alpha1.AMContext{} }, noop)
+	Register("amsecuritydomain", func() client.Object { return &v1alpha1.AMContext{} }, extractHRID)
 	Register("secret", func() client.Object { return &corev1.Secret{} }, extractSecretKey)
 }
 
+func noop(client.Object, string) (any, error) {
+	return nil, nil
+}
+
 func extractSecretKey(obj client.Object, key string) (any, error) {
-	return nil, ErrNotImplemented
+	secret, ok := obj.(*corev1.Secret)
+	if !ok {
+		return nil, NewWrappedError("extract", "secret", key, ErrNotASecret)
+	}
+	data, ok := secret.Data[key]
+	if !ok {
+		return nil, NewWrappedError("extract", "secret", key, ErrSecretKeyMissing)
+	}
+	return data, nil
+}
+
+func extractHRID(obj client.Object, _ string) (any, error) {
+	return refs.NewNamespacedNameFromObject(obj).HRID(), nil
 }

@@ -46,14 +46,14 @@ type DeleteGuardFunc[T core.ContextAwareObject] func(ctx context.Context, obj T)
 type PostUpsertFunc[T core.ContextAwareObject, D store.Identifiable] func(ctx context.Context, obj T, dto D) error
 
 // RefResolverFunc writes resolved in-cluster refs onto obj (secrets, parent CRs). Mutates obj.
-type RefResolverFunc[T any] func(ctx context.Context, obj T) error
+type RefResolverFunc[T any] func(ctx context.Context, obj T, namespace string) error
 
 // AdmissionCheckFunc is extra spec/cluster validation.
 // Severe errors reject; warnings admit.
 type AdmissionCheckFunc[T core.ContextAwareObject] func(ctx context.Context, obj T) *gerrors.AdmissionErrors
 
 // ImmutableFieldsFunc returns severe errors when frozen spec fields changed between old and new.
-type ImmutableFieldsFunc[T core.ContextAwareObject] func(old, new T) *gerrors.AdmissionErrors
+type ImmutableFieldsFunc[T core.ContextAwareObject] func(oldValue, newValue T) *gerrors.AdmissionErrors
 
 // DryRunFunc validates dto against the remote API without persisting. Never maps the CR.
 type DryRunFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) error
