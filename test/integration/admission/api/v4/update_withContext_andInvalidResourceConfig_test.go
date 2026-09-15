@@ -37,7 +37,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 	It("should return error on API creation with invalid api resource", func() {
 		fixtures := fixture.
 			Builder().
-			WithAPIv4(constants.ApiV4WithOauth2AmResourceFile).
+			WithAPIv4(constants.ApiV4WithCacheRedisResourceFile).
 			Build().
 			Apply()
 		ctxFixtures := fixture.
@@ -55,7 +55,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		By("adding an invalid to the API")
 		invalidConfig := &utils.GenericStringMap{
 			Unstructured: struct{ Object map[string]interface{} }{Object: map[string]interface{}{
-				"wrong_json": "[{\"object\":object}]",
+				"useSsl": "not a boolean",
 			}},
 		}
 
@@ -70,8 +70,8 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 				errors.NewSeveref(
 					"Resource [%s] configuration is not valid",
 					*fixtures.APIv4.Spec.Resources[0].Name,
-				).Error(),
-				err.Error(),
+				),
+				err,
 			)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
