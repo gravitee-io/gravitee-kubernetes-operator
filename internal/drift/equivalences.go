@@ -96,11 +96,24 @@ func IgnoreOnlyArgs(crd any, remote any, ctx DriftContext) Equivalence {
 	stripNS := slices.Contains(ctx.FuncArgs[1:], ignoreOnlyStripNS)
 	crdNames := keys(crdItems, ctx.Namespace, stripNS)
 	remoteNames := keys(remoteItems, ctx.Namespace, stripNS)
+	only := onlyOnSide(side, crdNames, remoteNames)
 	if stripNS {
 		return ignoreOnlySetCompare(side, crdNames, remoteNames)
 	}
+	// Filtering CRD-only items can leave nil vs a live empty GET slice (`[]`).
+	// detectItems treats that as members[0] vs a zero value; skip instead.
+	if ignoreOnlyRemainingEmpty(side, crdNames, remoteNames, only) {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
 
-	return ignoreOnlyFilters(side, ctx.FuncArgs, onlyOnSide(side, crdNames, remoteNames))
+	return ignoreOnlyFilters(side, ctx.FuncArgs, only)
+}
+
+func ignoreOnlyRemainingEmpty(side string, crdNames, remoteNames, only []string) bool {
+	if side == ignoreOnlyCRD {
+		return len(difference(crdNames, only)) == 0 && len(remoteNames) == 0
+	}
+	return len(crdNames) == 0 && len(difference(remoteNames, only)) == 0
 }
 
 func ignoreOnlySetCompare(side string, crdNames, remoteNames []string) Equivalence {

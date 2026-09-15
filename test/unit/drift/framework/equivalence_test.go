@@ -658,15 +658,11 @@ var _ = Describe("IgnoreOnlyArgs", func() {
 		Expect(filtered).To(ConsistOf(namedItem{ID: "owner"}))
 	})
 
-	It("filters remote-only items when crd is empty", func() {
+	It("skips when crd is empty and remaining remote items are remote-only", func() {
 		remote := []namedItem{{ID: "sync-id"}}
 
 		e := drift.IgnoreOnlyArgs(nil, remote, remoteCtx)
-		Expect(e.Equivalent).To(Equal(drift.CannotCompare))
-		Expect(e.RemoteItemsFilterFunc).NotTo(BeNil())
-
-		filtered := e.RemoteItemsFilterFunc(remote)
-		Expect(filtered).To(BeEmpty())
+		Expect(e).To(Equal(drift.Equivalence{Equivalent: drift.Equivalent, Skip: true}))
 	})
 
 	It("keeps non-keyed items when filtering remote-only items", func() {
@@ -698,15 +694,11 @@ var _ = Describe("IgnoreOnlyArgs", func() {
 		Expect(filtered).To(ConsistOf(namedItem{ID: "owner"}))
 	})
 
-	It("filters crd-only items when remote is empty", func() {
+	It("skips when remote is empty and remaining crd items are crd-only", func() {
 		crd := []namedItem{{ID: "local-only"}}
 
 		e := drift.IgnoreOnlyArgs(crd, nil, crdCtx)
-		Expect(e.Equivalent).To(Equal(drift.CannotCompare))
-		Expect(e.CRDItemsFilterFunc).NotTo(BeNil())
-
-		filtered := e.CRDItemsFilterFunc(crd)
-		Expect(filtered).To(BeEmpty())
+		Expect(e).To(Equal(drift.Equivalence{Equivalent: drift.Equivalent, Skip: true}))
 	})
 
 	It("Detect ignores remote-only items", func() {
@@ -718,6 +710,12 @@ var _ = Describe("IgnoreOnlyArgs", func() {
 	It("Detect ignores crd-only items", func() {
 		crd := withIgnoreOnlyCRD{Items: []namedItem{{ID: "owner"}, {ID: "local-only"}}}
 		remote := withIgnoreOnlyCRD{Items: []namedItem{{ID: "owner"}}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("Detect ignores crd-only items when remote is an empty slice", func() {
+		crd := withIgnoreOnlyCRD{Items: []namedItem{{ID: "local-only"}}}
+		remote := withIgnoreOnlyCRD{Items: []namedItem{}}
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
 
