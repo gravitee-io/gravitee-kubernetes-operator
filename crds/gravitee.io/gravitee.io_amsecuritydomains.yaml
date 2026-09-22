@@ -323,6 +323,7 @@ spec:
                   description: Description is a human-readable description of the domain.
                   type: string
                 enabled:
+                  default: true
                   description: Enabled controls whether the domain handles incoming authentication
                     and authorization requests.
                   type: boolean

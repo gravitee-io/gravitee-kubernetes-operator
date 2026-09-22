@@ -143,7 +143,7 @@ _Appears in:_
 | `corsSettings` _[CorsSettings](#corssettings)_ | CorsSettings is the Cross-Origin Resource Sharing configuration<br />controlling which web origins may call the domain's endpoints from a browser. |  | Optional: \{\} <br /> |
 | `dataPlaneId` _string_ | DataPlaneId is the identifier of the data plane this domain is connected to.<br />Optional at creation and resolved from the environment's data planes when omitted.<br />Immutable afterwards: an apply that names a different one is rejected. |  | Optional: \{\} <br /> |
 | `description` _string_ | Description is a human-readable description of the domain. |  | Optional: \{\} <br /> |
-| `enabled` _boolean_ | Enabled controls whether the domain handles incoming authentication and authorization requests. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether the domain handles incoming authentication and authorization requests. | true | Optional: \{\} <br /> |
 | `keyRetrievalSettings` _[KeyRetrievalSettings](#keyretrievalsettings)_ | KeyRetrievalSettings are the fetch, SSRF and cache limits<br />applied to every trusted domain in the security domain. |  | Optional: \{\} <br /> |
 | `loginSettings` _[LoginSettings](#loginsettings)_ | LoginSettings is the configuration of the domain's login flow<br />and the features offered on the sign-in page. |  | Optional: \{\} <br /> |
 | `master` _boolean_ | Master controls whether this is the master domain of its environment.<br />A master domain may perform cross-domain token introspection. |  | Optional: \{\} <br /> |
@@ -3125,7 +3125,7 @@ _Appears in:_
 | `corsSettings` _[CorsSettings](#corssettings)_ | CorsSettings is the Cross-Origin Resource Sharing configuration<br />controlling which web origins may call the domain's endpoints from a browser. |  | Optional: \{\} <br /> |
 | `dataPlaneId` _string_ | DataPlaneId is the identifier of the data plane this domain is connected to.<br />Optional at creation and resolved from the environment's data planes when omitted.<br />Immutable afterwards: an apply that names a different one is rejected. |  | Optional: \{\} <br /> |
 | `description` _string_ | Description is a human-readable description of the domain. |  | Optional: \{\} <br /> |
-| `enabled` _boolean_ | Enabled controls whether the domain handles incoming authentication and authorization requests. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether the domain handles incoming authentication and authorization requests. | true | Optional: \{\} <br /> |
 | `keyRetrievalSettings` _[KeyRetrievalSettings](#keyretrievalsettings)_ | KeyRetrievalSettings are the fetch, SSRF and cache limits<br />applied to every trusted domain in the security domain. |  | Optional: \{\} <br /> |
 | `loginSettings` _[LoginSettings](#loginsettings)_ | LoginSettings is the configuration of the domain's login flow<br />and the features offered on the sign-in page. |  | Optional: \{\} <br /> |
 | `master` _boolean_ | Master controls whether this is the master domain of its environment.<br />A master domain may perform cross-domain token introspection. |  | Optional: \{\} <br /> |

@@ -52,7 +52,7 @@ func NewLifecycle() Lifecycle {
 		ResolveRefs:   nil,
 		ClientFactory: internal.CreateAMClient,
 		ToDTO:         internal.ToDomainDTO,
-		DeleteGuard:   nil,
+		DeleteGuard:   internal.DeleteGuard,
 		Delete:        internal.Delete,
 		Upsert:        internal.Upsert,
 		PostUpsert:    internal.UpdateStatus,

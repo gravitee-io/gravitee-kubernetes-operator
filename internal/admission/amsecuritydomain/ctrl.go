@@ -32,11 +32,18 @@ type AdmissionCtrl struct {
 	Lifecycle lifecycle.AdmissionLifecycle[*v1alpha1.AMSecurityDomain, amsdk.Domain, *am.Client]
 }
 
-func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
+func NewAdmissionCtrl() AdmissionCtrl {
+	a := AdmissionCtrl{}
 	a.Lifecycle.ClientFactory = internal.CreateAMClient
 	a.Lifecycle.DryRun = internal.DryRun
 	a.Lifecycle.GetRemote = internal.GetRemote
 	a.Lifecycle.ToDTO = internal.ToDomainDTO
+	a.Lifecycle.DeleteGuard = internal.DeleteGuard
+	return a
+}
+
+func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
+	a = NewAdmissionCtrl()
 	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.AMSecurityDomain{}).
 		WithValidator(a).
 		Complete()

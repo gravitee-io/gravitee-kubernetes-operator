@@ -19,11 +19,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 
 	"github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg"
 	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg/sdk/domain"
 	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/apicontext"
-	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/response"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -35,6 +36,24 @@ import (
 type Client struct {
 	*pkg.AMClient
 	Context core.ContextModel
+}
+
+func NewSDKClient(ctx context.Context, obj *v1alpha1.AMContext) (*Client, error) {
+
+	if _, err := dynamic.InjectSecretIfAny(ctx, obj); err != nil {
+		return nil, err
+	}
+
+	var amClient, err = pkg.NewClient(toSDKContext(obj.Spec), env.Config.HTTPClientTimeoutSeconds*int(time.Millisecond))
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AMClient: %w", err)
+	}
+
+	return &Client{
+		AMClient: amClient,
+		Context:  obj,
+	}, nil
 }
 
 func (c *Client) GetOrgID() string {
@@ -53,38 +72,29 @@ func (c *Client) Probe(ctx context.Context) error {
 		req.URL.RawQuery = url.Values{"size": {"1"}}.Encode()
 		return nil
 	})
-	_, ok := response.Payload[[]amsdk.Domain](resp)
-	if !ok {
-		return fmt.Errorf("invalid response payload")
+
+	if err := HasErrors(err, func() *http.Response {
+		return resp.HTTPResponse
+	}); err != nil {
+		return err
 	}
+
 	return err
 }
 
-func NewSDKClient(ctx context.Context, obj *v1alpha1.AMContext) (*Client, error) {
-
-	if _, err := dynamic.InjectSecretIfAny(ctx, obj); err != nil {
-		return nil, err
+func toSDKContext(spec v1alpha1.AMContextSpec) apicontext.APIContext {
+	baseUrl := spec.BaseUrl
+	path := "/automation"
+	if spec.Path != nil && strings.TrimSpace(*spec.Path) != "" {
+		path = *spec.Path
 	}
-
-	amClient, err := pkg.NewClient(toSDKContext(obj), env.Config.HTTPClientTimeoutSeconds)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to create AMClient: %w", err)
-	}
-
-	return &Client{
-		AMClient: amClient,
-		Context:  obj,
-	}, nil
-}
-
-func toSDKContext(obj *v1alpha1.AMContext) apicontext.APIContext {
+	baseUrl = fmt.Sprintf("%s%s", baseUrl, path)
 	return apicontext.APIContext{
-		BaseURL: obj.Spec.BaseUrl,
-		OrgID:   obj.Spec.OrgID,
-		EnvID:   obj.Spec.EnvID,
+		BaseURL: baseUrl,
+		OrgID:   spec.OrgID,
+		EnvID:   spec.EnvID,
 		Auth: apicontext.Auth{
-			BearerToken: new(obj.Spec.GetAuth().GetBearerToken()),
+			BearerToken: new(spec.GetAuth().GetBearerToken()),
 		},
 	}
 }
@@ -104,9 +114,9 @@ func ToAdmissionErrors(errors []amsdk.DryRunError) *gerrors.AdmissionErrors {
 	return errs
 }
 
-func HasErrors(err error, extractor func() *http.Response) error {
+func HasErrors(err error, response func() *http.Response) error {
 	if err != nil {
 		return err
 	}
-	return gerrors.FromResponse(extractor())
+	return gerrors.FromResponse(response())
 }

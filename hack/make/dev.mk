@@ -8,6 +8,10 @@ start-cluster: ## Init and start a local cluster
 start-cluster-ui: ## Init and start a local cluster
 	@APIM_UI=true npx zx ./hack/scripts/run-kind.mjs
 
+.PHONY: start-bare-cluster
+start-bare-cluster: ## Start a plain kind cluster (no Gravitee pods)
+	kind create cluster --name gravitee
+
 .PHONY: start-conformance-cluster
 start-conformance-cluster: ## Init and start a local cluster for gateway-api conformance tests
 	kind create cluster --config hack/kind/kind.conformance.yaml

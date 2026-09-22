@@ -67,6 +67,8 @@ github.com/gkampitakis/go-diff v1.3.2 h1:Qyn0J9XJSDTgnsgHRdz9Zp24RaJeKMUHg2+PDZZ
 github.com/gkampitakis/go-diff v1.3.2/go.mod h1:LLgOrpqleQe26cte8s36HTWcTmMEur6OPYerdAAS9tk=
 github.com/gkampitakis/go-snaps v0.5.15 h1:amyJrvM1D33cPHwVrjo9jQxX8g/7E2wYdZ+01KS3zGE=
 github.com/gkampitakis/go-snaps v0.5.15/go.mod h1:HNpx/9GoKisdhw9AFOBT1N7DBs9DiHo/hGheFGBZ+mc=
+github.com/go-chi/chi/v5 v5.3.2 h1:5YQkICvTCSZ25hoRsyJazN0scjzKGiu4VAUc7H1o1nY=
+github.com/go-chi/chi/v5 v5.3.2/go.mod h1:R+tYY2hNuVUUjxoPtqUdgBqevM9s9njzkTLutVsOCto=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-logr/logr v1.4.4 h1:tG4xh9yMsRCAiodLVTxyrkzSZ9+o0L1Kg/+cPVcbP/8=
 github.com/go-logr/logr v1.4.4/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
@@ -137,6 +139,8 @@ github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 h1:JeSE6pjso5THxAzdVpqr6/geYxZytqFMBCOtn/ujyeo=
 github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674/go.mod h1:r4w70xmWCQKmi1ONH4KIaBptdivuRPyosB9RmPlGEwA=
+github.com/gravitee-io-labs/gravitee-automation-tools/am-mock-server v1.0.2 h1:XhFkK1Z3j4WDcS53OoSl9vQg2A6N3NFwDMco9fMq6fk=
+github.com/gravitee-io-labs/gravitee-automation-tools/am-mock-server v1.0.2/go.mod h1:oJjjIfl8VYLUEo0UTE0ye2hiwcFS+zQzjPJgULPW9VY=
 github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk v1.0.2 h1:/oupOZ1NFmzIGozvOZds8pk6KfbwrM9GL9MfF7dmYaw=
 github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk v1.0.2/go.mod h1:rESCIfHGErAV2pkjYBiRVo8+7D4Op+Tr93+da4vRt1o=
 github.com/gravitee-io-labs/gravitee-automation-tools/common v1.0.0 h1:kBnBKOdBr4XksHjmSMXt2PBFbsAQaMrUIV3s07oR2os=

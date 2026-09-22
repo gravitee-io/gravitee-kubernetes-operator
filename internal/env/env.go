@@ -138,7 +138,6 @@ func init() {
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
 	Config.HTTPClientInsecureSkipVerify = os.Getenv(HttpCLientInsecureSkipCertVerify) == TrueString
-	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 
 	httpProxy := HttpProxy{
 		Enabled:        os.Getenv(HttpClientProxyEnabled) == TrueString,
@@ -151,10 +150,6 @@ func init() {
 
 	Config.HttpClientTrustStorePath = os.Getenv(HttpClientTruststorePath)
 
-	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
-	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
-	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
-	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
 	Config.SecureMetrics = os.Getenv(SecureMetrics) == TrueString

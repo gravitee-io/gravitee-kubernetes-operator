@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/gravitee-io-labs/gravitee-automation-tools/am-mock-server v1.0.2
 	github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk v1.0.2
 	github.com/gravitee-io-labs/gravitee-automation-tools/common v1.0.0
 	github.com/moby/moby v27.5.1+incompatible
@@ -47,6 +48,7 @@ require (
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
+	github.com/go-chi/chi/v5 v5.3.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.23.1 // indirect
 	github.com/go-openapi/jsonreference v0.21.5 // indirect

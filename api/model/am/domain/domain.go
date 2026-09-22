@@ -48,6 +48,7 @@ type Domain struct {
 
 	// Enabled controls whether the domain handles incoming authentication and authorization requests.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=true
 	Enabled *bool `json:"enabled,omitempty"`
 
 	// KeyRetrievalSettings are the fetch, SSRF and cache limits
