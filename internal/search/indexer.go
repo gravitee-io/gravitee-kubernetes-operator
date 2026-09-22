@@ -60,6 +60,7 @@ const (
 	PortalThemeContextField      IndexField = "portaltheme-context"
 	PortalThemeField             IndexField = "portal-theme"
 	CatalogMcpServerContextField IndexField = "catalogmcpserver-context"
+	AMSecurityContextField       IndexField = "am-sec-domain-context"
 )
 
 func (f IndexField) String() string {
@@ -123,6 +124,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexPortalThemeRef))
 	collect(newIndexer(ctx, cache, &v1alpha1.CatalogMcpServer{}, CatalogMcpServerContextField,
 		indexCatalogMcpServerManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
+		indexPortalThemeRef))
 
 	return errors.NewAggregate(errs)
 }
@@ -436,4 +439,11 @@ func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {
 		cp.Namespace = obj.GetNamespace()
 	}
 	return cp.String()
+}
+
+func indexAMSecurityDomainContext(asd *v1alpha1.AMSecurityDomain, fields *[]string) {
+	if !asd.HasContext() {
+		return
+	}
+	*fields = append(*fields, ensureNamespacedRef(asd, asd.ContextRef()))
 }

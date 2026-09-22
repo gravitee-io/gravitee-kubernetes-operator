@@ -16,64 +16,97 @@ package am
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/url"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/client"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/service"
+	"github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg"
+	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg/sdk/domain"
+	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/apicontext"
+	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/response"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-const automationBasePath = "/automation"
-
-// AM wraps the Automation API services needed to talk to one AM environment.
-type AM struct {
-	Domains *service.Domains
+// Client wraps the Automation API services needed to talk to one Client environment.
+type Client struct {
+	*pkg.AMClient
 	Context core.ContextModel
 }
 
-func FromContext(ctx context.Context, amCtx core.ContextObject, parentNs string) (*AM, error) {
-	urls, err := client.NewURLs(
-		amCtx.GetURL(),
-		getAutomationPath(amCtx),
-		amCtx.GetOrgID(),
-		amCtx.GetEnvID(),
-	)
+func (c *Client) GetOrgID() string {
+	return c.Context.GetOrgID()
+}
+
+func (c *Client) GetEnvID() string {
+	return c.Context.GetEnvID()
+}
+
+// Probe checks that AM's Automation API is reachable at this org/env.
+// A 200 is the whole contract: the body is discarded.
+func (c *Client) Probe(ctx context.Context) error {
+	resp, err := c.Domains.ListDomainsWithResponse(ctx, func(ctx context.Context, req *http.Request) error {
+		// Add page and length
+		req.URL.RawQuery = url.Values{"size": {"1"}}.Encode()
+		return nil
+	})
+	_, ok := response.Payload[[]amsdk.Domain](resp)
+	if !ok {
+		return fmt.Errorf("invalid response payload")
+	}
+	return err
+}
+
+func NewSDKClient(ctx context.Context, obj *v1alpha1.AMContext) (*Client, error) {
+
+	if _, err := dynamic.InjectSecretIfAny(ctx, obj); err != nil {
+		return nil, err
+	}
+
+	amClient, err := pkg.NewClient(toSDKContext(obj), env.Config.HTTPClientTimeoutSeconds)
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create AMClient: %w", err)
 	}
 
-	if _, err = dynamic.InjectSecretIfAny(ctx, amCtx); err != nil {
-		return nil, err
-	}
-
-	httpClient, err := http.NewClient(ctx, toHttpAuth(amCtx))
-	if err != nil {
-		return nil, err
-	}
-
-	c := &client.Client{
-		HTTP: httpClient,
-		URLs: urls,
-	}
-
-	return &AM{
-		Domains: service.NewDomains(c),
-		Context: amCtx,
+	return &Client{
+		AMClient: amClient,
+		Context:  obj,
 	}, nil
 }
 
-func FromContextRef(ctx context.Context, ref core.ObjectRef, parentNs string) (*AM, error) {
-	amCtx, err := dynamic.ResolveAMContext(ctx, ref, parentNs)
-	if err != nil {
-		return nil, err
+func toSDKContext(obj *v1alpha1.AMContext) apicontext.APIContext {
+	return apicontext.APIContext{
+		BaseURL: obj.Spec.BaseUrl,
+		OrgID:   obj.Spec.OrgID,
+		EnvID:   obj.Spec.EnvID,
+		Auth: apicontext.Auth{
+			BearerToken: new(obj.Spec.GetAuth().GetBearerToken()),
+		},
 	}
-	return FromContext(ctx, amCtx, parentNs)
 }
 
-func getAutomationPath(amCtx core.ContextModel) string {
-	if amCtx.GetPath() != nil {
-		return *amCtx.GetPath()
+func ToAdmissionErrors(errors []amsdk.DryRunError) *gerrors.AdmissionErrors {
+	errs := gerrors.NewAdmissionErrors()
+	for _, err := range errors {
+		if err.Severity != nil && err.Message != nil {
+			switch *err.Severity {
+			case amsdk.SeverityError:
+				errs.AddSevere(*err.Message)
+			case amsdk.SeverityWarning:
+				errs.AddWarning(*err.Message)
+			}
+		}
 	}
-	return automationBasePath
+	return errs
+}
+
+func HasErrors(err error, extractor func() *http.Response) error {
+	if err != nil {
+		return err
+	}
+	return gerrors.FromResponse(extractor())
 }

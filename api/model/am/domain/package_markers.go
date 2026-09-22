@@ -12,25 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package service
-
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/client"
-)
-
-const domainsPath = "domains"
-
-type Domains struct {
-	*client.Client
-}
-
-func NewDomains(c *client.Client) *Domains {
-	return &Domains{Client: c}
-}
-
-// Probe checks that AM's Automation API is reachable at this org/env.
-// A 200 is the whole contract: the body is discarded.
-func (svc *Domains) Probe() error {
-	url := svc.AutomationTarget(domainsPath).WithQueryParam("size", "1")
-	return svc.HTTP.Get(url.String(), nil)
-}
+// +kubebuilder:object:generate=true
+// +groupName=gravitee.io/v1alpha1
+package domain

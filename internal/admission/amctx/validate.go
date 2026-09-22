@@ -99,12 +99,12 @@ func validateSecretRef(ctx context.Context, obj *v1alpha1.AMContext) *gerrors.Ad
 }
 
 func validateContextIsAvailable(ctx context.Context, obj *v1alpha1.AMContext) *gerrors.AdmissionError {
-	client, err := am.FromContext(ctx, obj, obj.GetNamespace())
+	client, err := am.NewSDKClient(ctx, obj)
 	if err != nil {
 		return gerrors.NewSevere(err.Error())
 	}
 
-	err = client.Domains.Probe()
+	err = client.Probe(ctx)
 	if gerrors.IsNetworkError(err) {
 		return gerrors.NewWarningf(
 			"unable to reach AM, [%s] is not available",
