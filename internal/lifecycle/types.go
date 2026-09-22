@@ -25,16 +25,16 @@ import (
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-// ResolveContextFunc builds the API client from the CR (own contextRef or inherited parent).
+// ClientFactoryFunc builds the API client from the CR (own contextRef or inherited parent).
 // Error means the context cannot be used.
-type ResolveContextFunc[T core.ContextAwareObject, C any] func(ctx context.Context, obj T) (C, error)
+type ClientFactoryFunc[T core.ContextAwareObject, C core.APIClient] func(ctx context.Context, obj T) (C, error)
 
 // ToDTOFunc maps a CR to the wire payload. Do not fetch refs or call the API.
 // Identity() must be set so Delete and GetRemote can address the remote object.
 type ToDTOFunc[T core.ContextAwareObject, D store.Identifiable] func(obj T) D
 
 // UpsertFunc PUT/creates the remote resource from dto. Never sees the CR.
-type UpsertFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) error
+type UpsertFunc[C any, D store.Identifiable, R any] func(ctx context.Context, client C, dto D) (R, error)
 
 // DeleteFunc removes the remote resource. Use dto.Identity() as the key. Never sees the CR.
 type DeleteFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) error
@@ -43,7 +43,7 @@ type DeleteFunc[C any, D store.Identifiable] func(ctx context.Context, client C,
 type DeleteGuardFunc[T core.ContextAwareObject] func(ctx context.Context, obj T) error
 
 // PostUpsertFunc mutates the CR after a successful Upsert (status, annotations).
-type PostUpsertFunc[T core.ContextAwareObject, D store.Identifiable] func(ctx context.Context, obj T, dto D) error
+type PostUpsertFunc[T core.ContextAwareObject, R any] func(ctx context.Context, obj T, response R) error
 
 // RefResolverFunc writes resolved in-cluster refs onto obj (secrets, parent CRs). Mutates obj.
 type RefResolverFunc[T any] func(ctx context.Context, obj T, namespace string) error
@@ -56,25 +56,25 @@ type AdmissionCheckFunc[T core.ContextAwareObject] func(ctx context.Context, obj
 type ImmutableFieldsFunc[T core.ContextAwareObject] func(oldValue, newValue T) *gerrors.AdmissionErrors
 
 // DryRunFunc validates dto against the remote API without persisting. Never maps the CR.
-type DryRunFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) error
+type DryRunFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) *gerrors.AdmissionErrors
 
 // GetRemoteFunc returns the live remote object for dto.Identity().
 // Return the client error as-is, including 404.
 type GetRemoteFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) (D, error)
 
 // ResourceLifecycle is the reconcile holes for one CR kind.
-type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C any] struct {
+type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.APIClient, R core.OrgEnvIDGetter] struct {
 	// Finalizer is added on every reconcile and removed only after a successful Delete.
 	Finalizer string
 
-	// ResolveRefs runs after template compile/release, before ResolveContext.
+	// ResolveRefs runs after template compile/release, before ClientFactory.
 	// Nil → GenericRefResolver. Use the same func as AdmissionLifecycle.ResolveRefs.
 	ResolveRefs RefResolverFunc[T]
 
-	// ResolveContext runs after refs, before ToDTO. Required.
-	ResolveContext ResolveContextFunc[T, C]
+	// ClientFactory runs after refs, before ToDTO. Required.
+	ClientFactory ClientFactoryFunc[T, C]
 
-	// ToDTO runs after ResolveContext, before Upsert or Delete. Required.
+	// ToDTO runs after ClientFactory, before Upsert or Delete. Required.
 	// Use the same func as AdmissionLifecycle.ToDTO.
 	ToDTO ToDTOFunc[T, D]
 
@@ -85,23 +85,23 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C any] s
 	Delete DeleteFunc[C, D]
 
 	// Upsert runs on create/update, after ToDTO. Required.
-	Upsert UpsertFunc[C, D]
+	Upsert UpsertFunc[C, D, R]
 
 	// PostUpsert runs on create/update, after a successful Upsert. Nil skips.
-	PostUpsert PostUpsertFunc[T, D]
+	PostUpsert PostUpsertFunc[T, R]
 }
 
 // AdmissionLifecycle is the admission holes for one CR kind.
-type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C any] struct {
-	// ResolveRefs runs on create/update after template compile, before ResolveContext.
+type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.APIClient] struct {
+	// ResolveRefs runs on create/update after template compile, before ClientFactory.
 	// Nil → GenericRefResolver. Use the same func as ResourceLifecycle.ResolveRefs.
 	ResolveRefs RefResolverFunc[T]
 
-	// ResolveContext runs on create/update after refs, before PreCheck.
+	// ClientFactory runs on create/update after refs, before PreCheck.
 	// Builds C for DryRun and GetRemote. Required when either is set.
-	ResolveContext ResolveContextFunc[T, C]
+	ClientFactory ClientFactoryFunc[T, C]
 
-	// PreCheck runs on create/update after ResolveContext, before ImmutableFields. Nil skips.
+	// PreCheck runs on create/update after ClientFactory, before ImmutableFields. Nil skips.
 	PreCheck AdmissionCheckFunc[T]
 
 	// ImmutableFields runs on update after PreCheck, before ToDTO. Nil skips.

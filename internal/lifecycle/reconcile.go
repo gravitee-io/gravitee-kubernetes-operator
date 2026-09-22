@@ -29,12 +29,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle/ref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
 
-func (l ResourceLifecycle[T, D, C]) Reconcile(
+func (l ResourceLifecycle[T, D, C, R]) Reconcile(
 	ctx context.Context,
 	cli client.Client,
 	recorder record.EventRecorder,
@@ -79,7 +78,7 @@ func (l ResourceLifecycle[T, D, C]) Reconcile(
 	return ctrl.Result{}, nil
 }
 
-func (l ResourceLifecycle[T, D, C]) mutate(
+func (l ResourceLifecycle[T, D, C, R]) mutate(
 	ctx context.Context,
 	events *event.Recorder,
 	obj, dc T,
@@ -106,7 +105,7 @@ func (l ResourceLifecycle[T, D, C]) mutate(
 	})
 }
 
-func (l ResourceLifecycle[T, D, C]) upsert(ctx context.Context, dc T) error {
+func (l ResourceLifecycle[T, D, C, R]) upsert(ctx context.Context, dc T) error {
 	if err := l.resolveRefs(ctx, dc); err != nil {
 		return err
 	}
@@ -118,16 +117,17 @@ func (l ResourceLifecycle[T, D, C]) upsert(ctx context.Context, dc T) error {
 	if err != nil {
 		return err
 	}
-	if err := controlPlane(l.Upsert(ctx, api, dto)); err != nil {
+	resp, err := l.Upsert(ctx, api, dto)
+	if err := wrapUnexpectedAsControlPlane(err); err != nil {
 		return err
 	}
 	if l.PostUpsert == nil {
 		return nil
 	}
-	return l.PostUpsert(ctx, dc, dto)
+	return l.PostUpsert(ctx, dc, resp)
 }
 
-func (l ResourceLifecycle[T, D, C]) delete(ctx context.Context, obj, dc T) error {
+func (l ResourceLifecycle[T, D, C, R]) delete(ctx context.Context, obj, dc T) error {
 	if err := l.resolveRefs(ctx, dc); err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (l ResourceLifecycle[T, D, C]) delete(ctx context.Context, obj, dc T) error
 			return err
 		}
 	}
-	if err := controlPlane(l.Delete(ctx, api, dto)); err != nil {
+	if err := wrapUnexpectedAsControlPlane(l.Delete(ctx, api, dto)); err != nil {
 		return err
 	}
 	if l.Finalizer != "" {
@@ -149,23 +149,21 @@ func (l ResourceLifecycle[T, D, C]) delete(ctx context.Context, obj, dc T) error
 	return nil
 }
 
-func (l ResourceLifecycle[T, D, C]) clientAndDTO(ctx context.Context, dc T) (C, D, error) {
+func (l ResourceLifecycle[T, D, C, R]) clientAndDTO(ctx context.Context, dc T) (C, D, error) {
 	var zeroC C
 	var zeroD D
-	api, err := l.ResolveContext(ctx, dc)
+	api, err := l.ClientFactory(ctx, dc)
 	if err != nil {
 		return zeroC, zeroD, gerrors.NewResolveRefError(err)
 	}
 	return api, l.ToDTO(dc), nil
 }
 
-func (l ResourceLifecycle[T, D, C]) resolveRefs(ctx context.Context, obj T) error {
+func (l ResourceLifecycle[T, D, C, R]) resolveRefs(ctx context.Context, obj T) error {
 	ns := obj.GetNamespace()
 	var err error
 	if l.ResolveRefs != nil {
 		err = l.ResolveRefs(ctx, obj, ns)
-	} else {
-		err = ref.GenericRefResolver(ctx, obj, ns)
 	}
 	if err == nil {
 		return nil
@@ -173,7 +171,7 @@ func (l ResourceLifecycle[T, D, C]) resolveRefs(ctx context.Context, obj T) erro
 	return gerrors.NewResolveRefError(err)
 }
 
-func (l ResourceLifecycle[T, D, C]) updateStatusSuccess(ctx context.Context, cli client.Client, obj T) error {
+func (l ResourceLifecycle[T, D, C, R]) updateStatusSuccess(ctx context.Context, cli client.Client, obj T) error {
 	if obj.IsBeingDeleted() {
 		return nil
 	}
@@ -181,7 +179,7 @@ func (l ResourceLifecycle[T, D, C]) updateStatusSuccess(ctx context.Context, cli
 	return cli.Status().Update(ctx, obj)
 }
 
-func (l ResourceLifecycle[T, D, C]) updateStatusFailure(ctx context.Context, cli client.Client, obj T, err error) error {
+func (l ResourceLifecycle[T, D, C, R]) updateStatusFailure(ctx context.Context, cli client.Client, obj T, err error) error {
 	k8s.ErrorToCondition(obj, err)
 	return cli.Status().Update(ctx, obj)
 }
@@ -194,7 +192,7 @@ func asConditionAware[T core.ContextAwareObject](obj T) core.ConditionAwareObjec
 	return ca
 }
 
-func controlPlane(err error) error {
+func wrapUnexpectedAsControlPlane(err error) error {
 	if err == nil {
 		return nil
 	}

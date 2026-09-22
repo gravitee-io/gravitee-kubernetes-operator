@@ -64,7 +64,7 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 		return errs
 	}
 
-	api, ok := a.resolveContext(ctx, newObj, errs)
+	apiClient, ok := a.resolveContext(ctx, newObj, errs)
 	if !ok {
 		return errs
 	}
@@ -81,7 +81,7 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 		}
 	}
 
-	a.dryRun(ctx, api, newObj, errs)
+	a.dryRun(ctx, apiClient, newObj, errs)
 	if errs.IsSevere() {
 		return errs
 	}
@@ -91,7 +91,7 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 		return errs
 	}
 
-	a.detectDrift(ctx, api, oldObj, newObj, errs)
+	a.detectDrift(ctx, apiClient, oldObj, newObj, errs)
 	return errs
 }
 
@@ -119,15 +119,15 @@ func (a AdmissionLifecycle[T, D, C]) templateAndRefs(
 
 // resolveContext validates the context ref by building the API client.
 // Returns the client and true on success. On failure adds a severe error and returns zero C, false.
-// When ResolveContext is nil (no context-dependent operations), returns zero C, true.
+// When ClientFactory is nil (no context-dependent operations), returns zero C, true.
 func (a AdmissionLifecycle[T, D, C]) resolveContext(
 	ctx context.Context, obj T, errs *errors.AdmissionErrors,
 ) (C, bool) {
 	var zero C
-	if a.ResolveContext == nil {
+	if a.ClientFactory == nil {
 		return zero, true
 	}
-	api, err := a.ResolveContext(ctx, obj)
+	api, err := a.ClientFactory(ctx, obj)
 	if err != nil {
 		errs.AddSeveref("could not resolve context: %s", err.Error())
 		return zero, false
@@ -154,19 +154,19 @@ func (a AdmissionLifecycle[T, D, C]) postCheck(
 }
 
 func (a AdmissionLifecycle[T, D, C]) dryRun(
-	ctx context.Context, api C, obj T, errs *errors.AdmissionErrors,
+	ctx context.Context, apiClient C, obj T, errs *errors.AdmissionErrors,
 ) {
 	if a.DryRun == nil {
 		return
 	}
 	dto := a.ToDTO(obj)
-	if err := a.DryRun(ctx, api, dto); err != nil {
-		errs.AddSevere(err.Error())
+	if err := a.DryRun(ctx, apiClient, dto); err != nil {
+		errs.MergeWith(err)
 	}
 }
 
 func (a AdmissionLifecycle[T, D, C]) detectDrift(
-	ctx context.Context, api C, oldObj, newObj T, errs *errors.AdmissionErrors,
+	ctx context.Context, apiClient C, oldObj, newObj T, errs *errors.AdmissionErrors,
 ) {
 	if a.GetRemote == nil {
 		return
@@ -196,7 +196,7 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 	}
 
 	newDTO := a.ToDTO(newCopy)
-	remote, err := a.GetRemote(ctx, api, newDTO)
+	remote, err := a.GetRemote(ctx, apiClient, newDTO)
 	if err != nil {
 		applyRemoteFetchPolicy(newCopy, err, errs)
 		return

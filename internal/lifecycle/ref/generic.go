@@ -118,7 +118,7 @@ func resolveAndAssign(ctx context.Context, s reflect.Value, targetFields map[str
 			return err
 		}
 
-		val, err := Resolve(ctx, spec, ObjectKey(namespacedName, parentNs))
+		val, err := ResolveFromTag(ctx, spec, ObjectKey(namespacedName, parentNs))
 		if err != nil {
 			return err
 		}

@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -63,8 +64,7 @@ func Lookup(name string) (Kind, bool) {
 
 // Init registers known kinds. Call once at process start. Do not register AMSecurityDomain until that CRD exists.
 func Init() {
-	Register("amcontext", func() client.Object { return &v1alpha1.AMContext{} }, noop)
-	Register("amsecuritydomain", func() client.Object { return &v1alpha1.AMContext{} }, extractHRID)
+	Register(core.CRDAMContextResource, func() client.Object { return &v1alpha1.AMContext{} }, noop)
 	Register("secret", func() client.Object { return &corev1.Secret{} }, extractSecretKey)
 }
 

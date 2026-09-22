@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func ObjectKey(ref *refs.NamespacedName, parentNs string) types.NamespacedName {
@@ -34,17 +35,23 @@ func ObjectKey(ref *refs.NamespacedName, parentNs string) types.NamespacedName {
 	return types.NamespacedName{Namespace: ns, Name: name}
 }
 
-func Resolve(ctx context.Context, tagSpec TagSpec, nsn types.NamespacedName) (any, error) {
-	kind, ok := Lookup(tagSpec.Kind)
-	if !ok {
-		return nil, NewWrappedError("resolve", tagSpec.Kind, "", ErrUnknownKind)
+func ResolveFromTag(ctx context.Context, tagSpec TagSpec, nsn types.NamespacedName) (any, error) {
+	kind, obj, a, err, done := Resolve(ctx, tagSpec.Kind, nsn)
+	if done {
+		return a, err
 	}
-
-	obj := kind.New()
-	if err := k8s.GetClient().Get(ctx, nsn, obj); err != nil {
-		return nil, NewWrappedError("resolve", tagSpec.Kind, "", err)
-	}
-
 	return kind.Extract(obj, tagSpec.Key)
+}
 
+func Resolve(ctx context.Context, kind string, nsn types.NamespacedName) (Kind, client.Object, any, error, bool) {
+	regKind, ok := Lookup(kind)
+	if !ok {
+		return Kind{}, nil, nil, NewWrappedError("resolve", kind, "", ErrUnknownKind), true
+	}
+
+	obj := regKind.New()
+	if err := k8s.GetClient().Get(ctx, nsn, obj); err != nil {
+		return Kind{}, nil, nil, NewWrappedError("resolve", kind, "", err), true
+	}
+	return regKind, obj, nil, nil, false
 }

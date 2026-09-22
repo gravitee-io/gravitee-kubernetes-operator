@@ -36,12 +36,14 @@ type testDTO struct {
 
 func (d testDTO) Identity() string { return d.Key }
 
-// testClient stands in for *am.AM or *apim.APIM.
+// testClient stands in for *am.Client or *apim.APIM.
 type testClient struct {
 	dryRunErr error
 	remote    *testDTO
 	remoteErr error
 }
+
+func (c *testClient) Probe(_ context.Context) error { return nil }
 
 func newGroup(name, ns string) *v1alpha1.Group {
 	return &v1alpha1.Group{
@@ -60,13 +62,13 @@ func toDTO(g *v1alpha1.Group) testDTO {
 	return testDTO{Key: g.Name, Name: g.Name}
 }
 
-func resolveCtx(tc *testClient) lifecycle.ResolveContextFunc[*v1alpha1.Group, *testClient] {
+func resolveCtx(tc *testClient) lifecycle.ClientFactoryFunc[*v1alpha1.Group, *testClient] {
 	return func(_ context.Context, _ *v1alpha1.Group) (*testClient, error) {
 		return tc, nil
 	}
 }
 
-func failResolveCtx(msg string) lifecycle.ResolveContextFunc[*v1alpha1.Group, *testClient] {
+func failResolveCtx(msg string) lifecycle.ClientFactoryFunc[*v1alpha1.Group, *testClient] {
 	return func(_ context.Context, _ *v1alpha1.Group) (*testClient, error) {
 		return nil, fmt.Errorf("%s", msg)
 	}
@@ -76,9 +78,9 @@ func noopRefs(_ context.Context, _ *v1alpha1.Group, _ string) error { return nil
 
 func minimalAdmission(tc *testClient) lifecycle.AdmissionLifecycle[*v1alpha1.Group, testDTO, *testClient] {
 	return lifecycle.AdmissionLifecycle[*v1alpha1.Group, testDTO, *testClient]{
-		ResolveRefs:    noopRefs,
-		ResolveContext: resolveCtx(tc),
-		ToDTO:          toDTO,
+		ResolveRefs:   noopRefs,
+		ClientFactory: resolveCtx(tc),
+		ToDTO:         toDTO,
 	}
 }
 
@@ -96,9 +98,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 
 		It("stops on ResolveContext failure", func() {
 			a := lifecycle.AdmissionLifecycle[*v1alpha1.Group, testDTO, *testClient]{
-				ResolveRefs:    noopRefs,
-				ResolveContext: failResolveCtx("unreachable"),
-				ToDTO:          toDTO,
+				ResolveRefs:   noopRefs,
+				ClientFactory: failResolveCtx("unreachable"),
+				ToDTO:         toDTO,
 			}
 			errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
 			Expect(errs.IsSevere()).To(BeTrue())
@@ -119,10 +121,12 @@ var _ = Describe("AdmissionLifecycle", func() {
 		})
 
 		It("runs DryRun and reports errors", func() {
-			tc := &testClient{dryRunErr: fmt.Errorf("dry run rejected")}
+			tc := &testClient{}
 			a := minimalAdmission(tc)
-			a.DryRun = func(_ context.Context, c *testClient, _ testDTO) error {
-				return c.dryRunErr
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
+				e := gerrors.NewAdmissionErrors()
+				e.AddSevere("dry run rejected")
+				return e
 			}
 			errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
 			Expect(errs.IsSevere()).To(BeTrue())
@@ -133,9 +137,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 			tc := &testClient{}
 			var order []string
 			a := minimalAdmission(tc)
-			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) error {
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
 				order = append(order, "dryrun")
-				return nil
+				return gerrors.NewAdmissionErrors()
 			}
 			a.PostCheck = func(_ context.Context, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 				order = append(order, "postcheck")
@@ -173,9 +177,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 				order = append(order, "immutable")
 				return gerrors.NewAdmissionErrors()
 			}
-			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) error {
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
 				order = append(order, "dryrun")
-				return nil
+				return gerrors.NewAdmissionErrors()
 			}
 			oldG := newGroup("g1", "ns")
 			newG := newGroup("g1", "ns")
@@ -193,9 +197,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 				e.AddSevere("field is immutable")
 				return e
 			}
-			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) error {
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
 				dryRunCalled = true
-				return nil
+				return gerrors.NewAdmissionErrors()
 			}
 			errs := a.ValidateUpdate(ctx, newGroup("g1", "ns"), newGroup("g1", "ns"))
 			Expect(errs.IsSevere()).To(BeTrue())
@@ -232,7 +236,7 @@ var _ = Describe("AdmissionLifecycle", func() {
 					order = append(order, "refs")
 					return nil
 				},
-				ResolveContext: func(_ context.Context, _ *v1alpha1.Group) (*testClient, error) {
+				ClientFactory: func(_ context.Context, _ *v1alpha1.Group) (*testClient, error) {
 					order = append(order, "context")
 					return tc, nil
 				},
@@ -241,9 +245,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 					order = append(order, "precheck")
 					return gerrors.NewAdmissionErrors()
 				},
-				DryRun: func(_ context.Context, _ *testClient, _ testDTO) error {
+				DryRun: func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
 					order = append(order, "dryrun")
-					return nil
+					return gerrors.NewAdmissionErrors()
 				},
 				PostCheck: func(_ context.Context, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 					order = append(order, "postcheck")
@@ -259,9 +263,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 			tc := &testClient{}
 			var order []string
 			a := lifecycle.AdmissionLifecycle[*v1alpha1.Group, testDTO, *testClient]{
-				ResolveRefs:    noopRefs,
-				ResolveContext: resolveCtx(tc),
-				ToDTO:          toDTO,
+				ResolveRefs:   noopRefs,
+				ClientFactory: resolveCtx(tc),
+				ToDTO:         toDTO,
 				PreCheck: func(_ context.Context, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 					order = append(order, "precheck")
 					return gerrors.NewAdmissionErrors()
