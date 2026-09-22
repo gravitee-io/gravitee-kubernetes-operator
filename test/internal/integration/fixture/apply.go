@@ -39,6 +39,14 @@ func (o *Objects) Apply() *Objects {
 		Expect(client.IgnoreAlreadyExists(err)).ToNot(HaveOccurred(), cm.Name)
 	}
 
+	if o.AMContext != nil {
+		o.applyAMContext(cli, ctx)
+	}
+
+	if o.AMSecurityDomain != nil {
+		o.applyAMSecurityDomain(cli, ctx)
+	}
+
 	if o.Context != nil {
 		o.applyContext(cli, ctx)
 	}
@@ -293,6 +301,31 @@ func (o *Objects) applyPortalTheme(ctx context.Context, cli client.Client) {
 		}
 		return assert.PortalThemeAccepted(o.PortalTheme)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.PortalTheme.Name)
+}
+
+func (o *Objects) applyAMContext(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.AMContext)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.AMContext)
+		if err != nil {
+			return err
+		}
+		return assert.HasFinalizer(o.AMContext, core.AMContextFinalizer)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMContext.Name)
+}
+
+func (o *Objects) applyAMSecurityDomain(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.AMSecurityDomain)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.AMSecurityDomain)
+		if err != nil {
+			return err
+		}
+		if err = assert.AMSecurityDomainAccepted(o.AMSecurityDomain); err != nil {
+			return assert.AMSecurityDomainFailed(o.AMSecurityDomain)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMSecurityDomain.Name)
 }
 
 func (o *Objects) applySharedPolicyGroup(cli client.Client, ctx context.Context) {

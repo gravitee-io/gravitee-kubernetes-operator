@@ -205,6 +205,15 @@ func NotificationFailed(notification *v1alpha1.Notification) error {
 	return Equals(reconcileCondition, true, notification.Status.IsFailed())
 }
 
+func AMSecurityDomainAccepted(sd *v1alpha1.AMSecurityDomain) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(sd.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func AMSecurityDomainFailed(sd *v1alpha1.AMSecurityDomain) error {
+	return Equals(reconcileCondition, true, sd.Status.IsFailed())
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }

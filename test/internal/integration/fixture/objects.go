@@ -44,6 +44,9 @@ type Objects struct {
 	Documentation     *v1alpha1.Documentation
 	PortalTheme       *v1alpha1.PortalTheme
 
+	AMContext        *v1alpha1.AMContext
+	AMSecurityDomain *v1alpha1.AMSecurityDomain
+
 	randomSuffix   string
 	navigationRoot string
 }
