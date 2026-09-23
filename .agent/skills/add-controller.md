@@ -451,15 +451,11 @@ MyResourceFinalizer = "finalizers.gravitee.io/myresources"
 that are pure logic — the `To*DTO` mapping, drift tags (`test/unit/drift/apim/`), any predicate or
 helper you added. Never place `_test.go` under `controllers/**/internal`.
 
-**Everything that needs a cluster or a live APIM goes to
-[`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e)**:
-reconciliation, `.status`, conditions, finalizer-driven deletion, templating, watch-triggered
-re-reconciles. Operator-specific coverage lives in `apim/tests/gko/<area>/` with fixtures in
-`apim/fixtures/<area>/`; behaviour a customer could also reach through Terraform belongs in a user
-journey under `apim/tests/user-journeys/<persona>/<journey>/`. That repo has its own `AGENTS.md`
-and a `write-e2e-test` skill — follow them there.
-
-Do not add anything to `test/integration/`.
+**Do not write e2e tests, and do not add anything to `test/integration/`.** Reconciliation,
+`.status`, conditions, finalizer-driven deletion, templating and watch-triggered re-reconciles are
+exercised by the epic's critical user journey in `gravitee-platform-e2e`, written by a separate
+agent from the PRD without this code. Leave that agent a current example under `examples/apim/`
+and a note in the plan on anything the platform cannot exercise yet.
 
 ## 10. Final checks
 
