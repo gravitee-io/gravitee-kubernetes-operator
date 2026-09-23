@@ -78,6 +78,8 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.PortalTheme:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.CatalogMcpServer:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *netV1.Ingress:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *corev1.Secret:
@@ -160,6 +162,9 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.PortalTheme:
 		oo, _ := e.ObjectOld.(*v1alpha1.PortalTheme)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *v1alpha1.CatalogMcpServer:
+		oo, _ := e.ObjectOld.(*v1alpha1.CatalogMcpServer)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *netV1.Ingress:
 		oo, _ := e.ObjectOld.(*netV1.Ingress)

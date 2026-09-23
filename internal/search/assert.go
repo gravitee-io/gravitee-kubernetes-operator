@@ -61,6 +61,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoCatalogMcpServers(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -242,6 +246,29 @@ func assertNoPortalThemes(ctx context.Context, ctxRef refs.NamespacedName, conte
 				"kubectl get portalthemes.gravitee.io "+
 				kubectlCommand,
 			contextName, len(themes.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func assertNoCatalogMcpServers(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	servers := &v1alpha1.CatalogMcpServerList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		CatalogMcpServerContextField,
+		ctxRef,
+		servers,
+	); err != nil {
+		return err
+	}
+
+	if len(servers.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d catalog mcp servers are relying on this context. "+
+				reviewMessage+
+				"kubectl get catalogmcpservers.gravitee.io "+
+				kubectlCommand,
+			contextName, len(servers.Items), contextName,
 		)
 	}
 	return nil

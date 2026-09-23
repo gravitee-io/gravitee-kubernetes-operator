@@ -59,6 +59,7 @@ const (
 	DocumentationApiField        IndexField = "documentation-api"
 	PortalThemeContextField      IndexField = "portaltheme-context"
 	PortalThemeField             IndexField = "portal-theme"
+	CatalogMcpServerContextField IndexField = "catalogmcpserver-context"
 )
 
 func (f IndexField) String() string {
@@ -120,6 +121,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexPortalThemeManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.Portal{}, PortalThemeField,
 		indexPortalThemeRef))
+	collect(newIndexer(ctx, cache, &v1alpha1.CatalogMcpServer{}, CatalogMcpServerContextField,
+		indexCatalogMcpServerManagementContexts))
 
 	return errors.NewAggregate(errs)
 }
@@ -379,6 +382,14 @@ func indexPortalThemeManagementContexts(thm *v1alpha1.PortalTheme, fields *[]str
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(thm, thm.Spec.Context))
+}
+
+func indexCatalogMcpServerManagementContexts(srv *v1alpha1.CatalogMcpServer, fields *[]string) {
+	if srv.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(srv, srv.Spec.Context))
 }
 
 func indexPortalListingPortal(listing *v1alpha1.PortalListing, fields *[]string) {
