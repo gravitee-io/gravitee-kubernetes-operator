@@ -5,6 +5,7 @@
 - [gravitee.io/v1alpha1/am](#graviteeiov1alpha1am)
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
+- [gravitee.io/v1alpha1/catalogmcpserver](#graviteeiov1alpha1catalogmcpserver)
 - [gravitee.io/v1alpha1/context](#graviteeiov1alpha1context)
 - [gravitee.io/v1alpha1/dictionary](#graviteeiov1alpha1dictionary)
 - [gravitee.io/v1alpha1/docs](#graviteeiov1alpha1docs)
@@ -37,6 +38,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ApiResource](#apiresource)
 - [ApiV4Definition](#apiv4definition)
 - [Application](#application)
+- [CatalogMcpServer](#catalogmcpserver)
 - [Dictionary](#dictionary)
 - [Documentation](#documentation)
 - [GatewayClassParameters](#gatewayclassparameters)
@@ -356,6 +358,73 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### CatalogMcpServer
+
+
+
+CatalogMcpServer is an upstream MCP server registered in the Gravitee AI Catalog as a
+Kubernetes resource. The platform discovers the tools, prompts and resources the server
+exposes and reports them in the status.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `CatalogMcpServer` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[CatalogMcpServerSpec](#catalogmcpserverspec)_ |  |  |  |
+| `status` _[CatalogMcpServerStatus](#catalogmcpserverstatus)_ |  |  |  |
+
+
+#### CatalogMcpServerSpec
+
+
+
+CatalogMcpServerSpec defines the desired state of a CatalogMcpServer.
+
+
+
+_Appears in:_
+- [CatalogMcpServer](#catalogmcpserver)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityId` _string_ | Stable catalog identity of the server, the name authorization policies reference:<br />lowercase, dot-separated segments, first segment `mcp-server`. Validated, never<br />repaired, and immutable once the server exists. |  | MaxLength: 255 <br />Pattern: `^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
+| `description` _string_ |  |  | Optional: \{\} <br /> |
+| `connection` _[Connection](#connection)_ |  |  | Required: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this server is registered in. |  |  |
+
+
+#### CatalogMcpServerStatus
+
+
+
+CatalogMcpServerStatus defines the observed state of a CatalogMcpServer.
+
+
+
+_Appears in:_
+- [CatalogMcpServer](#catalogmcpserver)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the catalog server in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this server by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the CatalogMcpServer.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the server has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+| `lastSyncedAt` _string_ | When the platform last discovered the server, as an RFC 3339 date-time. |  | Optional: \{\} <br /> |
+| `protocolVersion` _string_ | MCP protocol version negotiated with the server. |  | Optional: \{\} <br /> |
+| `serverInfo` _[ServerInfo](#serverinfo)_ |  |  | Optional: \{\} <br /> |
+| `tools` _[Tool](#tool) array_ |  |  | Optional: \{\} <br /> |
+| `prompts` _[Prompt](#prompt) array_ |  |  | Optional: \{\} <br /> |
+| `resources` _[Resource](#resource) array_ |  |  | Optional: \{\} <br /> |
 
 
 #### Dictionary
@@ -2183,6 +2252,310 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/catalogmcpserver
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+
+#### Auth
+
+
+
+Auth is the authentication the platform uses against the upstream MCP server, discriminated
+by type with exactly one nested block named after it. New ways of authenticating (a reference
+to a vaulted credential, for instance) are added as one more type and one more block, so
+existing manifests are never reshaped.
+
+
+
+_Appears in:_
+- [Connection](#connection)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[AuthType](#authtype)_ |  |  | Enum: [NONE HEADER OAUTH2] <br />Required: \{\} <br /> |
+| `header` _[HeaderAuth](#headerauth)_ | Required when type is HEADER. |  | Optional: \{\} <br /> |
+| `oauth2` _[OAuth2Auth](#oauth2auth)_ | Required when type is OAUTH2. |  | Optional: \{\} <br /> |
+
+
+#### AuthType
+
+_Underlying type:_ _string_
+
+AuthType discriminates how the platform authenticates against the upstream server.
+
+_Validation:_
+- Enum: [NONE HEADER OAUTH2]
+
+_Appears in:_
+- [Auth](#auth)
+
+| Field | Description |
+| --- | --- |
+| `NONE` |  |
+| `HEADER` |  |
+| `OAUTH2` |  |
+
+
+#### Connection
+
+
+
+Connection is where the upstream MCP server answers and how the platform authenticates to it.
+
+
+
+_Appears in:_
+- [CatalogMcpServerSpec](#catalogmcpserverspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `endpoint` _string_ | URL of the upstream MCP server. |  | Format: uri <br />Required: \{\} <br /> |
+| `transport` _[Transport](#transport)_ | MCP transport of the upstream server. | HTTP | Enum: [HTTP] <br />Optional: \{\} <br /> |
+| `auth` _[Auth](#auth)_ | Authentication used to discover the server's capabilities. Omitted means none. |  | Optional: \{\} <br /> |
+
+
+#### Discovered
+
+
+
+Discovered is what the platform learned from the upstream server at the last sync.
+It is read-only and never compared for drift.
+
+
+
+_Appears in:_
+- [CatalogMcpServerStatus](#catalogmcpserverstatus)
+- [Status](#status)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `lastSyncedAt` _string_ | When the platform last discovered the server, as an RFC 3339 date-time. |  | Optional: \{\} <br /> |
+| `protocolVersion` _string_ | MCP protocol version negotiated with the server. |  | Optional: \{\} <br /> |
+| `serverInfo` _[ServerInfo](#serverinfo)_ |  |  | Optional: \{\} <br /> |
+| `tools` _[Tool](#tool) array_ |  |  | Optional: \{\} <br /> |
+| `prompts` _[Prompt](#prompt) array_ |  |  | Optional: \{\} <br /> |
+| `resources` _[Resource](#resource) array_ |  |  | Optional: \{\} <br /> |
+
+
+#### HeaderAuth
+
+
+
+HeaderAuth is a static header sent on every request to the upstream server.
+
+
+
+_Appears in:_
+- [Auth](#auth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Name of the header, e.g. Authorization. |  | Required: \{\} <br /> |
+| `value` _string_ | Full header value: `Bearer <token>` for a bearer token, `Basic <base64>` for basic<br />credentials, or the raw key for an API-key header. Use templating to read it from a<br />Secret: [[ secret `my-secret/token` ]]. Never returned by the platform. |  | Required: \{\} <br /> |
+
+
+#### OAuth2Auth
+
+
+
+OAuth2Auth are OAuth 2.0 client credentials; the platform fetches a token from tokenUrl
+before reaching the upstream server.
+
+
+
+_Appears in:_
+- [Auth](#auth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `clientId` _string_ |  |  | Required: \{\} <br /> |
+| `clientSecret` _string_ | Client secret, a literal or a templated Secret value. Never returned by the platform. |  | Required: \{\} <br /> |
+| `tokenUrl` _string_ | Token endpoint of the authorization server. |  | Format: uri <br />Required: \{\} <br /> |
+| `scope` _string_ |  |  | Optional: \{\} <br /> |
+
+
+#### Prompt
+
+
+
+Prompt is a prompt the upstream server exposes, with the catalog identity a policy names.
+
+
+
+_Appears in:_
+- [CatalogMcpServerStatus](#catalogmcpserverstatus)
+- [Discovered](#discovered)
+- [Status](#status)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | Optional: \{\} <br /> |
+| `entityId` _string_ |  |  | Optional: \{\} <br /> |
+
+
+#### Resource
+
+
+
+Resource is a resource the upstream server exposes, with the catalog identity a policy names.
+
+
+
+_Appears in:_
+- [CatalogMcpServerStatus](#catalogmcpserverstatus)
+- [Discovered](#discovered)
+- [Status](#status)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `uri` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ |  |  | Optional: \{\} <br /> |
+| `entityId` _string_ |  |  | Optional: \{\} <br /> |
+
+
+#### ServerInfo
+
+
+
+ServerInfo is what the upstream server says about itself.
+
+
+
+_Appears in:_
+- [CatalogMcpServerStatus](#catalogmcpserverstatus)
+- [Discovered](#discovered)
+- [Status](#status)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | Optional: \{\} <br /> |
+| `version` _string_ |  |  | Optional: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [CatalogMcpServerStatus](#catalogmcpserverstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the catalog server in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this server by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the CatalogMcpServer.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the server has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+| `lastSyncedAt` _string_ | When the platform last discovered the server, as an RFC 3339 date-time. |  | Optional: \{\} <br /> |
+| `protocolVersion` _string_ | MCP protocol version negotiated with the server. |  | Optional: \{\} <br /> |
+| `serverInfo` _[ServerInfo](#serverinfo)_ |  |  | Optional: \{\} <br /> |
+| `tools` _[Tool](#tool) array_ |  |  | Optional: \{\} <br /> |
+| `prompts` _[Prompt](#prompt) array_ |  |  | Optional: \{\} <br /> |
+| `resources` _[Resource](#resource) array_ |  |  | Optional: \{\} <br /> |
+
+
+#### Tool
+
+
+
+Tool is a tool the upstream server exposes, with the catalog identity a policy names.
+
+
+
+_Appears in:_
+- [CatalogMcpServerStatus](#catalogmcpserverstatus)
+- [Discovered](#discovered)
+- [Status](#status)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | Optional: \{\} <br /> |
+| `entityId` _string_ |  |  | Optional: \{\} <br /> |
+
+
+#### Transport
+
+_Underlying type:_ _string_
+
+Transport is the MCP transport of an upstream server.
+
+_Validation:_
+- Enum: [HTTP]
+
+_Appears in:_
+- [Connection](#connection)
+
+| Field | Description |
+| --- | --- |
+| `HTTP` | TransportHTTP is the streamable HTTP transport, the only one discovery supports today.<br /> |
+
+
+#### Type
+
+
+
+Type defines the specification of a CatalogMcpServer resource: an upstream MCP server
+registered in the AI Catalog. Tools, prompts and resources are discovered by the platform
+and reported in the status only.
+
+
+
+_Appears in:_
+- [CatalogMcpServerSpec](#catalogmcpserverspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityId` _string_ | Stable catalog identity of the server, the name authorization policies reference:<br />lowercase, dot-separated segments, first segment `mcp-server`. Validated, never<br />repaired, and immutable once the server exists. |  | MaxLength: 255 <br />Pattern: `^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
+| `description` _string_ |  |  | Optional: \{\} <br /> |
+| `connection` _[Connection](#connection)_ |  |  | Required: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/context
 
 
@@ -3509,6 +3882,7 @@ _Appears in:_
 - [ApplicationSpec](#applicationspec)
 - [Auth](#auth)
 - [Auth](#auth)
+- [CatalogMcpServerSpec](#catalogmcpserverspec)
 - [Cloud](#cloud)
 - [Console](#console)
 - [DictionarySpec](#dictionaryspec)
@@ -3654,6 +4028,7 @@ _Appears in:_
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
 - [ApplicationStatus](#applicationstatus)
 - [AutomationStatus](#automationstatus)
+- [CatalogMcpServerStatus](#catalogmcpserverstatus)
 - [DictionaryStatus](#dictionarystatus)
 - [DocumentationStatus](#documentationstatus)
 - [GroupStatus](#groupstatus)
@@ -3662,6 +4037,7 @@ _Appears in:_
 - [PortalStatus](#portalstatus)
 - [PortalThemeStatus](#portalthemestatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
