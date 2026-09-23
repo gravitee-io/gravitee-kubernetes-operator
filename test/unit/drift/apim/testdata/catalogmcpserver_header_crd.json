@@ -1,0 +1,13 @@
+{
+  "metadata": {"name": "github", "namespace": "default"},
+  "spec": {
+    "contextRef": {"name": "dev-ctx"},
+    "entityId": "mcp-server.github",
+    "description": "GitHub tools for coding agents",
+    "connection": {
+      "endpoint": "https://api.githubcopilot.com/mcp/",
+      "transport": "HTTP",
+      "auth": {"type": "HEADER", "header": {"name": "Authorization", "value": "Bearer ghp_xxx"}}
+    }
+  }
+}
