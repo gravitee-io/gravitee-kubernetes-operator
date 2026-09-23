@@ -42,12 +42,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/kafkaroute"
 
+	amctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amctx"
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
 	documentationAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
-	amctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amctx"
 	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
@@ -71,6 +71,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
@@ -406,6 +407,16 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.PortalThemeList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for portal themes")
+		os.Exit(1)
+	}
+
+	if err := (&catalogmcpserver.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("catalogmcpserver-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.CatalogMcpServerList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for catalog mcp servers")
 		os.Exit(1)
 	}
 }

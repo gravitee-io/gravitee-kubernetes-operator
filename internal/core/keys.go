@@ -61,6 +61,7 @@ const (
 	PortalLinkFinalizer              = "finalizers.gravitee.io/portallinks"
 	DocumentationFinalizer           = "finalizers.gravitee.io/documentations"
 	PortalThemeFinalizer             = "finalizers.gravitee.io/portalthemes"
+	CatalogMcpServerFinalizer        = "finalizers.gravitee.io/catalogmcpservers"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 	GraviteeClassParametersFinalizer = "finalizers.gravitee.io/gatewayclassparameters"
