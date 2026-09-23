@@ -427,12 +427,10 @@ and tag reference: [AGENTS.md](../../AGENTS.md#drift-detection).
 pure parts: field validation predicates, defaulting, immutability comparisons, DTO drift tags. Call
 `drift.Init()` in `BeforeSuite` for any suite touching drift.
 
-**Anything that needs a cluster or a live APIM goes to
-[`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e)**:
-rejection messages as a user sees them, dry-run behaviour, drift against a mutated APIM, deletion
-guards. Webhook coverage lives in `apim/tests/gko/admission-webhook/` with fixtures in
-`apim/fixtures/admission-webhook/<case>/`. That repo has its own `AGENTS.md` and a `write-e2e-test`
-skill — follow them there.
+**Do not write e2e tests.** Rejection messages as a user sees them, dry-run behaviour, drift
+against a mutated APIM and deletion guards are exercised by the epic's critical user journey in
+`gravitee-platform-e2e`, written by a separate agent from the PRD without this code. Make the
+rejection text stable and specific, since that journey will match on it.
 
 Cover at minimum: a valid object is admitted; each severe check rejects with its own message;
 warnings do not reject; defaulting fills what it should. For drift, four cases — minimal and

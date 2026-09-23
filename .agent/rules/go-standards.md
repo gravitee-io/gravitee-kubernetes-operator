@@ -25,7 +25,7 @@
 - Use Ginkgo v2 and Gomega (not raw `testing.T` with `t.Errorf`/`t.Fatal`)
 - Dot-imports for `github.com/onsi/ginkgo/v2` and `github.com/onsi/gomega` are allowed in test files
 - Prefer testing through importable packages (`internal/...`, `api/...`); do not place `_test.go` under nested `controllers/**/internal`
-- Unit tests are the only Go tests to add. Anything needing a cluster or a live APIM belongs in the [platform e2e repo](https://github.com/gravitee-io/gravitee-platform-e2e); do not extend `test/integration/`
+- Unit tests are the only tests a story adds. Do not extend `test/integration/`, and do not write e2e tests: behaviour needing a cluster or a live APIM is covered by the epic's critical user journey in the platform e2e repo, written separately from the story (see AGENTS.md, Testing)
 
 ## Forbidden Patterns
 - Do not use `github.com/golang/protobuf` (use `google.golang.org/protobuf`)

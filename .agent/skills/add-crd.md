@@ -78,9 +78,11 @@ nothing.
 
 ## 8. Tests
 
-Unit tests in `test/unit/<area>/` for the pure logic. Everything requiring a cluster or a live APIM
-goes to [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e),
-with fixtures under `apim/fixtures/<area>/`. Do not add anything to `test/integration/`.
+Unit tests in `test/unit/<area>/` for the pure logic. Do not add anything to `test/integration/`,
+and do not write e2e tests: behaviour needing a cluster or a live APIM belongs to the epic's
+critical user journey in `gravitee-platform-e2e`, written by a separate agent from the PRD. What
+that agent needs from you is an example manifest under `examples/` and a regenerated
+`docs/api/reference.md`.
 
 ## 9. Final Checks
 

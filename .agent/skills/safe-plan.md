@@ -41,7 +41,9 @@ unless the user asks.
 
 ## Draft
 
-1. List the repos in scope. If two, you will sync both.
+1. List the repos in scope. If two, you will sync both. A story plan
+   never lists `gravitee-platform-e2e`: journeys are epic-level and
+   written separately from the story.
 2. Read enough code to make the plan actionable. Do not start the work.
 3. Write `plans/<slug>.md` using the template below.
 4. If two repos: write the same file to both `plans/` directories.
@@ -122,7 +124,7 @@ Do not edit the plan file.
 
 ## Sync
 
-Two-repo work (GKO + e2e, or any pair listed in `Repos:`):
+Two-repo work (any pair listed in `Repos:`):
 
 - After every Draft write and every Revise, both `plans/` copies
   match.
