@@ -1,0 +1,18 @@
+{
+  "hrid": "default-drift-full",
+  "entityId": "mcp-server.drift-full",
+  "description": "Every field the catalog accepts",
+  "connection": {
+    "endpoint": "https://mcp.example.com/mcp",
+    "transport": "HTTP",
+    "auth": {
+      "type": "OAUTH2",
+      "name": "Authorization",
+      "value": "Bearer token",
+      "clientId": "gravitee-catalog",
+      "clientSecret": "s3cr3t",
+      "tokenUrl": "https://auth.example.com/oauth/token",
+      "scope": "mcp:read"
+    }
+  }
+}

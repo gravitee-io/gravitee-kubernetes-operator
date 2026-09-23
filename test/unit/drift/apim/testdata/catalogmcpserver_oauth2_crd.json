@@ -1,0 +1,21 @@
+{
+  "metadata": {"name": "drift-full", "namespace": "default"},
+  "spec": {
+    "contextRef": {"name": "dev-ctx"},
+    "entityId": "mcp-server.drift-full",
+    "description": "Every field the catalog accepts",
+    "connection": {
+      "endpoint": "https://mcp.example.com/mcp",
+      "transport": "HTTP",
+      "auth": {
+        "type": "OAUTH2",
+        "oauth2": {
+          "clientId": "gravitee-catalog",
+          "clientSecret": "s3cr3t",
+          "tokenUrl": "https://auth.example.com/oauth/token",
+          "scope": "mcp:read"
+        }
+      }
+    }
+  }
+}
