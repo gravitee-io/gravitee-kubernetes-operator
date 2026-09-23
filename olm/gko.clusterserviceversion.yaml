@@ -916,3 +916,17 @@ spec:
             description: Latest observed conditions.
             x-descriptors:
               - urn:alm:descriptor:io.kubernetes.conditions
+      # --- CatalogMcpServer ---
+      - name: catalogmcpservers.gravitee.io
+        version: v1alpha1
+        kind: CatalogMcpServer
+        displayName: Catalog MCP Server
+        description: >-
+          Registers an upstream MCP server in the Gravitee AI Catalog and reports
+          the tools, prompts and resources it exposes.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
