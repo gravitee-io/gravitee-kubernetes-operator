@@ -63,6 +63,7 @@ func Lookup(name string) (Kind, bool) {
 // Init registers known kinds. Call once at process start. Do not register AMSecurityDomain until that CRD exists.
 func Init() {
 	Register(core.CRDAMContextResource, func() client.Object { return &v1alpha1.AMContext{} }, noop)
+	Register(core.CRDAMSecurityDomainResource, func() client.Object { return &v1alpha1.AMSecurityDomain{} }, noop)
 	Register("secret", func() client.Object { return &corev1.Secret{} }, extractSecretKey)
 }
 
