@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/dates"
 )
@@ -512,6 +513,16 @@ func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any, ctx DriftCo
 
 func EmptyIsTrue(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, true) {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	return DefaultEquivalence(crd, remote, ctx)
+}
+
+// TimeEquivalence compares instants, ignoring location and monotonic clock.
+func TimeEquivalence(crd any, remote any, ctx DriftContext) Equivalence {
+	crdTime, crdOk := crd.(time.Time)
+	remoteTime, remoteOk := remote.(time.Time)
+	if crdOk && remoteOk && crdTime.Equal(remoteTime) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return DefaultEquivalence(crd, remote, ctx)
