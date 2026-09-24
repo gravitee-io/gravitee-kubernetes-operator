@@ -59,118 +59,91 @@ spec:
                 domain.
               properties:
                 accountSettings:
-                  description: >-
-                    AccountSettings are the user account settings for the
-                    domain:
-
-                    brute-force protection, registration,...
+                  description: "AccountSettings holds the user account settings for the domain:
+                    brute-force protection,..."
                   properties:
                     accountBlockedDuration:
                       description: >-
                         AccountBlockedDuration is the duration, in seconds, for
-                        which the account
+                        which the account remains blocked after
 
-                        remains blocked after too...
+                        too...
                       format: int32
                       type: integer
                     autoLoginAfterRegistration:
-                      description: >-
-                        AutoLoginAfterRegistration controls whether the user is
-                        automatically
-
-                        logged in after completing...
+                      description: AutoLoginAfterRegistration controls whether the user is
+                        automatically logged in after completing...
                       type: boolean
                     autoLoginAfterResetPassword:
                       description: >-
                         AutoLoginAfterResetPassword controls whether the user is
-                        automatically
+                        automatically logged in after a
 
-                        logged in after a password...
+                        password...
                       type: boolean
                     completeRegistrationWhenResetPassword:
-                      description: >-
-                        CompleteRegistrationWhenResetPassword controls whether
-                        resetting a
-
+                      description: CompleteRegistrationWhenResetPassword controls whether resetting a
                         password also completes a...
                       type: boolean
                     defaultIdentityProviderForRegistration:
-                      description: >-
-                        DefaultIdentityProviderForRegistration is the key of an
-                        identity provider
-
-                        that exists under this...
+                      description: DefaultIdentityProviderForRegistration is the key of an identity
+                        provider that exists under this...
                       type: string
                     deletePasswordlessDevicesAfterResetPassword:
-                      description: >-
-                        DeletePasswordlessDevicesAfterResetPassword controls
-                        whether passwordless
-
-                        (WebAuthn) devices are...
+                      description: DeletePasswordlessDevicesAfterResetPassword controls whether
+                        passwordless (WebAuthn) devices are...
                       type: boolean
                     dynamicUserRegistration:
-                      description: >-
-                        DynamicUserRegistration controls whether dynamic
-                        (self-service) user
-
-                        registration is enabled.
+                      description: DynamicUserRegistration controls whether dynamic (self-service)
+                        user registration is enabled.
                       type: boolean
                     inherited:
                       description: Inherited controls whether account settings are inherited from the
-                        parent.
+                        parent (domain).
                       type: boolean
                     loginAttemptsDetectionEnabled:
                       description: >-
                         LoginAttemptsDetectionEnabled controls whether
-                        brute-force authentication
+                        brute-force authentication attempts are detected
 
-                        attempts are detected and...
+                        and...
                       type: boolean
                     loginAttemptsResetTime:
                       description: >-
                         LoginAttemptsResetTime is the time, in seconds, after
-                        which the login
+                        which the login attempt counter is reset
 
-                        attempt counter is reset when...
+                        when...
                       format: int32
                       type: integer
                     maxLoginAttempts:
-                      description: >-
-                        MaxLoginAttempts is the maximum number of failed login
-                        attempts
-
+                      description: MaxLoginAttempts is the maximum number of failed login attempts
                         before the account is blocked.
                       format: int32
                       type: integer
                     mfaChallengeAttemptsDetectionEnabled:
-                      description: >-
-                        MfaChallengeAttemptsDetectionEnabled controls whether
-                        failed MFA
-
+                      description: MfaChallengeAttemptsDetectionEnabled controls whether failed MFA
                         challenge attempts are detected...
                       type: boolean
                     mfaChallengeAttemptsResetTime:
-                      description: >-
-                        MfaChallengeAttemptsResetTime is the time, in seconds,
-                        after which
-
+                      description: MfaChallengeAttemptsResetTime is the time, in seconds, after which
                         the MFA challenge attempt...
                       format: int32
                       type: integer
                     mfaChallengeMaxAttempts:
                       description: >-
                         MfaChallengeMaxAttempts is the maximum number of failed
-                        MFA challenge
+                        MFA challenge attempts before the user
 
-                        attempts before the user is...
+                        is...
                       format: int32
                       type: integer
                     mfaChallengeSendVerifyAlertEmail:
                       description: >-
                         MfaChallengeSendVerifyAlertEmail controls whether to
-                        send an alert
+                        send an alert email after too many failed
 
-                        email after too many failed MFA...
+                        MFA...
                       type: boolean
                     redirectUriAfterRegistration:
                       description: RedirectUriAfterRegistration is the URL the user is redirected to
@@ -181,70 +154,55 @@ spec:
                         after a password reset.
                       type: string
                     rememberMe:
-                      description: >-
-                        RememberMe controls whether users can remain logged in
-                        for a fixed
-
+                      description: RememberMe controls whether users can remain logged in for a fixed
                         duration (remember-me).
                       type: boolean
                     rememberMeDuration:
-                      description: >-
-                        RememberMeDuration is the duration, in seconds, for
-                        which a remembered
-
-                        session stays valid.
+                      description: RememberMeDuration is the duration, in seconds, for which a
+                        remembered session stays valid.
                       format: int32
                       type: integer
                     resetPasswordConfirmIdentity:
                       description: >-
                         ResetPasswordConfirmIdentity controls whether the user
-                        must confirm
+                        must confirm their identity before
 
-                        their identity before resetting...
+                        resetting...
                       type: boolean
                     resetPasswordCustomForm:
-                      description: >-
-                        ResetPasswordCustomForm controls whether a custom form
-                        is used for
-
+                      description: ResetPasswordCustomForm controls whether a custom form is used for
                         the password-reset step.
                       type: boolean
                     resetPasswordCustomFormFields:
-                      description: >-
-                        ResetPasswordCustomFormFields are the custom fields
-                        rendered
-
-                        on the password-reset form.
+                      description: ResetPasswordCustomFormFields lists the custom fields rendered on
+                        the password-reset form.
                       items:
                         description: FormField is a custom field rendered on a domain form.
                         properties:
                           key:
-                            description: Key is the field identifier.
+                            description: Key is the identifier of the field, mapped to a user attribute.
                             type: string
                           label:
-                            description: Label is the human-readable label for the field.
+                            description: Label is the label displayed for the field.
                             type: string
                           type:
-                            description: Type is the field type (text, select, etc.).
+                            description: Type is the input type of the field.
                             type: string
                         type: object
                       type: array
                     resetPasswordInvalidateTokens:
                       description: >-
                         ResetPasswordInvalidateTokens controls whether existing
-                        tokens are
+                        tokens are invalidated when the password
 
-                        invalidated when the password is...
+                        is...
                       type: boolean
                     sendRecoverAccountEmail:
                       description: SendRecoverAccountEmail controls whether to send an
-                        account-recovery email.
+                        account-recovery email. Defaults to false.
                       type: boolean
                     sendVerifyRegistrationAccountEmail:
-                      description: >-
-                        SendVerifyRegistrationAccountEmail controls whether to
-                        send a
-
+                      description: SendVerifyRegistrationAccountEmail controls whether to send a
                         registration-verification email.
                       type: boolean
                   type: object
@@ -252,14 +210,11 @@ spec:
                   description: AlertEnabled controls whether alerting is enabled for the domain.
                   type: boolean
                 certificateSettings:
-                  description: CertificateSettings are the domain-level certificate settings.
+                  description: CertificateSettings holds the domain-level certificate settings.
                   properties:
                     fallbackCertificate:
-                      description: >-
-                        FallbackCertificate is the key of a certificate managed
-                        under this domain,
-
-                        used as the fallback...
+                      description: FallbackCertificate is the key of a certificate managed under this
+                        domain, used as the fallback...
                       type: string
                   type: object
                 contextRef:
@@ -274,53 +229,58 @@ spec:
                     - name
                   type: object
                 corsSettings:
-                  description: >-
-                    CorsSettings is the Cross-Origin Resource Sharing
-                    configuration
-
-                    controlling which web origins may...
+                  description: CorsSettings holds the Cross-Origin Resource Sharing configuration
+                    controlling which web origins...
                   properties:
                     allowCredentials:
                       description: >-
-                        AllowCredentials controls whether credentials (cookies,
-                        authorization headers,
+                        AllowCredentials controls whether the browser may send
+                        credentials (cookies, authorization
 
-                        TLS client...
+                        headers)...
                       type: boolean
                     allowedHeaders:
-                      description: AllowedHeaders lists the HTTP headers permitted on CORS requests.
+                      description: AllowedHeaders lists the request headers permitted on cross-origin
+                        requests.
                       items:
                         type: string
                       type: array
+                      x-kubernetes-list-type: set
                     allowedMethods:
-                      description: AllowedMethods lists the HTTP methods permitted on CORS requests.
+                      description: AllowedMethods lists the HTTP methods permitted on cross-origin
+                        requests.
                       items:
                         type: string
                       type: array
+                      x-kubernetes-list-type: set
                     allowedOrigins:
-                      description: AllowedOrigins lists the origins permitted to make CORS requests.
+                      description: AllowedOrigins lists the origins permitted to make cross-origin
+                        requests.
                       items:
                         type: string
                       type: array
+                      x-kubernetes-list-type: set
                     enabled:
-                      description: Enabled controls whether CORS is enabled for the domain.
+                      description: Enabled controls whether CORS handling is enabled for the domain
+                        when not inherited.
                       type: boolean
                     inherited:
                       description: Inherited controls whether CORS settings are inherited from the
-                        parent.
+                        gateway defaults (gravitee.yml).
                       type: boolean
                     maxAge:
-                      description: MaxAge is the maximum time, in seconds, a preflight response may be
-                        cached.
+                      description: MaxAge is how long, in seconds, a browser may cache the result of a
+                        preflight request.
                       format: int32
                       type: integer
                   type: object
                 dataPlaneId:
                   description: DataPlaneId is the identifier of the data plane this domain is
                     connected to.
+                  maxLength: 255
                   type: string
                 description:
-                  description: Description is a human-readable description of the domain.
+                  description: Description is the human-readable description of the domain.
                   type: string
                 enabled:
                   default: true
@@ -328,128 +288,114 @@ spec:
                     and authorization requests.
                   type: boolean
                 keyRetrievalSettings:
-                  description: |-
-                    KeyRetrievalSettings are the fetch, SSRF and cache limits
-                    applied to every trusted domain in the...
+                  description: >-
+                    KeyRetrievalSettings holds the fetch, SSRF and cache limits
+                    applied to every trusted domain in
+
+                    the...
                   properties:
                     allowPrivateIpAddress:
-                      description: >-
-                        AllowPrivateIpAddress controls whether private IP
-                        addresses are
-
-                        allowed in key retrieval URIs.
+                      description: AllowPrivateIpAddress controls whether key material can be fetched
+                        from private IP addresses.
                       type: boolean
                     allowUnsecuredHttpUri:
-                      description: >-
-                        AllowUnsecuredHttpUri controls whether unsecured HTTP
-                        URIs are
-
-                        allowed for key retrieval.
+                      description: AllowUnsecuredHttpUri controls whether key material can be fetched
+                        over unsecured HTTP URIs.
                       type: boolean
                     cacheMaxEntries:
-                      description: CacheMaxEntries is the maximum number of entries in the key
-                        retrieval cache.
+                      description: >-
+                        CacheMaxEntries is the maximum number of key material
+                        entries retained in the cache. Defaults to
+
+                        50.
                       format: int32
                       type: integer
                     cacheTtlSeconds:
                       description: CacheTtlSeconds is the time-to-live, in seconds, for cached key
-                        retrieval entries.
+                        material. Defaults to 300.
                       format: int32
                       type: integer
                     fetchTimeoutMs:
-                      description: FetchTimeoutMs is the timeout, in milliseconds, for key retrieval
-                        HTTP requests.
+                      description: FetchTimeoutMs is the timeout, in milliseconds, for fetching key
+                        material. Defaults to 5000.
                       format: int32
                       type: integer
                     maxResponseSizeKb:
-                      description: MaxResponseSizeKb is the maximum response size, in kilobytes, for
-                        key retrieval.
+                      description: MaxResponseSizeKb is the maximum key material response size, in
+                        kilobytes. Defaults to 32.
                       format: int32
                       type: integer
                   type: object
                 loginSettings:
-                  description: >-
-                    LoginSettings is the configuration of the domain's login
-                    flow
-
+                  description: LoginSettings holds the configuration of the domain's login flow
                     and the features offered on the...
                   properties:
                     certificateBasedAuthEnabled:
-                      description: >-
-                        CertificateBasedAuthEnabled controls whether
-                        certificate-based
-
-                        authentication is available on the...
+                      description: CertificateBasedAuthEnabled controls whether certificate-based
+                        authentication is offered.
                       type: boolean
                     certificateBasedAuthUrl:
-                      description: CertificateBasedAuthUrl is the URL endpoint for certificate-based
+                      description: CertificateBasedAuthUrl is the URL used for certificate-based
                         authentication.
                       type: string
                     forgotPasswordEnabled:
-                      description: ForgotPasswordEnabled controls whether the forgot-password link is
-                        shown.
+                      description: ForgotPasswordEnabled controls whether users can initiate a
+                        forgot-password flow from the login...
                       type: boolean
                     hideForm:
-                      description: |-
-                        HideForm controls whether the login form is hidden
-                        (useful when only external identity providers...
+                      description: HideForm controls whether the login form is hidden (for example
+                        when only social or...
                       type: boolean
                     identifierFirstEnabled:
-                      description: IdentifierFirstEnabled controls whether identifier-first login flow
-                        is used.
+                      description: IdentifierFirstEnabled controls whether identifier-first login is
+                        enabled, prompting for the...
                       type: boolean
                     inherited:
-                      description: Inherited controls whether login settings are inherited from the
-                        parent.
+                      description: Inherited controls whether these login settings are inherited from
+                        a parent scope rather than...
                       type: boolean
                     magicLinkAuthEnabled:
-                      description: MagicLinkAuthEnabled controls whether magic-link (passwordless
-                        email) login is available.
+                      description: MagicLinkAuthEnabled controls whether magic-link authentication is
+                        offered. Defaults to false.
                       type: boolean
                     passwordlessDeviceNamingEnabled:
-                      description: PasswordlessDeviceNamingEnabled controls whether passwordless
-                        devices can be named.
+                      description: PasswordlessDeviceNamingEnabled controls whether users can name
+                        their passwordless devices.
                       type: boolean
                     passwordlessEnabled:
-                      description: PasswordlessEnabled controls whether passwordless login is
-                        available.
+                      description: PasswordlessEnabled controls whether passwordless (WebAuthn)
+                        authentication is offered.
                       type: boolean
                     passwordlessEnforcePasswordEnabled:
-                      description: >-
-                        PasswordlessEnforcePasswordEnabled controls whether a
-                        password is still
-
-                        required alongside...
+                      description: PasswordlessEnforcePasswordEnabled controls whether a password is
+                        still required alongside...
                       type: boolean
                     passwordlessEnforcePasswordMaxAge:
-                      description: >-
-                        PasswordlessEnforcePasswordMaxAge is the maximum age, in
-                        seconds,
-
-                        before a password confirmation is...
+                      description: PasswordlessEnforcePasswordMaxAge is the period, in seconds, after
+                        which the user's credentials...
                       format: int32
                       type: integer
                     passwordlessRememberDeviceEnabled:
                       description: >-
-                        PasswordlessRememberDeviceEnabled controls whether
-                        passwordless
+                        PasswordlessRememberDeviceEnabled controls whether a
+                        passwordless device can be remembered to
 
-                        devices are remembered across...
+                        skip...
                       type: boolean
                     registerEnabled:
-                      description: RegisterEnabled controls whether the registration link is shown on
-                        the login page.
+                      description: RegisterEnabled controls whether users can self-register from the
+                        login page. Defaults to false.
                       type: boolean
                     rememberMeEnabled:
-                      description: RememberMeEnabled controls whether the remember-me option is shown
-                        on the login page.
+                      description: >-
+                        RememberMeEnabled controls whether the login page offers
+                        a remember-me option. Defaults to
+
+                        false.
                       type: boolean
                     resetPasswordOnExpiration:
-                      description: >-
-                        ResetPasswordOnExpiration controls whether a password
-                        reset is forced
-
-                        when the password has expired.
+                      description: ResetPasswordOnExpiration controls whether the user is forced to
+                        reset their password once it...
                       type: boolean
                   type: object
                 master:
@@ -458,13 +404,18 @@ spec:
                   type: boolean
                 name:
                   description: Name is the human-readable name of the domain.
+                  maxLength: 255
+                  minLength: 1
                   type: string
                 oidc:
                   description: Oidc holds the OpenID Connect settings for the domain.
                   properties:
                     cibaSettings:
-                      description: CibaSettings is the Client-Initiated Backchannel Authentication
-                        configuration.
+                      description: >-
+                        CibaSettings holds the Client-Initiated Backchannel
+                        Authentication (CIBA) settings for the
+
+                        domain.
                       properties:
                         authReqExpiry:
                           description: AuthReqExpiry is the default validity period, in seconds, of the
@@ -474,124 +425,120 @@ spec:
                         bindingMessageLength:
                           description: >-
                             BindingMessageLength is the maximum number of
-                            characters accepted
+                            characters accepted for the binding_message
 
-                            for the binding_message parameter.
+                            parameter.
                           format: int32
                           type: integer
                         enabled:
-                          description: Enabled controls whether CIBA is enabled for the domain.
+                          description: Enabled controls whether Client-Initiated Backchannel
+                            Authentication is enabled for the domain.
                           type: boolean
                         tokenReqInterval:
                           description: >-
                             TokenReqInterval is the minimum delay, in seconds,
-                            between two polls
+                            that a client must wait between two polls of
 
-                            of the token endpoint for the...
+                            the...
                           format: int32
                           type: integer
                       type: object
                     clientRegistrationSettings:
-                      description: ClientRegistrationSettings is the Dynamic Client Registration
-                        configuration.
+                      description: >-
+                        ClientRegistrationSettings holds the OpenID Connect
+                        Dynamic Client Registration configuration
+
+                        for...
                       properties:
                         allowHttpSchemeRedirectUri:
                           description: >-
                             AllowHttpSchemeRedirectUri controls whether the
-                            unsecured http scheme
+                            unsecured http scheme is permitted in redirect
 
-                            is permitted in redirect URIs.
+                            URIs.
                           type: boolean
                         allowLocalhostRedirectUri:
-                          description: >-
-                            AllowLocalhostRedirectUri controls whether localhost
-                            is permitted
-
+                          description: AllowLocalhostRedirectUri controls whether localhost is permitted
                             as a redirect URI host.
                           type: boolean
                         allowRedirectUriParamsExpressionLanguage:
-                          description: >-
-                            AllowRedirectUriParamsExpressionLanguage controls
-                            whether expression
-
-                            language is permitted in...
+                          description: AllowRedirectUriParamsExpressionLanguage controls whether
+                            expression language is permitted in...
                           type: boolean
                         allowWildCardRedirectUri:
                           description: AllowWildCardRedirectUri controls whether wildcards are permitted
                             in redirect URIs.
                           type: boolean
                         allowedScopes:
-                          description: AllowedScopes lists scopes permitted on client registration
-                            requests.
+                          description: >-
+                            AllowedScopes lists the scopes permitted on client
+                            registration requests when the allowed list
+
+                            is...
                           items:
                             type: string
                           type: array
                         allowedScopesEnabled:
                           description: >-
                             AllowedScopesEnabled controls whether registered
-                            client scopes
+                            client scopes are restricted to an allowed
 
-                            are restricted to the allowed list.
+                            list.
                           type: boolean
                         clientTemplateEnabled:
-                          description: >-
-                            ClientTemplateEnabled controls whether a client
-                            template is used
-
-                            for dynamic registration.
+                          description: ClientTemplateEnabled controls whether a client may be used as a
+                            template for dynamic client...
                           type: boolean
                         defaultScopes:
-                          description: DefaultScopes are added to every client registration request.
+                          description: DefaultScopes lists the default scopes added to every client
+                            registration request.
                           items:
                             type: string
                           type: array
                         dynamicClientRegistrationEnabled:
-                          description: >-
-                            DynamicClientRegistrationEnabled controls whether
-                            dynamic client
-
-                            registration is enabled.
+                          description: DynamicClientRegistrationEnabled controls whether Dynamic Client
+                            Registration is enabled for the...
                           type: boolean
                         openDynamicClientRegistrationEnabled:
-                          description: >-
-                            OpenDynamicClientRegistrationEnabled controls
-                            whether open (unauthenticated)
-
-                            dynamic client...
+                          description: OpenDynamicClientRegistrationEnabled controls whether open
+                            (unauthenticated) Dynamic Client...
                           type: boolean
                       type: object
                     postLogoutRedirectUris:
-                      description: PostLogoutRedirectUris is the list of URIs allowed for post-logout
-                        redirection.
+                      description: PostLogoutRedirectUris lists the URLs the user may be redirected to
+                        after sign-out...
                       items:
                         type: string
                       type: array
                     redirectUriStrictMatching:
-                      description: >-
-                        RedirectUriStrictMatching controls whether redirect URI
-                        matching is strict
-
-                        (no wildcard or partial...
+                      description: RedirectUriStrictMatching controls whether redirect_uri and
+                        post_logout_redirect_uri values are...
                       type: boolean
                     requestUris:
-                      description: RequestUris is the list of pre-registered request URIs.
+                      description: RequestUris lists the allowed request_uri values for passing OpenID
+                        Connect request objects by...
                       items:
                         type: string
                       type: array
                     securityProfileSettings:
-                      description: SecurityProfileSettings holds FAPI security profile settings.
+                      description: >-
+                        SecurityProfileSettings holds the Financial-grade API
+                        (FAPI) security profile configuration for
+
+                        the...
                       properties:
                         enableFapiBrazil:
-                          description: EnableFapiBrazil controls whether the FAPI Brazil profile is
-                            enabled.
+                          description: EnableFapiBrazil controls whether the Open Banking Brasil
+                            Financial-grade API security profile...
                           type: boolean
                         enablePlainFapi:
-                          description: EnablePlainFapi controls whether the plain FAPI profile is enabled.
+                          description: EnablePlainFapi controls whether the standard Financial-grade API
+                            security profile (version 1.
                           type: boolean
                       type: object
                     workloadIdentitySettings:
-                      description: WorkloadIdentitySettings are the workload identity (SPIFFE)
-                        settings.
+                      description: WorkloadIdentitySettings holds the workload identity (SPIFFE)
+                        settings for the domain.
                       properties:
                         clockSkewSeconds:
                           description: ClockSkewSeconds is the allowed clock skew, in seconds, when
@@ -601,103 +548,101 @@ spec:
                         defaultAllowedAlgorithms:
                           description: >-
                             DefaultAllowedAlgorithms is the default allowlist of
-                            signature algorithms
+                            signature algorithms accepted for SPIFFE
 
-                            accepted for SPIFFE JWT...
+                            JWT...
                           items:
                             type: string
                           type: array
                         enabled:
                           description: Enabled controls whether SPIFFE workload identity support is
-                            enabled.
+                            enabled for the domain.
                           type: boolean
                         maxJwtLifetimeSeconds:
-                          description: MaxJwtLifetimeSeconds is the maximum accepted JWT lifetime, in
-                            seconds, computed as exp minus iat.
+                          description: >-
+                            MaxJwtLifetimeSeconds is the maximum accepted JWT
+                            lifetime, in seconds, computed as exp minus
+
+                            iat.
                           format: int32
                           type: integer
                       type: object
                   type: object
                 passwordSettings:
                   description: >-
-                    PasswordSettings is the password policy applied to users of
-                    the domain:
+                    PasswordSettings holds the password policy applied to users
+                    of the domain: complexity
 
-                    complexity requirements,...
+                    requirements,...
                   properties:
                     excludePasswordsInDictionary:
                       description: >-
-                        ExcludePasswordsInDictionary controls whether dictionary
-                        words are
+                        ExcludePasswordsInDictionary controls whether passwords
+                        found in a common-password dictionary
 
-                        rejected as passwords.
+                        are...
                       type: boolean
                     excludeUserProfileInfoInPassword:
-                      description: >-
-                        ExcludeUserProfileInfoInPassword controls whether user
-                        profile
-
-                        information (name, email) is...
+                      description: ExcludeUserProfileInfoInPassword controls whether passwords
+                        containing the user's profile...
                       type: boolean
                     expiryDuration:
-                      description: >-
-                        ExpiryDuration is the maximum lifetime, in seconds, of a
-                        password
-
-                        before the user must change it.
+                      description: ExpiryDuration is the number of days after which a password expires
+                        and must be changed.
                       format: int32
                       type: integer
                     includeNumbers:
-                      description: IncludeNumbers controls whether passwords must include at least one
-                        digit.
+                      description: IncludeNumbers controls whether a password must contain at least
+                        one number.
                       type: boolean
                     includeSpecialCharacters:
                       description: >-
-                        IncludeSpecialCharacters controls whether passwords must
-                        include
+                        IncludeSpecialCharacters controls whether a password
+                        must contain at least one special
 
-                        at least one special character.
+                        character.
                       type: boolean
                     inherited:
-                      description: Inherited controls whether password settings are inherited from the
-                        parent.
+                      description: Inherited controls whether these password settings are inherited
+                        from a parent scope rather than...
                       type: boolean
                     lettersInMixedCase:
                       description: >-
-                        LettersInMixedCase controls whether passwords must
-                        include both
+                        LettersInMixedCase controls whether a password must
+                        contain both uppercase and lowercase
 
-                        uppercase and lowercase letters.
+                        letters.
                       type: boolean
                     maxConsecutiveLetters:
-                      description: >-
-                        MaxConsecutiveLetters is the maximum number of
-                        consecutive identical
-
-                        characters allowed in a...
+                      description: MaxConsecutiveLetters is the maximum number of identical
+                        consecutive characters allowed in a...
                       format: int32
                       type: integer
                     maxLength:
-                      description: MaxLength is the maximum password length.
+                      description: MaxLength is the maximum number of characters a password may
+                        contain. Defaults to 128.
                       format: int32
                       type: integer
                     minLength:
-                      description: MinLength is the minimum password length.
+                      description: MinLength is the minimum number of characters a password must
+                        contain. Defaults to 8.
                       format: int32
                       type: integer
                     oldPasswords:
-                      description: OldPasswords is the number of previous passwords that cannot be
-                        reused.
+                      description: OldPasswords is the number of previous passwords retained in
+                        history and barred from reuse.
                       format: int32
                       type: integer
                     passwordHistoryEnabled:
                       description: PasswordHistoryEnabled controls whether password history is
-                        enforced.
+                        enforced to prevent reuse of recent...
                       type: boolean
                   type: object
                 path:
                   description: Path is the context path the domain is served under, relative to
                     the gateway.
+                  maxLength: 255
+                  minLength: 1
                   pattern: ^/.*
                   type: string
                 saml:
@@ -705,138 +650,153 @@ spec:
                     identity provider (IdP).
                   properties:
                     certificate:
-                      description: Certificate is the X.509 certificate for SAML assertion signing.
+                      description: Certificate is the key of a certificate managed under this domain,
+                        used to sign SAML responses.
                       type: string
                     enabled:
-                      description: Enabled controls whether the SAML 2.0 IdP is enabled.
+                      description: Enabled controls whether the domain exposes the SAML 2.0 IdP
+                        protocol. Defaults to false.
                       type: boolean
                     entityId:
-                      description: EntityId is the SAML entity identifier for this domain.
+                      description: EntityId is the URL or URN that uniquely identifies this IdP (the
+                        SAML entity ID).
                       type: string
                   type: object
                 scim:
-                  description: Scim is the configuration of the domain's SCIM 2.0 provisioning
+                  description: Scim holds the configuration of the domain's SCIM 2.0 provisioning
                     endpoints.
                   properties:
                     enabled:
-                      description: Enabled controls whether the SCIM 2.0 endpoints are enabled.
+                      description: Enabled controls whether the SCIM provisioning API is enabled for
+                        the domain. Defaults to false.
                       type: boolean
                     idpSelectionEnabled:
-                      description: >-
-                        IdpSelectionEnabled controls whether an identity
-                        provider can be
-
-                        selected for SCIM-provisioned...
+                      description: IdpSelectionEnabled controls whether an identity provider is
+                        selected for SCIM-provisioned users...
                       type: boolean
                     idpSelectionRule:
                       description: >-
-                        IdpSelectionRule is an expression that selects the
-                        identity provider
+                        IdpSelectionRule is the expression that selects the
+                        identity provider for a SCIM-provisioned
 
-                        for SCIM-provisioned users.
+                        user.
                       type: string
                   type: object
                 secretExpirationSettings:
-                  description: SecretExpirationSettings controls whether client secrets in the
-                    domain expire and after how long.
+                  description: >-
+                    SecretExpirationSettings controls whether client secrets in
+                    the domain expire and after how
+
+                    long.
                   properties:
                     enabled:
-                      description: Enabled controls whether client secrets expire.
+                      description: Enabled controls whether client-secret expiration is enabled.
                       type: boolean
                     expiryTimeSeconds:
-                      description: ExpiryTimeSeconds is the lifetime, in seconds, of a client secret.
+                      description: ExpiryTimeSeconds is the lifetime, in seconds, of a client secret
+                        before it expires.
                       format: int64
                       type: integer
                   type: object
                 selfServiceAccountManagementSettings:
                   description: >-
                     SelfServiceAccountManagementSettings controls whether end
-                    users can manage their
+                    users can manage their own account
 
-                    own account (for...
+                    (for...
                   properties:
                     enabled:
-                      description: Enabled controls whether self-service account management is
-                        enabled.
+                      description: Enabled controls whether self-service account management is enabled
+                        for end users.
                       type: boolean
                     resetPassword:
-                      description: ResetPassword holds settings for user-initiated password resets.
+                      description: ResetPassword holds the rules applied to a self-service password
+                        reset.
                       properties:
                         oldPasswordRequired:
                           description: >-
-                            OldPasswordRequired controls whether the old
-                            password must be
+                            OldPasswordRequired controls whether the user must
+                            supply their current password to set a new
 
-                            provided when resetting.
+                            one.
                           type: boolean
                         tokenAge:
-                          description: TokenAge is the validity period, in seconds, of the password reset
-                            token.
+                          description: TokenAge is the lifetime, in seconds, of the password-reset token.
                           format: int32
                           type: integer
                       type: object
                   type: object
                 tags:
-                  description: Tags are sharding tags that control which gateways deploy this
-                    domain.
+                  description: Tags lists the sharding tags that control which gateways deploy
+                    this domain.
                   items:
                     type: string
                   type: array
+                  x-kubernetes-list-type: set
                 tokenExchangeSettings:
-                  description: TokenExchangeSettings is the OAuth 2.
+                  description: TokenExchangeSettings holds the OAuth 2.
                   properties:
                     allowDelegation:
-                      description: AllowDelegation controls whether token delegation is allowed.
+                      description: AllowDelegation controls whether delegation is allowed, where an
+                        actor acts on behalf of the...
                       type: boolean
                     allowImpersonation:
-                      description: AllowImpersonation controls whether token impersonation is allowed.
+                      description: >-
+                        AllowImpersonation controls whether impersonation is
+                        allowed, where the issued token represents
+
+                        the...
                       type: boolean
                     allowedActorTokenTypes:
-                      description: AllowedActorTokenTypes lists the token types accepted as the
-                        actor_token.
+                      description: AllowedActorTokenTypes lists the token types accepted as the actor
+                        token when delegating.
                       items:
                         type: string
                       type: array
                     allowedRequestedTokenTypes:
-                      description: AllowedRequestedTokenTypes lists the token types that may be
-                        requested.
+                      description: >-
+                        AllowedRequestedTokenTypes lists the token types that
+                        may be requested as the result of an
+
+                        exchange.
                       items:
                         type: string
                       type: array
                     allowedSubjectTokenTypes:
                       description: AllowedSubjectTokenTypes lists the token types accepted as the
-                        subject_token.
+                        subject token in an exchange.
                       items:
                         type: string
                       type: array
                     enabled:
-                      description: Enabled controls whether token exchange is enabled.
+                      description: Enabled controls whether token exchange is enabled for the domain.
+                        Defaults to false.
                       type: boolean
                     idJagSettings:
-                      description: IdJagSettings is the ID-JAG issuance behavior of token exchange.
+                      description: IdJagSettings holds the ID-JAG issuance behavior of token exchange.
                       properties:
                         laxValidation:
-                          description: >-
-                            LaxValidation also accepts an access token issued to
-                            the requesting client
-
-                            as the subject token.
+                          description: LaxValidation also accepts an access token issued to the requesting
+                            client as the subject token.
                           type: boolean
                       type: object
                     maxDelegationDepth:
-                      description: MaxDelegationDepth is the maximum depth of delegation chains.
+                      description: MaxDelegationDepth is the maximum depth of the delegation chain
+                        (nested "act" claims).
                       format: int32
+                      maximum: 100
+                      minimum: 1
                       type: integer
                     tokenExchangeOAuthSettings:
                       description: >-
-                        TokenExchangeOAuthSettings are the OAuth-specific
-                        token-exchange behavior,
+                        TokenExchangeOAuthSettings holds the OAuth-specific
+                        token-exchange behavior, such as how scopes
 
-                        with optional...
+                        are...
                       properties:
                         inherited:
                           description: Inherited controls whether these settings are inherited from the
-                            domain defaults.
+                            domain defaults rather than...
                           type: boolean
                         scopeHandling:
                           description: ScopeHandling is how scopes are handled when issuing the exchanged
@@ -848,59 +808,62 @@ spec:
                       type: object
                   type: object
                 uma:
-                  description: Uma is the configuration of the domain's User-Managed Access (UMA
-                    2.0) authorization features.
+                  description: >-
+                    Uma holds the configuration of the domain's User-Managed
+                    Access (UMA 2.0) authorization
+
+                    features.
                   properties:
                     enabled:
-                      description: Enabled controls whether UMA 2.0 is enabled.
+                      description: Enabled controls whether User-Managed Access is enabled for the
+                        domain. Defaults to false.
                       type: boolean
                   type: object
                 vhostMode:
                   description: >-
                     VhostMode controls whether the domain is exposed through its
-                    virtual hosts
+                    virtual hosts rather than the
 
-                    rather than the default...
+                    default...
                   type: boolean
                 vhosts:
-                  description: Vhosts are the virtual hosts the domain is exposed on, overriding
+                  description: Vhosts lists the virtual hosts the domain is exposed on, overriding
                     the default context path.
                   items:
                     description: VirtualHost is a virtual host the domain is exposed on.
                     properties:
                       host:
-                        description: Host is the hostname.
+                        description: Host is the hostname the domain is served on.
                         type: string
                       overrideEntrypoint:
-                        description: >-
-                          OverrideEntrypoint controls whether the virtual host
-                          overrides the
-
-                          domain's default entrypoint.
+                        description: OverrideEntrypoint controls whether this virtual host overrides the
+                          organization entry point.
                         type: boolean
                       path:
-                        description: Path is the context path for this virtual host.
+                        description: Path is the context path the domain is served under on this host.
                         type: string
                     type: object
                   type: array
                 webAuthnSettings:
                   description: >-
-                    WebAuthnSettings is the WebAuthn (FIDO2) relying-party
-                    configuration governing
+                    WebAuthnSettings holds the WebAuthn (FIDO2) relying-party
+                    configuration governing passwordless
 
-                    passwordless and...
+                    and...
                   properties:
                     attestationConveyancePreference:
-                      description: AttestationConveyancePreference controls how attestation data is
-                        conveyed.
+                      description: >-
+                        AttestationConveyancePreference is the relying-party
+                        preference for attestation conveyance
+
+                        during...
                       enum:
                         - direct
                         - indirect
                         - none
                       type: string
                     authenticatorAttachment:
-                      description: AuthenticatorAttachment constrains the type of authenticator
-                        allowed.
+                      description: AuthenticatorAttachment is the preferred authenticator attachment.
                       enum:
                         - cross_platform
                         - platform
@@ -908,45 +871,47 @@ spec:
                     certificates:
                       additionalProperties:
                         type: string
-                      description: Certificates maps certificate aliases to their PEM-encoded values.
+                      description: Certificates holds the trusted device-attestation X.509
+                        certificates, keyed by name.
                       type: object
                     enforceAuthenticatorIntegrity:
-                      description: >-
-                        EnforceAuthenticatorIntegrity controls whether
-                        authenticator integrity
-
-                        is enforced on each use.
+                      description: EnforceAuthenticatorIntegrity controls whether to periodically
+                        re-verify that registered...
                       type: boolean
                     enforceAuthenticatorIntegrityMaxAge:
                       description: >-
-                        EnforceAuthenticatorIntegrityMaxAge is the maximum age,
-                        in seconds,
+                        EnforceAuthenticatorIntegrityMaxAge is the maximum
+                        elapsed time, in seconds, since an
 
-                        before an authenticator...
+                        authenticator...
                       format: int32
                       type: integer
                     forceRegistration:
                       description: >-
-                        ForceRegistration controls whether WebAuthn registration
-                        is forced
+                        ForceRegistration controls whether to reject
+                        registration of a credential already registered to
 
-                        on every login.
+                        a...
                       type: boolean
                     origin:
-                      description: Origin is the expected origin for WebAuthn assertions.
+                      description: Origin is the relying-party origin; must match the browser's
+                        window.location.
                       type: string
                     relyingPartyId:
-                      description: RelyingPartyId is the relying party identifier.
+                      description: "RelyingPartyId is the relying-party identifier: a domain string
+                        that scopes credentials to this..."
                       type: string
                     relyingPartyName:
-                      description: RelyingPartyName is the human-readable relying party name.
+                      description: RelyingPartyName is the human-readable relying-party name shown to
+                        users during ceremonies.
                       type: string
                     requireResidentKey:
-                      description: RequireResidentKey controls whether a resident key (discoverable
-                        credential) is required.
+                      description: RequireResidentKey controls whether the authenticator must create a
+                        client-side resident...
                       type: boolean
                     userVerification:
-                      description: UserVerification controls the user verification requirement.
+                      description: UserVerification is the relying-party requirement regarding user
+                        verification during a ceremony.
                       enum:
                         - discouraged
                         - preferred
@@ -954,31 +919,30 @@ spec:
                       type: string
                   type: object
                 webProtectionSettings:
-                  description: |-
-                    WebProtectionSettings are the HTTP security headers applied
-                    to the domain's login and consent pages.
+                  description: WebProtectionSettings holds the HTTP security headers applied to
+                    the domain's login and consent...
                   properties:
                     csp:
-                      description: Csp is the Content Security Policy configuration.
+                      description: Csp holds the Content Security Policy configuration for the
+                        domain's login and consent pages.
                       properties:
                         directives:
-                          description: >-
-                            Directives are the CSP directives, one per entry, in
-                            the form "directive-name value"
-
-                            (e.g.
+                          description: Directives lists the CSP directives, one per entry, in the form
+                            "directive-name value".
                           items:
                             type: string
                           type: array
                         enabled:
-                          description: Enabled controls whether CSP headers are sent.
+                          description: Enabled controls whether CSP is enabled for the domain when not
+                            inherited. Defaults to false.
                           type: boolean
                         inherited:
                           description: Inherited controls whether CSP settings are inherited from the
-                            parent.
+                            gateway defaults (gravitee.yml).
                           type: boolean
                         reportOnly:
-                          description: ReportOnly controls whether the CSP is enforced or report-only.
+                          description: ReportOnly delivers the policy as
+                            Content-Security-Policy-Report-Only when true.
                           type: boolean
                         scriptInlineNonce:
                           description: ScriptInlineNonce controls whether inline scripts are allowed via a
@@ -986,31 +950,38 @@ spec:
                           type: boolean
                       type: object
                     xframe:
-                      description: Xframe is the X-Frame-Options configuration.
+                      description: Xframe controls whether the domain's pages may be embedded in
+                        frames on other origins.
                       properties:
                         action:
-                          description: Action is the X-Frame-Options value (DENY, SAMEORIGIN, etc.).
+                          description: "Action is the X-Frame-Options action. Supported values: DENY,
+                            SAMEORIGIN."
+                          enum:
+                            - DENY
+                            - SAMEORIGIN
                           type: string
                         enabled:
-                          description: Enabled controls whether the X-Frame-Options header is sent.
+                          description: Enabled controls whether X-Frame-Options is enabled for the domain
+                            when not inherited.
                           type: boolean
                         inherited:
                           description: Inherited controls whether X-Frame-Options settings are inherited
-                            from the parent.
+                            from the gateway defaults...
                           type: boolean
                       type: object
                     xss:
-                      description: Xss is the X-XSS-Protection configuration.
+                      description: Xss controls the legacy X-XSS-Protection response header.
                       properties:
                         action:
-                          description: Action is the X-XSS-Protection value.
+                          description: Action is the value of the X-XSS-Protection header.
                           type: string
                         enabled:
-                          description: Enabled controls whether the X-XSS-Protection header is sent.
+                          description: Enabled controls whether X-XSS-Protection is enabled for the domain
+                            when not inherited.
                           type: boolean
                         inherited:
                           description: Inherited controls whether X-XSS-Protection settings are inherited
-                            from the parent.
+                            from the gateway defaults...
                           type: boolean
                       type: object
                   type: object
