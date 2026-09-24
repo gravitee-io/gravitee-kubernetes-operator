@@ -15,6 +15,9 @@
 package am_test
 
 import (
+	"context"
+	"strings"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -173,4 +176,30 @@ var _ = Describe("AMSecurityDomain type behavior", func() {
 		Expect(dst.Status.Status.ID).To(Equal("key-xyz"))
 		Expect(dst.Status.Status.EnvID).To(Equal("env-2"))
 	})
+})
+
+var _ = Describe("AMSecurityDomain key validation", func() {
+	withName := func(namespace, name string) *v1alpha1.AMSecurityDomain {
+		obj := newAMSecurityDomain("d1", "/d1")
+		obj.Namespace = namespace
+		obj.Name = name
+		return obj
+	}
+
+	DescribeTable("accepts names that give a valid AM key",
+		func(namespace, name string) {
+			Expect(internal.ValidateKey(context.Background(), withName(namespace, name)).IsSevere()).To(BeFalse())
+		},
+		Entry("simple name", "default", "my-domain"),
+		Entry("digits", "team1", "domain2"),
+		Entry("key of exactly 255 characters", "ns", strings.Repeat("a", 252)),
+	)
+
+	DescribeTable("rejects names that give an invalid AM key",
+		func(namespace, name string) {
+			Expect(internal.ValidateKey(context.Background(), withName(namespace, name)).IsSevere()).To(BeTrue())
+		},
+		Entry("dot in name", "default", "my.domain"),
+		Entry("key longer than 255 characters", "ns", strings.Repeat("a", 253)),
+	)
 })

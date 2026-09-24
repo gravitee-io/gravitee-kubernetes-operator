@@ -25,9 +25,13 @@ import (
 func ToDomainDTO(obj *v1alpha1.AMSecurityDomain) domain.Domain {
 	dto := mapper.MapViaJSON[domain.Domain](obj.Spec.Domain)
 	if dto.Key == "" {
-		dto.Key = refs.NewNamespacedNameFromObject(obj).HRID()
+		dto.Key = domainKey(obj)
 	}
 	return dto
+}
+
+func domainKey(obj *v1alpha1.AMSecurityDomain) string {
+	return refs.NewNamespacedNameFromObject(obj).HRID()
 }
 
 type DomainResponse struct {

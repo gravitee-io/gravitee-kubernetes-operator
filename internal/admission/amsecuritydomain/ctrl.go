@@ -35,6 +35,7 @@ type AdmissionCtrl struct {
 func NewAdmissionCtrl() AdmissionCtrl {
 	a := AdmissionCtrl{}
 	a.Lifecycle.ClientFactory = internal.CreateAMClient
+	a.Lifecycle.PreCheck = internal.ValidateKey
 	a.Lifecycle.DryRun = internal.DryRun
 	a.Lifecycle.GetRemote = internal.GetRemote
 	a.Lifecycle.ToDTO = internal.ToDomainDTO
