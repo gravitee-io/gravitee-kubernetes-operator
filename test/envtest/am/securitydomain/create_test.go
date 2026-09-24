@@ -23,11 +23,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
-var _ = Describe("Create", labels.WithContext, func() {
+var _ = Describe("Create", func() {
 	ctx := context.Background()
 
 	It("should create a basic security domain", func() {

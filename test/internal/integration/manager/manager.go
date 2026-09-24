@@ -17,6 +17,7 @@ package manager
 import (
 	"context"
 	"os"
+	"sync"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/securitydomain"
@@ -46,6 +47,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -58,6 +60,7 @@ import (
 	clientScheme "k8s.io/client-go/kubernetes/scheme"
 
 	netV1 "k8s.io/api/networking/v1"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -66,13 +69,44 @@ const (
 	managerPort = 0
 )
 
-var mgr ctrl.Manager
+var (
+	mgr        ctrl.Manager
+	restConfig *rest.Config
+	startOnce  sync.Once
+	cancel     context.CancelFunc
+	stopped    = make(chan struct{})
+)
+
+// UseConfig points the manager at cfg. Call it before anything touches the manager.
+func UseConfig(cfg *rest.Config) {
+	if mgr != nil {
+		panic("manager already started: set GKO_TEST_ENVTEST=true for envtest suites")
+	}
+	restConfig = cfg
+}
 
 func Instance() ctrl.Manager {
+	startOnce.Do(start)
 	return mgr
 }
 
+// Stop shuts the manager down and waits for it to exit, so an envtest
+// control plane can stop without open watches.
+func Stop() {
+	if cancel == nil {
+		return
+	}
+	cancel()
+	<-stopped
+}
+
 func init() {
+	if os.Getenv("GKO_TEST_ENVTEST") != "true" {
+		Instance()
+	}
+}
+
+func start() {
 	os.Setenv(env.HttpCLientInsecureSkipCertVerify, env.TrueString)
 	// env.Config is already initialized; enable drift so admission tests exercise it.
 	env.Config.DriftDetection.Enabled = true
@@ -84,9 +118,15 @@ func init() {
 	runtimeUtil.Must(v1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 
+	cfg := restConfig
+	if cfg == nil {
+		cfg = ctrl.GetConfigOrDie()
+	}
+	dynamic.UseConfig(cfg)
+
 	var err error
 
-	mgr, err = ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err = ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme,
 		WebhookServer: webhook.NewServer(webhook.Options{
 			Port: managerPort,
@@ -120,43 +160,43 @@ func init() {
 
 	runtimeUtil.Must(
 		(&apidefinition.Reconciler{
-			Client:   Client(),
+			Client:   mgr.GetClient(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("apidefinition_controller"),
-			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ApiDefinitionList{}),
+			Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiDefinitionList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&apidefinition.V4Reconciler{
-			Client:   Client(),
+			Client:   mgr.GetClient(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
-			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ApiV4DefinitionList{}),
+			Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&managementcontext.Reconciler{
-			Client:   Client(),
+			Client:   mgr.GetClient(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("managementcontext_controller"),
-			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ManagementContextList{}),
+			Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ManagementContextList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&ingress.Reconciler{
-			Client:   Client(),
+			Client:   mgr.GetClient(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("ingress-controller"),
-			Watcher:  watch.New(context.Background(), Client(), &netV1.IngressList{}),
+			Watcher:  watch.New(context.Background(), mgr.GetClient(), &netV1.IngressList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&apiresource.Reconciler{
-			Client:   Client(),
+			Client:   mgr.GetClient(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("apiresource-controller"),
 		}).SetupWithManager(mgr),
@@ -164,10 +204,10 @@ func init() {
 
 	runtimeUtil.Must(
 		(&application.Reconciler{
-			Client:   Client(),
+			Client:   mgr.GetClient(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("application-controller"),
-			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ApplicationList{}),
+			Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApplicationList{}),
 		}).SetupWithManager(mgr),
 	)
 
@@ -175,21 +215,21 @@ func init() {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.SubscriptionList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.SubscriptionList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&group.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("group-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.GroupList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.GroupList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&policygroups.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("sharedpolicygroups-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.SharedPolicyGroupList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.SharedPolicyGroupList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&notification.Reconciler{
@@ -202,61 +242,64 @@ func init() {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("dictionary-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.DictionaryList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.DictionaryList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&portal.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("portal-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.PortalList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&portallisting.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("portallisting-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalListingList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.PortalListingList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&portallink.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("portallink-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalLinkList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.PortalLinkList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&documentation.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("documentation-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.DocumentationList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.DocumentationList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&portaltheme.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("portaltheme-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalThemeList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.PortalThemeList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&amcontext.Reconciler{
-		Client:   Client(),
+		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("amcontext-controller"),
-		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.AMContextList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.AMContextList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&securitydomain.Reconciler{
-		Client:    Client(),
+		Client:    mgr.GetClient(),
 		Lifecycle: securitydomain.NewLifecycle(),
 		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("amsecuritydomain-controller"),
-		Watcher:   watch.New(context.Background(), Client(), &v1alpha1.AMSecurityDomainList{}),
+		Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.AMSecurityDomainList{}),
 	}).SetupWithManager(mgr))
 
+	mgrCtx, mgrCancel := context.WithCancel(ctrl.SetupSignalHandler())
+	cancel = mgrCancel
 	go func() {
-		runtimeUtil.Must(Instance().Start(ctrl.SetupSignalHandler()))
+		defer close(stopped)
+		runtimeUtil.Must(mgr.Start(mgrCtx))
 	}()
-	<-Instance().Elected()
+	<-mgr.Elected()
 }

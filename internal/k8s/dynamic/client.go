@@ -18,12 +18,23 @@ import (
 	"sync"
 
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var dynamicClient *dynamic.DynamicClient
 var once sync.Once
+
+// UseConfig builds the client from cfg instead of the ambient kubeconfig.
+// It must run before the first GetClient call to take effect.
+// FIXME: only envtest suites need this; AM should stop resolving secrets
+// through this package, then this seam can go.
+func UseConfig(cfg *rest.Config) {
+	once.Do(func() {
+		dynamicClient = dynamic.NewForConfigOrDie(cfg)
+	})
+}
 
 func GetClient() *dynamic.DynamicClient {
 	once.Do(func() {

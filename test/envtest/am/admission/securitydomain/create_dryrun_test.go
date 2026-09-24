@@ -21,13 +21,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Validate create", labels.WithContext, func() {
+var _ = Describe("Validate create", func() {
 	ctx := context.Background()
 	admissionCtrl := amsecuritydomain.NewAdmissionCtrl()
 
