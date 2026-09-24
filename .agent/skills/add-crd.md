@@ -58,7 +58,7 @@ and `GetID()`; the controller and the webhook both call them before every APIM r
 make generate manifests reference
 ```
 
-Verify the generated CRD appears in `helm/gko/crds/gravitee.io/` and the API reference was updated.
+Verify the generated CRD appears in `crds/gravitee.io/` and the API reference was updated.
 
 ## 5. Create the APIM Client Layer and the Controller
 
