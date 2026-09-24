@@ -16,7 +16,7 @@ Gravitee Kubernetes Operator (GKO) is a Kubernetes operator built with **Kubebui
 # Build
 make build                     # Build manager binary (runs code generation first)
 make generate                  # Generate DeepCopy methods via controller-gen
-make manifests                 # Generate CRD manifests into helm/gko/crds/gravitee.io
+make manifests                 # Generate CRD manifests into crds/gravitee.io
 
 # Lint
 make lint-fix                  # Auto-fix lint issues + add license headers
@@ -233,7 +233,7 @@ After modifying CRD types in `api/`:
 make generate manifests reference
 ```
 - `generate` — DeepCopy methods (`zz_generated.deepcopy.go`)
-- `manifests` — CRD YAML in `helm/gko/crds/gravitee.io/`
+- `manifests` — CRD YAML in `crds/gravitee.io/`
 - `reference` — API docs in `docs/api/reference.md`
 
 After modifying Helm values (`helm/gko/values.yaml`):

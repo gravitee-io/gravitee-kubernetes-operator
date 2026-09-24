@@ -471,5 +471,5 @@ make unit
 ```
 
 `make manifests` regenerates the RBAC from your markers and the CRD YAML under
-`helm/gko/crds/gravitee.io/`. CI fails on a dirty tree, so commit the generated files with the
+`crds/gravitee.io/`. CI fails on a dirty tree, so commit the generated files with the
 source change.
