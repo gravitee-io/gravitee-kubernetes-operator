@@ -104,7 +104,7 @@ type Domain struct {
 
 	// Tags are sharding tags that control which gateways deploy this domain.
 	// +kubebuilder:validation:Optional
-	Tags *[]string `json:"tags,omitempty"`
+	Tags []string `json:"tags,omitempty"`
 
 	// TokenExchangeSettings is the OAuth 2.0 Token Exchange (RFC 8693) configuration for the domain,
 	// covering impersonation and delegation.
@@ -122,7 +122,7 @@ type Domain struct {
 
 	// Vhosts are the virtual hosts the domain is exposed on, overriding the default context path.
 	// +kubebuilder:validation:Optional
-	Vhosts *[]VirtualHost `json:"vhosts,omitempty"`
+	Vhosts []VirtualHost `json:"vhosts,omitempty"`
 
 	// WebAuthnSettings is the WebAuthn (FIDO2) relying-party configuration governing
 	// passwordless and multi-factor authentication for the domain.

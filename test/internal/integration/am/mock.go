@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io-labs/gravitee-automation-tools/am-mock-server/server"
-	pkg "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg"
+	pkg "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg"
 	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/apicontext"
 	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/auth"
 )

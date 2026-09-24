@@ -22,8 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg"
-	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg/sdk/domain"
+	"github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg"
+	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/apicontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -44,7 +44,8 @@ func NewSDKClient(ctx context.Context, obj *v1alpha1.AMContext) (*Client, error)
 		return nil, err
 	}
 
-	var amClient, err = pkg.NewClient(toSDKContext(obj.Spec), env.Config.HTTPClientTimeoutSeconds*int(time.Millisecond))
+	timeout := time.Duration(env.Config.HTTPClientTimeoutSeconds) * time.Second
+	amClient, err := pkg.NewClient(toSDKContext(obj.Spec), int(timeout.Milliseconds()))
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create AMClient: %w", err)
@@ -67,7 +68,7 @@ func (c *Client) GetEnvID() string {
 // Probe checks that AM's Automation API is reachable at this org/env.
 // A 200 is the whole contract: the body is discarded.
 func (c *Client) Probe(ctx context.Context) error {
-	resp, err := c.Domains.ListDomainsWithResponse(ctx, func(ctx context.Context, req *http.Request) error {
+	resp, err := c.ListDomainsWithResponse(ctx, func(ctx context.Context, req *http.Request) error {
 		// Add page and length
 		req.URL.RawQuery = url.Values{"size": {"1"}}.Encode()
 		return nil

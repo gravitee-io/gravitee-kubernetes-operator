@@ -155,11 +155,11 @@ _Appears in:_
 | `scim` _[SCIMSettings](#scimsettings)_ | Scim is the configuration of the domain's SCIM 2.0 provisioning endpoints. |  | Optional: \{\} <br /> |
 | `secretExpirationSettings` _[SecretExpirationSettings](#secretexpirationsettings)_ | SecretExpirationSettings controls whether client secrets in the domain expire and after how long. |  | Optional: \{\} <br /> |
 | `selfServiceAccountManagementSettings` _[SelfServiceAccountManagementSettings](#selfserviceaccountmanagementsettings)_ | SelfServiceAccountManagementSettings controls whether end users can manage their<br />own account (for example, reset their password) and the rules that apply. |  | Optional: \{\} <br /> |
-| `tags` _string_ | Tags are sharding tags that control which gateways deploy this domain. |  | Optional: \{\} <br /> |
+| `tags` _string array_ | Tags are sharding tags that control which gateways deploy this domain. |  | Optional: \{\} <br /> |
 | `tokenExchangeSettings` _[TokenExchangeSettings](#tokenexchangesettings)_ | TokenExchangeSettings is the OAuth 2.0 Token Exchange (RFC 8693) configuration for the domain,<br />covering impersonation and delegation. |  | Optional: \{\} <br /> |
 | `uma` _[UMASettings](#umasettings)_ | Uma is the configuration of the domain's User-Managed Access (UMA 2.0) authorization features. |  | Optional: \{\} <br /> |
 | `vhostMode` _boolean_ | VhostMode controls whether the domain is exposed through its virtual hosts<br />rather than the default context path. When true, Vhosts must be supplied. |  | Optional: \{\} <br /> |
-| `vhosts` _[VirtualHost](#virtualhost)_ | Vhosts are the virtual hosts the domain is exposed on, overriding the default context path. |  | Optional: \{\} <br /> |
+| `vhosts` _[VirtualHost](#virtualhost) array_ | Vhosts are the virtual hosts the domain is exposed on, overriding the default context path. |  | Optional: \{\} <br /> |
 | `webAuthnSettings` _[WebAuthnSettings](#webauthnsettings)_ | WebAuthnSettings is the WebAuthn (FIDO2) relying-party configuration governing<br />passwordless and multi-factor authentication for the domain. |  | Optional: \{\} <br /> |
 | `webProtectionSettings` _[WebProtectionSettings](#webprotectionsettings)_ | WebProtectionSettings are the HTTP security headers applied<br />to the domain's login and consent pages. |  | Optional: \{\} <br /> |
 | `contextRef` _[NamespacedName](#namespacedname)_ |  |  | Required: \{\} <br /> |
@@ -2995,7 +2995,7 @@ _Appears in:_
 | `rememberMeDuration` _integer_ | RememberMeDuration is the duration, in seconds, for which a remembered<br />session stays valid. |  | Optional: \{\} <br /> |
 | `resetPasswordConfirmIdentity` _boolean_ | ResetPasswordConfirmIdentity controls whether the user must confirm<br />their identity before resetting a password. |  | Optional: \{\} <br /> |
 | `resetPasswordCustomForm` _boolean_ | ResetPasswordCustomForm controls whether a custom form is used for<br />the password-reset step. |  | Optional: \{\} <br /> |
-| `resetPasswordCustomFormFields` _[FormField](#formfield)_ | ResetPasswordCustomFormFields are the custom fields rendered<br />on the password-reset form. |  | Optional: \{\} <br /> |
+| `resetPasswordCustomFormFields` _[FormField](#formfield) array_ | ResetPasswordCustomFormFields are the custom fields rendered<br />on the password-reset form. |  | Optional: \{\} <br /> |
 | `resetPasswordInvalidateTokens` _boolean_ | ResetPasswordInvalidateTokens controls whether existing tokens are<br />invalidated when the password is reset. |  | Optional: \{\} <br /> |
 | `sendRecoverAccountEmail` _boolean_ | SendRecoverAccountEmail controls whether to send an account-recovery email. |  | Optional: \{\} <br /> |
 | `sendVerifyRegistrationAccountEmail` _boolean_ | SendVerifyRegistrationAccountEmail controls whether to send a<br />registration-verification email. |  | Optional: \{\} <br /> |
@@ -3054,10 +3054,11 @@ _Appears in:_
 | `allowLocalhostRedirectUri` _boolean_ | AllowLocalhostRedirectUri controls whether localhost is permitted<br />as a redirect URI host. |  | Optional: \{\} <br /> |
 | `allowRedirectUriParamsExpressionLanguage` _boolean_ | AllowRedirectUriParamsExpressionLanguage controls whether expression<br />language is permitted in redirect URI parameters. |  | Optional: \{\} <br /> |
 | `allowWildCardRedirectUri` _boolean_ | AllowWildCardRedirectUri controls whether wildcards are permitted in redirect URIs. |  | Optional: \{\} <br /> |
-| `allowedScopes` _string_ | AllowedScopes lists scopes permitted on client registration requests. |  | Optional: \{\} <br /> |
+| `allowedScopes` _string array_ | AllowedScopes lists scopes permitted on client registration requests. |  | Optional: \{\} <br /> |
+| `allowedScopesEnabled` _boolean_ | AllowedScopesEnabled controls whether registered client scopes<br />are restricted to the allowed list. |  | Optional: \{\} <br /> |
 | `clientTemplateEnabled` _boolean_ | ClientTemplateEnabled controls whether a client template is used<br />for dynamic registration. |  | Optional: \{\} <br /> |
+| `defaultScopes` _string array_ | DefaultScopes are added to every client registration request. |  | Optional: \{\} <br /> |
 | `dynamicClientRegistrationEnabled` _boolean_ | DynamicClientRegistrationEnabled controls whether dynamic client<br />registration is enabled. |  | Optional: \{\} <br /> |
-| `enabled` _boolean_ | Enabled controls whether OpenID Connect Dynamic Client Registration is enabled. |  | Optional: \{\} <br /> |
 | `openDynamicClientRegistrationEnabled` _boolean_ | OpenDynamicClientRegistrationEnabled controls whether open (unauthenticated)<br />dynamic client registration is enabled. |  | Optional: \{\} <br /> |
 
 
@@ -3076,9 +3077,9 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `allowCredentials` _boolean_ | AllowCredentials controls whether credentials (cookies, authorization headers,<br />TLS client certificates) are included in CORS responses. |  | Optional: \{\} <br /> |
-| `allowedHeaders` _string_ | AllowedHeaders lists the HTTP headers permitted on CORS requests. |  | Optional: \{\} <br /> |
-| `allowedMethods` _string_ | AllowedMethods lists the HTTP methods permitted on CORS requests. |  | Optional: \{\} <br /> |
-| `allowedOrigins` _string_ | AllowedOrigins lists the origins permitted to make CORS requests. |  | Optional: \{\} <br /> |
+| `allowedHeaders` _string array_ | AllowedHeaders lists the HTTP headers permitted on CORS requests. |  | Optional: \{\} <br /> |
+| `allowedMethods` _string array_ | AllowedMethods lists the HTTP methods permitted on CORS requests. |  | Optional: \{\} <br /> |
+| `allowedOrigins` _string array_ | AllowedOrigins lists the origins permitted to make CORS requests. |  | Optional: \{\} <br /> |
 | `enabled` _boolean_ | Enabled controls whether CORS is enabled for the domain. |  | Optional: \{\} <br /> |
 | `inherited` _boolean_ | Inherited controls whether CORS settings are inherited from the parent. |  | Optional: \{\} <br /> |
 | `maxAge` _integer_ | MaxAge is the maximum time, in seconds, a preflight response may be cached. |  | Optional: \{\} <br /> |
@@ -3097,11 +3098,11 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `directives` _map[string]string_ | Directives maps CSP directive names to their values. |  | Optional: \{\} <br /> |
+| `directives` _string array_ | Directives are the CSP directives, one per entry, in the form "directive-name value"<br />(e.g. "default-src 'self'"). Directives that take no value may be supplied on their own. |  | Optional: \{\} <br /> |
 | `enabled` _boolean_ | Enabled controls whether CSP headers are sent. |  | Optional: \{\} <br /> |
 | `inherited` _boolean_ | Inherited controls whether CSP settings are inherited from the parent. |  | Optional: \{\} <br /> |
 | `reportOnly` _boolean_ | ReportOnly controls whether the CSP is enforced or report-only. |  | Optional: \{\} <br /> |
-| `scriptInlineNonce` _string_ | ScriptInlineNonce is the nonce value for inline scripts. |  | Optional: \{\} <br /> |
+| `scriptInlineNonce` _boolean_ | ScriptInlineNonce controls whether inline scripts are allowed via a per-request nonce. |  | Optional: \{\} <br /> |
 
 
 #### Domain
@@ -3137,11 +3138,11 @@ _Appears in:_
 | `scim` _[SCIMSettings](#scimsettings)_ | Scim is the configuration of the domain's SCIM 2.0 provisioning endpoints. |  | Optional: \{\} <br /> |
 | `secretExpirationSettings` _[SecretExpirationSettings](#secretexpirationsettings)_ | SecretExpirationSettings controls whether client secrets in the domain expire and after how long. |  | Optional: \{\} <br /> |
 | `selfServiceAccountManagementSettings` _[SelfServiceAccountManagementSettings](#selfserviceaccountmanagementsettings)_ | SelfServiceAccountManagementSettings controls whether end users can manage their<br />own account (for example, reset their password) and the rules that apply. |  | Optional: \{\} <br /> |
-| `tags` _string_ | Tags are sharding tags that control which gateways deploy this domain. |  | Optional: \{\} <br /> |
+| `tags` _string array_ | Tags are sharding tags that control which gateways deploy this domain. |  | Optional: \{\} <br /> |
 | `tokenExchangeSettings` _[TokenExchangeSettings](#tokenexchangesettings)_ | TokenExchangeSettings is the OAuth 2.0 Token Exchange (RFC 8693) configuration for the domain,<br />covering impersonation and delegation. |  | Optional: \{\} <br /> |
 | `uma` _[UMASettings](#umasettings)_ | Uma is the configuration of the domain's User-Managed Access (UMA 2.0) authorization features. |  | Optional: \{\} <br /> |
 | `vhostMode` _boolean_ | VhostMode controls whether the domain is exposed through its virtual hosts<br />rather than the default context path. When true, Vhosts must be supplied. |  | Optional: \{\} <br /> |
-| `vhosts` _[VirtualHost](#virtualhost)_ | Vhosts are the virtual hosts the domain is exposed on, overriding the default context path. |  | Optional: \{\} <br /> |
+| `vhosts` _[VirtualHost](#virtualhost) array_ | Vhosts are the virtual hosts the domain is exposed on, overriding the default context path. |  | Optional: \{\} <br /> |
 | `webAuthnSettings` _[WebAuthnSettings](#webauthnsettings)_ | WebAuthnSettings is the WebAuthn (FIDO2) relying-party configuration governing<br />passwordless and multi-factor authentication for the domain. |  | Optional: \{\} <br /> |
 | `webProtectionSettings` _[WebProtectionSettings](#webprotectionsettings)_ | WebProtectionSettings are the HTTP security headers applied<br />to the domain's login and consent pages. |  | Optional: \{\} <br /> |
 
@@ -3162,6 +3163,22 @@ _Appears in:_
 | `key` _string_ | Key is the field identifier. |  | Optional: \{\} <br /> |
 | `label` _string_ | Label is the human-readable label for the field. |  | Optional: \{\} <br /> |
 | `type` _string_ | Type is the field type (text, select, etc.). |  | Optional: \{\} <br /> |
+
+
+#### IdJagSettings
+
+
+
+IdJagSettings is the ID-JAG issuance behavior of token exchange.
+
+
+
+_Appears in:_
+- [TokenExchangeSettings](#tokenexchangesettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `laxValidation` _boolean_ | LaxValidation also accepts an access token issued to the requesting client<br />as the subject token. By default only an ID token is accepted. |  | Optional: \{\} <br /> |
 
 
 #### KeyRetrievalSettings
@@ -3234,10 +3251,11 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `cibaSettings` _[CIBASettings](#cibasettings)_ | CibaSettings is the Client-Initiated Backchannel Authentication configuration. |  | Optional: \{\} <br /> |
 | `clientRegistrationSettings` _[ClientRegistrationSettings](#clientregistrationsettings)_ | ClientRegistrationSettings is the Dynamic Client Registration configuration. |  | Optional: \{\} <br /> |
-| `postLogoutRedirectUris` _string_ | PostLogoutRedirectUris is the list of URIs allowed for post-logout redirection. |  | Optional: \{\} <br /> |
+| `postLogoutRedirectUris` _string array_ | PostLogoutRedirectUris is the list of URIs allowed for post-logout redirection. |  | Optional: \{\} <br /> |
 | `redirectUriStrictMatching` _boolean_ | RedirectUriStrictMatching controls whether redirect URI matching is strict<br />(no wildcard or partial matching). |  | Optional: \{\} <br /> |
-| `requestUris` _string_ | RequestUris is the list of pre-registered request URIs. |  | Optional: \{\} <br /> |
+| `requestUris` _string array_ | RequestUris is the list of pre-registered request URIs. |  | Optional: \{\} <br /> |
 | `securityProfileSettings` _[SecurityProfileSettings](#securityprofilesettings)_ | SecurityProfileSettings holds FAPI security profile settings. |  | Optional: \{\} <br /> |
+| `workloadIdentitySettings` _[SpiffeDomainSettings](#spiffedomainsettings)_ | WorkloadIdentitySettings are the workload identity (SPIFFE) settings. |  | Optional: \{\} <br /> |
 
 
 #### PasswordSettings
@@ -3376,6 +3394,26 @@ _Appears in:_
 | `resetPassword` _[ResetPasswordSettings](#resetpasswordsettings)_ | ResetPassword holds settings for user-initiated password resets. |  | Optional: \{\} <br /> |
 
 
+#### SpiffeDomainSettings
+
+
+
+SpiffeDomainSettings are the workload identity (SPIFFE) settings for the domain.
+Key retrieval limits are configured in keyRetrievalSettings.
+
+
+
+_Appears in:_
+- [OidcSettings](#oidcsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `clockSkewSeconds` _integer_ | ClockSkewSeconds is the allowed clock skew, in seconds, when validating JWT temporal claims. |  | Optional: \{\} <br /> |
+| `defaultAllowedAlgorithms` _string array_ | DefaultAllowedAlgorithms is the default allowlist of signature algorithms<br />accepted for SPIFFE JWT validation. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether SPIFFE workload identity support is enabled. |  | Optional: \{\} <br /> |
+| `maxJwtLifetimeSeconds` _integer_ | MaxJwtLifetimeSeconds is the maximum accepted JWT lifetime, in seconds, computed as exp minus iat. |  | Optional: \{\} <br /> |
+
+
 #### Status
 
 
@@ -3396,6 +3434,23 @@ _Appears in:_
 | `errors` _[Errors](#errors)_ | Errors encountered during admission or reconciliation. |  |  |
 
 
+#### TokenExchangeOAuthSettings
+
+
+
+TokenExchangeOAuthSettings is the OAuth-specific token-exchange behavior.
+
+
+
+_Appears in:_
+- [TokenExchangeSettings](#tokenexchangesettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `inherited` _boolean_ | Inherited controls whether these settings are inherited from the domain defaults. |  | Optional: \{\} <br /> |
+| `scopeHandling` _string_ | ScopeHandling is how scopes are handled when issuing the exchanged token.<br />downscoping restricts the issued token to a subset of the original scopes. |  | Enum: [downscoping permissive] <br />Optional: \{\} <br /> |
+
+
 #### TokenExchangeSettings
 
 
@@ -3412,11 +3467,13 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `allowDelegation` _boolean_ | AllowDelegation controls whether token delegation is allowed. |  | Optional: \{\} <br /> |
 | `allowImpersonation` _boolean_ | AllowImpersonation controls whether token impersonation is allowed. |  | Optional: \{\} <br /> |
-| `allowedActorTokenTypes` _string_ | AllowedActorTokenTypes lists the token types accepted as the actor_token. |  | Optional: \{\} <br /> |
-| `allowedRequestedTokenTypes` _string_ | AllowedRequestedTokenTypes lists the token types that may be requested. |  | Optional: \{\} <br /> |
-| `allowedSubjectTokenTypes` _string_ | AllowedSubjectTokenTypes lists the token types accepted as the subject_token. |  | Optional: \{\} <br /> |
+| `allowedActorTokenTypes` _string array_ | AllowedActorTokenTypes lists the token types accepted as the actor_token. |  | Optional: \{\} <br /> |
+| `allowedRequestedTokenTypes` _string array_ | AllowedRequestedTokenTypes lists the token types that may be requested. |  | Optional: \{\} <br /> |
+| `allowedSubjectTokenTypes` _string array_ | AllowedSubjectTokenTypes lists the token types accepted as the subject_token. |  | Optional: \{\} <br /> |
 | `enabled` _boolean_ | Enabled controls whether token exchange is enabled. |  | Optional: \{\} <br /> |
+| `idJagSettings` _[IdJagSettings](#idjagsettings)_ | IdJagSettings is the ID-JAG issuance behavior of token exchange. |  | Optional: \{\} <br /> |
 | `maxDelegationDepth` _integer_ | MaxDelegationDepth is the maximum depth of delegation chains. |  | Optional: \{\} <br /> |
+| `tokenExchangeOAuthSettings` _[TokenExchangeOAuthSettings](#tokenexchangeoauthsettings)_ | TokenExchangeOAuthSettings are the OAuth-specific token-exchange behavior,<br />with optional inheritance from the domain defaults. |  | Optional: \{\} <br /> |
 
 
 #### UMASettings
@@ -3471,7 +3528,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `attestationConveyancePreference` _string_ | AttestationConveyancePreference controls how attestation data is conveyed. |  | Enum: [direct indirect none] <br />Optional: \{\} <br /> |
 | `authenticatorAttachment` _string_ | AuthenticatorAttachment constrains the type of authenticator allowed. |  | Enum: [cross_platform platform] <br />Optional: \{\} <br /> |
-| `certificates` _map[string]string_ | Certificates maps certificate aliases to their PEM-encoded values. |  | Optional: \{\} <br /> |
+| `certificates` _object (keys:string, values:string)_ | Certificates maps certificate aliases to their PEM-encoded values. |  | Optional: \{\} <br /> |
 | `enforceAuthenticatorIntegrity` _boolean_ | EnforceAuthenticatorIntegrity controls whether authenticator integrity<br />is enforced on each use. |  | Optional: \{\} <br /> |
 | `enforceAuthenticatorIntegrityMaxAge` _integer_ | EnforceAuthenticatorIntegrityMaxAge is the maximum age, in seconds,<br />before an authenticator integrity re-check is required. |  | Optional: \{\} <br /> |
 | `forceRegistration` _boolean_ | ForceRegistration controls whether WebAuthn registration is forced<br />on every login. |  | Optional: \{\} <br /> |

@@ -526,6 +526,13 @@ spec:
                           items:
                             type: string
                           type: array
+                        allowedScopesEnabled:
+                          description: >-
+                            AllowedScopesEnabled controls whether registered
+                            client scopes
+
+                            are restricted to the allowed list.
+                          type: boolean
                         clientTemplateEnabled:
                           description: >-
                             ClientTemplateEnabled controls whether a client
@@ -533,16 +540,17 @@ spec:
 
                             for dynamic registration.
                           type: boolean
+                        defaultScopes:
+                          description: DefaultScopes are added to every client registration request.
+                          items:
+                            type: string
+                          type: array
                         dynamicClientRegistrationEnabled:
                           description: >-
                             DynamicClientRegistrationEnabled controls whether
                             dynamic client
 
                             registration is enabled.
-                          type: boolean
-                        enabled:
-                          description: Enabled controls whether OpenID Connect Dynamic Client Registration
-                            is enabled.
                           type: boolean
                         openDynamicClientRegistrationEnabled:
                           description: >-
@@ -580,6 +588,34 @@ spec:
                         enablePlainFapi:
                           description: EnablePlainFapi controls whether the plain FAPI profile is enabled.
                           type: boolean
+                      type: object
+                    workloadIdentitySettings:
+                      description: WorkloadIdentitySettings are the workload identity (SPIFFE)
+                        settings.
+                      properties:
+                        clockSkewSeconds:
+                          description: ClockSkewSeconds is the allowed clock skew, in seconds, when
+                            validating JWT temporal claims.
+                          format: int32
+                          type: integer
+                        defaultAllowedAlgorithms:
+                          description: >-
+                            DefaultAllowedAlgorithms is the default allowlist of
+                            signature algorithms
+
+                            accepted for SPIFFE JWT...
+                          items:
+                            type: string
+                          type: array
+                        enabled:
+                          description: Enabled controls whether SPIFFE workload identity support is
+                            enabled.
+                          type: boolean
+                        maxJwtLifetimeSeconds:
+                          description: MaxJwtLifetimeSeconds is the maximum accepted JWT lifetime, in
+                            seconds, computed as exp minus iat.
+                          format: int32
+                          type: integer
                       type: object
                   type: object
                 passwordSettings:
@@ -776,10 +812,40 @@ spec:
                     enabled:
                       description: Enabled controls whether token exchange is enabled.
                       type: boolean
+                    idJagSettings:
+                      description: IdJagSettings is the ID-JAG issuance behavior of token exchange.
+                      properties:
+                        laxValidation:
+                          description: >-
+                            LaxValidation also accepts an access token issued to
+                            the requesting client
+
+                            as the subject token.
+                          type: boolean
+                      type: object
                     maxDelegationDepth:
                       description: MaxDelegationDepth is the maximum depth of delegation chains.
                       format: int32
                       type: integer
+                    tokenExchangeOAuthSettings:
+                      description: >-
+                        TokenExchangeOAuthSettings are the OAuth-specific
+                        token-exchange behavior,
+
+                        with optional...
+                      properties:
+                        inherited:
+                          description: Inherited controls whether these settings are inherited from the
+                            domain defaults.
+                          type: boolean
+                        scopeHandling:
+                          description: ScopeHandling is how scopes are handled when issuing the exchanged
+                            token.
+                          enum:
+                            - downscoping
+                            - permissive
+                          type: string
+                      type: object
                   type: object
                 uma:
                   description: Uma is the configuration of the domain's User-Managed Access (UMA
@@ -896,10 +962,14 @@ spec:
                       description: Csp is the Content Security Policy configuration.
                       properties:
                         directives:
-                          additionalProperties:
+                          description: >-
+                            Directives are the CSP directives, one per entry, in
+                            the form "directive-name value"
+
+                            (e.g.
+                          items:
                             type: string
-                          description: Directives maps CSP directive names to their values.
-                          type: object
+                          type: array
                         enabled:
                           description: Enabled controls whether CSP headers are sent.
                           type: boolean
@@ -911,8 +981,9 @@ spec:
                           description: ReportOnly controls whether the CSP is enforced or report-only.
                           type: boolean
                         scriptInlineNonce:
-                          description: ScriptInlineNonce is the nonce value for inline scripts.
-                          type: string
+                          description: ScriptInlineNonce controls whether inline scripts are allowed via a
+                            per-request nonce.
+                          type: boolean
                       type: object
                     xframe:
                       description: Xframe is the X-Frame-Options configuration.

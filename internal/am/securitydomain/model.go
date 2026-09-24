@@ -15,7 +15,7 @@
 package securitydomain
 
 import (
-	"github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg/sdk/domain"
+	domain "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"

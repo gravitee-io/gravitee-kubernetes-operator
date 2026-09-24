@@ -19,5 +19,6 @@ metadata:
 spec:
   name: Basic Security Domain
   path: /basic
+  description: Basic security domain
   contextRef:
     name: am-ctx

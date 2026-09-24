@@ -123,7 +123,7 @@ type AccountSettings struct {
 	// ResetPasswordCustomFormFields are the custom fields rendered
 	// on the password-reset form.
 	// +kubebuilder:validation:Optional
-	ResetPasswordCustomFormFields *[]FormField `json:"resetPasswordCustomFormFields,omitempty"`
+	ResetPasswordCustomFormFields []FormField `json:"resetPasswordCustomFormFields,omitempty"`
 
 	// ResetPasswordInvalidateTokens controls whether existing tokens are
 	// invalidated when the password is reset.
@@ -157,15 +157,15 @@ type CorsSettings struct {
 
 	// AllowedHeaders lists the HTTP headers permitted on CORS requests.
 	// +kubebuilder:validation:Optional
-	AllowedHeaders *[]string `json:"allowedHeaders,omitempty"`
+	AllowedHeaders []string `json:"allowedHeaders,omitempty"`
 
 	// AllowedMethods lists the HTTP methods permitted on CORS requests.
 	// +kubebuilder:validation:Optional
-	AllowedMethods *[]string `json:"allowedMethods,omitempty"`
+	AllowedMethods []string `json:"allowedMethods,omitempty"`
 
 	// AllowedOrigins lists the origins permitted to make CORS requests.
 	// +kubebuilder:validation:Optional
-	AllowedOrigins *[]string `json:"allowedOrigins,omitempty"`
+	AllowedOrigins []string `json:"allowedOrigins,omitempty"`
 
 	// Enabled controls whether CORS is enabled for the domain.
 	// +kubebuilder:validation:Optional
@@ -306,7 +306,7 @@ type OidcSettings struct {
 
 	// PostLogoutRedirectUris is the list of URIs allowed for post-logout redirection.
 	// +kubebuilder:validation:Optional
-	PostLogoutRedirectUris *[]string `json:"postLogoutRedirectUris,omitempty"`
+	PostLogoutRedirectUris []string `json:"postLogoutRedirectUris,omitempty"`
 
 	// RedirectUriStrictMatching controls whether redirect URI matching is strict
 	// (no wildcard or partial matching).
@@ -315,11 +315,36 @@ type OidcSettings struct {
 
 	// RequestUris is the list of pre-registered request URIs.
 	// +kubebuilder:validation:Optional
-	RequestUris *[]string `json:"requestUris,omitempty"`
+	RequestUris []string `json:"requestUris,omitempty"`
 
 	// SecurityProfileSettings holds FAPI security profile settings.
 	// +kubebuilder:validation:Optional
 	SecurityProfileSettings *SecurityProfileSettings `json:"securityProfileSettings,omitempty"`
+
+	// WorkloadIdentitySettings are the workload identity (SPIFFE) settings.
+	// +kubebuilder:validation:Optional
+	WorkloadIdentitySettings *SpiffeDomainSettings `json:"workloadIdentitySettings,omitempty"`
+}
+
+// SpiffeDomainSettings are the workload identity (SPIFFE) settings for the domain.
+// Key retrieval limits are configured in keyRetrievalSettings.
+type SpiffeDomainSettings struct {
+	// ClockSkewSeconds is the allowed clock skew, in seconds, when validating JWT temporal claims.
+	// +kubebuilder:validation:Optional
+	ClockSkewSeconds *int32 `json:"clockSkewSeconds,omitempty"`
+
+	// DefaultAllowedAlgorithms is the default allowlist of signature algorithms
+	// accepted for SPIFFE JWT validation.
+	// +kubebuilder:validation:Optional
+	DefaultAllowedAlgorithms []string `json:"defaultAllowedAlgorithms,omitempty"`
+
+	// Enabled controls whether SPIFFE workload identity support is enabled.
+	// +kubebuilder:validation:Optional
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// MaxJwtLifetimeSeconds is the maximum accepted JWT lifetime, in seconds, computed as exp minus iat.
+	// +kubebuilder:validation:Optional
+	MaxJwtLifetimeSeconds *int32 `json:"maxJwtLifetimeSeconds,omitempty"`
 }
 
 // CIBASettings is the Client-Initiated Backchannel Authentication configuration.
@@ -366,21 +391,26 @@ type ClientRegistrationSettings struct {
 
 	// AllowedScopes lists scopes permitted on client registration requests.
 	// +kubebuilder:validation:Optional
-	AllowedScopes *[]string `json:"allowedScopes,omitempty"`
+	AllowedScopes []string `json:"allowedScopes,omitempty"`
+
+	// AllowedScopesEnabled controls whether registered client scopes
+	// are restricted to the allowed list.
+	// +kubebuilder:validation:Optional
+	AllowedScopesEnabled *bool `json:"allowedScopesEnabled,omitempty"`
 
 	// ClientTemplateEnabled controls whether a client template is used
 	// for dynamic registration.
 	// +kubebuilder:validation:Optional
 	ClientTemplateEnabled *bool `json:"clientTemplateEnabled,omitempty"`
 
+	// DefaultScopes are added to every client registration request.
+	// +kubebuilder:validation:Optional
+	DefaultScopes []string `json:"defaultScopes,omitempty"`
+
 	// DynamicClientRegistrationEnabled controls whether dynamic client
 	// registration is enabled.
 	// +kubebuilder:validation:Optional
 	DynamicClientRegistrationEnabled *bool `json:"dynamicClientRegistrationEnabled,omitempty"`
-
-	// Enabled controls whether OpenID Connect Dynamic Client Registration is enabled.
-	// +kubebuilder:validation:Optional
-	Enabled *bool `json:"enabled,omitempty"`
 
 	// OpenDynamicClientRegistrationEnabled controls whether open (unauthenticated)
 	// dynamic client registration is enabled.
@@ -534,23 +564,53 @@ type TokenExchangeSettings struct {
 
 	// AllowedActorTokenTypes lists the token types accepted as the actor_token.
 	// +kubebuilder:validation:Optional
-	AllowedActorTokenTypes *[]string `json:"allowedActorTokenTypes,omitempty"`
+	AllowedActorTokenTypes []string `json:"allowedActorTokenTypes,omitempty"`
 
 	// AllowedRequestedTokenTypes lists the token types that may be requested.
 	// +kubebuilder:validation:Optional
-	AllowedRequestedTokenTypes *[]string `json:"allowedRequestedTokenTypes,omitempty"`
+	AllowedRequestedTokenTypes []string `json:"allowedRequestedTokenTypes,omitempty"`
 
 	// AllowedSubjectTokenTypes lists the token types accepted as the subject_token.
 	// +kubebuilder:validation:Optional
-	AllowedSubjectTokenTypes *[]string `json:"allowedSubjectTokenTypes,omitempty"`
+	AllowedSubjectTokenTypes []string `json:"allowedSubjectTokenTypes,omitempty"`
 
 	// Enabled controls whether token exchange is enabled.
 	// +kubebuilder:validation:Optional
 	Enabled *bool `json:"enabled,omitempty"`
 
+	// IdJagSettings is the ID-JAG issuance behavior of token exchange.
+	// +kubebuilder:validation:Optional
+	IdJagSettings *IdJagSettings `json:"idJagSettings,omitempty"`
+
 	// MaxDelegationDepth is the maximum depth of delegation chains.
 	// +kubebuilder:validation:Optional
 	MaxDelegationDepth *int32 `json:"maxDelegationDepth,omitempty"`
+
+	// TokenExchangeOAuthSettings are the OAuth-specific token-exchange behavior,
+	// with optional inheritance from the domain defaults.
+	// +kubebuilder:validation:Optional
+	TokenExchangeOAuthSettings *TokenExchangeOAuthSettings `json:"tokenExchangeOAuthSettings,omitempty"`
+}
+
+// TokenExchangeOAuthSettings is the OAuth-specific token-exchange behavior.
+type TokenExchangeOAuthSettings struct {
+	// Inherited controls whether these settings are inherited from the domain defaults.
+	// +kubebuilder:validation:Optional
+	Inherited *bool `json:"inherited,omitempty"`
+
+	// ScopeHandling is how scopes are handled when issuing the exchanged token.
+	// downscoping restricts the issued token to a subset of the original scopes.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=downscoping;permissive
+	ScopeHandling *string `json:"scopeHandling,omitempty"`
+}
+
+// IdJagSettings is the ID-JAG issuance behavior of token exchange.
+type IdJagSettings struct {
+	// LaxValidation also accepts an access token issued to the requesting client
+	// as the subject token. By default only an ID token is accepted.
+	// +kubebuilder:validation:Optional
+	LaxValidation *bool `json:"laxValidation,omitempty"`
 }
 
 // UMASettings is the User-Managed Access (UMA 2.0) configuration.
@@ -590,7 +650,7 @@ type WebAuthnSettings struct {
 
 	// Certificates maps certificate aliases to their PEM-encoded values.
 	// +kubebuilder:validation:Optional
-	Certificates *map[string]string `json:"certificates,omitempty"`
+	Certificates map[string]string `json:"certificates,omitempty"`
 
 	// EnforceAuthenticatorIntegrity controls whether authenticator integrity
 	// is enforced on each use.
@@ -646,9 +706,10 @@ type WebProtectionSettings struct {
 
 // CspSettings is the Content Security Policy configuration.
 type CspSettings struct {
-	// Directives maps CSP directive names to their values.
+	// Directives are the CSP directives, one per entry, in the form "directive-name value"
+	// (e.g. "default-src 'self'"). Directives that take no value may be supplied on their own.
 	// +kubebuilder:validation:Optional
-	Directives *map[string]string `json:"directives,omitempty"`
+	Directives []string `json:"directives,omitempty"`
 
 	// Enabled controls whether CSP headers are sent.
 	// +kubebuilder:validation:Optional
@@ -662,9 +723,9 @@ type CspSettings struct {
 	// +kubebuilder:validation:Optional
 	ReportOnly *bool `json:"reportOnly,omitempty"`
 
-	// ScriptInlineNonce is the nonce value for inline scripts.
+	// ScriptInlineNonce controls whether inline scripts are allowed via a per-request nonce.
 	// +kubebuilder:validation:Optional
-	ScriptInlineNonce *string `json:"scriptInlineNonce,omitempty"`
+	ScriptInlineNonce *bool `json:"scriptInlineNonce,omitempty"`
 }
 
 // XFrameSettings is the X-Frame-Options configuration.

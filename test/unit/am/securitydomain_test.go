@@ -67,18 +67,19 @@ var _ = Describe("AMSecurityDomain DTO mapping", func() {
 	It("maps tags when present", func() {
 		obj := newAMSecurityDomain("tagged", "/tagged")
 		tags := []string{"eu", "production"}
-		obj.Spec.Tags = &tags
+		obj.Spec.Tags = tags
 		dto := internal.ToDomainDTO(obj)
 
 		Expect(dto.Tags).ToNot(BeNil())
-		Expect(*dto.Tags).To(Equal([]string{"eu", "production"}))
+		Expect(dto.Tags).To(Equal([]string{"eu", "production"}))
 	})
 
-	It("does not carry the contextRef into the DTO", func() {
+	It("keys the DTO on the resource HRID, not the contextRef", func() {
 		obj := newAMSecurityDomain("d1", "/d1")
 		dto := internal.ToDomainDTO(obj)
 
-		Expect(dto.Key).To(BeEmpty(), "contextRef should not leak into Key")
+		Expect(dto.Key).To(Equal(refs.NewNamespacedNameFromObject(obj).HRID()))
+		Expect(dto.Key).ToNot(ContainSubstring("am-ctx"))
 	})
 })
 

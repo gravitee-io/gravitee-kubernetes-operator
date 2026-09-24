@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
-	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/pkg/sdk/domain"
+	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -29,14 +29,14 @@ import (
 )
 
 func Delete(ctx context.Context, amClient *am.Client, dto amsdk.Domain) error {
-	resp, err := amClient.Domains.DeleteDomainWithResponse(ctx, dto.Identity())
+	resp, err := amClient.DeleteDomainWithResponse(ctx, dto.Identity())
 	return am.HasErrors(err, func() *http.Response {
 		return resp.HTTPResponse
 	})
 }
 
 func Upsert(ctx context.Context, client *am.Client, dto amsdk.Domain) (DomainResponse, error) {
-	resp, err := client.Domains.UpsertDomainWithResponse(ctx, nil, dto)
+	resp, err := client.UpsertDomainWithResponse(ctx, nil, dto)
 
 	if err = am.HasErrors(err, func() *http.Response {
 		return resp.HTTPResponse
@@ -80,7 +80,7 @@ func CreateAMClient(ctx context.Context, obj *v1alpha1.AMSecurityDomain) (*am.Cl
 
 func DryRun(ctx context.Context, client *am.Client, dto amsdk.Domain) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	resp, err := client.Domains.UpsertDomainWithResponse(ctx, new(amsdk.UpsertDomainParams{
+	resp, err := client.UpsertDomainWithResponse(ctx, new(amsdk.UpsertDomainParams{
 		DryRun: new(true),
 	}), dto, func(ctx context.Context, req *http.Request) error {
 		js, _ := json.Marshal(dto)
@@ -94,14 +94,11 @@ func DryRun(ctx context.Context, client *am.Client, dto amsdk.Domain) *errors.Ad
 		errs.AddSevere(err.Error())
 		return errs
 	}
-	if resp.JSON200.DryRunErrors == nil {
-		return errs
-	}
-	return am.ToAdmissionErrors(*resp.JSON200.DryRunErrors)
+	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors)
 }
 
 func GetRemote(ctx context.Context, client *am.Client, dto amsdk.Domain) (amsdk.Domain, error) {
-	resp, err := client.Domains.GetDomainWithResponse(ctx, dto.Key)
+	resp, err := client.GetDomainWithResponse(ctx, dto.Key)
 	if err = am.HasErrors(err, func() *http.Response {
 		return resp.HTTPResponse
 	}); err != nil {

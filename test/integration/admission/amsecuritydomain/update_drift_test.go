@@ -61,7 +61,7 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 		dto := internal.ToDomainDTO(fixtures.AMSecurityDomain)
 		remoteDesc := "remote change"
 		dto.Description = &remoteDesc
-		_, err := sdk.Domains.UpsertDomainWithResponse(ctx, nil, dto)
+		_, err := sdk.UpsertDomainWithResponse(ctx, nil, dto)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("changing the local CRD description")
@@ -88,7 +88,7 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 		remoteDesc := "remote value"
 		dto.Description = &remoteDesc
 
-		resp, err := sdk.Domains.UpsertDomainWithResponse(ctx, nil, dto)
+		resp, err := sdk.UpsertDomainWithResponse(ctx, nil, dto)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(resp.JSON200).ToNot(BeNil())
 
