@@ -136,6 +136,7 @@ require (
 	k8s.io/streaming v0.36.4 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.34.0 // indirect
 	sigs.k8s.io/cloud-provider-kind v0.7.0 // indirect
+	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.24.2-0.20260922162418-fbc3eec4c710 // indirect
 	sigs.k8s.io/controller-tools v0.20.0 // indirect
 	sigs.k8s.io/kind v0.29.0 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
@@ -190,5 +191,6 @@ tool (
 	gotest.tools/gotestsum
 	honnef.co/go/tools/cmd/staticcheck
 	sigs.k8s.io/cloud-provider-kind
+	sigs.k8s.io/controller-runtime/tools/setup-envtest
 	sigs.k8s.io/controller-tools/cmd/controller-gen
 )
