@@ -40,7 +40,7 @@
 
 ## Generated Files
 
-- Never hand-edit `zz_generated*.go` files, CRD YAML in `helm/gko/crds/`, `docs/api/reference.md`, or `helm/gko/README.md`
+- Never hand-edit `zz_generated*.go` files, CRD YAML in `crds/`, `docs/api/reference.md`, or `helm/gko/README.md`
 - Always commit regenerated output alongside the source change that caused it
 - After any change to CRD/model types under `api/`, run:
   ```bash
