@@ -15,8 +15,6 @@ package catalogmcpserver
 
 import (
 	"context"
-	"encoding/json"
-	goerrors "errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
@@ -25,11 +23,22 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-// validateCreate runs the checks in order: a context is required, it must resolve (this also
-// compiles templates so the dry run carries resolved credentials), then the platform dry run,
-// which discovers the upstream and refuses an unreachable server or a taken entityId. Schema
-// and CEL own the spec-only rules (entityId grammar and immutability, auth variant pairing).
+// validateCreate runs the checks in order: the context, then the platform dry run, which
+// discovers the upstream and refuses an unreachable server or a taken entityId. Schema and CEL
+// own the spec-only rules (entityId grammar and immutability, auth variant pairing).
 func validateCreate(ctx context.Context, srv *v1alpha1.CatalogMcpServer) *errors.AdmissionErrors {
+	errs := validateContext(ctx, srv)
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateDryRun(ctx, srv))
+	return errs
+}
+
+// validateContext requires a context that resolves. Resolving also compiles templates, so a dry
+// run that follows carries resolved credentials.
+func validateContext(ctx context.Context, srv *v1alpha1.CatalogMcpServer) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	if !srv.HasContext() {
@@ -38,11 +47,6 @@ func validateCreate(ctx context.Context, srv *v1alpha1.CatalogMcpServer) *errors
 	}
 
 	errs.Add(ctxref.Validate(ctx, srv))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validateDryRun(ctx, srv))
 	return errs
 }
 
@@ -68,19 +72,11 @@ func validateDryRun(ctx context.Context, srv *v1alpha1.CatalogMcpServer) *errors
 	return errs
 }
 
-// refusalToAdmissionErrors turns a platform refusal into the findings the author reads. A 400
-// answers the resource state with the findings in errors.severe (credentials already removed),
-// so those are reported one by one; anything else is reported as the request error.
+// refusalToAdmissionErrors reports a platform refusal finding by finding; anything else is
+// reported as the request error.
 func refusalToAdmissionErrors(err error) *errors.AdmissionErrors {
-	if errors.IsBadRequest(err) {
-		serverError := &errors.ServerError{}
-		if goerrors.As(err, serverError) {
-			state := new(model.CatalogMcpServerState)
-			if jsonErr := json.Unmarshal([]byte(serverError.Body), state); jsonErr == nil &&
-				len(state.Errors.Severe) > 0 {
-				return errors.NewAdmissionErrorsFromStatus(state.Errors)
-			}
-		}
+	if findings, refused := model.CatalogMcpServerRefusal(err); refused {
+		return errors.NewAdmissionErrorsFromStatus(findings)
 	}
 
 	errs := errors.NewAdmissionErrors()
