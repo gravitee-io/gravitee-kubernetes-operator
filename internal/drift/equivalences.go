@@ -260,7 +260,7 @@ func itemsOnlyFilterFunc(onlyIDs []string) ItemsFilterFunc {
 		filtered := make([]any, 0, v.Len())
 		for i := 0; i < v.Len(); i++ {
 			item := v.Index(i).Interface()
-			if keyed, ok := item.(Keyed); ok {
+			if keyed, ok := toKeyed(item); ok {
 				if slices.Contains(onlyIDs, keyed.MatchKey()) {
 					continue
 				}
@@ -281,13 +281,28 @@ func asKeyed(items any) ([]Keyed, bool) {
 	v := reflect.ValueOf(items)
 	keyed := make([]Keyed, v.Len())
 	for i := 0; i < v.Len(); i++ {
-		item, ok := v.Index(i).Interface().(Keyed)
+		item, ok := toKeyed(v.Index(i).Interface())
 		if !ok {
 			return nil, false
 		}
 		keyed[i] = item
 	}
 	return keyed, true
+}
+
+// toKeyed returns item as Keyed; a plain string is its own key.
+func toKeyed(item any) (Keyed, bool) {
+	if s, ok := item.(string); ok {
+		return keyedString(s), true
+	}
+	keyed, ok := item.(Keyed)
+	return keyed, ok
+}
+
+type keyedString string
+
+func (k keyedString) MatchKey() string {
+	return string(k)
 }
 
 func keys(items []Keyed, namespace string, stripNS bool) []string {
