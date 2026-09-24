@@ -18,8 +18,11 @@ import (
 	"log"
 	"reflect"
 	"strings"
+	"time"
 	"unicode"
 )
+
+var timeType = reflect.TypeFor[time.Time]()
 
 type valuePair struct {
 	Value     reflect.Value
@@ -85,6 +88,9 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 	for i := 0; i < t.NumField(); i++ {
 		// get info to find an Equivalence func
 		field := t.Field(i)
+		if !field.IsExported() {
+			log.Panicf("detect drift does not support unexported fields, '%s.%s' is unexported.", t, field.Name)
+		}
 		driftFunc := getDriftFunc(field.Tag.Get("drift"))
 		// use json tag or infer the name of the field
 		property := getProperty(field)
@@ -136,6 +142,13 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 			if !equivalent.Skip {
 				detectMapItems(property, driftFunc, crdPair.Value, remotePair.Value, this)
 			}
+		case fieldType == timeType:
+			this.AppendChild(&Result{
+				Property:    property,
+				Equivalence: TimeEquivalence(crdPair.Interface, remotePair.Interface, this.context),
+				CRDValue:    crdPair.Interface,
+				RemoteValue: remotePair.Interface,
+			}, ordered)
 		case fieldType.Kind() == reflect.Struct:
 			handleStructField(property, driftFunc, field, crdPair.Interface, remotePair.Interface, this)
 		default:
