@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -37,10 +38,13 @@ func CreateOrUpdate(ctx context.Context, srv *v1alpha1.CatalogMcpServer) error {
 
 	state, err := apimClient.CatalogMcpServers.CreateOrUpdate(srv)
 	if err != nil {
-		// The admission dry-run already refused bad payloads, so a 400 here is almost always
-		// the upstream being unreachable at reconcile time: keep it recoverable (backoff)
-		// rather than terminal until the next spec change.
+		// A 400 is how the platform refuses an apply, a failed discovery of the upstream included,
+		// which is often transient: keep it recoverable (backoff) rather than terminal until the
+		// next spec change.
 		if gerrors.IsBadRequest(err) {
+			if findings, refused := model.CatalogMcpServerRefusal(err); refused {
+				srv.Status.Errors = findings
+			}
 			return fmt.Errorf("catalog mcp server [%s] was refused by the automation api: %w", srv.GetName(), err)
 		}
 		return gerrors.NewControlPlaneError(err)

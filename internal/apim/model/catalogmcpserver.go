@@ -14,10 +14,15 @@
 package model
 
 import (
+	"encoding/json"
+	goerrors "errors"
+	"net/http"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
 // CatalogMcpServerDTO is the automation API wire representation of a CatalogMcpServer
@@ -60,6 +65,23 @@ type CatalogMcpServerState struct {
 	EnvID                       string        `json:"environmentId,omitempty"`
 	Errors                      status.Errors `json:"errors,omitempty"`
 	catalogmcpserver.Discovered `json:",inline"`
+}
+
+// CatalogMcpServerRefusal reads the findings of a refused apply. The platform refuses with a 400
+// whose body is the resource state, credentials removed, with the findings in errors.severe; a
+// 400 the host answers before the module sees the request has another shape and is not a refusal.
+func CatalogMcpServerRefusal(err error) (status.Errors, bool) {
+	serverError := &errors.ServerError{}
+	if !goerrors.As(err, serverError) || serverError.StatusCode != http.StatusBadRequest {
+		return status.Errors{}, false
+	}
+
+	state := new(CatalogMcpServerState)
+	if json.Unmarshal([]byte(serverError.Body), state) != nil || len(state.Errors.Severe) == 0 {
+		return status.Errors{}, false
+	}
+
+	return state.Errors, true
 }
 
 // ToCatalogMcpServerDTO maps the CRD onto the wire payload. It is the single mapping used by

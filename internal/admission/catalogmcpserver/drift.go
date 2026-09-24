@@ -30,9 +30,17 @@ func validateUpdate(
 	oldObj *v1alpha1.CatalogMcpServer,
 	newObj *v1alpha1.CatalogMcpServer,
 ) *errors.AdmissionErrors {
-	errs := validateCreate(ctx, newObj)
+	errs := validateContext(ctx, newObj)
 	if errs.IsSevere() {
 		return errs
+	}
+	// The dry run discovers the upstream: a metadata-only update, the controller's own finalizer
+	// and annotation writes included, must not depend on the upstream being reachable.
+	if oldObj.Spec.Hash() != newObj.Spec.Hash() {
+		errs.MergeWith(validateDryRun(ctx, newObj))
+		if errs.IsSevere() {
+			return errs
+		}
 	}
 	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemoteCatalogMcpServer,
 		drift.MapDTO(model.ToCatalogMcpServerDTO)))

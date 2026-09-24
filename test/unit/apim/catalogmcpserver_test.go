@@ -15,6 +15,8 @@ package apim_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	xErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
 func newCatalogMcpServer(auth *catalogmcpserver.Auth) *v1alpha1.CatalogMcpServer {
@@ -160,5 +163,52 @@ var _ = Describe("Catalog MCP server", func() {
 			Expect(state.Prompts[0].Name).To(Equal("summarize_pr"))
 			Expect(state.Resources[0].URI).To(Equal("github://repos"))
 		})
+	})
+
+	Describe("refusal findings", func() {
+		refusedWith := func(statusCode int, body string) error {
+			return xErrors.ServerError{StatusCode: statusCode, Body: body}
+		}
+
+		It("reads the findings a refused apply carries in errors.severe", func() {
+			err := refusedWith(http.StatusBadRequest, `{
+				"entityId": "mcp-server.github",
+				"connection": {"endpoint": "https://api.githubcopilot.com/mcp/", "transport": "HTTP"},
+				"errors": {"severe": ["upstream unreachable", "entityId already used"], "warning": ["slow upstream"]}
+			}`)
+
+			findings, refused := model.CatalogMcpServerRefusal(err)
+
+			Expect(refused).To(BeTrue())
+			Expect(findings.Severe).To(ConsistOf("upstream unreachable", "entityId already used"))
+			Expect(findings.Warning).To(ConsistOf("slow upstream"))
+		})
+
+		It("reads the findings through a wrapped error", func() {
+			err := fmt.Errorf("apply failed: %w",
+				refusedWith(http.StatusBadRequest, `{"errors": {"severe": ["upstream unreachable"]}}`))
+
+			findings, refused := model.CatalogMcpServerRefusal(err)
+
+			Expect(refused).To(BeTrue())
+			Expect(findings.Severe).To(ConsistOf("upstream unreachable"))
+		})
+
+		DescribeTable("is not a refusal",
+			func(err error) {
+				_, refused := model.CatalogMcpServerRefusal(err)
+				Expect(refused).To(BeFalse())
+			},
+			Entry("a 400 without severe findings",
+				refusedWith(http.StatusBadRequest, `{"errors": {"warning": ["slow upstream"]}}`)),
+			Entry("a 400 in the platform error shape, a missing hrid for instance",
+				refusedWith(http.StatusBadRequest, `{"message": "hrid is required", "http_status": 400}`)),
+			Entry("a 400 whose body is not JSON",
+				refusedWith(http.StatusBadRequest, `Bad Request`)),
+			Entry("another status carrying a state body",
+				refusedWith(http.StatusInternalServerError, `{"errors": {"severe": ["boom"]}}`)),
+			Entry("an error that is not a server answer",
+				fmt.Errorf("connection refused")),
+		)
 	})
 })
