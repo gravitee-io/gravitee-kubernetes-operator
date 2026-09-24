@@ -184,6 +184,45 @@ jobs:
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
+  job-envtest:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    steps:
+      - checkout
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - run:
+          name: Generate cache key for envtest assets
+          command: grep '^ENVTEST_K8S_VERSION' hack/make/test.mk > /tmp/envtest_version
+      - restore_cache:
+          keys:
+            - envtest-assets-{{ checksum "/tmp/envtest_version" }}
+      - run:
+          name: Run envtest suites
+          command: |
+            ENVTEST_ARGS="--cover --coverprofile=cover-envtest.out --coverpkg=github.com/gravitee-io/gravitee-kubernetes-operator/... --output-dir=/tmp/junit/reports" \
+             make -s envtest
+      - save_cache:
+          key: envtest-assets-{{ checksum "/tmp/envtest_version" }}
+          paths:
+            - ~/.local/share/kubebuilder-envtest
+      - store_test_results:
+          path: /tmp/junit/reports
+      - persist_to_workspace:
+          root: /tmp/junit/reports
+          paths:
+            - cover-envtest.out
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-envtest.out
+          destination: cover-envtest.out
+      - go/save-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+
   job-conformance-test:
     machine:
       image: ubuntu-2204:2024.01.2
@@ -912,6 +951,8 @@ workflows:
           name: Lint resources
       - job-unit-test:
           name: Run unit tests
+      - job-envtest:
+          name: Run envtest suites
       - job-integration-test:
           matrix:
             parameters:
@@ -976,6 +1017,12 @@ workflows:
             branches:
               only:
                 - master
+      - job-envtest:
+          name: Run envtest suites (master)
+          filters:
+            branches:
+              only:
+                - master
       - job-integration-test:
           matrix:
             parameters:
@@ -1000,6 +1047,7 @@ workflows:
           requires:
             - job-integration-test-withContext
             - job-integration-test-withoutContext
+            - Run envtest suites (master)
             - Run Conformance Test (master)
           filters:
             branches:
@@ -1070,6 +1118,8 @@ workflows:
         - test
         - << pipeline.parameters.trigger >>
     jobs:
+      - job-envtest:
+          name: Run envtest suites
       - job-integration-test:
           matrix:
             parameters:
