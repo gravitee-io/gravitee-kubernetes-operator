@@ -6,6 +6,8 @@ This document provides all the information you need regarding the operator integ
 
 Test are written and run using the [gingko](https://onsi.github.io/ginkgo/) testing framework, paired with the [gomega](https://onsi.github.io/gomega/) matcher library against a local kind cluster.
 
+AM tests do not live here: they run on envtest, see `test/envtest/am/` (`make envtest`).
+
 This section does not describe how to use gingko or gomega. Please read the respective documentations linked above before going further.
 
 > Note: kubectl, helm and kind are assumed to have been installed on your machine.
