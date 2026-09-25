@@ -34,9 +34,12 @@ COPY crds/ crds/
 
 
 # Build
-ARG TARGETOS=linux
-ARG TARGETARCH=amd64
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -o manager main.go
+# TARGETOS and TARGETARCH must not have a default value: BuildKit only injects
+# the target platform into a stage ARG declared without one, and a default would
+# make every platform of a multi-arch build ship a binary for that architecture.
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
