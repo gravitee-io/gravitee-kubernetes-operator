@@ -155,7 +155,9 @@
         "clearTextUpgrade": true,
         "version": "HTTP_2",
         "maxHeaderSize": 8192,
-        "maxChunkSize": 4096
+        "maxChunkSize": 4096,
+        "maxWaitQueueSize": 32,
+        "maxConnectionLifetime": 60000
       },
       "ssl": {
         "trustAll": true,
@@ -297,6 +299,7 @@
   "analytics": {
     "enabled": true,
     "reporterMetricsEnabled": true,
+    "connectionEvents": ["CONNECTED", "DISCONNECTED"],
     "otelLogs": {
       "enabled": true
     },
@@ -325,7 +328,22 @@
     },
     "tracing": {
       "enabled": true,
-      "verbose": true
+      "verbose": true,
+      "redaction": {
+        "defaultReplacement": "[MASKED]",
+        "rules": [
+          {
+            "attributeNamePattern": "http.request.header.authorization",
+            "valuePattern": "^Bearer ",
+            "maskingStrategy": {
+              "type": "PARTIAL",
+              "replacement": "#",
+              "prefixLength": 7,
+              "suffixLength": 2
+            }
+          }
+        ]
+      }
     }
   },
   "services": {
@@ -365,7 +383,9 @@
     "slowCallDuration": 2000,
     "openStateDuration": 10000,
     "maxFailures": 5,
-    "perSubscription": true
+    "perSubscription": true,
+    "failureCondition": "{#response.status >= 500}",
+    "forceNextEndpointOnFailure": true
   },
   "portalNavigation": [
     {
@@ -385,6 +405,7 @@
   },
   "pages": [
     {
+      "id": "page-id",
       "hrid": "guide-page",
       "crossId": "page-cross",
       "name": "Guide",

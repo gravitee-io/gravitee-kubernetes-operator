@@ -210,6 +210,12 @@ type Failover struct {
 	// API Failover  per subscription
 	// +kubebuilder:default:=true
 	PerSubscription *bool `json:"perSubscription,omitempty"`
+	// EL expression marking a response as failed, e.g. `{#response.status >= 500}`
+	// +kubebuilder:validation:Optional
+	FailureCondition *string `json:"failureCondition,omitempty"`
+	// On retry, target the next endpoint of the group instead of the load balancer's pick
+	// +kubebuilder:default:=false
+	ForceNextEndpointOnFailure *bool `json:"forceNextEndpointOnFailure,omitempty"`
 }
 
 func NewDefaultKubernetesContext() *DefinitionContext {

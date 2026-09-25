@@ -15,6 +15,9 @@
 package model
 
 import (
+	"encoding/json"
+	"slices"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
@@ -109,12 +112,14 @@ type APIV4DefinitionContextDTO struct {
 }
 
 type APIV4FailoverDTO struct {
-	Enabled           *bool  `json:"enabled,omitempty"`
-	MaxRetries        *int   `json:"maxRetries,omitempty"`
-	SlowCallDuration  *int64 `json:"slowCallDuration,omitempty"`
-	OpenStateDuration *int64 `json:"openStateDuration,omitempty"`
-	MaxFailures       *int   `json:"maxFailures,omitempty"`
-	PerSubscription   *bool  `json:"perSubscription,omitempty"`
+	Enabled                    *bool   `json:"enabled,omitempty"`
+	MaxRetries                 *int    `json:"maxRetries,omitempty"`
+	SlowCallDuration           *int64  `json:"slowCallDuration,omitempty"`
+	OpenStateDuration          *int64  `json:"openStateDuration,omitempty"`
+	MaxFailures                *int    `json:"maxFailures,omitempty"`
+	PerSubscription            *bool   `json:"perSubscription,omitempty"`
+	FailureCondition           *string `json:"failureCondition,omitempty" drift:"empty-is-nil"`
+	ForceNextEndpointOnFailure *bool   `json:"forceNextEndpointOnFailure,omitempty" drift:"empty-is-nil"`
 }
 
 type APIV4ConsoleNotificationDTO struct {
@@ -204,6 +209,8 @@ type APIV4HttpClientOptionsDTO struct {
 	ProtocolVersion               base.ProtocolVersion `json:"version,omitempty"`
 	MaxHeaderSize                 *int                 `json:"maxHeaderSize,omitempty"`
 	MaxChunkSize                  *int                 `json:"maxChunkSize,omitempty"`
+	MaxWaitQueueSize              *int                 `json:"maxWaitQueueSize,omitempty"`
+	MaxConnectionLifetime         *int64               `json:"maxConnectionLifetime,omitempty"`
 }
 
 type APIV4HttpClientSslOptionsDTO struct {
@@ -332,17 +339,53 @@ type APIV4SamplingDTO struct {
 }
 
 type APIV4TracingDTO struct {
-	Enabled *bool `json:"enabled,omitempty"`
-	Verbose *bool `json:"verbose,omitempty"`
+	Enabled   *bool                     `json:"enabled,omitempty"`
+	Verbose   *bool                     `json:"verbose,omitempty"`
+	Redaction *APIV4TracingRedactionDTO `json:"redaction,omitempty"`
+}
+
+type APIV4TracingRedactionDTO struct {
+	DefaultReplacement *string                        `json:"defaultReplacement,omitempty"`
+	Rules              []APIV4TracingRedactionRuleDTO `json:"rules,omitempty" drift:"empty-is-nil"`
+}
+
+type APIV4TracingRedactionRuleDTO struct {
+	AttributeNamePattern string                          `json:"attributeNamePattern"`
+	MaskingStrategy      *APIV4TracingMaskingStrategyDTO `json:"maskingStrategy,omitempty"`
+	ValuePattern         *string                         `json:"valuePattern,omitempty"`
+}
+
+type APIV4TracingMaskingStrategyDTO struct {
+	Type         v4.TracingMaskingType `json:"type" drift:"case-insensitive"`
+	Replacement  *string               `json:"replacement,omitempty"`
+	PrefixLength *int                  `json:"prefixLength,omitempty"`
+	SuffixLength *int                  `json:"suffixLength,omitempty"`
 }
 
 type APIV4AnalyticsDTO struct {
-	Enabled                bool              `json:"enabled" drift:"empty-is-true"`
-	ReporterMetricsEnabled *bool             `json:"reporterMetricsEnabled,omitempty" drift:"empty-is-true"`
-	OtelLogs               *APIV4OtelLogsDTO `json:"otelLogs,omitempty"`
-	Sampling               *APIV4SamplingDTO `json:"sampling,omitempty"`
-	Logging                *APIV4LoggingDTO  `json:"logging,omitempty"`
-	Tracing                *APIV4TracingDTO  `json:"tracing,omitempty"`
+	Enabled                bool  `json:"enabled" drift:"empty-is-true"`
+	ReporterMetricsEnabled *bool `json:"reporterMetricsEnabled,omitempty" drift:"empty-is-true"`
+	// Always sent: the Automation API reads an absent field as an empty selection, which reports
+	// nothing, so an unset CRD value must go out as null to keep reporting CONNECTED and ERROR.
+	ConnectionEvents APIV4ConnectionEventsDTO `json:"connectionEvents"`
+	OtelLogs         *APIV4OtelLogsDTO        `json:"otelLogs,omitempty"`
+	Sampling         *APIV4SamplingDTO        `json:"sampling,omitempty"`
+	Logging          *APIV4LoggingDTO         `json:"logging,omitempty"`
+	Tracing          *APIV4TracingDTO         `json:"tracing,omitempty"`
+}
+
+// APIV4ConnectionEventsDTO is a set: APIM does not return the events in the
+// order they were sent, so both drift sides are sorted when decoded.
+type APIV4ConnectionEventsDTO []v4.ConnectionEvent
+
+func (events *APIV4ConnectionEventsDTO) UnmarshalJSON(data []byte) error {
+	var decoded []v4.ConnectionEvent
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	slices.Sort(decoded)
+	*events = decoded
+	return nil
 }
 
 type APIV4ApiServicesDTO struct {
@@ -385,6 +428,7 @@ type APIV4PageSourceDTO struct {
 }
 
 type APIV4PageDTO struct {
+	ID            string              `json:"id,omitempty" drift:"ignore"`
 	HRID          string              `json:"hrid,omitempty"`
 	CrossID       string              `json:"crossId,omitempty" drift:"ignore"`
 	Name          string              `json:"name,omitempty"`

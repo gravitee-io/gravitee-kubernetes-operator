@@ -107,6 +107,11 @@ type Analytics struct {
 	// +kubebuilder:validation:Optional
 	ReporterMetricsEnabled *bool `json:"reporterMetricsEnabled,omitempty"`
 
+	// Native v4 only. Unset reports CONNECTED and ERROR, an empty list reports none
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	ConnectionEvents *[]ConnectionEvent `json:"connectionEvents,omitempty"`
+
 	// OpenTelemetry log export configuration.
 	// +kubebuilder:validation:Optional
 	OtelLogs *OtelLogs `json:"otelLogs,omitempty"`
@@ -120,6 +125,15 @@ type Analytics struct {
 	// Analytics Tracing
 	Tracing *Tracing `json:"tracing,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=CONNECTED;DISCONNECTED;ERROR
+type ConnectionEvent string
+
+const (
+	ConnectionEventConnected    = ConnectionEvent("CONNECTED")
+	ConnectionEventDisconnected = ConnectionEvent("DISCONNECTED")
+	ConnectionEventError        = ConnectionEvent("ERROR")
+)
 
 type OtelLogs struct {
 	// Enable OpenTelemetry log export for this API.
@@ -158,4 +172,61 @@ type Tracing struct {
 
 	// Specify if Tracing is Verbose or not
 	Verbose *bool `json:"verbose,omitempty"`
+
+	// Masking applied to span attributes before traces are exported
+	// +kubebuilder:validation:Optional
+	Redaction *TracingRedaction `json:"redaction,omitempty"`
+}
+
+type TracingRedaction struct {
+	// Replacement for FULL rules that set none, defaults to `[REDACTED]`
+	// +kubebuilder:validation:Optional
+	DefaultReplacement *string `json:"defaultReplacement,omitempty"`
+
+	// Masking rules, each matching span attributes by key and optionally by value
+	// +kubebuilder:validation:Optional
+	Rules []TracingRedactionRule `json:"rules,omitempty"`
+}
+
+type TracingRedactionRule struct {
+	// Span attribute key: glob, short name, or `regex:`-prefixed Java regex
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	AttributeNamePattern string `json:"attributeNamePattern"`
+
+	// How the matched value is masked
+	// +kubebuilder:validation:Optional
+	MaskingStrategy *TracingMaskingStrategy `json:"maskingStrategy,omitempty"`
+
+	// Java regex the attribute value must partially match for the rule to apply
+	// +kubebuilder:validation:Optional
+	ValuePattern *string `json:"valuePattern,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=FULL;PARTIAL
+type TracingMaskingType string
+
+const (
+	TracingMaskingTypeFull    = TracingMaskingType("FULL")
+	TracingMaskingTypePartial = TracingMaskingType("PARTIAL")
+)
+
+type TracingMaskingStrategy struct {
+	// FULL replaces the whole value, PARTIAL keeps a visible prefix and suffix
+	// +kubebuilder:validation:Required
+	Type TracingMaskingType `json:"type"`
+
+	// FULL: replacement text, defaults to `[REDACTED]`. PARTIAL: mask character, defaults to `*`
+	// +kubebuilder:validation:Optional
+	Replacement *string `json:"replacement,omitempty"`
+
+	// PARTIAL only: number of leading characters kept visible
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
+	PrefixLength *int `json:"prefixLength,omitempty"`
+
+	// PARTIAL only: number of trailing characters kept visible
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
+	SuffixLength *int `json:"suffixLength,omitempty"`
 }

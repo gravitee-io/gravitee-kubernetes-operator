@@ -71,6 +71,17 @@ spec:
                 analytics:
                   description: API Analytics (Not applicable for Native API)
                   properties:
+                    connectionEvents:
+                      description: Native v4 only. Unset reports CONNECTED and ERROR, an empty list
+                        reports none
+                      items:
+                        enum:
+                          - CONNECTED
+                          - DISCONNECTED
+                          - ERROR
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: set
                     enabled:
                       default: true
                       description: Analytics Enabled or not?
@@ -185,6 +196,56 @@ spec:
                         enabled:
                           description: Specify if Tracing is Enabled or not
                           type: boolean
+                        redaction:
+                          description: Masking applied to span attributes before traces are exported
+                          properties:
+                            defaultReplacement:
+                              description: Replacement for FULL rules that set none, defaults to `[REDACTED]`
+                              type: string
+                            rules:
+                              description: Masking rules, each matching span attributes by key and optionally
+                                by value
+                              items:
+                                properties:
+                                  attributeNamePattern:
+                                    description: "Span attribute key: glob, short name, or `regex:`-prefixed Java
+                                      regex"
+                                    minLength: 1
+                                    type: string
+                                  maskingStrategy:
+                                    description: How the matched value is masked
+                                    properties:
+                                      prefixLength:
+                                        description: "PARTIAL only: number of leading characters kept visible"
+                                        minimum: 0
+                                        type: integer
+                                      replacement:
+                                        description: "FULL: replacement text, defaults to `[REDACTED]`. PARTIAL: mask
+                                          character, defaults to `*`"
+                                        type: string
+                                      suffixLength:
+                                        description: "PARTIAL only: number of trailing characters kept visible"
+                                        minimum: 0
+                                        type: integer
+                                      type:
+                                        description: FULL replaces the whole value, PARTIAL keeps a visible prefix and
+                                          suffix
+                                        enum:
+                                          - FULL
+                                          - PARTIAL
+                                        type: string
+                                    required:
+                                      - type
+                                    type: object
+                                  valuePattern:
+                                    description: Java regex the attribute value must partially match for the rule to
+                                      apply
+                                    type: string
+                                required:
+                                  - attributeNamePattern
+                                type: object
+                              type: array
+                          type: object
                         verbose:
                           description: Specify if Tracing is Verbose or not
                           type: boolean
@@ -571,6 +632,15 @@ spec:
                     enabled:
                       default: false
                       description: API Failover is enabled?
+                      type: boolean
+                    failureCondition:
+                      description: EL expression marking a response as failed, e.g. `{#response.status
+                        >= 500}`
+                      type: string
+                    forceNextEndpointOnFailure:
+                      default: false
+                      description: On retry, target the next endpoint of the group instead of the load
+                        balancer's pick
                       type: boolean
                     maxFailures:
                       default: 5

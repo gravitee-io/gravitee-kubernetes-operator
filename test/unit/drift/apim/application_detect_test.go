@@ -19,6 +19,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Application Drift detection", func() {
@@ -212,6 +213,31 @@ var _ = Describe("Application Drift detection", func() {
 			},
 		),
 	)
+
+	It("detects a console-side change of the OAuth additional client metadata", func() {
+		withMetadata := func(softwareID string) model.ApplicationDTO {
+			return model.ApplicationDTO{Settings: &model.ApplicationSettingsDTO{
+				Oauth: &model.ApplicationOAuthClientSettingsDTO{
+					AdditionalClientMetadata: map[string]string{"software_id": softwareID},
+				},
+			}}
+		}
+
+		result := drift.DetectWithNamespace(withMetadata("crd-template"), withMetadata("console-template"), "")
+
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
+
+	It("treats absent and empty OAuth additional client metadata as equivalent", func() {
+		crd := model.ApplicationDTO{Settings: &model.ApplicationSettingsDTO{
+			Oauth: &model.ApplicationOAuthClientSettingsDTO{},
+		}}
+		remote := model.ApplicationDTO{Settings: &model.ApplicationSettingsDTO{
+			Oauth: &model.ApplicationOAuthClientSettingsDTO{AdditionalClientMetadata: map[string]string{}},
+		}}
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {

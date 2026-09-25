@@ -31,6 +31,9 @@ spec:
   analytics:
     enabled: true
     reporterMetricsEnabled: false
+    connectionEvents:
+      - CONNECTED
+      - DISCONNECTED
   listeners:
     - type: KAFKA
       host: "kafka.local"
