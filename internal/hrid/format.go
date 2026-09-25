@@ -15,8 +15,16 @@
 package hrid
 
 import (
+	"fmt"
+	"regexp"
 	"slices"
 )
+
+// MaxLength is the longest HRID the automation API accepts.
+const MaxLength = 256
+
+// pattern is the automation API's HRID grammar.
+var pattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]+[a-zA-Z0-9]$`)
 
 var forbiddenRunes = []rune{' ', '.'}
 
@@ -44,4 +52,23 @@ func NameToValidHRIDPointer(s *string) *string {
 // ToHRID convert a namespaced name to a valid HRID.
 func ToHRID(ns, name string) string {
 	return ns + "-" + name
+}
+
+// Validate checks a derived HRID against the automation API grammar before it is sent, so that a
+// legal Kubernetes name the platform cannot address (a dotted name, a very long namespace and
+// name) fails with a message naming the value.
+func Validate(hrid string) error {
+	if len(hrid) > MaxLength {
+		return fmt.Errorf(
+			"hrid [%s] derived from the resource namespace and name is %d characters long, the limit is %d",
+			hrid, len(hrid), MaxLength,
+		)
+	}
+	if !pattern.MatchString(hrid) {
+		return fmt.Errorf(
+			"hrid [%s] derived from the resource namespace and name must match %s: rename the resource",
+			hrid, pattern.String(),
+		)
+	}
+	return nil
 }

@@ -50,6 +50,7 @@ import (
 	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
 	documentationAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
 	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
+	mcpProxyAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mcpproxy"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
 	portalAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portal"
@@ -651,6 +652,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 	}
 
 	if err := (catalogMcpServerAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (mcpProxyAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

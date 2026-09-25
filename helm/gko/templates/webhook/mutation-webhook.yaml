@@ -397,4 +397,40 @@ webhooks:
   timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
   admissionReviewVersions:
     - v1
+- name: v1alpha1.gravitee.io.mcpproxy
+  clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /mutate-gravitee-io-v1alpha1-mcpproxy
+        port: {{ .Values.manager.webhook.service.port }}
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  objectSelector: {}
+  reinvocationPolicy: Never
+  rules:
+  - apiGroups:
+    - gravitee.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - mcpproxies
+    scope: '*'
+  {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: "In"
+        values:
+          - {{ .Release.Namespace }}
+  {{ else }}
+  namespaceSelector: {}
+  {{ end }}
+  sideEffects: None
+  timeoutSeconds: {{ include "gko.WebhookTimeoutSeconds" . }}
+  admissionReviewVersions:
+    - v1
 {{- end }}

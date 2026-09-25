@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package catalogmcpserver
+package mcpproxy
 
 import (
 	"context"
@@ -23,11 +23,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-var _ admission.Validator[*v1alpha1.CatalogMcpServer] = AdmissionCtrl{}
-var _ admission.Defaulter[*v1alpha1.CatalogMcpServer] = AdmissionCtrl{}
+var _ admission.Validator[*v1alpha1.McpProxy] = AdmissionCtrl{}
+var _ admission.Defaulter[*v1alpha1.McpProxy] = AdmissionCtrl{}
 
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.CatalogMcpServer{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.McpProxy{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
@@ -35,26 +35,25 @@ func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 
 type AdmissionCtrl struct{}
 
-func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.CatalogMcpServer) error {
+func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.McpProxy) error {
 	return nil
 }
 
 func (a AdmissionCtrl) ValidateCreate(
-	ctx context.Context, obj *v1alpha1.CatalogMcpServer,
+	ctx context.Context, obj *v1alpha1.McpProxy,
 ) (admission.Warnings, error) {
 	return validateCreate(ctx, obj).Map()
 }
 
-// ValidateDelete admits every deletion, with a warning naming the studios that still select the
-// server: refusing would make pruning a directory depend on the order resources are deleted in.
+// ValidateDelete admits every deletion: nothing references an McpProxy.
 func (a AdmissionCtrl) ValidateDelete(
-	ctx context.Context, obj *v1alpha1.CatalogMcpServer,
+	_ context.Context, _ *v1alpha1.McpProxy,
 ) (admission.Warnings, error) {
-	return validateDelete(ctx, obj).Map()
+	return admission.Warnings{}, nil
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
-	ctx context.Context, oldObj *v1alpha1.CatalogMcpServer, newObj *v1alpha1.CatalogMcpServer,
+	ctx context.Context, oldObj *v1alpha1.McpProxy, newObj *v1alpha1.McpProxy,
 ) (admission.Warnings, error) {
 	if newObj.IsBeingDeleted() {
 		return admission.Warnings{}, nil
