@@ -1,0 +1,80 @@
+{
+  "hrid": "default-drift-full",
+  "entityId": "mcp-proxy.drift-full",
+  "name": "Drift full",
+  "description": "Every field the proxy accepts",
+  "contextPath": "/mcp/drift-full",
+  "mode": "PROXY",
+  "protocolVersion": "2025-03-26",
+  "state": "STARTED",
+  "serverUrl": "https://mcp.example.com/mcp",
+  "upstreamAuth": {
+    "type": "OAUTH2",
+    "apiKeyHeader": "X-Api-Key",
+    "apiKey": "k",
+    "token": "t",
+    "username": "gravitee",
+    "password": "p",
+    "authorizeUrl": "https://auth.example.com/authorize",
+    "tokenUrl": "https://auth.example.com/token",
+    "clientId": "gravitee",
+    "clientSecret": "s",
+    "scopes": ["repo"]
+  },
+  "studio": {
+    "tools": [{"server": "default-github", "tool": "create_issue", "alias": "issue", "entityId": "mcp-tool.github.create_issue"}],
+    "upstreamAuth": [{"server": "default-github", "auth": {
+      "type": "OAUTH2", "apiKeyHeader": "X-Api-Key", "apiKey": "k", "token": "t", "username": "gravitee",
+      "password": "p", "authorizeUrl": "https://auth.example.com/authorize", "tokenUrl": "https://auth.example.com/token",
+      "clientId": "gravitee", "clientSecret": "s", "scopes": ["repo"]
+    }}],
+    "enableFGA": true
+  },
+  "flowExecution": {"mode": "BEST_MATCH", "matchRequired": true},
+  "flows": [{
+    "name": "Log tool calls",
+    "enabled": true,
+    "selectors": [{"type": "MCP", "methods": ["tools/call"], "condition": "{#request.headers['X-Audit'] != null}"}],
+    "request": [{
+      "name": "Quota", "policy": "rate-limit", "description": "One hundred calls a minute", "enabled": true,
+      "condition": "{#request.headers['X-Quota'] != null}", "configuration": {"rate": {"limit": 100}}
+    }],
+    "response": [{
+      "name": "Header", "policy": "transform-headers", "description": "Tag responses", "enabled": true,
+      "condition": "{#response.status == 200}", "configuration": {"addHeaders": [{"name": "X-Proxied-By"}]}
+    }],
+    "tags": ["audit"]
+  }],
+  "identityProviders": [{
+    "name": "keycloak",
+    "type": "OAUTH2_GENERIC",
+    "issuerUrl": "https://kc.example.com/realms/acme",
+    "introspectionEndpoint": "/protocol/openid-connect/token/introspect",
+    "introspectionEndpointMethod": "POST",
+    "clientId": "gateway",
+    "userInfoEndpoint": "/protocol/openid-connect/userinfo",
+    "clientSecret": "s",
+    "domain": "gravitee.eu.auth0.com",
+    "audience": "https://mcp.example.com"
+  }],
+  "plans": [{
+    "name": "Keys",
+    "security": {
+      "type": "API_KEY", "source": "HEADER", "apiKeyHeader": "X-Drift-Key", "propagateApiKey": true,
+      "provider": "keycloak", "scopes": ["repo:read"]
+    },
+    "flows": [{
+      "name": "Plan guardrails", "enabled": true,
+      "selectors": [{"type": "CONDITION", "methods": ["tools/list"], "condition": "{#request.headers['X-Plan'] != null}"}],
+      "request": [{
+        "name": "Log", "policy": "logging", "description": "Log calls", "enabled": true,
+        "condition": "{#request.headers['X-Log'] != null}", "configuration": {"scope": "API"}
+      }],
+      "response": [{
+        "name": "Log", "policy": "logging", "description": "Log answers", "enabled": true,
+        "condition": "{#response.status == 200}", "configuration": {"scope": "API"}
+      }],
+      "tags": ["plan"]
+    }]
+  }]
+}

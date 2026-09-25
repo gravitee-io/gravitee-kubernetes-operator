@@ -1,0 +1,34 @@
+{
+  "metadata": {"name": "drift-full", "namespace": "default"},
+  "spec": {
+    "contextRef": {"name": "dev-ctx"},
+    "entityId": "mcp-proxy.drift-full",
+    "name": "Drift full",
+    "description": "Every PROXY field the drift comparison covers",
+    "contextPath": "/mcp/drift-full",
+    "protocolVersion": "2025-03-26",
+    "mode": "PROXY",
+    "state": "STARTED",
+    "proxy": {
+      "serverUrl": "https://mcp.example.com/mcp",
+      "upstreamAuth": {"type": "BASIC", "basic": {"username": "gravitee", "password": "p"}}
+    },
+    "flowExecution": {"mode": "BEST_MATCH", "matchRequired": true},
+    "flows": [{
+      "name": "Log tool calls",
+      "enabled": true,
+      "tags": ["audit"],
+      "selectors": [{"type": "MCP", "mcp": {"methods": ["tools/call", "tools/list"]}}],
+      "request": [{"name": "Quota", "policy": "rate-limit", "enabled": true, "configuration": {"rate": {"limit": 100}}}]
+    }],
+    "identityProviders": [{"name": "auth0", "type": "OAUTH2_AUTH0", "auth0": {"domain": "gravitee.eu.auth0.com", "audience": "https://mcp.example.com"}}],
+    "plans": [
+      {"name": "Tokens", "security": {"type": "OAUTH2", "oauth2": {"provider": "auth0"}}},
+      {
+        "name": "Keys",
+        "security": {"type": "API_KEY", "apiKey": {"source": "HEADER", "header": "X-Drift-Key", "propagate": true}},
+        "flows": [{"name": "Plan guardrails", "enabled": true, "request": [{"name": "Log", "policy": "logging", "enabled": true}]}]
+      }
+    ]
+  }
+}
