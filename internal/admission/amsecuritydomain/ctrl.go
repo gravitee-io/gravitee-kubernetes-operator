@@ -42,7 +42,6 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
 			ToDTO:         internal.ToDomainDTO,
-			DeleteGuard:   internal.DeleteGuard,
 		}),
 	}
 }

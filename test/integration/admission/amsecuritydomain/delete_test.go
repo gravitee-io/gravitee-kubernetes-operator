@@ -50,15 +50,4 @@ var _ = Describe("Validate delete", labels.WithContext, func() {
 		Expect(err).ToNot(HaveOccurred())
 	})
 
-	It("should reject delete when created remotely but context is missing", func() {
-		fixtures := fixture.Builder().
-			WithAMSecurityDomain(constants.AMSecurityDomainBasicFile).
-			Build()
-
-		fixtures.AMSecurityDomain.Status.ID = "some-remote-id"
-
-		_, err := admissionCtrl.ValidateDelete(ctx, fixtures.AMSecurityDomain)
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("without contextRef"))
-	})
 })

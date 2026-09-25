@@ -52,7 +52,6 @@ func NewLifecycle() Lifecycle {
 		ResolveRefs:   nil,
 		ClientFactory: internal.CreateAMClient,
 		ToDTO:         internal.ToDomainDTO,
-		DeleteGuard:   internal.DeleteGuard,
 		Delete:        internal.Delete,
 		Upsert:        internal.Upsert,
 		PostUpsert:    internal.UpdateStatus,
@@ -64,11 +63,7 @@ func NewLifecycle() Lifecycle {
 // +kubebuilder:rbac:groups=gravitee.io,resources=amsecuritydomains/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	domain := &v1alpha1.AMSecurityDomain{}
-	if err := r.Client.Get(ctx, req.NamespacedName, domain); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, domain)
+	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.AMSecurityDomain{})
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -120,12 +120,3 @@ func unexpectedResponse(resp *http.Response) error {
 	return fmt.Errorf("unexpected AM response: status %d, content type %q",
 		resp.StatusCode, resp.Header.Get("Content-Type"))
 }
-
-func DeleteGuard(_ context.Context, obj *v1alpha1.AMSecurityDomain) error {
-	// if there is a status with data, that means it has been created at least once
-	// there it cannot be deleted if the CRD has no contextRef
-	if obj.Status.ID != "" && !obj.HasContext() {
-		return fmt.Errorf("cannot delete %s [%s] without contextRef", obj.Kind, obj.GetRef().String())
-	}
-	return nil
-}
