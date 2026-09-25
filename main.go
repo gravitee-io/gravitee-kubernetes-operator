@@ -63,13 +63,13 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
-	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/yaml"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/catalogmcpserver"
@@ -502,6 +502,8 @@ func applyCRDs() error {
 			return err
 		}
 
+		// sigs.k8s.io/yaml, as kubectl and helm use: it keeps a plain scalar that looks like a date
+		// (an MCP protocol version enum value) a string, where a YAML decoder yields a timestamp.
 		obj := make(map[string]interface{})
 		if err = yaml.Unmarshal(b, &obj); err != nil {
 			return err
