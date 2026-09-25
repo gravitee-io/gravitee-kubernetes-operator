@@ -447,9 +447,11 @@ MyResourceFinalizer = "finalizers.gravitee.io/myresources"
 
 ## 9. Tests
 
-**Unit tests only in this repo.** Put them in `test/unit/<area>/` (Ginkgo v2) and cover the parts
-that are pure logic — the `To*DTO` mapping, drift tags (`test/unit/drift/apim/`), any predicate or
-helper you added. Never place `_test.go` under `controllers/**/internal`.
+**Unit and envtest suites only in this repo.** Put unit tests in `test/unit/<area>/` (Ginkgo v2) and
+cover the parts that are pure logic — the `To*DTO` mapping, drift tags (`test/unit/drift/apim/`), any
+predicate or helper you added. Never place `_test.go` under `controllers/**/internal`. Reconcile
+flows that only need an API server and an in-process mock (AM today) go in `test/envtest/<area>/`,
+run with `make envtest`.
 
 **Everything that needs a cluster or a live APIM goes to
 [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e)**:

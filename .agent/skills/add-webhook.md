@@ -423,9 +423,11 @@ and tag reference: [AGENTS.md](../../AGENTS.md#drift-detection).
 
 ## 7. Tests
 
-**Unit tests only in this repo**, under `test/unit/admission/` and `test/unit/drift/apim/` — the
-pure parts: field validation predicates, defaulting, immutability comparisons, DTO drift tags. Call
-`drift.Init()` in `BeforeSuite` for any suite touching drift.
+**Unit and envtest suites only in this repo.** Unit tests go under `test/unit/admission/` and
+`test/unit/drift/apim/` — the pure parts: field validation predicates, defaulting, immutability
+comparisons, DTO drift tags. Call `drift.Init()` in `BeforeSuite` for any suite touching drift.
+Admission checks that need real Secrets or an in-process mock (AM today) go in
+`test/envtest/<area>/admission/`, run with `make envtest`.
 
 **Anything that needs a cluster or a live APIM goes to
 [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e)**:

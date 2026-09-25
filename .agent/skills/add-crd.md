@@ -78,8 +78,9 @@ nothing.
 
 ## 8. Tests
 
-Unit tests in `test/unit/<area>/` for the pure logic. Everything requiring a cluster or a live APIM
-goes to [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e),
+Unit tests in `test/unit/<area>/` for the pure logic, envtest suites in `test/envtest/<area>/` for
+flows that only need an API server and an in-process mock (AM today). Everything requiring a cluster
+or a live APIM goes to [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e),
 with fixtures under `apim/fixtures/<area>/`. Do not add anything to `test/integration/`.
 
 ## 9. Final Checks

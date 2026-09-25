@@ -39,7 +39,7 @@ go tool ginkgo test/unit/predicate/...
 go tool ginkgo --focus "should ..." test/integration/apidefinition/v2/...
 
 # Local development
-make start-cluster             # Create local KinD cluster with APIM
+make start-cluster             # Create local KinD cluster with APIM (Kubernetes/kind versions: hack/make/versions.mk)
 make delete-cluster            # Delete local KinD cluster
 make install                   # Install CRDs into current cluster
 make run                       # Run operator locally (APPLY_CRDS=true ENABLE_GATEWAY_API=false)
@@ -214,7 +214,7 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 
 ## Testing
 
-**New work is unit tests here and e2e tests in the platform repo. Do not add integration tests.**
+**New work is unit and envtest suites here and e2e tests in the platform repo. Do not add integration tests.**
 
 | Layer | Where | What belongs there |
 |-------|-------|--------------------|
