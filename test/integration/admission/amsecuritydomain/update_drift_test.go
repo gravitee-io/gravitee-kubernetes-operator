@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -113,14 +114,13 @@ var _ = Describe("Validate drift - remote fetch failure", labels.WithContext, fu
 			WithAMContext(constants.AMContextFile).
 			WithAMSecurityDomain(constants.AMSecurityDomainBasicFile).
 			Build()
+		Expect(manager.Client().Create(ctx, fixtures.AMContext)).To(Succeed())
 
 		newSD := fixtures.AMSecurityDomain.DeepCopy()
-		desc := "changed"
-		newSD.Spec.Description = &desc
+		newSD.Spec.Description = new("changed")
 
 		_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.AMSecurityDomain, newSD)
-		if err != nil {
-			Expect(err.Error()).To(ContainSubstring("not found during drift detection"))
-		}
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("not found during drift detection"))
 	})
 })
