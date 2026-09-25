@@ -20,14 +20,18 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
+	coreV1 "k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("Create", labels.WithContext, func() {
+var _ = Describe("Create", func() {
 	ctx := context.Background()
 
 	It("should create a basic security domain", func() {
@@ -47,6 +51,29 @@ var _ = Describe("Create", labels.WithContext, func() {
 		Expect(fixtures.AMSecurityDomain.Status.ID).ToNot(BeEmpty())
 		Expect(fixtures.AMSecurityDomain.Status.OrgID).To(Equal("DEFAULT"))
 		Expect(fixtures.AMSecurityDomain.Status.EnvID).To(Equal("DEFAULT"))
+	})
+
+	It("should create a security domain whose AMContext token is a template", func() {
+		secret := &coreV1.Secret{
+			ObjectMeta: metaV1.ObjectMeta{Name: random.GetName(), Namespace: constants.Namespace},
+			Data:       map[string][]byte{"token": []byte("admin-token")},
+		}
+		Expect(manager.Client().Create(ctx, secret)).To(Succeed())
+		DeferCleanup(func() {
+			Expect(client.IgnoreNotFound(manager.Client().Delete(ctx, secret))).To(Succeed())
+		})
+		secretName := secret.Name
+
+		fixtures := fixture.Builder().
+			WithAMContext(constants.AMContextFile).
+			WithAMSecurityDomain(constants.AMSecurityDomainBasicFile).
+			Build()
+		fixtures.AMContext.Spec.Auth = &am.Auth{BearerToken: "[[ secret `" + secretName + "/token` ]]"}
+		fixtures.Apply()
+
+		By("expecting security domain to be accepted")
+
+		Expect(assert.AMSecurityDomainAccepted(fixtures.AMSecurityDomain)).To(Succeed())
 	})
 
 	It("should create a security domain with full settings", func() {

@@ -417,6 +417,8 @@ sigs.k8s.io/cloud-provider-kind v0.7.0 h1:8UnbeDrNu0y9SoQ3hz/LlPdaNj+nLktKJZFPYh
 sigs.k8s.io/cloud-provider-kind v0.7.0/go.mod h1:ksECZrsdRUWU7tK0D4nZcBESNdhwzMQgj0rQh5svekg=
 sigs.k8s.io/controller-runtime v0.24.1 h1:miPEwrmirImAvgME1L9qebGHrOnGJoVmVdtOU9fRfo4=
 sigs.k8s.io/controller-runtime v0.24.1/go.mod h1:vFkfY5fGt5xAC/sKb8IBFKgWPNKG9OUG29dR8Y2wImw=
+sigs.k8s.io/controller-runtime/tools/setup-envtest v0.24.2-0.20260922162418-fbc3eec4c710 h1:L90ttSy8HyqodL2G/BuMSfr3qGrZehxFuVppXK+hrf4=
+sigs.k8s.io/controller-runtime/tools/setup-envtest v0.24.2-0.20260922162418-fbc3eec4c710/go.mod h1:wpkYufRHTSw9ABET21/PkEL7kdGnmiZJ6o72t9p/1I8=
 sigs.k8s.io/controller-tools v0.20.0 h1:VWZF71pwSQ2lZZCt7hFGJsOfDc5dVG28/IysjjMWXL8=
 sigs.k8s.io/controller-tools v0.20.0/go.mod h1:b4qPmjGU3iZwqn34alUU5tILhNa9+VXK+J3QV0fT/uU=
 sigs.k8s.io/gateway-api v1.6.1 h1:mock6phZbI6rvZerwrVNk7hVNymQgHo+6sJ81Ia7ftY=

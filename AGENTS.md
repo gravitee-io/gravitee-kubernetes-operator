@@ -29,6 +29,7 @@ npx --yes -p @commitlint/cli -p @commitlint/config-conventional \
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
 make it                        # Run integration tests (Ginkgo, requires cluster) — test/integration/...
+make envtest                   # Run envtest suites (Ginkgo, no cluster: kube-apiserver + etcd) — test/envtest/...
 
 # Run a single unit test suite
 go tool ginkgo test/unit/apim/...
@@ -38,7 +39,7 @@ go tool ginkgo test/unit/predicate/...
 go tool ginkgo --focus "should ..." test/integration/apidefinition/v2/...
 
 # Local development
-make start-cluster             # Create local KinD cluster with APIM
+make start-cluster             # Create local KinD cluster with APIM (Kubernetes/kind versions: hack/make/versions.mk)
 make delete-cluster            # Delete local KinD cluster
 make install                   # Install CRDs into current cluster
 make run                       # Run operator locally (APPLY_CRDS=true ENABLE_GATEWAY_API=false)
@@ -213,11 +214,12 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 
 ## Testing
 
-**New work is unit tests here and e2e tests in the platform repo. Do not add integration tests.**
+**New work is unit and envtest suites here and e2e tests in the platform repo. Do not add integration tests.**
 
 | Layer | Where | What belongs there |
 |-------|-------|--------------------|
 | Unit | `test/unit/<area>/` in this repo | Pure logic: DTO mapping, drift tags, validation predicates, templating, helpers. Ginkgo v2; dot-imports for `ginkgo/v2` and `gomega` are allowed |
+| Envtest | `test/envtest/<area>/` in this repo | Controllers and admission against a real kube-apiserver + etcd with in-process mocks (AM today). No cluster needed; run with `make envtest` |
 | E2E | [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e) | Anything requiring a cluster or a live APIM/AM: reconciliation, `.status`, admission rejection, drift, deletion |
 | Helm | `helm/gko/tests/` | helm-unittest YAML tests |
 
