@@ -76,6 +76,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
@@ -418,6 +419,16 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.CatalogMcpServerList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for catalog mcp servers")
+		os.Exit(1)
+	}
+
+	if err := (&mcpproxy.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("mcpproxy-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.McpProxyList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for mcp proxies")
 		os.Exit(1)
 	}
 }

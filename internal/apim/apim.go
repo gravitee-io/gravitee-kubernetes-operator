@@ -44,6 +44,7 @@ type APIM struct {
 	Documentations    *service.Documentations
 	PortalThemes      *service.PortalThemes
 	CatalogMcpServers *service.CatalogMcpServers
+	McpProxies        *service.McpProxies
 	Env               *service.Env
 
 	Context core.ContextModel
@@ -97,6 +98,7 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		Documentations:    service.NewDocumentations(c),
 		PortalThemes:      service.NewPortalThemes(c),
 		CatalogMcpServers: service.NewCatalogMcpServers(c),
+		McpProxies:        service.NewMcpProxies(c),
 		Env:               service.NewEnv(c),
 		Context:           context,
 	}, nil
