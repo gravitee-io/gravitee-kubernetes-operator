@@ -68,7 +68,7 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 	Finalizer string
 
 	// ResolveRefs runs after template compile/release, before ClientFactory.
-	// Nil → GenericRefResolver. Use the same func as AdmissionLifecycle.ResolveRefs.
+	// Nil skips resolution and the ResolvedRefs condition. Use the same func as AdmissionLifecycle.ResolveRefs.
 	ResolveRefs RefResolverFunc[T]
 
 	// ClientFactory runs after refs, before ToDTO. Required.
@@ -94,7 +94,7 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 // AdmissionLifecycle is the admission holes for one CR kind.
 type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.APIClient] struct {
 	// ResolveRefs runs on create/update after template compile, before ClientFactory.
-	// Nil → GenericRefResolver. Use the same func as ResourceLifecycle.ResolveRefs.
+	// Nil skips resolution. Use the same func as ResourceLifecycle.ResolveRefs.
 	ResolveRefs RefResolverFunc[T]
 
 	// ClientFactory runs on create/update after refs, before PreCheck.

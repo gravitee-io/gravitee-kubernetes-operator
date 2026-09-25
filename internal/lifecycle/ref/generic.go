@@ -29,7 +29,8 @@ type TagSpec struct {
 	Key      string
 }
 
-// GenericRefResolver is the default ResolveRefs. Walk obj, resolve each `ref` tag, write into the value field.
+// GenericRefResolver walks obj, resolves each `ref` tag and writes the value into the target field.
+// Set it as ResolveRefs to opt in: a nil ResolveRefs resolves nothing.
 func GenericRefResolver[T any](ctx context.Context, obj T, parentNs string) error {
 	return Walk(ctx, obj, parentNs)
 }
@@ -121,6 +122,11 @@ func resolveAndAssign(ctx context.Context, s reflect.Value, targetFields map[str
 		val, err := ResolveFromTag(ctx, spec, ObjectKey(namespacedName, parentNs))
 		if err != nil {
 			return err
+		}
+
+		// nothing to assign
+		if val == nil {
+			continue
 		}
 
 		fieldVal := s.FieldByName(targetField)

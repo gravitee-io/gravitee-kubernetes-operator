@@ -22,7 +22,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle/ref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -224,10 +223,10 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 
 func (a AdmissionLifecycle[T, D, C]) resolveRefs(ctx context.Context, obj T) error {
 	ns := obj.GetNamespace()
-	if a.ResolveRefs != nil {
-		return a.ResolveRefs(ctx, obj, ns)
+	if a.ResolveRefs == nil {
+		return nil
 	}
-	return ref.GenericRefResolver(ctx, obj, ns)
+	return a.ResolveRefs(ctx, obj, ns)
 }
 
 func applyRemoteFetchPolicy(obj client.Object, err error, errs *errors.AdmissionErrors) {

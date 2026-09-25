@@ -18,7 +18,6 @@ package ref
 import (
 	"strings"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,7 +28,6 @@ import (
 type ObjectFactory func() client.Object
 
 // ExtractFunc pulls a value out of a fetched object (e.g. secret data key).
-// Nil on Kind means the whole object is the resolved value.
 type ExtractFunc func(obj client.Object, key string) (any, error)
 
 type Kind struct {
@@ -82,8 +80,4 @@ func extractSecretKey(obj client.Object, key string) (any, error) {
 		return nil, NewWrappedError("extract", "secret", key, ErrSecretKeyMissing)
 	}
 	return data, nil
-}
-
-func extractHRID(obj client.Object, _ string) (any, error) {
-	return refs.NewNamespacedNameFromObject(obj).HRID(), nil
 }

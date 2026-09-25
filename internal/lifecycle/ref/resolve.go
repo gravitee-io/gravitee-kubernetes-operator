@@ -36,22 +36,22 @@ func ObjectKey(ref *refs.NamespacedName, parentNs string) types.NamespacedName {
 }
 
 func ResolveFromTag(ctx context.Context, tagSpec TagSpec, nsn types.NamespacedName) (any, error) {
-	kind, obj, a, err, done := Resolve(ctx, tagSpec.Kind, nsn)
-	if done {
-		return a, err
+	kind, obj, err := Resolve(ctx, tagSpec.Kind, nsn)
+	if err != nil {
+		return nil, err
 	}
 	return kind.Extract(obj, tagSpec.Key)
 }
 
-func Resolve(ctx context.Context, kind string, nsn types.NamespacedName) (Kind, client.Object, any, error, bool) {
+func Resolve(ctx context.Context, kind string, nsn types.NamespacedName) (Kind, client.Object, error) {
 	regKind, ok := Lookup(kind)
 	if !ok {
-		return Kind{}, nil, nil, NewWrappedError("resolve", kind, "", ErrUnknownKind), true
+		return Kind{}, nil, NewWrappedError("resolve", kind, "", ErrUnknownKind)
 	}
 
 	obj := regKind.New()
 	if err := k8s.GetClient().Get(ctx, nsn, obj); err != nil {
-		return Kind{}, nil, nil, NewWrappedError("resolve", kind, "", err), true
+		return Kind{}, nil, NewWrappedError("resolve", kind, "", err)
 	}
-	return regKind, obj, nil, nil, false
+	return regKind, obj, nil
 }

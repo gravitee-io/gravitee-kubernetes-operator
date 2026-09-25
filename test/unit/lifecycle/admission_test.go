@@ -84,6 +84,24 @@ func minimalAdmission(tc *testClient) lifecycle.AdmissionLifecycle[*v1alpha1.Gro
 	}
 }
 
+// refGroup is a Group carrying one ref-tagged field. With SecretRef unset, the generic
+// resolver fails, which makes "was resolution attempted" observable.
+type refGroup struct {
+	*v1alpha1.Group
+	Secret    []byte               `json:"secret,omitempty" ref:"secret,SecretRef,key"`
+	SecretRef *refs.NamespacedName `json:"secretRef,omitempty"`
+}
+
+var _ = Describe("AdmissionLifecycle without ResolveRefs", func() {
+	It("does not resolve refs", func() {
+		a := lifecycle.AdmissionLifecycle[*refGroup, testDTO, *testClient]{}
+
+		errs := a.ValidateCreate(context.Background(), &refGroup{Group: newGroup("g1", "ns")})
+
+		Expect(errs.IsSevere()).To(BeFalse(), "unexpected severe errors: %v", errs.Severe)
+	})
+})
+
 var _ = Describe("AdmissionLifecycle", func() {
 
 	ctx := context.Background()

@@ -18,7 +18,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
+	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -83,7 +87,7 @@ func (l ResourceLifecycle[T, D, C, R]) mutate(
 	events *event.Recorder,
 	obj, dc T,
 ) error {
-	if l.Finalizer != "" {
+	if l.Finalizer != "" && !obj.IsBeingDeleted() {
 		util.AddFinalizer(obj, l.Finalizer)
 	}
 	k8s.AddAnnotation(obj, core.LastSpecHashAnnotation, hash.Calculate(obj.GetSpec()))
@@ -110,8 +114,10 @@ func (l ResourceLifecycle[T, D, C, R]) upsert(ctx context.Context, dc T) error {
 		return err
 	}
 
-	k8s.SetCondition(asConditionAware(dc), k8s.NewResolvedRefsConditionBuilder(dc.GetGeneration()).
-		ResolveRefs("All References successfully resolved").Build())
+	if l.ResolveRefs != nil {
+		k8s.SetCondition(asConditionAware(dc), k8s.NewResolvedRefsConditionBuilder(dc.GetGeneration()).
+			ResolveRefs("All References successfully resolved").Build())
+	}
 
 	api, dto, err := l.clientAndDTO(ctx, dc)
 	if err != nil {
@@ -176,12 +182,28 @@ func (l ResourceLifecycle[T, D, C, R]) updateStatusSuccess(ctx context.Context, 
 		return nil
 	}
 	k8s.AddSuccessfulConditions(asConditionAware(obj))
+	l.dropResolvedRefsWhenUnused(obj)
 	return cli.Status().Update(ctx, obj)
 }
 
 func (l ResourceLifecycle[T, D, C, R]) updateStatusFailure(ctx context.Context, cli client.Client, obj T, err error) error {
 	k8s.ErrorToCondition(obj, err)
+	l.dropResolvedRefsWhenUnused(obj)
 	return cli.Status().Update(ctx, obj)
+}
+
+// dropResolvedRefsWhenUnused removes the ResolvedRefs condition the shared status helpers
+// always add: a resource without ResolveRefs has no references to report on.
+func (l ResourceLifecycle[T, D, C, R]) dropResolvedRefsWhenUnused(obj T) {
+	if l.ResolveRefs != nil {
+		return
+	}
+	ca := asConditionAware(obj)
+	conditions := ca.GetConditions()
+	delete(conditions, k8s.ConditionResolvedRefs)
+	ca.SetConditions(slices.SortedFunc(maps.Values(conditions), func(a, b metav1.Condition) int {
+		return strings.Compare(a.Type, b.Type)
+	}))
 }
 
 func asConditionAware[T core.ContextAwareObject](obj T) core.ConditionAwareObject {
