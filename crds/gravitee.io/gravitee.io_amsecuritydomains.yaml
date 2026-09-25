@@ -26,7 +26,7 @@ spec:
     listKind: AMSecurityDomainList
     plural: amsecuritydomains
     shortNames:
-      - amsecuritydomains
+      - graviteeamsecuritydomains
     singular: amsecuritydomain
   scope: Namespaced
   versions:
@@ -1051,26 +1051,6 @@ spec:
                 environmentId:
                   description: The environment ID defined in the AM context.
                   type: string
-                errors:
-                  description: Errors encountered during admission or reconciliation.
-                  properties:
-                    severe:
-                      description: >-
-                        severe errors do not pass admission and will block
-                        reconcile
-
-                        hence, this field should always be...
-                      items:
-                        type: string
-                      type: array
-                    warning:
-                      description: |-
-                        warning errors do not block object reconciliation,
-                        most of the time because the value is ignored or...
-                      items:
-                        type: string
-                      type: array
-                  type: object
                 id:
                   description: The ID of the security domain in the AM instance.
                   type: string

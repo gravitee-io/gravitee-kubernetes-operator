@@ -15,7 +15,6 @@
 package domain
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -41,6 +40,4 @@ type Status struct {
 	// +kubebuilder:validation:MaxItems=8
 	// +kubebuilder:default={}
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-	// Errors encountered during admission or reconciliation.
-	Errors status.Errors `json:"errors,omitempty"`
 }

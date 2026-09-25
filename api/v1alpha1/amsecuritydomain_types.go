@@ -88,7 +88,7 @@ func (s *AMSecurityDomainStatus) IsFailed() bool {
 // +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
 // +kubebuilder:printcolumn:name="Path",type=string,JSONPath=`.spec.path`
 // +kubebuilder:printcolumn:name="Enabled",type=string,JSONPath=`.spec.enabled`
-// +kubebuilder:resource:shortName=amsecuritydomains
+// +kubebuilder:resource:shortName=graviteeamsecuritydomains
 // +kubebuilder:storageversion
 type AMSecurityDomain struct {
 	metav1.TypeMeta   `json:",inline"`

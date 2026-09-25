@@ -182,7 +182,6 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID defined in the AM context. |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the AM context. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
-| `errors` _[Errors](#errors)_ | Errors encountered during admission or reconciliation. |  |  |
 
 
 #### ApiDefinition
@@ -3431,7 +3430,6 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID defined in the AM context. |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the AM context. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
-| `errors` _[Errors](#errors)_ | Errors encountered during admission or reconciliation. |  |  |
 
 
 #### TokenExchangeOAuthSettings
@@ -4747,7 +4745,6 @@ _Appears in:_
 
 
 _Appears in:_
-- [AMSecurityDomainStatus](#amsecuritydomainstatus)
 - [ApiDefinitionStatus](#apidefinitionstatus)
 - [ApiStatus](#apistatus)
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
@@ -4762,7 +4759,6 @@ _Appears in:_
 - [PortalStatus](#portalstatus)
 - [PortalThemeStatus](#portalthemestatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
-- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
