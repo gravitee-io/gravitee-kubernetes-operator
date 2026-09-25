@@ -198,9 +198,10 @@ func (w *Type) WatchApis(index search.IndexField) *handler.Funcs {
 	}
 }
 
-// WatchCatalogMcpServers can be used to trigger a reconciliation when a CatalogMcpServer is
-// created or updated on resources that reference it (e.g. McpProxy studios), so that a studio
-// applied before its servers is synced once they land.
+// WatchCatalogMcpServers enqueues the resources that reference a CatalogMcpServer (McpProxy
+// studios) when an event on the server passes the controller's predicates. Which events re-run a
+// studio is up to those predicates: the McpProxy controller passes the update that first syncs the
+// server (CatalogMcpServerSyncedPredicate).
 func (w *Type) WatchCatalogMcpServers(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
