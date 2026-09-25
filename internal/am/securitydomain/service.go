@@ -23,7 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
 func Delete(ctx context.Context, amClient *am.Client, dto amsdk.Domain) error {
@@ -71,14 +71,14 @@ func CreateAMClient(ctx context.Context, obj *v1alpha1.AMSecurityDomain) (*am.Cl
 		return nil, fmt.Errorf("contextRef empty on %s [%s/%s]", obj.Kind, obj.GetName(), obj.GetNamespace())
 	}
 
-	amContext := &v1alpha1.AMContext{}
-	ref := obj.ContextRef()
-	if ref.GetNamespace() == "" {
-		ref.SetNamespace(obj.Namespace)
-	}
-	err := k8s.GetClient().Get(ctx, ref.NamespacedName(), amContext)
+	// resolved like the APIM contexts: templates compiled, fetched from the API server
+	resolved, err := dynamic.ResolveAMContext(ctx, obj.ContextRef(), obj.GetNamespace())
 	if err != nil {
-		return nil, fmt.Errorf("AMContext [%s]: %w", ref.String(), err)
+		return nil, fmt.Errorf("AMContext [%s]: %w", obj.ContextRef().String(), err)
+	}
+	amContext, ok := resolved.(*v1alpha1.AMContext)
+	if !ok {
+		return nil, fmt.Errorf("AMContext [%s]: unexpected type %T", obj.ContextRef().String(), resolved)
 	}
 
 	return am.NewSDKClient(ctx, amContext)
