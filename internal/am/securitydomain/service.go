@@ -72,7 +72,7 @@ func CreateAMClient(ctx context.Context, obj *v1alpha1.AMSecurityDomain) (*am.Cl
 	}
 	err := k8s.GetClient().Get(ctx, ref.NamespacedName(), amContext)
 	if err != nil {
-		return nil, fmt.Errorf("AMContext [%s] not found", ref.String())
+		return nil, fmt.Errorf("AMContext [%s]: %w", ref.String(), err)
 	}
 
 	return am.NewSDKClient(ctx, amContext)
