@@ -1,0 +1,70 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# A Studio selecting tools from the CatalogMcpServer in
+# examples/apim/catalog_mcp_server/catalog-mcp-server.yml. Applied before that server has
+# synced, it waits (ResolvedRefs=False) and converges once the server is registered.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak
+stringData:
+  client-secret: "replace_me"
+---
+apiVersion: gravitee.io/v1alpha1
+kind: McpProxy
+metadata:
+  name: dev-tools
+spec:
+  contextRef:
+    name: dev-ctx
+  entityId: mcp-proxy.dev-tools
+  name: Developer Tools
+  contextPath: /mcp/dev-tools
+  protocolVersion: "2025-03-26"
+  mode: STUDIO
+  studio:
+    tools:
+      # serverRef names a CatalogMcpServer; the namespace defaults to the proxy's.
+      - serverRef:
+          name: github
+        tool: create_issue
+      - serverRef:
+          name: github
+        tool: list_pull_requests
+        alias: list_prs
+    # One entry per server a selected tool comes from; type NONE when it needs no credential.
+    upstreamAuth:
+      - serverRef:
+          name: github
+        auth:
+          type: BEARER
+          bearer:
+            token: "[[ secret `github-mcp-upstream/token` ]]"
+    # Inserts the tool-level authorization policy on tools/call.
+    enableFGA: true
+  identityProviders:
+    - name: keycloak
+      type: OAUTH2_GENERIC
+      oauth2Generic:
+        issuerUrl: https://keycloak.example.com/realms/gravitee
+        introspectionEndpoint: /protocol/openid-connect/token/introspect
+        introspectionEndpointMethod: POST
+        clientId: gravitee
+        clientSecret: "[[ secret `keycloak/client-secret` ]]"
+  plans:
+    - name: Default
+      security:
+        type: OAUTH2
+        oauth2:
+          provider: keycloak

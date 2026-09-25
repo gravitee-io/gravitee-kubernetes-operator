@@ -1,0 +1,89 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+apiVersion: gravitee.io/v1alpha1
+kind: McpProxy
+metadata:
+  name: drift-full
+spec:
+  contextRef:
+    name: dev-ctx
+  entityId: mcp-proxy.drift-full
+  name: Drift full
+  description: Every PROXY field the drift comparison covers
+  contextPath: /mcp/drift-full
+  protocolVersion: "2025-03-26"
+  mode: PROXY
+  state: STARTED
+  proxy:
+    serverUrl: https://mcp.example.com/mcp
+    upstreamAuth:
+      type: BASIC
+      basic:
+        username: gravitee
+        password: "[[ secret `drift-full/password` ]]"
+  flowExecution:
+    mode: BEST_MATCH
+    matchRequired: true
+  flows:
+    - name: Log tool calls
+      enabled: true
+      tags: [audit]
+      selectors:
+        - type: MCP
+          mcp:
+            methods: ["tools/call", "tools/list"]
+        - type: CONDITION
+          condition:
+            condition: "{#request.headers['X-Audit'] != null}"
+      request:
+        - name: Quota
+          policy: rate-limit
+          description: One hundred calls a minute
+          condition: "{#request.headers['X-Quota'] != null}"
+          configuration:
+            rate:
+              limit: 100
+              periodTime: 1
+              periodTimeUnit: MINUTES
+      response:
+        - name: Header
+          policy: transform-headers
+          configuration:
+            addHeaders:
+              - name: X-Proxied-By
+                value: gravitee
+  identityProviders:
+    - name: auth0
+      type: OAUTH2_AUTH0
+      auth0:
+        domain: gravitee.eu.auth0.com
+        audience: https://mcp.example.com
+  plans:
+    - name: Keys
+      security:
+        type: API_KEY
+        apiKey:
+          source: HEADER
+          header: X-Drift-Key
+          propagate: true
+      flows:
+        - name: Plan guardrails
+          request:
+            - name: Log
+              policy: logging
+    - name: Tokens
+      security:
+        type: OAUTH2
+        oauth2:
+          provider: auth0

@@ -930,3 +930,17 @@ spec:
             description: Latest observed conditions.
             x-descriptors:
               - urn:alm:descriptor:io.kubernetes.conditions
+      # --- McpProxy ---
+      - name: mcpproxies.gravitee.io
+        version: v1alpha1
+        kind: McpProxy
+        displayName: MCP Proxy
+        description: >-
+          Publishes an MCP proxy in Gravitee, either fronting a single upstream MCP
+          server or composing a Studio from tools selected across catalog servers.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
