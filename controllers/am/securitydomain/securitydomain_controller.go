@@ -35,7 +35,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 )
 
-type Lifecycle lifecycle.ResourceLifecycle[*v1alpha1.AMSecurityDomain, amsdk.Domain, *am.Client, internal.DomainResponse]
+type Lifecycle = lifecycle.ResourceLifecycle[*v1alpha1.AMSecurityDomain, amsdk.Domain, *am.Client, internal.DomainResponse]
 
 // Reconciler reconciles an AMSecurityDomain object.
 type Reconciler struct {
@@ -47,7 +47,7 @@ type Reconciler struct {
 }
 
 func NewLifecycle() Lifecycle {
-	return Lifecycle{
+	return lifecycle.NewResourceLifecycle(Lifecycle{
 		Finalizer:     core.AMSecurityDomainFinalizer,
 		ResolveRefs:   nil,
 		ClientFactory: internal.CreateAMClient,
@@ -56,7 +56,7 @@ func NewLifecycle() Lifecycle {
 		Delete:        internal.Delete,
 		Upsert:        internal.Upsert,
 		PostUpsert:    internal.UpdateStatus,
-	}
+	})
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=amsecuritydomains,verbs=get;list;watch;create;update;patch;delete
@@ -68,8 +68,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err := r.Client.Get(ctx, req.NamespacedName, domain); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	return lifecycle.ResourceLifecycle[*v1alpha1.AMSecurityDomain, amsdk.Domain, *am.Client, internal.DomainResponse](r.Lifecycle).
-		Reconcile(ctx, r.Client, r.Recorder, req, domain)
+	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, domain)
 }
 
 // SetupWithManager sets up the controller with the Manager.

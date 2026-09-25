@@ -28,19 +28,23 @@ import (
 
 var _ admission.Validator[*v1alpha1.AMSecurityDomain] = AdmissionCtrl{}
 
+type Lifecycle = lifecycle.AdmissionLifecycle[*v1alpha1.AMSecurityDomain, amsdk.Domain, *am.Client]
+
 type AdmissionCtrl struct {
-	Lifecycle lifecycle.AdmissionLifecycle[*v1alpha1.AMSecurityDomain, amsdk.Domain, *am.Client]
+	Lifecycle Lifecycle
 }
 
 func NewAdmissionCtrl() AdmissionCtrl {
-	a := AdmissionCtrl{}
-	a.Lifecycle.ClientFactory = internal.CreateAMClient
-	a.Lifecycle.PreCheck = internal.ValidateKey
-	a.Lifecycle.DryRun = internal.DryRun
-	a.Lifecycle.GetRemote = internal.GetRemote
-	a.Lifecycle.ToDTO = internal.ToDomainDTO
-	a.Lifecycle.DeleteGuard = internal.DeleteGuard
-	return a
+	return AdmissionCtrl{
+		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
+			ClientFactory: internal.CreateAMClient,
+			PreCheck:      internal.ValidateKey,
+			DryRun:        internal.DryRun,
+			GetRemote:     internal.GetRemote,
+			ToDTO:         internal.ToDomainDTO,
+			DeleteGuard:   internal.DeleteGuard,
+		}),
+	}
 }
 
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
