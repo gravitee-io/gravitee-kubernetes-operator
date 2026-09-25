@@ -336,8 +336,27 @@ type APIV4SamplingDTO struct {
 }
 
 type APIV4TracingDTO struct {
-	Enabled *bool `json:"enabled,omitempty"`
-	Verbose *bool `json:"verbose,omitempty"`
+	Enabled   *bool                     `json:"enabled,omitempty"`
+	Verbose   *bool                     `json:"verbose,omitempty"`
+	Redaction *APIV4TracingRedactionDTO `json:"redaction,omitempty"`
+}
+
+type APIV4TracingRedactionDTO struct {
+	DefaultReplacement *string                        `json:"defaultReplacement,omitempty"`
+	Rules              []APIV4TracingRedactionRuleDTO `json:"rules,omitempty" drift:"empty-is-nil"`
+}
+
+type APIV4TracingRedactionRuleDTO struct {
+	AttributeNamePattern string                          `json:"attributeNamePattern"`
+	MaskingStrategy      *APIV4TracingMaskingStrategyDTO `json:"maskingStrategy,omitempty"`
+	ValuePattern         *string                         `json:"valuePattern,omitempty"`
+}
+
+type APIV4TracingMaskingStrategyDTO struct {
+	Type         v4.TracingMaskingType `json:"type" drift:"case-insensitive"`
+	Replacement  *string               `json:"replacement,omitempty"`
+	PrefixLength *int                  `json:"prefixLength,omitempty"`
+	SuffixLength *int                  `json:"suffixLength,omitempty"`
 }
 
 type APIV4AnalyticsDTO struct {
