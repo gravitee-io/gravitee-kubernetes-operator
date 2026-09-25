@@ -98,7 +98,7 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 	ResolveRefs RefResolverFunc[T]
 
 	// ClientFactory runs on create/update after refs, before PreCheck.
-	// Builds C for DryRun and GetRemote. Required when either is set.
+	// Builds C for DryRun and GetRemote. Required.
 	ClientFactory ClientFactoryFunc[T, C]
 
 	// PreCheck runs on create/update after ClientFactory, before ImmutableFields. Nil skips.
@@ -108,18 +108,53 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 	ImmutableFields ImmutableFieldsFunc[T]
 
 	// ToDTO runs on create/update after PreCheck and ImmutableFields, before DryRun.
-	// Required for DryRun and drift. Use the same func as ResourceLifecycle.ToDTO.
+	// Required. Use the same func as ResourceLifecycle.ToDTO.
 	ToDTO ToDTOFunc[T, D]
 
-	// DryRun runs on create/update after ToDTO, before PostCheck. Nil skips.
+	// DryRun runs on create/update after ToDTO, before PostCheck. Required.
 	DryRun DryRunFunc[C, D]
 
 	// PostCheck runs on create/update after DryRun, before drift. Nil skips.
 	PostCheck AdmissionCheckFunc[T]
 
-	// GetRemote runs on update after PostCheck. Nil disables drift.
+	// GetRemote runs on update after PostCheck, for drift. Required.
 	GetRemote GetRemoteFunc[C, D]
 
 	// DeleteGuard runs on delete review only. Nil skips.
 	DeleteGuard DeleteGuardFunc[T]
+}
+
+// NewResourceLifecycle returns l, and panics on the first missing required hole.
+func NewResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.APIClient, R core.OrgEnvIDGetter](
+	l ResourceLifecycle[T, D, C, R],
+) ResourceLifecycle[T, D, C, R] {
+	switch {
+	case l.ClientFactory == nil:
+		panic("lifecycle: ResourceLifecycle.ClientFactory is required")
+	case l.ToDTO == nil:
+		panic("lifecycle: ResourceLifecycle.ToDTO is required")
+	case l.Upsert == nil:
+		panic("lifecycle: ResourceLifecycle.Upsert is required")
+	case l.Delete == nil:
+		panic("lifecycle: ResourceLifecycle.Delete is required")
+	}
+	return l
+}
+
+// NewAdmissionLifecycle returns a, and panics on the first missing required hole.
+// Dry-run and drift are mandatory, so are the client and DTO they need.
+func NewAdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.APIClient](
+	a AdmissionLifecycle[T, D, C],
+) AdmissionLifecycle[T, D, C] {
+	switch {
+	case a.ClientFactory == nil:
+		panic("lifecycle: AdmissionLifecycle.ClientFactory is required")
+	case a.ToDTO == nil:
+		panic("lifecycle: AdmissionLifecycle.ToDTO is required")
+	case a.DryRun == nil:
+		panic("lifecycle: AdmissionLifecycle.DryRun is required")
+	case a.GetRemote == nil:
+		panic("lifecycle: AdmissionLifecycle.GetRemote is required")
+	}
+	return a
 }
