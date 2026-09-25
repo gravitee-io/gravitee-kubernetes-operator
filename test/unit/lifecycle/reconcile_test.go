@@ -328,6 +328,22 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			Expect(g.GetConditions()).ToNot(HaveKey(k8s.ConditionResolvedRefs))
 		})
 
+		It("reports a client factory failure on Accepted when ResolveRefs is nil", func() {
+			cli := newCluster(newGroup("g1", testNs))
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = nil
+			l.ClientFactory = failResolveCtx("context not found")
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).To(HaveOccurred())
+			g := fetch(cli, "g1")
+			Expect(g.GetConditions()).ToNot(HaveKey(k8s.ConditionResolvedRefs))
+			accepted := condition(g, k8s.ConditionAccepted)
+			Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+			Expect(accepted.Message).To(ContainSubstring("context not found"))
+		})
+
 		It("fails with a ResolveRef error and does not upsert", func() {
 			cli := newCluster(newGroup("g1", testNs))
 			l := newGroupLifecycle(r)

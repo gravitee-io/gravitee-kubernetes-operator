@@ -202,8 +202,20 @@ func (l ResourceLifecycle[T, D, C, R]) updateStatusSuccess(ctx context.Context, 
 
 func (l ResourceLifecycle[T, D, C, R]) updateStatusFailure(ctx context.Context, cli client.Client, obj T, err error) error {
 	k8s.ErrorToCondition(obj, err)
+	if l.ResolveRefs == nil {
+		// ErrorToCondition may leave the reason on ResolvedRefs only, which is dropped below.
+		l.setAcceptedMessage(obj, err.Error())
+	}
 	l.dropResolvedRefsWhenUnused(obj)
 	return cli.Status().Update(ctx, obj)
+}
+
+func (l ResourceLifecycle[T, D, C, R]) setAcceptedMessage(obj T, message string) {
+	ca := asConditionAware(obj)
+	if accepted := k8s.GetCondition(ca, k8s.ConditionAccepted); accepted != nil {
+		accepted.Message = message
+		k8s.SetCondition(ca, accepted)
+	}
 }
 
 // dropResolvedRefsWhenUnused removes the ResolvedRefs condition the shared status helpers
