@@ -1,0 +1,25 @@
+{
+  "metadata": {"name": "dev-tools", "namespace": "default"},
+  "spec": {
+    "contextRef": {"name": "dev-ctx"},
+    "entityId": "mcp-proxy.dev-tools",
+    "name": "Developer Tools",
+    "contextPath": "/mcp/dev-tools",
+    "protocolVersion": "2025-03-26",
+    "mode": "STUDIO",
+    "state": "STARTED",
+    "studio": {
+      "tools": [
+        {"serverRef": {"name": "jira"}, "tool": "create_ticket"},
+        {"serverRef": {"name": "github"}, "tool": "list_pull_requests", "alias": "list_prs"},
+        {"serverRef": {"name": "github"}, "tool": "create_issue"}
+      ],
+      "upstreamAuth": [
+        {"serverRef": {"name": "jira"}, "auth": {"type": "NONE"}},
+        {"serverRef": {"name": "github"}, "auth": {"type": "BEARER", "bearer": {"token": "ghp"}}}
+      ],
+      "enableFGA": true
+    },
+    "plans": [{"name": "Default", "security": {"type": "API_KEY", "apiKey": {"source": "HEADER"}}}]
+  }
+}
