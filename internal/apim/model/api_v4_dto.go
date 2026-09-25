@@ -109,12 +109,14 @@ type APIV4DefinitionContextDTO struct {
 }
 
 type APIV4FailoverDTO struct {
-	Enabled           *bool  `json:"enabled,omitempty"`
-	MaxRetries        *int   `json:"maxRetries,omitempty"`
-	SlowCallDuration  *int64 `json:"slowCallDuration,omitempty"`
-	OpenStateDuration *int64 `json:"openStateDuration,omitempty"`
-	MaxFailures       *int   `json:"maxFailures,omitempty"`
-	PerSubscription   *bool  `json:"perSubscription,omitempty"`
+	Enabled                    *bool   `json:"enabled,omitempty"`
+	MaxRetries                 *int    `json:"maxRetries,omitempty"`
+	SlowCallDuration           *int64  `json:"slowCallDuration,omitempty"`
+	OpenStateDuration          *int64  `json:"openStateDuration,omitempty"`
+	MaxFailures                *int    `json:"maxFailures,omitempty"`
+	PerSubscription            *bool   `json:"perSubscription,omitempty"`
+	FailureCondition           *string `json:"failureCondition,omitempty" drift:"empty-is-nil"`
+	ForceNextEndpointOnFailure *bool   `json:"forceNextEndpointOnFailure,omitempty" drift:"empty-is-nil"`
 }
 
 type APIV4ConsoleNotificationDTO struct {

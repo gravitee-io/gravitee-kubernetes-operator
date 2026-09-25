@@ -367,7 +367,9 @@
     "slowCallDuration": 2000,
     "openStateDuration": 10000,
     "maxFailures": 5,
-    "perSubscription": true
+    "perSubscription": true,
+    "failureCondition": "{#response.status >= 500}",
+    "forceNextEndpointOnFailure": true
   },
   "portalNavigation": [
     {

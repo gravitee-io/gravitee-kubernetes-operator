@@ -281,6 +281,8 @@ spec:
     openStateDuration: 10000
     perSubscription: true
     slowCallDuration: 30000
+    failureCondition: "{#response.status >= 500}"
+    forceNextEndpointOnFailure: true
   responseTemplates:
     CORS_PREFLIGHT_FAILED:
       "text/html":
