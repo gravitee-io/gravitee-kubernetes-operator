@@ -38,6 +38,8 @@ spec:
         - "https://example.com"
       grantTypes:
         - "client_credentials"
+      additionalClientMetadata:
+        policy_uri: "https://example.com/policy"
     tls:
       clientCertificates:
         - name: "default"

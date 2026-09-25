@@ -58,9 +58,10 @@ type ApplicationSimpleSettingsDTO struct {
 }
 
 type ApplicationOAuthClientSettingsDTO struct {
-	ApplicationType application.OauthType   `json:"applicationType" drift:"case-insensitive"`
-	GrantTypes      []application.GrantType `json:"grantTypes"`
-	RedirectUris    []string                `json:"redirectUris"`
+	ApplicationType          application.OauthType   `json:"applicationType" drift:"case-insensitive"`
+	GrantTypes               []application.GrantType `json:"grantTypes"`
+	RedirectUris             []string                `json:"redirectUris"`
+	AdditionalClientMetadata map[string]string       `json:"additionalClientMetadata,omitempty" drift:"empty-is-nil"`
 }
 
 type ApplicationTLSSettingsDTO struct {

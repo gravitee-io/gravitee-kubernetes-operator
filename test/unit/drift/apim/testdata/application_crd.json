@@ -12,7 +12,10 @@
       "oauth": {
         "applicationType": "M2M",
         "grantTypes": ["client_credentials"],
-        "redirectUris": ["https://my-app"]
+        "redirectUris": ["https://my-app"],
+        "additionalClientMetadata": {
+          "software_id": "3d5a2f0e-1c4b-4c8a-9f7e-2b6d8e0a1c34"
+        }
       },
       "tls": {
         "clientCertificate": "CERTIFICATE",
