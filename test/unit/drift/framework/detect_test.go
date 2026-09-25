@@ -147,7 +147,27 @@ type withMapOfStructArray struct {
 }
 
 type withTime struct {
+	At *time.Time `json:"at,omitempty" drift:"time"`
+}
+
+type withUntaggedTime struct {
 	At *time.Time `json:"at,omitempty"`
+}
+
+type timeTagInner struct {
+	Name string `json:"name"`
+}
+
+type withTimeTagNonTime struct {
+	Inner timeTagInner `json:"inner" drift:"time"`
+}
+
+type withIgnoredTime struct {
+	At *time.Time `json:"at,omitempty" drift:"ignore"`
+}
+
+type withEmptyIsNilTime struct {
+	At *time.Time `json:"at,omitempty" drift:"empty-is-nil"`
 }
 
 type withUnexported struct {
@@ -1244,6 +1264,31 @@ var _ = Describe("time.Time fields", func() {
 
 	It("detects a time missing on one side", func() {
 		result := drift.DetectWithNamespace(withTime{}, withTime{At: &instant}, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
+
+	It("honours the ignore tag", func() {
+		expectNoDrift(drift.DetectWithNamespace(withIgnoredTime{}, withIgnoredTime{At: &instant}, ""))
+	})
+
+	It("honours the empty-is-nil tag", func() {
+		zero := time.Time{}
+		expectNoDrift(drift.DetectWithNamespace(withEmptyIsNilTime{}, withEmptyIsNilTime{At: &zero}, ""))
+	})
+
+	It("panics on an untagged time", func() {
+		Expect(func() {
+			drift.DetectWithNamespace(withUntaggedTime{At: &instant}, withUntaggedTime{At: &later}, "")
+		}).To(PanicWith(MatchRegexp(`unexported fields, 'time.Time.wall'`)))
+	})
+
+	It("falls back to the default struct equivalence when the time-tagged struct is not a time", func() {
+		expectNoDrift(drift.DetectWithNamespace(
+			withTimeTagNonTime{Inner: timeTagInner{Name: "a"}},
+			withTimeTagNonTime{Inner: timeTagInner{Name: "a"}}, ""))
+		result := drift.DetectWithNamespace(
+			withTimeTagNonTime{Inner: timeTagInner{Name: "a"}},
+			withTimeTagNonTime{Inner: timeTagInner{Name: "b"}}, "")
 		Expect(result.DriftDetected()).To(BeTrue())
 	})
 })

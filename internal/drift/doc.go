@@ -78,6 +78,8 @@
 //   - ignore-skip (struct): same as ignore but also sets Skip=true.
 //   - trimmed (string): compares strings after [strings.TrimSpace].
 //   - rfc3339 (string): compares instants; accepts RFC3339 and RFC3339Nano inputs.
+//   - time (struct): compares [time.Time] values as instants, ignoring location and
+//     monotonic clock, and skips children; any other struct gets the default struct equivalence.
 //   - case-insensitive (string): compares strings case-insensitively.
 //   - ignore-remote-default (string): ignores a difference when the CRD value is unset;
 //     with no arguments any remote value is accepted, with arguments only a listed
@@ -131,7 +133,8 @@
 // or `drift:"ignore-only:crd,expired,scheduled"`
 //
 // Filters slice items that exist only on the named side before item comparison.
-// Items must implement [Keyed].
+// Items must implement [Keyed], or be strings (including named string types), which are
+// their own key.
 // With `strip-ns`, keys are compared after stripping the namespace prefix
 // and remaining membership is compared as a set (Skip).
 // With `expired`, items implementing [Expiring] whose [Expiring.Expired] is true are
@@ -164,6 +167,8 @@
 //
 //   - slices, arrays: [CannotCompare] at container level; items are still compared.
 //   - structs: [CannotCompare] at container level; children are still compared.
+//     A [time.Time] has only unexported fields, so an untagged one panics: tag it
+//     `drift:"time"` (or `ignore`).
 //   - other kinds: [DefaultEquivalence] (reflect.DeepEqual).
 //
 // Unknown drift tag names panic at runtime. Registered functions are keyed by name

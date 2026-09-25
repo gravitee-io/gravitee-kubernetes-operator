@@ -171,6 +171,7 @@ Do **not** define a DTO for drift. Reuse the resource's existing `internal/apim/
 | `empty-is-true` | Booleans APIM defaults to `true` when absent |
 | `trimmed` | Strings with insignificant whitespace |
 | `rfc3339` | Date-time strings (timezone-tolerant) |
+| `time` | `time.Time` fields, compared as instants (timezone-tolerant). Required on every `time.Time`: an untagged one panics |
 | `case-insensitive` | Enums APIM may echo back in a different case |
 | `unstructured` | `GenericStringMap` / `unstructured.Unstructured` JSON blobs |
 | `ignore-remote-default` (optionally `:A,B`) | Strings the CRD may leave unset, which APIM then resolves on its own. Bare, any remote value is accepted (cross-resource portal `visibility`); with `:A,B`, only the listed server defaults are (`flowMode`, documentation `area`) |
