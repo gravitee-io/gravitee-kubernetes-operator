@@ -71,6 +71,17 @@ spec:
                 analytics:
                   description: API Analytics (Not applicable for Native API)
                   properties:
+                    connectionEvents:
+                      description: Native v4 only. Unset reports CONNECTED and ERROR, an empty list
+                        reports none
+                      items:
+                        enum:
+                          - CONNECTED
+                          - DISCONNECTED
+                          - ERROR
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: set
                     enabled:
                       default: true
                       description: Analytics Enabled or not?

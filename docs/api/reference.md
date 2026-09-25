@@ -4915,6 +4915,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Analytics Enabled or not? | true |  |
 | `reporterMetricsEnabled` _boolean_ | Enable the connection-metrics reporter on the gateway.<br />Only applicable to Native v4 APIs. |  | Optional: \{\} <br /> |
+| `connectionEvents` _[ConnectionEvent](#connectionevent)_ | Native v4 only. Unset reports CONNECTED and ERROR, an empty list reports none |  | Enum: [CONNECTED DISCONNECTED ERROR] <br />Optional: \{\} <br /> |
 | `otelLogs` _[OtelLogs](#otellogs)_ | OpenTelemetry log export configuration. |  | Optional: \{\} <br /> |
 | `sampling` _[Sampling](#sampling)_ | Analytics Sampling |  |  |
 | `logging` _[Logging](#logging)_ | Analytics Logging |  |  |
@@ -5001,6 +5002,20 @@ _Appears in:_
 
 
 
+
+
+
+#### ConnectionEvent
+
+_Underlying type:_ _string_
+
+
+
+_Validation:_
+- Enum: [CONNECTED DISCONNECTED ERROR]
+
+_Appears in:_
+- [Analytics](#analytics)
 
 
 

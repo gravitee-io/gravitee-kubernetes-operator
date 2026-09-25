@@ -360,12 +360,15 @@ type APIV4TracingMaskingStrategyDTO struct {
 }
 
 type APIV4AnalyticsDTO struct {
-	Enabled                bool              `json:"enabled" drift:"empty-is-true"`
-	ReporterMetricsEnabled *bool             `json:"reporterMetricsEnabled,omitempty" drift:"empty-is-true"`
-	OtelLogs               *APIV4OtelLogsDTO `json:"otelLogs,omitempty"`
-	Sampling               *APIV4SamplingDTO `json:"sampling,omitempty"`
-	Logging                *APIV4LoggingDTO  `json:"logging,omitempty"`
-	Tracing                *APIV4TracingDTO  `json:"tracing,omitempty"`
+	Enabled                bool  `json:"enabled" drift:"empty-is-true"`
+	ReporterMetricsEnabled *bool `json:"reporterMetricsEnabled,omitempty" drift:"empty-is-true"`
+	// Always sent: the Automation API reads an absent field as an empty selection, which reports
+	// nothing, so an unset CRD value must go out as null to keep reporting CONNECTED and ERROR.
+	ConnectionEvents []v4.ConnectionEvent `json:"connectionEvents"`
+	OtelLogs         *APIV4OtelLogsDTO    `json:"otelLogs,omitempty"`
+	Sampling         *APIV4SamplingDTO    `json:"sampling,omitempty"`
+	Logging          *APIV4LoggingDTO     `json:"logging,omitempty"`
+	Tracing          *APIV4TracingDTO     `json:"tracing,omitempty"`
 }
 
 type APIV4ApiServicesDTO struct {
