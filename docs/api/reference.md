@@ -1387,6 +1387,7 @@ _Appears in:_
 | `applicationType` _[OauthType](#oauthtype)_ | Oauth client application type |  | Enum: [BACKEND_TO_BACKEND NATIVE BROWSER WEB] <br />Required: \{\} <br /> |
 | `grantTypes` _[GrantType](#granttype) array_ | List of Oauth client grant types |  | Enum: [authorization_code client_credentials refresh_token password implicit] <br /> |
 | `redirectUris` _string array_ | List of Oauth client redirect uris |  | Optional: \{\} <br /> |
+| `additionalClientMetadata` _object (keys:string, values:string)_ | DCR metadata sent to the provider, e.g. `software_id` to select a client template |  | Optional: \{\} <br /> |
 
 
 #### OauthType

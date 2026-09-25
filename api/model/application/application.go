@@ -51,6 +51,9 @@ type OAuthClientSettings struct {
 	// List of Oauth client redirect uris
 	// +kubebuilder:validation:Optional
 	RedirectUris []string `json:"redirectUris"`
+	// DCR metadata sent to the provider, e.g. `software_id` to select a client template
+	// +kubebuilder:validation:Optional
+	AdditionalClientMetadata map[string]string `json:"additionalClientMetadata,omitempty"`
 }
 
 // TLS settings are used to configure client side TLS in order
