@@ -204,6 +204,8 @@ type APIV4HttpClientOptionsDTO struct {
 	ProtocolVersion               base.ProtocolVersion `json:"version,omitempty"`
 	MaxHeaderSize                 *int                 `json:"maxHeaderSize,omitempty"`
 	MaxChunkSize                  *int                 `json:"maxChunkSize,omitempty"`
+	MaxWaitQueueSize              *int                 `json:"maxWaitQueueSize,omitempty"`
+	MaxConnectionLifetime         *int64               `json:"maxConnectionLifetime,omitempty"`
 }
 
 type APIV4HttpClientSslOptionsDTO struct {
@@ -385,6 +387,7 @@ type APIV4PageSourceDTO struct {
 }
 
 type APIV4PageDTO struct {
+	ID            string              `json:"id,omitempty" drift:"ignore"`
 	HRID          string              `json:"hrid,omitempty"`
 	CrossID       string              `json:"crossId,omitempty" drift:"ignore"`
 	Name          string              `json:"name,omitempty"`
