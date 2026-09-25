@@ -28,6 +28,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Create", func() {
@@ -53,11 +54,15 @@ var _ = Describe("Create", func() {
 	})
 
 	It("should create a security domain whose AMContext token is a template", func() {
-		secretName := random.GetName()
-		Expect(manager.Client().Create(ctx, &coreV1.Secret{
-			ObjectMeta: metaV1.ObjectMeta{Name: secretName, Namespace: constants.Namespace},
+		secret := &coreV1.Secret{
+			ObjectMeta: metaV1.ObjectMeta{Name: random.GetName(), Namespace: constants.Namespace},
 			Data:       map[string][]byte{"token": []byte("admin-token")},
-		})).To(Succeed())
+		}
+		Expect(manager.Client().Create(ctx, secret)).To(Succeed())
+		DeferCleanup(func() {
+			Expect(client.IgnoreNotFound(manager.Client().Delete(ctx, secret))).To(Succeed())
+		})
+		secretName := secret.Name
 
 		fixtures := fixture.Builder().
 			WithAMContext(constants.AMContextFile).

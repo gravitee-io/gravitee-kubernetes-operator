@@ -28,12 +28,17 @@ var once sync.Once
 
 // UseConfig builds the client from cfg instead of the ambient kubeconfig.
 // It must run before the first GetClient call to take effect.
-// FIXME: only envtest suites need this; AM should stop resolving secrets
-// through this package, then this seam can go.
+// Only envtest suites need this: AM resolves its contexts and their secrets through
+// this client, so they must share the envtest config with the test manager.
 func UseConfig(cfg *rest.Config) {
+	applied := false
 	once.Do(func() {
 		dynamicClient = dynamic.NewForConfigOrDie(cfg)
+		applied = true
 	})
+	if !applied {
+		panic("dynamic client already built from another config: call UseConfig before GetClient")
+	}
 }
 
 func GetClient() *dynamic.DynamicClient {

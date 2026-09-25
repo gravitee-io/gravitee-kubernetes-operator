@@ -27,6 +27,7 @@ import (
 
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -47,12 +48,15 @@ var _ = Describe("Validate AMContext", func() {
 	}
 
 	createSecret := func(data map[string][]byte) string {
-		name := random.GetName()
-		Expect(manager.Client().Create(ctx, &coreV1.Secret{
-			ObjectMeta: metaV1.ObjectMeta{Name: name, Namespace: constants.Namespace},
+		secret := &coreV1.Secret{
+			ObjectMeta: metaV1.ObjectMeta{Name: random.GetName(), Namespace: constants.Namespace},
 			Data:       data,
-		})).To(Succeed())
-		return name
+		}
+		Expect(manager.Client().Create(ctx, secret)).To(Succeed())
+		DeferCleanup(func() {
+			Expect(client.IgnoreNotFound(manager.Client().Delete(ctx, secret))).To(Succeed())
+		})
+		return secret.Name
 	}
 
 	It("should accept a valid secretRef", func() {

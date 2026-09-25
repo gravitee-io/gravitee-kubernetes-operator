@@ -16,6 +16,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sync"
 
@@ -73,8 +74,10 @@ var (
 	mgr        ctrl.Manager
 	restConfig *rest.Config
 	startOnce  sync.Once
-	cancel     context.CancelFunc
-	stopped    = make(chan struct{})
+	// startFailure is what start() panicked with, if it did.
+	startFailure any
+	cancel       context.CancelFunc
+	stopped      = make(chan struct{})
 )
 
 // UseConfig points the manager at cfg. Call it before anything touches the manager.
@@ -86,7 +89,19 @@ func UseConfig(cfg *rest.Config) {
 }
 
 func Instance() ctrl.Manager {
-	startOnce.Do(start)
+	startOnce.Do(func() {
+		defer func() {
+			if r := recover(); r != nil {
+				startFailure = r
+				panic(r)
+			}
+		}()
+		start()
+	})
+	if startFailure != nil {
+		// the Once is spent: report the original failure instead of a nil manager
+		panic(fmt.Sprintf("test manager failed to start: %v", startFailure))
+	}
 	return mgr
 }
 
@@ -101,15 +116,17 @@ func Stop() {
 }
 
 func init() {
+	// env.Config is already initialized: set it directly, environment variables are read too early.
+	env.Config.HTTPClientInsecureSkipVerify = true
+	// enable drift so admission tests exercise it.
+	env.Config.DriftDetection.Enabled = true
+
 	if os.Getenv("GKO_TEST_ENVTEST") != "true" {
 		Instance()
 	}
 }
 
 func start() {
-	os.Setenv(env.HttpCLientInsecureSkipCertVerify, env.TrueString)
-	// env.Config is already initialized; enable drift so admission tests exercise it.
-	env.Config.DriftDetection.Enabled = true
 
 	ctx := context.Background()
 
