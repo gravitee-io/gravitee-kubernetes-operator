@@ -16,7 +16,6 @@ package securitydomain
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -25,23 +24,30 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
 
 func Delete(ctx context.Context, amClient *am.Client, dto amsdk.Domain) error {
 	resp, err := amClient.DeleteDomainWithResponse(ctx, dto.Identity())
-	return am.HasErrors(err, func() *http.Response {
-		return resp.HTTPResponse
+	err = am.HasErrors(err, func() (*http.Response, []byte) {
+		return resp.HTTPResponse, resp.Body
 	})
+	if errors.IsNotFound(err) {
+		// already gone from AM (deleted outside the operator): nothing left to delete
+		return nil
+	}
+	return err
 }
 
 func Upsert(ctx context.Context, client *am.Client, dto amsdk.Domain) (DomainResponse, error) {
 	resp, err := client.UpsertDomainWithResponse(ctx, nil, dto)
 
-	if err = am.HasErrors(err, func() *http.Response {
-		return resp.HTTPResponse
+	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return DomainResponse{}, err
+	}
+	if resp.JSON200 == nil {
+		return DomainResponse{}, unexpectedResponse(resp.HTTPResponse)
 	}
 
 	return DomainResponse{
@@ -82,16 +88,16 @@ func DryRun(ctx context.Context, client *am.Client, dto amsdk.Domain) *errors.Ad
 	errs := errors.NewAdmissionErrors()
 	resp, err := client.UpsertDomainWithResponse(ctx, new(amsdk.UpsertDomainParams{
 		DryRun: new(true),
-	}), dto, func(ctx context.Context, req *http.Request) error {
-		js, _ := json.Marshal(dto)
-		log.Info(ctx, "DryRun", "body", string(js))
-		return nil
-	})
+	}), dto)
 
-	if err = am.HasErrors(err, func() *http.Response {
-		return resp.HTTPResponse
+	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		errs.AddSevere(err.Error())
+		return errs
+	}
+	if resp.JSON200 == nil {
+		errs.AddSevere(unexpectedResponse(resp.HTTPResponse).Error())
 		return errs
 	}
 	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors)
@@ -99,12 +105,20 @@ func DryRun(ctx context.Context, client *am.Client, dto amsdk.Domain) *errors.Ad
 
 func GetRemote(ctx context.Context, client *am.Client, dto amsdk.Domain) (amsdk.Domain, error) {
 	resp, err := client.GetDomainWithResponse(ctx, dto.Key)
-	if err = am.HasErrors(err, func() *http.Response {
-		return resp.HTTPResponse
+	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return amsdk.Domain{}, err
 	}
+	if resp.JSON200 == nil {
+		return amsdk.Domain{}, unexpectedResponse(resp.HTTPResponse)
+	}
 	return *resp.JSON200, nil
+}
+
+func unexpectedResponse(resp *http.Response) error {
+	return fmt.Errorf("unexpected AM response: status %d, content type %q",
+		resp.StatusCode, resp.Header.Get("Content-Type"))
 }
 
 func DeleteGuard(_ context.Context, obj *v1alpha1.AMSecurityDomain) error {

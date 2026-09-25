@@ -15,8 +15,10 @@
 package am
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -47,7 +49,11 @@ func NewSDKClient(ctx context.Context, obj *v1alpha1.AMContext) (*Client, error)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP client: %w", err)
 	}
-	baseClient, err := pkg.NewClient(toSDKContext(obj.Spec))
+	apiContext, err := toSDKContext(obj.Spec)
+	if err != nil {
+		return nil, err
+	}
+	baseClient, err := pkg.NewClient(apiContext)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create AMClient: %w", err)
 	}
@@ -79,30 +85,33 @@ func (c *Client) Probe(ctx context.Context) error {
 		return nil
 	})
 
-	if err := HasErrors(err, func() *http.Response {
-		return resp.HTTPResponse
-	}); err != nil {
-		return err
-	}
-
-	return err
+	return HasErrors(err, func() (*http.Response, []byte) {
+		return resp.HTTPResponse, resp.Body
+	})
 }
 
-func toSDKContext(spec v1alpha1.AMContextSpec) apicontext.APIContext {
-	baseUrl := spec.BaseUrl
+func toSDKContext(spec v1alpha1.AMContextSpec) (apicontext.APIContext, error) {
+	if spec.Context == nil {
+		return apicontext.APIContext{}, fmt.Errorf("AMContext has no spec")
+	}
 	path := "/automation"
 	if spec.Path != nil && strings.TrimSpace(*spec.Path) != "" {
 		path = *spec.Path
 	}
-	baseUrl = fmt.Sprintf("%s%s", baseUrl, path)
-	return apicontext.APIContext{
-		BaseURL: baseUrl,
+	baseURL, err := url.JoinPath(spec.BaseUrl, path)
+	if err != nil {
+		return apicontext.APIContext{}, fmt.Errorf("invalid AM URL [%s] with path [%s]: %w", spec.BaseUrl, path, err)
+	}
+	apiContext := apicontext.APIContext{
+		BaseURL: baseURL,
 		OrgID:   spec.OrgID,
 		EnvID:   spec.EnvID,
-		Auth: apicontext.Auth{
-			BearerToken: new(spec.GetAuth().GetBearerToken()),
-		},
 	}
+	// no auth is left to the SDK, which rejects it
+	if spec.HasAuthentication() {
+		apiContext.Auth.BearerToken = new(spec.Auth.BearerToken)
+	}
+	return apiContext, nil
 }
 
 func ToAdmissionErrors(errors []amsdk.DryRunError) *gerrors.AdmissionErrors {
@@ -120,9 +129,13 @@ func ToAdmissionErrors(errors []amsdk.DryRunError) *gerrors.AdmissionErrors {
 	return errs
 }
 
-func HasErrors(err error, response func() *http.Response) error {
+// HasErrors returns err, or a server error for a 4xx/5xx response. The SDK has already read
+// the response body, so it is passed in and put back for the error to report AM's message.
+func HasErrors(err error, response func() (*http.Response, []byte)) error {
 	if err != nil {
 		return err
 	}
-	return gerrors.FromResponse(response())
+	resp, body := response()
+	resp.Body = io.NopCloser(bytes.NewReader(body))
+	return gerrors.FromResponse(resp)
 }
