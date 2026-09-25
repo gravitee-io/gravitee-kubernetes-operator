@@ -65,6 +65,15 @@ func (in *Analytics) DeepCopyInto(out *Analytics) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ConnectionEvents != nil {
+		in, out := &in.ConnectionEvents, &out.ConnectionEvents
+		*out = new([]ConnectionEvent)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make([]ConnectionEvent, len(*in))
+			copy(*out, *in)
+		}
+	}
 	if in.OtelLogs != nil {
 		in, out := &in.OtelLogs, &out.OtelLogs
 		*out = new(OtelLogs)

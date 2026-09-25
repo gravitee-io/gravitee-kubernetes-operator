@@ -311,6 +311,7 @@
   "analytics": {
     "enabled": true,
     "reporterMetricsEnabled": true,
+    "connectionEvents": ["CONNECTED", "DISCONNECTED"],
     "otelLogs": {
       "enabled": true
     },

@@ -107,6 +107,11 @@ type Analytics struct {
 	// +kubebuilder:validation:Optional
 	ReporterMetricsEnabled *bool `json:"reporterMetricsEnabled,omitempty"`
 
+	// Native v4 only. Unset reports CONNECTED and ERROR, an empty list reports none
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	ConnectionEvents *[]ConnectionEvent `json:"connectionEvents,omitempty"`
+
 	// OpenTelemetry log export configuration.
 	// +kubebuilder:validation:Optional
 	OtelLogs *OtelLogs `json:"otelLogs,omitempty"`
@@ -120,6 +125,15 @@ type Analytics struct {
 	// Analytics Tracing
 	Tracing *Tracing `json:"tracing,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=CONNECTED;DISCONNECTED;ERROR
+type ConnectionEvent string
+
+const (
+	ConnectionEventConnected    = ConnectionEvent("CONNECTED")
+	ConnectionEventDisconnected = ConnectionEvent("DISCONNECTED")
+	ConnectionEventError        = ConnectionEvent("ERROR")
+)
 
 type OtelLogs struct {
 	// Enable OpenTelemetry log export for this API.
