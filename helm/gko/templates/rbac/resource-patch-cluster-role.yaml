@@ -65,6 +65,7 @@ rules:
       - documentations.gravitee.io
       - portalthemes.gravitee.io
       - catalogmcpservers.gravitee.io
+      - mcpproxies.gravitee.io
 {{- if .Values.gatewayAPI.controller.enabled }}
       - gatewayclassparameters.gravitee.io
       - kafkaroutes.gravitee.io
