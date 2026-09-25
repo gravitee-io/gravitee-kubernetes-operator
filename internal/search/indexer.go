@@ -125,7 +125,7 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 	collect(newIndexer(ctx, cache, &v1alpha1.CatalogMcpServer{}, CatalogMcpServerContextField,
 		indexCatalogMcpServerManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
-		indexPortalThemeRef))
+		indexAMSecurityDomainContext))
 
 	return errors.NewAggregate(errs)
 }
