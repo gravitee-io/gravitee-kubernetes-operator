@@ -17,6 +17,7 @@ package lifecycle_test
 import (
 	"context"
 	"fmt"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 )
@@ -183,6 +185,22 @@ var _ = Describe("AdmissionLifecycle", func() {
 	})
 
 	Describe("ValidateUpdate", func() {
+		It("skips validation for an object being deleted", func() {
+			a := minimalAdmission(&testClient{})
+			a.DryRun = func(context.Context, *testClient, testDTO) *gerrors.AdmissionErrors {
+				e := gerrors.NewAdmissionErrors()
+				e.AddSevere("remote already deleted")
+				return e
+			}
+			oldObj := newGroup("g1", "ns")
+			newObj := oldObj.DeepCopy()
+			newObj.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+
+			errs := a.ValidateUpdate(ctx, oldObj, newObj)
+
+			Expect(errs.IsSevere()).To(BeFalse())
+		})
+
 		It("runs ImmutableFields between PreCheck and DryRun", func() {
 			tc := &testClient{}
 			var order []string
@@ -297,5 +315,54 @@ var _ = Describe("AdmissionLifecycle", func() {
 			Expect(errs.IsSevere()).To(BeFalse())
 			Expect(order).To(Equal([]string{"precheck", "postcheck"}))
 		})
+	})
+})
+
+var _ = Describe("AdmissionLifecycle drift", func() {
+	ctx := context.Background()
+	var enabled bool
+
+	BeforeEach(func() {
+		enabled = env.Config.DriftDetection.Enabled
+		env.Config.DriftDetection.Enabled = true
+	})
+
+	AfterEach(func() {
+		env.Config.DriftDetection.Enabled = enabled
+	})
+
+	withRemote := func(remote testDTO, err error) groupAdmission {
+		a := minimalAdmission(&testClient{})
+		a.GetRemote = func(context.Context, *testClient, testDTO) (testDTO, error) { return remote, err }
+		return a
+	}
+
+	It("applies the remote-missing policy when the remote is not found", func() {
+		a := withRemote(testDTO{}, gerrors.ServerError{StatusCode: 404})
+		g := newGroup("g1", "ns")
+
+		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
+
+		Expect(errs.IsSevere()).To(BeTrue())
+		Expect(errs.Severe[0].Error()).To(ContainSubstring("not found during drift detection"))
+	})
+
+	It("rejects an unchanged CR when the remote changed", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		g := newGroup("g1", "ns")
+
+		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
+
+		Expect(errs.IsSevere()).To(BeTrue())
+		Expect(errs.Severe[0].Error()).To(ContainSubstring("drift detected"))
+	})
+
+	It("accepts when the remote matches", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "g1"}, nil)
+		g := newGroup("g1", "ns")
+
+		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
+
+		Expect(errs.IsSevere()).To(BeFalse())
 	})
 })

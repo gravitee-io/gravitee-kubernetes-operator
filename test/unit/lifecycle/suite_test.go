@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle/ref"
 )
 
@@ -30,4 +31,5 @@ func TestLifecycle(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	ref.Init()
+	drift.Init()
 })

@@ -22,6 +22,7 @@ import (
 	"slices"
 	"strings"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -102,7 +103,8 @@ func (l ResourceLifecycle[T, D, C, R]) mutate(
 	}
 
 	if err := template.Compile(ctx, dc, true); err != nil {
-		return gerrors.NewCompileTemplateError(err)
+		// not wrapped: a template source created later must be retried, as in the other controllers
+		return err
 	}
 	return events.Record(event.Update, obj, func() error {
 		return l.upsert(ctx, dc)
@@ -134,7 +136,15 @@ func (l ResourceLifecycle[T, D, C, R]) upsert(ctx context.Context, dc T) error {
 }
 
 func (l ResourceLifecycle[T, D, C, R]) delete(ctx context.Context, obj, dc T) error {
+	if l.Finalizer != "" && !util.ContainsFinalizer(obj, l.Finalizer) {
+		return nil
+	}
 	if err := l.resolveRefs(ctx, dc); err != nil {
+		if apierrors.IsNotFound(err) {
+			// A reference deleted first (a Secret, a parent CR) leaves nothing to clean up here.
+			l.removeFinalizer(obj)
+			return nil
+		}
 		return err
 	}
 	api, dto, err := l.clientAndDTO(ctx, dc)
@@ -149,10 +159,14 @@ func (l ResourceLifecycle[T, D, C, R]) delete(ctx context.Context, obj, dc T) er
 	if err := wrapUnexpectedAsControlPlane(l.Delete(ctx, api, dto)); err != nil {
 		return err
 	}
+	l.removeFinalizer(obj)
+	return nil
+}
+
+func (l ResourceLifecycle[T, D, C, R]) removeFinalizer(obj T) {
 	if l.Finalizer != "" {
 		util.RemoveFinalizer(obj, l.Finalizer)
 	}
-	return nil
 }
 
 func (l ResourceLifecycle[T, D, C, R]) clientAndDTO(ctx context.Context, dc T) (C, D, error) {

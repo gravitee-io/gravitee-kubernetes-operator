@@ -16,14 +16,11 @@ package lifecycle
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+	admissiondrift "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (a AdmissionLifecycle[T, D, C]) ValidateCreate(ctx context.Context, obj T) *errors.AdmissionErrors {
@@ -57,6 +54,9 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 	ctx context.Context, oldObj, newObj T,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
+	if newObj.IsBeingDeleted() {
+		return errs
+	}
 
 	a.templateAndRefs(ctx, newObj, errs)
 	if errs.IsSevere() {
@@ -197,28 +197,11 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 	newDTO := a.ToDTO(newCopy)
 	remote, err := a.GetRemote(ctx, apiClient, newDTO)
 	if err != nil {
-		applyRemoteFetchPolicy(newCopy, err, errs)
+		admissiondrift.ApplyRemoteFetchPolicy(newCopy, err, errs)
 		return
 	}
 
-	oldDTO := a.ToDTO(oldCopy)
-	ns := newCopy.GetNamespace()
-	oldVsRemote := drift.DetectWithNamespace(oldDTO, remote, ns)
-	newVsRemote := drift.DetectWithNamespace(newDTO, remote, ns)
-
-	if result := drift.Merge(oldVsRemote, newVsRemote); result.DriftDetected() {
-		applyDriftPolicy(env.Config.DriftDetection.Policy, func() string {
-			if env.Config.DriftDetection.Policy == env.DriftPolicyAllow {
-				objRef := client.ObjectKeyFromObject(newObj)
-				kind := newObj.GetObjectKind().GroupVersionKind().Kind
-				return fmt.Sprintf(
-					"drift detected for resource [%s] [%s], drift policy is 'allow': drift is ignored",
-					kind, objRef,
-				)
-			}
-			return fmt.Sprintf("\ndrift detected:\n%s", result.String())
-		}, errs)
-	}
+	admissiondrift.CompareWithRemote(newCopy, a.ToDTO(oldCopy), newDTO, remote, errs)
 }
 
 func (a AdmissionLifecycle[T, D, C]) resolveRefs(ctx context.Context, obj T) error {
@@ -227,35 +210,4 @@ func (a AdmissionLifecycle[T, D, C]) resolveRefs(ctx context.Context, obj T) err
 		return nil
 	}
 	return a.ResolveRefs(ctx, obj, ns)
-}
-
-func applyRemoteFetchPolicy(obj client.Object, err error, errs *errors.AdmissionErrors) {
-	objRef := client.ObjectKeyFromObject(obj)
-	kind := obj.GetObjectKind().GroupVersionKind().Kind
-	if errors.IsNotFound(err) {
-		applyDriftPolicy(
-			env.Config.DriftDetection.OnRemoteMissing,
-			func() string { return fmt.Sprintf("remote [%s] [%s] not found during drift detection", kind, objRef) },
-			errs,
-		)
-		return
-	}
-	applyDriftPolicy(
-		env.Config.DriftDetection.OnFetchFailure,
-		func() string {
-			return fmt.Sprintf("failed to fetch remote [%s] [%s] during drift detection: %s", kind, objRef, err.Error())
-		},
-		errs,
-	)
-}
-
-func applyDriftPolicy(policy env.DriftPolicy, message func() string, errs *errors.AdmissionErrors) {
-	switch policy {
-	case env.DriftPolicyWarn:
-		errs.AddWarning(message())
-	case env.DriftPolicyAllow:
-		log.Global.Warn(message())
-	default:
-		errs.AddSevere(message())
-	}
 }

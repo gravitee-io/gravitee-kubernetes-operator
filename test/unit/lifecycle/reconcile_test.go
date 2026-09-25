@@ -17,10 +17,12 @@ package lifecycle_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -228,6 +230,47 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 		})
 	})
 
+	It("does not delete when its finalizer is already gone", func() {
+		cli := newCluster(deletingGroup("g1", "other/finalizer"))
+
+		_, err := reconcile(newGroupLifecycle(r), cli, "g1")
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(r.deleted).To(BeEmpty())
+	})
+
+	Describe("delete with a reference already gone", func() {
+		It("releases the finalizer without calling Delete", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = func(context.Context, *v1alpha1.Group, string) error {
+				notFound := apierrors.NewNotFound(corev1.Resource("secrets"), "token")
+				return fmt.Errorf("lifecycle/ref: resolve: %w", notFound)
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(r.deleted).To(BeEmpty())
+			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("still requeues on any other resolution error", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = func(context.Context, *v1alpha1.Group, string) error {
+				return errors.New("api server unavailable")
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(reconcileErrorType(err)).To(Equal(gerrors.ResolveRefError))
+			Expect(r.deleted).To(BeEmpty())
+			Expect(fetch(cli, "g1").Finalizers).To(ContainElement(testFinalizer))
+		})
+	})
+
 	Describe("client factory failure", func() {
 		It("requeues a create with a ResolveRef error and does not upsert", func() {
 			cli := newCluster(newGroup("g1", testNs))
@@ -302,15 +345,16 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 		})
 	})
 
-	It("aborts on a template compile error without upserting", func() {
+	It("requeues on a template compile error without upserting", func() {
 		g := newGroup("g1", testNs)
 		g.Spec.Type = &group.Type{Name: "[[ secret `missing/token` ]]"}
 		cli := newCluster(g)
 
 		_, err := reconcile(newGroupLifecycle(r), cli, "g1")
 
-		Expect(err).ToNot(HaveOccurred())
+		// the Secret may be created later: retry like the other controllers do
+		Expect(err).To(HaveOccurred())
 		Expect(r.upserted).To(BeEmpty())
-		Expect(condition(fetch(cli, "g1"), k8s.ConditionAccepted).Reason).To(Equal(string(gerrors.CompileTemplateError)))
+		Expect(condition(fetch(cli, "g1"), k8s.ConditionAccepted).Status).To(Equal(metav1.ConditionFalse))
 	})
 })

@@ -69,6 +69,8 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 
 	// ResolveRefs runs after template compile/release, before ClientFactory.
 	// Nil skips resolution and the ResolvedRefs condition. Use the same func as AdmissionLifecycle.ResolveRefs.
+	// On delete, a NotFound reference means nothing is left to clean: the finalizer is released
+	// without calling Delete.
 	ResolveRefs RefResolverFunc[T]
 
 	// ClientFactory runs after refs, before ToDTO. Required.
