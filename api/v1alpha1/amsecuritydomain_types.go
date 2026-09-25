@@ -36,7 +36,7 @@ var _ core.ConditionAware = &AMSecurityDomain{}
 type AMSecurityDomainSpec struct {
 	domain.Domain `json:",inline"`
 	// +kubebuilder:validation:Required
-	Context *refs.NamespacedName `json:"contextRef" ref:"amcontext"`
+	Context *refs.NamespacedName `json:"contextRef"`
 }
 
 func (spec *AMSecurityDomainSpec) Hash() string {
