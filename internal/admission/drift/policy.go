@@ -17,13 +17,15 @@ package drift
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func applyRemoteFetchPolicy(obj client.Object, err error, errs *errors.AdmissionErrors) {
+// ApplyRemoteFetchPolicy applies OnRemoteMissing (HTTP 404) or OnFetchFailure to a failed remote fetch.
+func ApplyRemoteFetchPolicy(obj client.Object, err error, errs *errors.AdmissionErrors) {
 	ref := client.ObjectKeyFromObject(obj)
 	kind := obj.GetObjectKind().GroupVersionKind().Kind
 	if errors.IsNotFound(err) {
@@ -41,6 +43,27 @@ func applyRemoteFetchPolicy(obj client.Object, err error, errs *errors.Admission
 		},
 		errs,
 	)
+}
+
+// CompareWithRemote compares the old and new DTOs of obj with the remote one, merges both results
+// (see drift.Merge) and applies the drift policy when drift remains.
+func CompareWithRemote(obj client.Object, oldDTO, newDTO, remote any, errs *errors.AdmissionErrors) {
+	ns := obj.GetNamespace()
+	oldVsRemote := drift.DetectWithNamespace(oldDTO, remote, ns)
+	newVsRemote := drift.DetectWithNamespace(newDTO, remote, ns)
+
+	result := drift.Merge(oldVsRemote, newVsRemote)
+	if !result.DriftDetected() {
+		return
+	}
+	applyPolicy(env.Config.DriftDetection.Policy, func() string {
+		if env.Config.DriftDetection.Policy == env.DriftPolicyAllow {
+			ref := client.ObjectKeyFromObject(obj)
+			kind := obj.GetObjectKind().GroupVersionKind().Kind
+			return fmt.Sprintf("drift detected for resource [%s] [%s], drift policy is 'allow': drift is ignored", kind, ref)
+		}
+		return fmt.Sprintf("\ndrift detected:\n%s", result.String())
+	}, errs)
 }
 
 func applyPolicy(policy env.DriftPolicy, message func() string, errs *errors.AdmissionErrors) {

@@ -31,6 +31,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle/ref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	v1 "k8s.io/api/networking/v1"
 
@@ -204,6 +205,9 @@ func main() {
 	}
 	// Always init as user may force at the CRD level
 	drift.Init()
+
+	// Init the type registry for references
+	ref.Init()
 
 	//+kubebuilder:scaffold:builder
 

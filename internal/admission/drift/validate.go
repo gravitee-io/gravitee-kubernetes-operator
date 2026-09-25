@@ -16,12 +16,10 @@ package drift
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -95,30 +93,12 @@ func ValidateDriftWithContext[T client.Object](
 
 	remoteObject, err := getRemoteObject(apimClient, newCopy)
 	if err != nil {
-		applyRemoteFetchPolicy(newCopy, err, errs)
+		ApplyRemoteFetchPolicy(newCopy, err, errs)
 		// An error occurred: whether it is added to the admission errors or not,
 		// we need to return so that "allow" policy is respected: we allow applying in spite of errors or not found
 		return errs
 	}
 
-	oldDTO := mapDTO(oldCopy)
-	newDTO := mapDTO(newCopy)
-
-	ns := newCopy.GetNamespace()
-
-	oldVsRemoteResult := drift.DetectWithNamespace(oldDTO, remoteObject, ns)
-	newVsRemoteResult := drift.DetectWithNamespace(newDTO, remoteObject, ns)
-
-	if result := drift.Merge(oldVsRemoteResult, newVsRemoteResult); result.DriftDetected() {
-		applyPolicy(env.Config.DriftDetection.Policy, func() string {
-			if env.Config.DriftDetection.Policy == env.DriftPolicyAllow {
-				ref := client.ObjectKeyFromObject(newCRD)
-				kind := newCopy.GetObjectKind().GroupVersionKind().Kind
-				return fmt.Sprintf("drift detected for resource [%s] [%s], drift policy is 'allow': drift is ignored", kind, ref)
-			}
-			return fmt.Sprintf("\ndrift detected:\n%s", result.String())
-		}, errs)
-	}
-
+	CompareWithRemote(newCopy, mapDTO(oldCopy), mapDTO(newCopy), remoteObject, errs)
 	return errs
 }
