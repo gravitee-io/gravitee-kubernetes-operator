@@ -4333,6 +4333,8 @@ _Appears in:_
 | `openStateDuration` _integer_ | API Failover  open state duration | 10000 |  |
 | `maxFailures` _integer_ | API Failover max failures | 5 |  |
 | `perSubscription` _boolean_ | API Failover  per subscription | true |  |
+| `failureCondition` _string_ | EL expression marking a response as failed, e.g. `\{#response.status >= 500\}` |  | Optional: \{\} <br /> |
+| `forceNextEndpointOnFailure` _boolean_ | On retry, target the next endpoint of the group instead of the load balancer's pick | false |  |
 
 
 #### Flow

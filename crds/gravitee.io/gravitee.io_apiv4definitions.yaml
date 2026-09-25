@@ -572,6 +572,15 @@ spec:
                       default: false
                       description: API Failover is enabled?
                       type: boolean
+                    failureCondition:
+                      description: EL expression marking a response as failed, e.g. `{#response.status
+                        >= 500}`
+                      type: string
+                    forceNextEndpointOnFailure:
+                      default: false
+                      description: On retry, target the next endpoint of the group instead of the load
+                        balancer's pick
+                      type: boolean
                     maxFailures:
                       default: 5
                       description: API Failover max failures
