@@ -66,9 +66,6 @@ func (a AdmissionCtrl) ValidateUpdate(
 	oldObj *v1alpha1.AMSecurityDomain,
 	newObj *v1alpha1.AMSecurityDomain,
 ) (admission.Warnings, error) {
-	if newObj.IsBeingDeleted() {
-		return admission.Warnings{}, nil
-	}
 	return a.Lifecycle.ValidateUpdate(ctx, oldObj, newObj).Map()
 }
 
