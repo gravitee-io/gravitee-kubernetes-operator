@@ -20,15 +20,14 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg"
 	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/apicontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	ghttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
@@ -44,9 +43,15 @@ func NewSDKClient(ctx context.Context, obj *v1alpha1.AMContext) (*Client, error)
 		return nil, err
 	}
 
-	timeout := time.Duration(env.Config.HTTPClientTimeoutSeconds) * time.Second
-	amClient, err := pkg.NewClient(toSDKContext(obj.Spec), int(timeout.Milliseconds()))
-
+	client, err := ghttp.NewStdClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP client: %w", err)
+	}
+	baseClient, err := pkg.NewClient(toSDKContext(obj.Spec))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AMClient: %w", err)
+	}
+	amClient, err := baseClient.WithHTTPClient(client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create AMClient: %w", err)
 	}

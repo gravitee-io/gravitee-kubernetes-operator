@@ -194,6 +194,22 @@ func NewNoAuthClient(ctx context.Context) (*Client, error) {
 }
 
 func NewClient(ctx context.Context, auth *Auth) (*Client, error) {
+	httpClient, err := NewStdClient()
+	if err != nil {
+		return nil, err
+	}
+
+	if auth != nil {
+		httpClient.Transport = NewAuthenticatedRoundTripper(auth, httpClient.Transport)
+	}
+
+	return &Client{ctx, *httpClient}, nil
+}
+
+// NewStdClient returns a net/http client configured from the operator settings: HTTP proxy,
+// TLS verification, trust store and timeout. Use it for any client the operator does not build
+// itself, such as the AM SDK.
+func NewStdClient() (*http.Client, error) {
 	defaultTransport, _ := http.DefaultTransport.(*http.Transport)
 	transport := defaultTransport.Clone()
 	if env.Config.HttpProxy.Enabled {
@@ -240,12 +256,5 @@ func NewClient(ctx context.Context, auth *Auth) (*Client, error) {
 	}
 
 	timeout := time.Duration(env.Config.HTTPClientTimeoutSeconds) * time.Second
-	httpClient := http.Client{Timeout: timeout, Transport: transport}
-
-	if auth != nil {
-		authRoundTripper := NewAuthenticatedRoundTripper(auth, transport)
-		httpClient.Transport = authRoundTripper
-	}
-
-	return &Client{ctx, httpClient}, nil
+	return &http.Client{Timeout: timeout, Transport: transport}, nil
 }

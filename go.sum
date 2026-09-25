@@ -147,8 +147,8 @@ github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 h1:JeSE6pjso5T
 github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674/go.mod h1:r4w70xmWCQKmi1ONH4KIaBptdivuRPyosB9RmPlGEwA=
 github.com/gravitee-io-labs/gravitee-automation-tools/am-mock-server v1.1.1 h1:9VwfqnC6YIuTA/DlVHnzSG0Ti3k41kJBtOapj13kgM4=
 github.com/gravitee-io-labs/gravitee-automation-tools/am-mock-server v1.1.1/go.mod h1:+ljcI5c7EJyFDZR5evpMjCNnwHYIAL9uIHT7RwS0CgU=
-github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2 v2.0.1 h1:wmmx+lSZknMGa8V67thwfYdX5Yta7VdI1frSzOo0NJQ=
-github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2 v2.0.1/go.mod h1:uknuiakjTQOsT9ek3PFZB5VRG55tnpLLrtOqXyTSnl4=
+github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2 v2.1.0 h1:RJY7nYrqtgXWwuZPvKFgFfBvsWgmXLCvIpuKia6Wm04=
+github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2 v2.1.0/go.mod h1:uknuiakjTQOsT9ek3PFZB5VRG55tnpLLrtOqXyTSnl4=
 github.com/gravitee-io-labs/gravitee-automation-tools/common v1.0.0 h1:kBnBKOdBr4XksHjmSMXt2PBFbsAQaMrUIV3s07oR2os=
 github.com/gravitee-io-labs/gravitee-automation-tools/common v1.0.0/go.mod h1:QPs8z4jMR4uTcK+1A8hI/74mxeq33aVVxML/ZFf21hA=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.7 h1:X+2YciYSxvMQK0UZ7sg45ZVabVZBeBuvMkmuI2V3Fak=
