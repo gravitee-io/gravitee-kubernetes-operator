@@ -16,6 +16,7 @@ package framework
 
 import (
 	"reflect"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
@@ -143,6 +144,34 @@ type withMapOfArray struct {
 type withMapOfStructArray struct {
 	Name   *string                      `json:"name" drift:"empty-is-nil"`
 	Values map[string][]MultipleWithPtr `json:"values" drift:"empty-is-nil"`
+}
+
+type withTime struct {
+	At *time.Time `json:"at,omitempty" drift:"time"`
+}
+
+type withUntaggedTime struct {
+	At *time.Time `json:"at,omitempty"`
+}
+
+type timeTagInner struct {
+	Name string `json:"name"`
+}
+
+type withTimeTagNonTime struct {
+	Inner timeTagInner `json:"inner" drift:"time"`
+}
+
+type withIgnoredTime struct {
+	At *time.Time `json:"at,omitempty" drift:"ignore"`
+}
+
+type withEmptyIsNilTime struct {
+	At *time.Time `json:"at,omitempty" drift:"empty-is-nil"`
+}
+
+type withUnexported struct {
+	hidden string
 }
 
 type withIntMapKey struct {
@@ -1171,6 +1200,12 @@ values:
 			}).To(PanicWith(MatchRegexp(`map key must be of type string`)))
 		})
 
+		It("panics when a field is unexported", func() {
+			Expect(func() {
+				drift.DetectWithNamespace(withUnexported{hidden: "a"}, withUnexported{hidden: "b"}, "")
+			}).To(PanicWith(MatchRegexp(`unexported fields, 'framework.withUnexported.hidden'`)))
+		})
+
 		It("panics when a nested map key is not a string", func() {
 			crd := withNestedIntMapKey{Values: map[string]map[int]string{"outer": {1: "a"}}}
 			remote := withNestedIntMapKey{Values: map[string]map[int]string{"outer": {1: "b"}}}
@@ -1211,6 +1246,51 @@ values:
 		})
 	})
 
+})
+
+var _ = Describe("time.Time fields", func() {
+	instant := time.Date(2026, 9, 24, 10, 0, 0, 0, time.UTC)
+	later := instant.Add(time.Hour)
+	sameInstantOtherZone := instant.In(time.FixedZone("CEST", 2*60*60))
+
+	It("sees the same instant in another location as no drift", func() {
+		expectNoDrift(drift.DetectWithNamespace(withTime{At: &instant}, withTime{At: &sameInstantOtherZone}, ""))
+	})
+
+	It("detects a different instant", func() {
+		result := drift.DetectWithNamespace(withTime{At: &instant}, withTime{At: &later}, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
+
+	It("detects a time missing on one side", func() {
+		result := drift.DetectWithNamespace(withTime{}, withTime{At: &instant}, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
+
+	It("honours the ignore tag", func() {
+		expectNoDrift(drift.DetectWithNamespace(withIgnoredTime{}, withIgnoredTime{At: &instant}, ""))
+	})
+
+	It("honours the empty-is-nil tag", func() {
+		zero := time.Time{}
+		expectNoDrift(drift.DetectWithNamespace(withEmptyIsNilTime{}, withEmptyIsNilTime{At: &zero}, ""))
+	})
+
+	It("panics on an untagged time", func() {
+		Expect(func() {
+			drift.DetectWithNamespace(withUntaggedTime{At: &instant}, withUntaggedTime{At: &later}, "")
+		}).To(PanicWith(MatchRegexp(`unexported fields, 'time.Time.wall'`)))
+	})
+
+	It("falls back to the default struct equivalence when the time-tagged struct is not a time", func() {
+		expectNoDrift(drift.DetectWithNamespace(
+			withTimeTagNonTime{Inner: timeTagInner{Name: "a"}},
+			withTimeTagNonTime{Inner: timeTagInner{Name: "a"}}, ""))
+		result := drift.DetectWithNamespace(
+			withTimeTagNonTime{Inner: timeTagInner{Name: "a"}},
+			withTimeTagNonTime{Inner: timeTagInner{Name: "b"}}, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
 })
 
 var _ = Describe("Merge", func() {

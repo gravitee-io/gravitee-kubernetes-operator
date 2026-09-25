@@ -636,7 +636,8 @@ var _ = Describe("IgnoreOnlyArgs", func() {
 			Expect(e.CRDItemsFilterFunc).To(BeNil())
 		},
 		Entry("same names", []namedItem{{ID: "owner"}}, []namedItem{{ID: "owner"}}, remoteCtx),
-		Entry("non-keyed slice items", []string{"foo"}, []string{"foo"}, remoteCtx),
+		Entry("same string items", []string{"foo"}, []string{"foo"}, remoteCtx),
+		Entry("non-keyed slice items", []int{1}, []int{1, 2}, remoteCtx),
 		Entry("crd item missing from remote", []namedItem{{ID: "owner"}}, []namedItem{}, remoteCtx),
 		Entry("empty context does not filter",
 			[]namedItem{{ID: "owner"}},
@@ -784,5 +785,41 @@ var _ = Describe("IgnoreOnlyArgs expired and scheduled", func() {
 		remote := withIgnoreOnlyCRDHidden{Items: []timedItem{{ID: "other"}}}
 		got := drift.DetectWithNamespace(crd, remote, "")
 		Expect(got.DriftDetected()).To(BeTrue())
+	})
+})
+
+type withIgnoreOnlyRemoteStrings struct {
+	Algorithms []string `json:"algorithms" drift:"ignore-only:remote"`
+}
+
+type algorithm string
+
+type withIgnoreOnlyRemoteNamedStrings struct {
+	Algorithms []algorithm `json:"algorithms" drift:"ignore-only:remote"`
+}
+
+var _ = Describe("IgnoreOnlyArgs on string slices", func() {
+	It("ignores remote-only values when the crd leaves the slice unset", func() {
+		remote := withIgnoreOnlyRemoteStrings{Algorithms: []string{"RS256", "ES256"}}
+		expectNoDrift(drift.DetectWithNamespace(withIgnoreOnlyRemoteStrings{}, remote, ""))
+	})
+
+	It("ignores remote-only values alongside the ones the crd sets", func() {
+		crd := withIgnoreOnlyRemoteStrings{Algorithms: []string{"RS256"}}
+		remote := withIgnoreOnlyRemoteStrings{Algorithms: []string{"RS256", "ES256"}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("detects drift when a crd value is missing from the remote", func() {
+		crd := withIgnoreOnlyRemoteStrings{Algorithms: []string{"RS256", "PS256"}}
+		remote := withIgnoreOnlyRemoteStrings{Algorithms: []string{"RS256"}}
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
+
+	It("ignores remote-only values of a named string type", func() {
+		crd := withIgnoreOnlyRemoteNamedStrings{Algorithms: []algorithm{"RS256"}}
+		remote := withIgnoreOnlyRemoteNamedStrings{Algorithms: []algorithm{"RS256", "ES256"}}
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
 })

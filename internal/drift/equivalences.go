@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/dates"
 )
@@ -34,6 +35,7 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.String, Ignore)
 	RegisterEquivalenceFunc("trimmed", reflect.String, Trimmed)
 	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
+	RegisterEquivalenceFunc("time", reflect.Struct, TimeStruct)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.String, IgnoreRemoteDefault)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
@@ -259,7 +261,7 @@ func itemsOnlyFilterFunc(onlyIDs []string) ItemsFilterFunc {
 		filtered := make([]any, 0, v.Len())
 		for i := 0; i < v.Len(); i++ {
 			item := v.Index(i).Interface()
-			if keyed, ok := item.(Keyed); ok {
+			if keyed, ok := toKeyed(item); ok {
 				if slices.Contains(onlyIDs, keyed.MatchKey()) {
 					continue
 				}
@@ -280,13 +282,30 @@ func asKeyed(items any) ([]Keyed, bool) {
 	v := reflect.ValueOf(items)
 	keyed := make([]Keyed, v.Len())
 	for i := 0; i < v.Len(); i++ {
-		item, ok := v.Index(i).Interface().(Keyed)
+		item, ok := toKeyed(v.Index(i).Interface())
 		if !ok {
 			return nil, false
 		}
 		keyed[i] = item
 	}
 	return keyed, true
+}
+
+// toKeyed returns item as Keyed; a string, or a named string type, is its own key.
+func toKeyed(item any) (Keyed, bool) {
+	if keyed, ok := item.(Keyed); ok {
+		return keyed, true
+	}
+	if v := reflect.ValueOf(item); v.Kind() == reflect.String {
+		return keyedString(v.String()), true
+	}
+	return nil, false
+}
+
+type keyedString string
+
+func (k keyedString) MatchKey() string {
+	return string(k)
 }
 
 func keys(items []Keyed, namespace string, stripNS bool) []string {
@@ -382,6 +401,20 @@ func RFC3339(crd any, remote any, _ DriftContext) Equivalence {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return Equivalence{Equivalent: Inequivalent}
+}
+
+// TimeStruct compares time.Time values as instants, ignoring location and monotonic clock.
+// Any other struct gets the default struct equivalence.
+func TimeStruct(crd any, remote any, ctx DriftContext) Equivalence {
+	crdTime, crdIsTime := crd.(time.Time)
+	remoteTime, remoteIsTime := remote.(time.Time)
+	if !crdIsTime && !remoteIsTime {
+		return defaultStructEquivalence(crd, remote, ctx)
+	}
+	if crdIsTime && remoteIsTime && crdTime.Equal(remoteTime) {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+	return Equivalence{Equivalent: Inequivalent, Skip: true}
 }
 
 // CaseInsensitive checks if the value is equal ignoring the case.
