@@ -35,6 +35,7 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.String, Ignore)
 	RegisterEquivalenceFunc("trimmed", reflect.String, Trimmed)
 	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
+	RegisterEquivalenceFunc("time", reflect.Struct, TimeStruct)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.String, IgnoreRemoteDefault)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
@@ -290,13 +291,15 @@ func asKeyed(items any) ([]Keyed, bool) {
 	return keyed, true
 }
 
-// toKeyed returns item as Keyed; a plain string is its own key.
+// toKeyed returns item as Keyed; a string, or a named string type, is its own key.
 func toKeyed(item any) (Keyed, bool) {
-	if s, ok := item.(string); ok {
-		return keyedString(s), true
+	if keyed, ok := item.(Keyed); ok {
+		return keyed, true
 	}
-	keyed, ok := item.(Keyed)
-	return keyed, ok
+	if v := reflect.ValueOf(item); v.Kind() == reflect.String {
+		return keyedString(v.String()), true
+	}
+	return nil, false
 }
 
 type keyedString string
@@ -398,6 +401,20 @@ func RFC3339(crd any, remote any, _ DriftContext) Equivalence {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return Equivalence{Equivalent: Inequivalent}
+}
+
+// TimeStruct compares time.Time values as instants, ignoring location and monotonic clock.
+// Any other struct gets the default struct equivalence.
+func TimeStruct(crd any, remote any, ctx DriftContext) Equivalence {
+	crdTime, crdIsTime := crd.(time.Time)
+	remoteTime, remoteIsTime := remote.(time.Time)
+	if !crdIsTime && !remoteIsTime {
+		return defaultStructEquivalence(crd, remote, ctx)
+	}
+	if crdIsTime && remoteIsTime && crdTime.Equal(remoteTime) {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+	return Equivalence{Equivalent: Inequivalent, Skip: true}
 }
 
 // CaseInsensitive checks if the value is equal ignoring the case.
@@ -528,16 +545,6 @@ func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any, ctx DriftCo
 
 func EmptyIsTrue(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, true) {
-		return Equivalence{Equivalent: Equivalent}
-	}
-	return DefaultEquivalence(crd, remote, ctx)
-}
-
-// TimeEquivalence compares instants, ignoring location and monotonic clock.
-func TimeEquivalence(crd any, remote any, ctx DriftContext) Equivalence {
-	crdTime, crdOk := crd.(time.Time)
-	remoteTime, remoteOk := remote.(time.Time)
-	if crdOk && remoteOk && crdTime.Equal(remoteTime) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return DefaultEquivalence(crd, remote, ctx)
