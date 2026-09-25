@@ -39,11 +39,7 @@ type testDTO struct {
 func (d testDTO) Identity() string { return d.Key }
 
 // testClient stands in for *am.Client or *apim.APIM.
-type testClient struct {
-	dryRunErr error
-	remote    *testDTO
-	remoteErr error
-}
+type testClient struct{}
 
 func (c *testClient) Probe(_ context.Context) error { return nil }
 
