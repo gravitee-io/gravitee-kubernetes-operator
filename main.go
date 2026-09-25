@@ -50,6 +50,7 @@ import (
 	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
 	documentationAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
 	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
+	mcpProxyAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mcpproxy"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
 	portalAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portal"
@@ -63,19 +64,20 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
-	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/yaml"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
@@ -420,6 +422,16 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for catalog mcp servers")
 		os.Exit(1)
 	}
+
+	if err := (&mcpproxy.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("mcpproxy-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.McpProxyList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for mcp proxies")
+		os.Exit(1)
+	}
 }
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
@@ -502,6 +514,8 @@ func applyCRDs() error {
 			return err
 		}
 
+		// sigs.k8s.io/yaml, as kubectl and helm use: it keeps a plain scalar that looks like a date
+		// (an MCP protocol version enum value) a string, where a YAML decoder yields a timestamp.
 		obj := make(map[string]interface{})
 		if err = yaml.Unmarshal(b, &obj); err != nil {
 			return err
@@ -638,6 +652,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 	}
 
 	if err := (catalogMcpServerAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (mcpProxyAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

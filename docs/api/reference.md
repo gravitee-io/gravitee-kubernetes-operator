@@ -13,6 +13,7 @@
 - [gravitee.io/v1alpha1/group](#graviteeiov1alpha1group)
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
 - [gravitee.io/v1alpha1/management](#graviteeiov1alpha1management)
+- [gravitee.io/v1alpha1/mcpproxy](#graviteeiov1alpha1mcpproxy)
 - [gravitee.io/v1alpha1/navigation](#graviteeiov1alpha1navigation)
 - [gravitee.io/v1alpha1/notification](#graviteeiov1alpha1notification)
 - [gravitee.io/v1alpha1/portal](#graviteeiov1alpha1portal)
@@ -45,6 +46,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [Group](#group)
 - [KafkaRoute](#kafkaroute)
 - [ManagementContext](#managementcontext)
+- [McpProxy](#mcpproxy)
 - [Notification](#notification)
 - [Portal](#portal)
 - [PortalLink](#portallink)
@@ -764,6 +766,79 @@ ManagementContextStatus defines the observed state of an API Context.
 _Appears in:_
 - [ManagementContext](#managementcontext)
 
+
+
+#### McpProxy
+
+
+
+McpProxy is a Gravitee MCP proxy as a Kubernetes resource: either a single upstream MCP
+server fronted whole (mode PROXY) or a Studio exposing tools selected across
+CatalogMcpServer resources (mode STUDIO).
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `McpProxy` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[McpProxySpec](#mcpproxyspec)_ |  |  |  |
+| `status` _[McpProxyStatus](#mcpproxystatus)_ |  |  |  |
+
+
+#### McpProxySpec
+
+
+
+McpProxySpec defines the desired state of an McpProxy.
+
+
+
+_Appears in:_
+- [McpProxy](#mcpproxy)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityId` _string_ | Stable identity of the proxy, the name authorization policies reference: lowercase,<br />dot-separated segments, first segment `mcp-proxy`. Immutable. |  | MaxLength: 255 <br />Pattern: `^mcp-proxy\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
+| `name` _string_ | Display name. Immutable. |  | Required: \{\} <br /> |
+| `description` _string_ | Immutable. |  | Optional: \{\} <br /> |
+| `contextPath` _string_ |  |  | Pattern: `^/` <br />Required: \{\} <br /> |
+| `protocolVersion` _string_ | MCP protocol version the proxy speaks. Immutable. |  | Enum: [2024-11-05 2025-03-26 2025-11-25] <br />Required: \{\} <br /> |
+| `mode` _[Mode](#mode)_ | PROXY requires the proxy block, STUDIO the studio block. Immutable. | PROXY | Enum: [PROXY STUDIO] <br />Optional: \{\} <br /> |
+| `proxy` _[Proxy](#proxy)_ | Required when mode is PROXY. |  | Optional: \{\} <br /> |
+| `studio` _[Studio](#studio)_ | Required when mode is STUDIO. |  | Optional: \{\} <br /> |
+| `state` _[LifecycleState](#lifecyclestate)_ | STARTED starts the proxy and redeploys it when it changed; STOPPED stops it and keeps later<br />changes stored until it is started again. | STARTED | Enum: [STARTED STOPPED] <br />Optional: \{\} <br /> |
+| `flowExecution` _[FlowExecution](#flowexecution)_ |  |  | Optional: \{\} <br /> |
+| `flows` _[Flow](#flow) array_ | Proxy-level flows. The manifest owns them: omitted means none. |  | Optional: \{\} <br /> |
+| `identityProviders` _[IdentityProvider](#identityprovider) array_ |  |  | Optional: \{\} <br /> |
+| `plans` _[Plan](#plan) array_ |  |  | MinItems: 1 <br />Required: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this proxy is created in. |  |  |
+
+
+#### McpProxyStatus
+
+
+
+McpProxyStatus defines the observed state of a McpProxy.
+
+
+
+_Appears in:_
+- [McpProxy](#mcpproxy)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the MCP proxy in the Gravitee API Management instance, also the id of the API<br />behind it |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this proxy by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `state` _string_ | The lifecycle state the platform observes. |  | Optional: \{\} <br /> |
+| `tools` _[StudioToolStatus](#studiotoolstatus) array_ | The tools a Studio exposes, with their catalog identities. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the McpProxy.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the proxy has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### Notification
@@ -3400,6 +3475,698 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/mcpproxy
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+
+#### APIKeyAuth
+
+
+
+APIKeyAuth is a static API key sent in a header.
+
+
+
+_Appears in:_
+- [UpstreamAuth](#upstreamauth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `header` _string_ | Name of the header carrying the key. |  | Required: \{\} <br /> |
+| `value` _string_ | The key: a literal, a secret:// URI resolved by the gateway, or a templated Secret value<br />([[ secret `my-secret/key` ]]). Never returned by the platform. |  | Required: \{\} <br /> |
+
+
+#### APIKeySource
+
+_Underlying type:_ _string_
+
+APIKeySource is where the gateway reads a consumer's API key.
+
+_Validation:_
+- Enum: [HEADER BEARER QUERY_PARAMETER]
+
+_Appears in:_
+- [PlanAPIKey](#planapikey)
+
+
+
+#### Auth0Provider
+
+
+
+Auth0Provider is an Auth0 tenant.
+
+
+
+_Appears in:_
+- [IdentityProvider](#identityprovider)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `domain` _string_ |  |  | Required: \{\} <br /> |
+| `audience` _string_ |  |  | Required: \{\} <br /> |
+
+
+#### BasicAuth
+
+
+
+BasicAuth are HTTP basic credentials.
+
+
+
+_Appears in:_
+- [UpstreamAuth](#upstreamauth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `username` _string_ |  |  | Required: \{\} <br /> |
+| `password` _string_ | A literal, a secret:// URI resolved by the gateway, or a templated Secret value.<br />Never returned by the platform. |  | Required: \{\} <br /> |
+
+
+#### BearerAuth
+
+
+
+BearerAuth is a bearer token sent in the Authorization header.
+
+
+
+_Appears in:_
+- [UpstreamAuth](#upstreamauth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `token` _string_ | The token: a literal, a secret:// URI resolved by the gateway, or a templated Secret value.<br />Never returned by the platform. |  | Required: \{\} <br /> |
+
+
+#### ConditionSelector
+
+
+
+ConditionSelector scopes a flow to requests matching an EL condition.
+
+
+
+_Appears in:_
+- [FlowSelector](#flowselector)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `condition` _string_ |  |  | Required: \{\} <br /> |
+
+
+#### Flow
+
+
+
+Flow is a set of policies applied to the requests and responses its selectors match.
+
+
+
+_Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+- [Plan](#plan)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | Required: \{\} <br /> |
+| `enabled` _boolean_ |  | true |  |
+| `selectors` _[FlowSelector](#flowselector) array_ |  |  | Optional: \{\} <br /> |
+| `request` _[FlowStep](#flowstep) array_ |  |  | Optional: \{\} <br /> |
+| `response` _[FlowStep](#flowstep) array_ |  |  | Optional: \{\} <br /> |
+| `tags` _string array_ |  |  | Optional: \{\} <br /> |
+
+
+#### FlowSelector
+
+
+
+FlowSelector is discriminated by type with exactly one nested block named after it.
+
+
+
+_Appears in:_
+- [Flow](#flow)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[FlowSelectorType](#flowselectortype)_ |  |  | Enum: [MCP CONDITION] <br />Required: \{\} <br /> |
+| `mcp` _[McpSelector](#mcpselector)_ | Required when type is MCP. |  | Optional: \{\} <br /> |
+| `condition` _[ConditionSelector](#conditionselector)_ | Required when type is CONDITION. |  | Optional: \{\} <br /> |
+
+
+#### FlowSelectorType
+
+_Underlying type:_ _string_
+
+FlowSelectorType discriminates a flow selector.
+
+_Validation:_
+- Enum: [MCP CONDITION]
+
+_Appears in:_
+- [FlowSelector](#flowselector)
+
+| Field | Description |
+| --- | --- |
+| `MCP` |  |
+| `CONDITION` |  |
+
+
+#### FlowStep
+
+
+
+FlowStep is one policy execution in a flow phase.
+
+
+
+_Appears in:_
+- [Flow](#flow)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | Required: \{\} <br /> |
+| `policy` _string_ | Policy plugin id, e.g. rate-limit. |  | Required: \{\} <br /> |
+| `description` _string_ |  |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ |  | true |  |
+| `condition` _string_ |  |  | Optional: \{\} <br /> |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Policy configuration, free-form per plugin. |  | Optional: \{\} <br /> |
+
+
+#### IdentityProvider
+
+
+
+IdentityProvider is an authorization server an OAUTH2 plan names, discriminated by type with
+at most one nested block. GRAVITEE_AM needs none and is accepted only when the proxy is created.
+
+
+
+_Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Name an OAUTH2 plan references in security.oauth2.provider. |  | Required: \{\} <br /> |
+| `type` _[IdentityProviderType](#identityprovidertype)_ |  |  | Enum: [GRAVITEE_AM OAUTH2_GENERIC OAUTH2_AUTH0] <br />Required: \{\} <br /> |
+| `oauth2Generic` _[OAuth2GenericProvider](#oauth2genericprovider)_ | Required when type is OAUTH2_GENERIC. |  | Optional: \{\} <br /> |
+| `auth0` _[Auth0Provider](#auth0provider)_ | Required when type is OAUTH2_AUTH0. |  | Optional: \{\} <br /> |
+
+
+#### IdentityProviderType
+
+_Underlying type:_ _string_
+
+IdentityProviderType discriminates the authorization server an OAUTH2 plan relies on.
+
+_Validation:_
+- Enum: [GRAVITEE_AM OAUTH2_GENERIC OAUTH2_AUTH0]
+
+_Appears in:_
+- [IdentityProvider](#identityprovider)
+
+| Field | Description |
+| --- | --- |
+| `GRAVITEE_AM` |  |
+| `OAUTH2_GENERIC` |  |
+| `OAUTH2_AUTH0` |  |
+
+
+#### IntrospectionMethod
+
+_Underlying type:_ _string_
+
+IntrospectionMethod is the HTTP method of a token introspection call.
+
+_Validation:_
+- Enum: [GET POST]
+
+_Appears in:_
+- [OAuth2GenericProvider](#oauth2genericprovider)
+
+
+
+#### LifecycleState
+
+_Underlying type:_ _string_
+
+LifecycleState is the lifecycle an MCP proxy is declared or observed in.
+
+_Validation:_
+- Enum: [STARTED STOPPED]
+
+_Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+- [Type](#type)
+
+| Field | Description |
+| --- | --- |
+| `STARTED` |  |
+| `STOPPED` |  |
+
+
+#### McpSelector
+
+
+
+McpSelector scopes a flow to MCP JSON-RPC methods, e.g. tools/call.
+
+
+
+_Appears in:_
+- [FlowSelector](#flowselector)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `methods` _string array_ |  |  | MinItems: 1 <br />Required: \{\} <br /> |
+
+
+#### Mode
+
+_Underlying type:_ _string_
+
+Mode is the shape of an MCP proxy: one upstream fronted whole, or a Studio composing tools
+selected across catalog servers.
+
+_Validation:_
+- Enum: [PROXY STUDIO]
+
+_Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+- [Type](#type)
+
+| Field | Description |
+| --- | --- |
+| `PROXY` |  |
+| `STUDIO` |  |
+
+
+#### OAuth2Auth
+
+
+
+OAuth2Auth is the MCP authorization flow the gateway runs against the upstream server.
+
+
+
+_Appears in:_
+- [UpstreamAuth](#upstreamauth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `authorizeUrl` _string_ |  |  | Format: uri <br />Required: \{\} <br /> |
+| `tokenUrl` _string_ |  |  | Format: uri <br />Required: \{\} <br /> |
+| `clientId` _string_ |  |  | Required: \{\} <br /> |
+| `clientSecret` _string_ | A literal, a secret:// URI resolved by the gateway, or a templated Secret value.<br />Never returned by the platform. |  | Required: \{\} <br /> |
+| `scopes` _string array_ |  |  | Optional: \{\} <br /> |
+
+
+#### OAuth2GenericProvider
+
+
+
+OAuth2GenericProvider is any OAuth 2.0 server that introspects tokens.
+
+
+
+_Appears in:_
+- [IdentityProvider](#identityprovider)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `issuerUrl` _string_ |  |  | Format: uri <br />Required: \{\} <br /> |
+| `introspectionEndpoint` _string_ |  |  | Required: \{\} <br /> |
+| `introspectionEndpointMethod` _[IntrospectionMethod](#introspectionmethod)_ |  |  | Enum: [GET POST] <br />Required: \{\} <br /> |
+| `clientId` _string_ |  |  | Optional: \{\} <br /> |
+| `userInfoEndpoint` _string_ |  |  | Optional: \{\} <br /> |
+| `clientSecret` _string_ | A literal, a secret:// URI resolved by the gateway, or a templated Secret value.<br />Never returned by the platform. |  | Optional: \{\} <br /> |
+
+
+#### Plan
+
+
+
+Plan is a consumer plan of the proxy. Plans converge by name: a declared plan the proxy does
+not have is created and published, an open plan absent from the declaration is closed, which
+ends its subscriptions, and changing the security of an existing plan is refused.
+
+
+
+_Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  | Required: \{\} <br /> |
+| `security` _[PlanSecurity](#plansecurity)_ |  |  | Required: \{\} <br /> |
+| `flows` _[Flow](#flow) array_ |  |  | Optional: \{\} <br /> |
+
+
+#### PlanAPIKey
+
+
+
+PlanAPIKey configures an API key plan.
+
+
+
+_Appears in:_
+- [PlanSecurity](#plansecurity)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `source` _[APIKeySource](#apikeysource)_ |  |  | Enum: [HEADER BEARER QUERY_PARAMETER] <br />Required: \{\} <br /> |
+| `header` _string_ | Custom header carrying the key. Omitted means the gateway default. |  | Optional: \{\} <br /> |
+| `propagate` _boolean_ | Forward the key to the upstream server. |  | Optional: \{\} <br /> |
+
+
+#### PlanOAuth2
+
+
+
+PlanOAuth2 configures an OAuth 2.0 plan.
+
+
+
+_Appears in:_
+- [PlanSecurity](#plansecurity)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `provider` _string_ | Name of the identityProviders entry that validates tokens. |  | Required: \{\} <br /> |
+| `scopes` _string array_ | Scopes required on the token. Only a GRAVITEE_AM provider accepts them. |  | Optional: \{\} <br /> |
+
+
+#### PlanSecurity
+
+
+
+PlanSecurity is the consumer authentication of a plan, discriminated by type with at most
+one nested block named after it.
+
+
+
+_Appears in:_
+- [Plan](#plan)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[PlanSecurityType](#plansecuritytype)_ |  |  | Enum: [KEY_LESS API_KEY OAUTH2] <br />Required: \{\} <br /> |
+| `apiKey` _[PlanAPIKey](#planapikey)_ | Required when type is API_KEY. |  | Optional: \{\} <br /> |
+| `oauth2` _[PlanOAuth2](#planoauth2)_ | Required when type is OAUTH2. |  | Optional: \{\} <br /> |
+
+
+#### PlanSecurityType
+
+_Underlying type:_ _string_
+
+PlanSecurityType discriminates how consumers authenticate against a plan.
+
+_Validation:_
+- Enum: [KEY_LESS API_KEY OAUTH2]
+
+_Appears in:_
+- [PlanSecurity](#plansecurity)
+
+| Field | Description |
+| --- | --- |
+| `KEY_LESS` |  |
+| `API_KEY` |  |
+| `OAUTH2` |  |
+
+
+#### Proxy
+
+
+
+Proxy is the PROXY mode: a single upstream fronted whole.
+
+
+
+_Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `serverUrl` _string_ | Raw URL of the upstream MCP server. The platform does not contact it on write; the gateway<br />reaches it at runtime. |  | Format: uri <br />Required: \{\} <br /> |
+| `upstreamAuth` _[UpstreamAuth](#upstreamauth)_ | Credential the gateway presents to the upstream. Omitted or NONE passes the caller's<br />credentials through. |  | Optional: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [McpProxyStatus](#mcpproxystatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the MCP proxy in the Gravitee API Management instance, also the id of the API<br />behind it |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this proxy by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `state` _string_ | The lifecycle state the platform observes. |  | Optional: \{\} <br /> |
+| `tools` _[StudioToolStatus](#studiotoolstatus) array_ | The tools a Studio exposes, with their catalog identities. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the McpProxy.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the proxy has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Studio
+
+
+
+Studio is the STUDIO mode: a curated tool surface composed from catalog servers.
+
+
+
+_Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `tools` _[StudioTool](#studiotool) array_ |  |  | MinItems: 1 <br />Required: \{\} <br /> |
+| `upstreamAuth` _[StudioUpstreamAuth](#studioupstreamauth) array_ | One entry per server a selected tool comes from. |  | Optional: \{\} <br /> |
+| `enableFGA` _boolean_ | Insert the tool-level authorization policy on tools/call. The platform owns that flow:<br />declared flows must not carry the authz-pep policy. |  | Optional: \{\} <br /> |
+
+
+#### StudioTool
+
+
+
+StudioTool selects one tool a catalog server exposes.
+
+
+
+_Appears in:_
+- [Studio](#studio)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `serverRef` _[NamespacedName](#namespacedname)_ | The CatalogMcpServer exposing the tool. The namespace defaults to the proxy's. |  | Required: \{\} <br /> |
+| `tool` _string_ | Name of the tool as the server advertises it (see the server's status.tools). |  | Required: \{\} <br /> |
+| `alias` _string_ | Name the Studio exposes the tool under. |  | Optional: \{\} <br />Pattern: `^[a-zA-Z0-9_=-]+$` <br /> |
+
+
+#### StudioToolStatus
+
+
+
+StudioToolStatus is a tool a Studio exposes, with the catalog identity a policy names.
+
+
+
+_Appears in:_
+- [McpProxyStatus](#mcpproxystatus)
+- [Status](#status)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `server` _string_ | HRID of the catalog server the tool comes from. |  | Optional: \{\} <br /> |
+| `tool` _string_ |  |  | Optional: \{\} <br /> |
+| `alias` _string_ |  |  | Optional: \{\} <br /> |
+| `entityId` _string_ |  |  | Optional: \{\} <br /> |
+
+
+#### StudioUpstreamAuth
+
+
+
+StudioUpstreamAuth is the credential the gateway presents to one catalog server.
+
+
+
+_Appears in:_
+- [Studio](#studio)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `serverRef` _[NamespacedName](#namespacedname)_ |  |  | Required: \{\} <br /> |
+| `auth` _[UpstreamAuth](#upstreamauth)_ | Use type NONE when the server needs no credential. |  | Required: \{\} <br /> |
+
+
+#### Type
+
+
+
+Type defines the specification of an McpProxy resource.
+
+
+
+_Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityId` _string_ | Stable identity of the proxy, the name authorization policies reference: lowercase,<br />dot-separated segments, first segment `mcp-proxy`. Immutable. |  | MaxLength: 255 <br />Pattern: `^mcp-proxy\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
+| `name` _string_ | Display name. Immutable. |  | Required: \{\} <br /> |
+| `description` _string_ | Immutable. |  | Optional: \{\} <br /> |
+| `contextPath` _string_ |  |  | Pattern: `^/` <br />Required: \{\} <br /> |
+| `protocolVersion` _string_ | MCP protocol version the proxy speaks. Immutable. |  | Enum: [2024-11-05 2025-03-26 2025-11-25] <br />Required: \{\} <br /> |
+| `mode` _[Mode](#mode)_ | PROXY requires the proxy block, STUDIO the studio block. Immutable. | PROXY | Enum: [PROXY STUDIO] <br />Optional: \{\} <br /> |
+| `proxy` _[Proxy](#proxy)_ | Required when mode is PROXY. |  | Optional: \{\} <br /> |
+| `studio` _[Studio](#studio)_ | Required when mode is STUDIO. |  | Optional: \{\} <br /> |
+| `state` _[LifecycleState](#lifecyclestate)_ | STARTED starts the proxy and redeploys it when it changed; STOPPED stops it and keeps later<br />changes stored until it is started again. | STARTED | Enum: [STARTED STOPPED] <br />Optional: \{\} <br /> |
+| `flowExecution` _[FlowExecution](#flowexecution)_ |  |  | Optional: \{\} <br /> |
+| `flows` _[Flow](#flow) array_ | Proxy-level flows. The manifest owns them: omitted means none. |  | Optional: \{\} <br /> |
+| `identityProviders` _[IdentityProvider](#identityprovider) array_ |  |  | Optional: \{\} <br /> |
+| `plans` _[Plan](#plan) array_ |  |  | MinItems: 1 <br />Required: \{\} <br /> |
+
+
+#### UpstreamAuth
+
+
+
+UpstreamAuth is the credential the gateway presents to an upstream MCP server, discriminated
+by type with exactly one nested block named after it. NONE passes the caller's credentials
+through. A reference to a vaulted credential is added later as one more type and one more
+block, so existing manifests are never reshaped.
+
+
+
+_Appears in:_
+- [Proxy](#proxy)
+- [StudioUpstreamAuth](#studioupstreamauth)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[UpstreamAuthType](#upstreamauthtype)_ |  |  | Enum: [NONE API_KEY BEARER BASIC OAUTH2] <br />Required: \{\} <br /> |
+| `apiKey` _[APIKeyAuth](#apikeyauth)_ | Required when type is API_KEY. |  | Optional: \{\} <br /> |
+| `bearer` _[BearerAuth](#bearerauth)_ | Required when type is BEARER. |  | Optional: \{\} <br /> |
+| `basic` _[BasicAuth](#basicauth)_ | Required when type is BASIC. |  | Optional: \{\} <br /> |
+| `oauth2` _[OAuth2Auth](#oauth2auth)_ | Required when type is OAUTH2. |  | Optional: \{\} <br /> |
+
+
+#### UpstreamAuthType
+
+_Underlying type:_ _string_
+
+UpstreamAuthType discriminates how the gateway authenticates against an upstream MCP server.
+
+_Validation:_
+- Enum: [NONE API_KEY BEARER BASIC OAUTH2]
+
+_Appears in:_
+- [UpstreamAuth](#upstreamauth)
+
+| Field | Description |
+| --- | --- |
+| `NONE` |  |
+| `API_KEY` |  |
+| `BEARER` |  |
+| `BASIC` |  |
+| `OAUTH2` |  |
+
+
+
 ## gravitee.io/v1alpha1/navigation
 
 
@@ -3889,12 +4656,15 @@ _Appears in:_
 - [DocumentationSpec](#documentationspec)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
+- [McpProxySpec](#mcpproxyspec)
 - [PortalLinkSpec](#portallinkspec)
 - [PortalListingSpec](#portallistingspec)
 - [PortalSpec](#portalspec)
 - [PortalThemeSpec](#portalthemespec)
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
+- [StudioTool](#studiotool)
+- [StudioUpstreamAuth](#studioupstreamauth)
 - [SubscriptionSpec](#subscriptionspec)
 - [Type](#type)
 - [Type](#type)
@@ -4032,11 +4802,13 @@ _Appears in:_
 - [DictionaryStatus](#dictionarystatus)
 - [DocumentationStatus](#documentationstatus)
 - [GroupStatus](#groupstatus)
+- [McpProxyStatus](#mcpproxystatus)
 - [PortalLinkStatus](#portallinkstatus)
 - [PortalListingStatus](#portallistingstatus)
 - [PortalStatus](#portalstatus)
 - [PortalThemeStatus](#portalthemestatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
@@ -4166,6 +4938,7 @@ _Appears in:_
 - [EndpointGroup](#endpointgroup)
 - [Entrypoint](#entrypoint)
 - [FlowSelector](#flowselector)
+- [FlowStep](#flowstep)
 - [FlowStep](#flowstep)
 - [FlowStep](#flowstep)
 - [GenericListener](#genericlistener)
@@ -5235,6 +6008,8 @@ _Appears in:_
 
 
 _Appears in:_
+- [McpProxySpec](#mcpproxyspec)
+- [Type](#type)
 - [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
