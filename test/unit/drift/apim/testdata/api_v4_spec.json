@@ -167,7 +167,9 @@
         "clearTextUpgrade": true,
         "version": "HTTP_2",
         "maxHeaderSize": 8192,
-        "maxChunkSize": 4096
+        "maxChunkSize": 4096,
+        "maxWaitQueueSize": 32,
+        "maxConnectionLifetime": 60000
       },
       "ssl": {
         "trustAll": true,

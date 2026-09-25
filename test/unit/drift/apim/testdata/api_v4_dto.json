@@ -155,7 +155,9 @@
         "clearTextUpgrade": true,
         "version": "HTTP_2",
         "maxHeaderSize": 8192,
-        "maxChunkSize": 4096
+        "maxChunkSize": 4096,
+        "maxWaitQueueSize": 32,
+        "maxConnectionLifetime": 60000
       },
       "ssl": {
         "trustAll": true,
@@ -385,6 +387,7 @@
   },
   "pages": [
     {
+      "id": "page-id",
       "hrid": "guide-page",
       "crossId": "page-cross",
       "name": "Guide",
