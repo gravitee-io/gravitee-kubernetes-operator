@@ -51,12 +51,22 @@ type conventionHolder struct {
 	ContentRef *refs.NamespacedName
 }
 
+type conventionKindOnly struct {
+	DomainKey    string `ref:"amsecuritydomain"`
+	DomainKeyRef *refs.NamespacedName
+}
+
 type nestedHolder struct {
 	Inner secretHolder
 }
 
 type listHolder struct {
 	Items []secretHolder
+}
+
+type hridHolder struct {
+	DomainKey string `ref:"amsecuritydomain,DomainRef"`
+	DomainRef *refs.NamespacedName
 }
 
 type valueRefHolder struct {
@@ -99,6 +109,21 @@ func tlsSecret(ns, name string, cert []byte) *corev1.Secret {
 	}
 }
 
+func expectHRID(ns, name string) string {
+	n := refs.NewNamespacedName(ns, name)
+	return n.HRID()
+}
+
+func amSecurityDomain(ns, name string) *v1alpha1.AMSecurityDomain {
+	return &v1alpha1.AMSecurityDomain{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: v1alpha1.GroupVersion.String(),
+			Kind:       "AMSecurityDomain",
+		},
+		ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: name},
+	}
+}
+
 var _ = Describe("GenericRefResolver", func() {
 	var ctx context.Context
 
@@ -137,6 +162,17 @@ var _ = Describe("GenericRefResolver", func() {
 		}
 		Expect(ref.GenericRefResolver(ctx, obj, parentNs)).To(Succeed())
 		Expect(obj.Content).To(Equal([]byte("from-convention")))
+	})
+
+	It("defaults the sibling field to <field>Ref when the tag is kind only", func() {
+		am := amSecurityDomain(parentNs, "ctx-b")
+		registerClient(am)
+
+		obj := &conventionKindOnly{
+			DomainKeyRef: &refs.NamespacedName{Name: "ctx-b"},
+		}
+		Expect(ref.GenericRefResolver(ctx, obj, parentNs)).To(Succeed())
+		Expect(obj.DomainKey).To(Equal(expectHRID(parentNs, "ctx-b")))
 	})
 
 	It("uses parentNs when the ref has no namespace", func() {
@@ -187,6 +223,17 @@ var _ = Describe("GenericRefResolver", func() {
 		Expect(ref.GenericRefResolver(ctx, obj, parentNs)).To(Succeed())
 		Expect(obj.Items[0].Content).To(Equal([]byte("item")))
 		Expect(obj.Items[1].Content).To(Equal([]byte("item")))
+	})
+
+	It("extracts HRID from a referenced AMSecurityDomain", func() {
+		am := amSecurityDomain(parentNs, "ctx-a")
+		registerClient(am)
+
+		obj := &hridHolder{
+			DomainRef: &refs.NamespacedName{Name: "ctx-a"},
+		}
+		Expect(ref.GenericRefResolver(ctx, obj, parentNs)).To(Succeed())
+		Expect(obj.DomainKey).To(Equal(expectHRID(parentNs, "ctx-a")))
 	})
 
 	It("wraps unknown kind as Error and ErrUnknownKind", func() {

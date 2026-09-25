@@ -12,25 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package am
+package mapper
 
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
-)
+import "encoding/json"
 
-func toHttpAuth(ctx core.ContextModel) *http.Auth {
-	if !ctx.HasAuthentication() {
-		return nil
+func MapViaJSON[T any](src any) T {
+	var dst T
+	if src == nil {
+		return dst
 	}
-	return &http.Auth{
-		Token: toBearer(ctx.GetAuth()),
-	}
-}
 
-func toBearer(auth core.Auth) http.BearerToken {
-	if auth == nil || auth.GetBearerToken() == "" {
-		return ""
+	data, err := json.Marshal(src)
+	if err != nil {
+		return dst
 	}
-	return http.BearerToken(auth.GetBearerToken())
+
+	if err := json.Unmarshal(data, &dst); err != nil {
+		return dst
+	}
+
+	return dst
 }

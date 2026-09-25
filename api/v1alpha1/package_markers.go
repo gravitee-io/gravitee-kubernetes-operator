@@ -57,6 +57,7 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&PortalTheme{}, &PortalThemeList{},
 		&SharedPolicyGroup{}, &SharedPolicyGroupList{},
 		&Subscription{}, &SubscriptionList{},
+		&AMSecurityDomain{}, &AMSecurityDomainList{},
 	)
 	metav1.AddToGroupVersion(s, GroupVersion)
 	return nil

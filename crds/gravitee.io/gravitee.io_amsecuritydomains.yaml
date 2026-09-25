@@ -1,0 +1,1065 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.0
+    gravitee.io/operator.version: 4.13.0-rc
+  name: amsecuritydomains.gravitee.io
+spec:
+  group: gravitee.io
+  names:
+    kind: AMSecurityDomain
+    listKind: AMSecurityDomainList
+    plural: amsecuritydomains
+    shortNames:
+      - graviteeamsecuritydomains
+    singular: amsecuritydomain
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - jsonPath: .spec.name
+          name: Name
+          type: string
+        - jsonPath: .spec.path
+          name: Path
+          type: string
+        - jsonPath: .spec.enabled
+          name: Enabled
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              description: APIVersion defines the versioned schema of this representation of
+                an object.
+              type: string
+            kind:
+              description: Kind is a string value representing the REST resource this object
+                represents.
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: AMSecurityDomainSpec defines the desired state of an AM security
+                domain.
+              properties:
+                accountSettings:
+                  description: "AccountSettings holds the user account settings for the domain:
+                    brute-force protection,..."
+                  properties:
+                    accountBlockedDuration:
+                      description: >-
+                        AccountBlockedDuration is the duration, in seconds, for
+                        which the account remains blocked after
+
+                        too...
+                      format: int32
+                      type: integer
+                    autoLoginAfterRegistration:
+                      description: AutoLoginAfterRegistration controls whether the user is
+                        automatically logged in after completing...
+                      type: boolean
+                    autoLoginAfterResetPassword:
+                      description: >-
+                        AutoLoginAfterResetPassword controls whether the user is
+                        automatically logged in after a
+
+                        password...
+                      type: boolean
+                    completeRegistrationWhenResetPassword:
+                      description: CompleteRegistrationWhenResetPassword controls whether resetting a
+                        password also completes a...
+                      type: boolean
+                    defaultIdentityProviderForRegistration:
+                      description: DefaultIdentityProviderForRegistration is the key of an identity
+                        provider that exists under this...
+                      type: string
+                    deletePasswordlessDevicesAfterResetPassword:
+                      description: DeletePasswordlessDevicesAfterResetPassword controls whether
+                        passwordless (WebAuthn) devices are...
+                      type: boolean
+                    dynamicUserRegistration:
+                      description: DynamicUserRegistration controls whether dynamic (self-service)
+                        user registration is enabled.
+                      type: boolean
+                    inherited:
+                      description: Inherited controls whether account settings are inherited from the
+                        parent (domain).
+                      type: boolean
+                    loginAttemptsDetectionEnabled:
+                      description: >-
+                        LoginAttemptsDetectionEnabled controls whether
+                        brute-force authentication attempts are detected
+
+                        and...
+                      type: boolean
+                    loginAttemptsResetTime:
+                      description: >-
+                        LoginAttemptsResetTime is the time, in seconds, after
+                        which the login attempt counter is reset
+
+                        when...
+                      format: int32
+                      type: integer
+                    maxLoginAttempts:
+                      description: MaxLoginAttempts is the maximum number of failed login attempts
+                        before the account is blocked.
+                      format: int32
+                      type: integer
+                    mfaChallengeAttemptsDetectionEnabled:
+                      description: MfaChallengeAttemptsDetectionEnabled controls whether failed MFA
+                        challenge attempts are detected...
+                      type: boolean
+                    mfaChallengeAttemptsResetTime:
+                      description: MfaChallengeAttemptsResetTime is the time, in seconds, after which
+                        the MFA challenge attempt...
+                      format: int32
+                      type: integer
+                    mfaChallengeMaxAttempts:
+                      description: >-
+                        MfaChallengeMaxAttempts is the maximum number of failed
+                        MFA challenge attempts before the user
+
+                        is...
+                      format: int32
+                      type: integer
+                    mfaChallengeSendVerifyAlertEmail:
+                      description: >-
+                        MfaChallengeSendVerifyAlertEmail controls whether to
+                        send an alert email after too many failed
+
+                        MFA...
+                      type: boolean
+                    redirectUriAfterRegistration:
+                      description: RedirectUriAfterRegistration is the URL the user is redirected to
+                        after registration.
+                      type: string
+                    redirectUriAfterResetPassword:
+                      description: RedirectUriAfterResetPassword is the URL the user is redirected to
+                        after a password reset.
+                      type: string
+                    rememberMe:
+                      description: RememberMe controls whether users can remain logged in for a fixed
+                        duration (remember-me).
+                      type: boolean
+                    rememberMeDuration:
+                      description: RememberMeDuration is the duration, in seconds, for which a
+                        remembered session stays valid.
+                      format: int32
+                      type: integer
+                    resetPasswordConfirmIdentity:
+                      description: >-
+                        ResetPasswordConfirmIdentity controls whether the user
+                        must confirm their identity before
+
+                        resetting...
+                      type: boolean
+                    resetPasswordCustomForm:
+                      description: ResetPasswordCustomForm controls whether a custom form is used for
+                        the password-reset step.
+                      type: boolean
+                    resetPasswordCustomFormFields:
+                      description: ResetPasswordCustomFormFields lists the custom fields rendered on
+                        the password-reset form.
+                      items:
+                        description: FormField is a custom field rendered on a domain form.
+                        properties:
+                          key:
+                            description: Key is the identifier of the field, mapped to a user attribute.
+                            type: string
+                          label:
+                            description: Label is the label displayed for the field.
+                            type: string
+                          type:
+                            description: Type is the input type of the field.
+                            type: string
+                        type: object
+                      type: array
+                    resetPasswordInvalidateTokens:
+                      description: >-
+                        ResetPasswordInvalidateTokens controls whether existing
+                        tokens are invalidated when the password
+
+                        is...
+                      type: boolean
+                    sendRecoverAccountEmail:
+                      description: SendRecoverAccountEmail controls whether to send an
+                        account-recovery email. Defaults to false.
+                      type: boolean
+                    sendVerifyRegistrationAccountEmail:
+                      description: SendVerifyRegistrationAccountEmail controls whether to send a
+                        registration-verification email.
+                      type: boolean
+                  type: object
+                alertEnabled:
+                  description: AlertEnabled controls whether alerting is enabled for the domain.
+                  type: boolean
+                certificateSettings:
+                  description: CertificateSettings holds the domain-level certificate settings.
+                  properties:
+                    fallbackCertificate:
+                      description: FallbackCertificate is the key of a certificate managed under this
+                        domain, used as the fallback...
+                      type: string
+                  type: object
+                contextRef:
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - name
+                  type: object
+                corsSettings:
+                  description: CorsSettings holds the Cross-Origin Resource Sharing configuration
+                    controlling which web origins...
+                  properties:
+                    allowCredentials:
+                      description: >-
+                        AllowCredentials controls whether the browser may send
+                        credentials (cookies, authorization
+
+                        headers)...
+                      type: boolean
+                    allowedHeaders:
+                      description: AllowedHeaders lists the request headers permitted on cross-origin
+                        requests.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: set
+                    allowedMethods:
+                      description: AllowedMethods lists the HTTP methods permitted on cross-origin
+                        requests.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: set
+                    allowedOrigins:
+                      description: AllowedOrigins lists the origins permitted to make cross-origin
+                        requests.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: set
+                    enabled:
+                      description: Enabled controls whether CORS handling is enabled for the domain
+                        when not inherited.
+                      type: boolean
+                    inherited:
+                      description: Inherited controls whether CORS settings are inherited from the
+                        gateway defaults (gravitee.yml).
+                      type: boolean
+                    maxAge:
+                      description: MaxAge is how long, in seconds, a browser may cache the result of a
+                        preflight request.
+                      format: int32
+                      type: integer
+                  type: object
+                dataPlaneId:
+                  description: DataPlaneId is the identifier of the data plane this domain is
+                    connected to.
+                  maxLength: 255
+                  type: string
+                description:
+                  description: Description is the human-readable description of the domain.
+                  type: string
+                enabled:
+                  default: true
+                  description: Enabled controls whether the domain handles incoming authentication
+                    and authorization requests.
+                  type: boolean
+                keyRetrievalSettings:
+                  description: >-
+                    KeyRetrievalSettings holds the fetch, SSRF and cache limits
+                    applied to every trusted domain in
+
+                    the...
+                  properties:
+                    allowPrivateIpAddress:
+                      description: AllowPrivateIpAddress controls whether key material can be fetched
+                        from private IP addresses.
+                      type: boolean
+                    allowUnsecuredHttpUri:
+                      description: AllowUnsecuredHttpUri controls whether key material can be fetched
+                        over unsecured HTTP URIs.
+                      type: boolean
+                    cacheMaxEntries:
+                      description: >-
+                        CacheMaxEntries is the maximum number of key material
+                        entries retained in the cache. Defaults to
+
+                        50.
+                      format: int32
+                      type: integer
+                    cacheTtlSeconds:
+                      description: CacheTtlSeconds is the time-to-live, in seconds, for cached key
+                        material. Defaults to 300.
+                      format: int32
+                      type: integer
+                    fetchTimeoutMs:
+                      description: FetchTimeoutMs is the timeout, in milliseconds, for fetching key
+                        material. Defaults to 5000.
+                      format: int32
+                      type: integer
+                    maxResponseSizeKb:
+                      description: MaxResponseSizeKb is the maximum key material response size, in
+                        kilobytes. Defaults to 32.
+                      format: int32
+                      type: integer
+                  type: object
+                loginSettings:
+                  description: LoginSettings holds the configuration of the domain's login flow
+                    and the features offered on the...
+                  properties:
+                    certificateBasedAuthEnabled:
+                      description: CertificateBasedAuthEnabled controls whether certificate-based
+                        authentication is offered.
+                      type: boolean
+                    certificateBasedAuthUrl:
+                      description: CertificateBasedAuthUrl is the URL used for certificate-based
+                        authentication.
+                      type: string
+                    forgotPasswordEnabled:
+                      description: ForgotPasswordEnabled controls whether users can initiate a
+                        forgot-password flow from the login...
+                      type: boolean
+                    hideForm:
+                      description: HideForm controls whether the login form is hidden (for example
+                        when only social or...
+                      type: boolean
+                    identifierFirstEnabled:
+                      description: IdentifierFirstEnabled controls whether identifier-first login is
+                        enabled, prompting for the...
+                      type: boolean
+                    inherited:
+                      description: Inherited controls whether these login settings are inherited from
+                        a parent scope rather than...
+                      type: boolean
+                    magicLinkAuthEnabled:
+                      description: MagicLinkAuthEnabled controls whether magic-link authentication is
+                        offered. Defaults to false.
+                      type: boolean
+                    passwordlessDeviceNamingEnabled:
+                      description: PasswordlessDeviceNamingEnabled controls whether users can name
+                        their passwordless devices.
+                      type: boolean
+                    passwordlessEnabled:
+                      description: PasswordlessEnabled controls whether passwordless (WebAuthn)
+                        authentication is offered.
+                      type: boolean
+                    passwordlessEnforcePasswordEnabled:
+                      description: PasswordlessEnforcePasswordEnabled controls whether a password is
+                        still required alongside...
+                      type: boolean
+                    passwordlessEnforcePasswordMaxAge:
+                      description: PasswordlessEnforcePasswordMaxAge is the period, in seconds, after
+                        which the user's credentials...
+                      format: int32
+                      type: integer
+                    passwordlessRememberDeviceEnabled:
+                      description: >-
+                        PasswordlessRememberDeviceEnabled controls whether a
+                        passwordless device can be remembered to
+
+                        skip...
+                      type: boolean
+                    registerEnabled:
+                      description: RegisterEnabled controls whether users can self-register from the
+                        login page. Defaults to false.
+                      type: boolean
+                    rememberMeEnabled:
+                      description: >-
+                        RememberMeEnabled controls whether the login page offers
+                        a remember-me option. Defaults to
+
+                        false.
+                      type: boolean
+                    resetPasswordOnExpiration:
+                      description: ResetPasswordOnExpiration controls whether the user is forced to
+                        reset their password once it...
+                      type: boolean
+                  type: object
+                master:
+                  description: Master controls whether this is the master domain of its
+                    environment.
+                  type: boolean
+                name:
+                  description: Name is the human-readable name of the domain.
+                  maxLength: 255
+                  minLength: 1
+                  type: string
+                oidc:
+                  description: Oidc holds the OpenID Connect settings for the domain.
+                  properties:
+                    cibaSettings:
+                      description: >-
+                        CibaSettings holds the Client-Initiated Backchannel
+                        Authentication (CIBA) settings for the
+
+                        domain.
+                      properties:
+                        authReqExpiry:
+                          description: AuthReqExpiry is the default validity period, in seconds, of the
+                            issued auth_req_id.
+                          format: int32
+                          type: integer
+                        bindingMessageLength:
+                          description: >-
+                            BindingMessageLength is the maximum number of
+                            characters accepted for the binding_message
+
+                            parameter.
+                          format: int32
+                          type: integer
+                        enabled:
+                          description: Enabled controls whether Client-Initiated Backchannel
+                            Authentication is enabled for the domain.
+                          type: boolean
+                        tokenReqInterval:
+                          description: >-
+                            TokenReqInterval is the minimum delay, in seconds,
+                            that a client must wait between two polls of
+
+                            the...
+                          format: int32
+                          type: integer
+                      type: object
+                    clientRegistrationSettings:
+                      description: >-
+                        ClientRegistrationSettings holds the OpenID Connect
+                        Dynamic Client Registration configuration
+
+                        for...
+                      properties:
+                        allowHttpSchemeRedirectUri:
+                          description: >-
+                            AllowHttpSchemeRedirectUri controls whether the
+                            unsecured http scheme is permitted in redirect
+
+                            URIs.
+                          type: boolean
+                        allowLocalhostRedirectUri:
+                          description: AllowLocalhostRedirectUri controls whether localhost is permitted
+                            as a redirect URI host.
+                          type: boolean
+                        allowRedirectUriParamsExpressionLanguage:
+                          description: AllowRedirectUriParamsExpressionLanguage controls whether
+                            expression language is permitted in...
+                          type: boolean
+                        allowWildCardRedirectUri:
+                          description: AllowWildCardRedirectUri controls whether wildcards are permitted
+                            in redirect URIs.
+                          type: boolean
+                        allowedScopes:
+                          description: >-
+                            AllowedScopes lists the scopes permitted on client
+                            registration requests when the allowed list
+
+                            is...
+                          items:
+                            type: string
+                          type: array
+                        allowedScopesEnabled:
+                          description: >-
+                            AllowedScopesEnabled controls whether registered
+                            client scopes are restricted to an allowed
+
+                            list.
+                          type: boolean
+                        clientTemplateEnabled:
+                          description: ClientTemplateEnabled controls whether a client may be used as a
+                            template for dynamic client...
+                          type: boolean
+                        defaultScopes:
+                          description: DefaultScopes lists the default scopes added to every client
+                            registration request.
+                          items:
+                            type: string
+                          type: array
+                        dynamicClientRegistrationEnabled:
+                          description: DynamicClientRegistrationEnabled controls whether Dynamic Client
+                            Registration is enabled for the...
+                          type: boolean
+                        openDynamicClientRegistrationEnabled:
+                          description: OpenDynamicClientRegistrationEnabled controls whether open
+                            (unauthenticated) Dynamic Client...
+                          type: boolean
+                      type: object
+                    postLogoutRedirectUris:
+                      description: PostLogoutRedirectUris lists the URLs the user may be redirected to
+                        after sign-out...
+                      items:
+                        type: string
+                      type: array
+                    redirectUriStrictMatching:
+                      description: RedirectUriStrictMatching controls whether redirect_uri and
+                        post_logout_redirect_uri values are...
+                      type: boolean
+                    requestUris:
+                      description: RequestUris lists the allowed request_uri values for passing OpenID
+                        Connect request objects by...
+                      items:
+                        type: string
+                      type: array
+                    securityProfileSettings:
+                      description: >-
+                        SecurityProfileSettings holds the Financial-grade API
+                        (FAPI) security profile configuration for
+
+                        the...
+                      properties:
+                        enableFapiBrazil:
+                          description: EnableFapiBrazil controls whether the Open Banking Brasil
+                            Financial-grade API security profile...
+                          type: boolean
+                        enablePlainFapi:
+                          description: EnablePlainFapi controls whether the standard Financial-grade API
+                            security profile (version 1.
+                          type: boolean
+                      type: object
+                    workloadIdentitySettings:
+                      description: WorkloadIdentitySettings holds the workload identity (SPIFFE)
+                        settings for the domain.
+                      properties:
+                        clockSkewSeconds:
+                          description: ClockSkewSeconds is the allowed clock skew, in seconds, when
+                            validating JWT temporal claims.
+                          format: int32
+                          type: integer
+                        defaultAllowedAlgorithms:
+                          description: >-
+                            DefaultAllowedAlgorithms is the default allowlist of
+                            signature algorithms accepted for SPIFFE
+
+                            JWT...
+                          items:
+                            type: string
+                          type: array
+                        enabled:
+                          description: Enabled controls whether SPIFFE workload identity support is
+                            enabled for the domain.
+                          type: boolean
+                        maxJwtLifetimeSeconds:
+                          description: >-
+                            MaxJwtLifetimeSeconds is the maximum accepted JWT
+                            lifetime, in seconds, computed as exp minus
+
+                            iat.
+                          format: int32
+                          type: integer
+                      type: object
+                  type: object
+                passwordSettings:
+                  description: >-
+                    PasswordSettings holds the password policy applied to users
+                    of the domain: complexity
+
+                    requirements,...
+                  properties:
+                    excludePasswordsInDictionary:
+                      description: >-
+                        ExcludePasswordsInDictionary controls whether passwords
+                        found in a common-password dictionary
+
+                        are...
+                      type: boolean
+                    excludeUserProfileInfoInPassword:
+                      description: ExcludeUserProfileInfoInPassword controls whether passwords
+                        containing the user's profile...
+                      type: boolean
+                    expiryDuration:
+                      description: ExpiryDuration is the number of days after which a password expires
+                        and must be changed.
+                      format: int32
+                      type: integer
+                    includeNumbers:
+                      description: IncludeNumbers controls whether a password must contain at least
+                        one number.
+                      type: boolean
+                    includeSpecialCharacters:
+                      description: >-
+                        IncludeSpecialCharacters controls whether a password
+                        must contain at least one special
+
+                        character.
+                      type: boolean
+                    inherited:
+                      description: Inherited controls whether these password settings are inherited
+                        from a parent scope rather than...
+                      type: boolean
+                    lettersInMixedCase:
+                      description: >-
+                        LettersInMixedCase controls whether a password must
+                        contain both uppercase and lowercase
+
+                        letters.
+                      type: boolean
+                    maxConsecutiveLetters:
+                      description: MaxConsecutiveLetters is the maximum number of identical
+                        consecutive characters allowed in a...
+                      format: int32
+                      type: integer
+                    maxLength:
+                      description: MaxLength is the maximum number of characters a password may
+                        contain. Defaults to 128.
+                      format: int32
+                      type: integer
+                    minLength:
+                      description: MinLength is the minimum number of characters a password must
+                        contain. Defaults to 8.
+                      format: int32
+                      type: integer
+                    oldPasswords:
+                      description: OldPasswords is the number of previous passwords retained in
+                        history and barred from reuse.
+                      format: int32
+                      type: integer
+                    passwordHistoryEnabled:
+                      description: PasswordHistoryEnabled controls whether password history is
+                        enforced to prevent reuse of recent...
+                      type: boolean
+                  type: object
+                path:
+                  description: Path is the context path the domain is served under, relative to
+                    the gateway.
+                  maxLength: 255
+                  minLength: 1
+                  pattern: ^/.*
+                  type: string
+                saml:
+                  description: Saml holds the settings for the domain acting as a SAML 2.0
+                    identity provider (IdP).
+                  properties:
+                    certificate:
+                      description: Certificate is the key of a certificate managed under this domain,
+                        used to sign SAML responses.
+                      type: string
+                    enabled:
+                      description: Enabled controls whether the domain exposes the SAML 2.0 IdP
+                        protocol. Defaults to false.
+                      type: boolean
+                    entityId:
+                      description: EntityId is the URL or URN that uniquely identifies this IdP (the
+                        SAML entity ID).
+                      type: string
+                  type: object
+                scim:
+                  description: Scim holds the configuration of the domain's SCIM 2.0 provisioning
+                    endpoints.
+                  properties:
+                    enabled:
+                      description: Enabled controls whether the SCIM provisioning API is enabled for
+                        the domain. Defaults to false.
+                      type: boolean
+                    idpSelectionEnabled:
+                      description: IdpSelectionEnabled controls whether an identity provider is
+                        selected for SCIM-provisioned users...
+                      type: boolean
+                    idpSelectionRule:
+                      description: >-
+                        IdpSelectionRule is the expression that selects the
+                        identity provider for a SCIM-provisioned
+
+                        user.
+                      type: string
+                  type: object
+                secretExpirationSettings:
+                  description: >-
+                    SecretExpirationSettings controls whether client secrets in
+                    the domain expire and after how
+
+                    long.
+                  properties:
+                    enabled:
+                      description: Enabled controls whether client-secret expiration is enabled.
+                      type: boolean
+                    expiryTimeSeconds:
+                      description: ExpiryTimeSeconds is the lifetime, in seconds, of a client secret
+                        before it expires.
+                      format: int64
+                      type: integer
+                  type: object
+                selfServiceAccountManagementSettings:
+                  description: >-
+                    SelfServiceAccountManagementSettings controls whether end
+                    users can manage their own account
+
+                    (for...
+                  properties:
+                    enabled:
+                      description: Enabled controls whether self-service account management is enabled
+                        for end users.
+                      type: boolean
+                    resetPassword:
+                      description: ResetPassword holds the rules applied to a self-service password
+                        reset.
+                      properties:
+                        oldPasswordRequired:
+                          description: >-
+                            OldPasswordRequired controls whether the user must
+                            supply their current password to set a new
+
+                            one.
+                          type: boolean
+                        tokenAge:
+                          description: TokenAge is the lifetime, in seconds, of the password-reset token.
+                          format: int32
+                          type: integer
+                      type: object
+                  type: object
+                tags:
+                  description: Tags lists the sharding tags that control which gateways deploy
+                    this domain.
+                  items:
+                    type: string
+                  type: array
+                  x-kubernetes-list-type: set
+                tokenExchangeSettings:
+                  description: TokenExchangeSettings holds the OAuth 2.
+                  properties:
+                    allowDelegation:
+                      description: AllowDelegation controls whether delegation is allowed, where an
+                        actor acts on behalf of the...
+                      type: boolean
+                    allowImpersonation:
+                      description: >-
+                        AllowImpersonation controls whether impersonation is
+                        allowed, where the issued token represents
+
+                        the...
+                      type: boolean
+                    allowedActorTokenTypes:
+                      description: AllowedActorTokenTypes lists the token types accepted as the actor
+                        token when delegating.
+                      items:
+                        type: string
+                      type: array
+                    allowedRequestedTokenTypes:
+                      description: >-
+                        AllowedRequestedTokenTypes lists the token types that
+                        may be requested as the result of an
+
+                        exchange.
+                      items:
+                        type: string
+                      type: array
+                    allowedSubjectTokenTypes:
+                      description: AllowedSubjectTokenTypes lists the token types accepted as the
+                        subject token in an exchange.
+                      items:
+                        type: string
+                      type: array
+                    enabled:
+                      description: Enabled controls whether token exchange is enabled for the domain.
+                        Defaults to false.
+                      type: boolean
+                    idJagSettings:
+                      description: IdJagSettings holds the ID-JAG issuance behavior of token exchange.
+                      properties:
+                        laxValidation:
+                          description: LaxValidation also accepts an access token issued to the requesting
+                            client as the subject token.
+                          type: boolean
+                      type: object
+                    maxDelegationDepth:
+                      description: MaxDelegationDepth is the maximum depth of the delegation chain
+                        (nested "act" claims).
+                      format: int32
+                      maximum: 100
+                      minimum: 1
+                      type: integer
+                    tokenExchangeOAuthSettings:
+                      description: >-
+                        TokenExchangeOAuthSettings holds the OAuth-specific
+                        token-exchange behavior, such as how scopes
+
+                        are...
+                      properties:
+                        inherited:
+                          description: Inherited controls whether these settings are inherited from the
+                            domain defaults rather than...
+                          type: boolean
+                        scopeHandling:
+                          description: ScopeHandling is how scopes are handled when issuing the exchanged
+                            token.
+                          enum:
+                            - downscoping
+                            - permissive
+                          type: string
+                      type: object
+                  type: object
+                uma:
+                  description: >-
+                    Uma holds the configuration of the domain's User-Managed
+                    Access (UMA 2.0) authorization
+
+                    features.
+                  properties:
+                    enabled:
+                      description: Enabled controls whether User-Managed Access is enabled for the
+                        domain. Defaults to false.
+                      type: boolean
+                  type: object
+                vhostMode:
+                  description: >-
+                    VhostMode controls whether the domain is exposed through its
+                    virtual hosts rather than the
+
+                    default...
+                  type: boolean
+                vhosts:
+                  description: Vhosts lists the virtual hosts the domain is exposed on, overriding
+                    the default context path.
+                  items:
+                    description: VirtualHost is a virtual host the domain is exposed on.
+                    properties:
+                      host:
+                        description: Host is the hostname the domain is served on.
+                        type: string
+                      overrideEntrypoint:
+                        description: OverrideEntrypoint controls whether this virtual host overrides the
+                          organization entry point.
+                        type: boolean
+                      path:
+                        description: Path is the context path the domain is served under on this host.
+                        type: string
+                    type: object
+                  type: array
+                webAuthnSettings:
+                  description: >-
+                    WebAuthnSettings holds the WebAuthn (FIDO2) relying-party
+                    configuration governing passwordless
+
+                    and...
+                  properties:
+                    attestationConveyancePreference:
+                      description: >-
+                        AttestationConveyancePreference is the relying-party
+                        preference for attestation conveyance
+
+                        during...
+                      enum:
+                        - direct
+                        - indirect
+                        - none
+                      type: string
+                    authenticatorAttachment:
+                      description: AuthenticatorAttachment is the preferred authenticator attachment.
+                      enum:
+                        - cross_platform
+                        - platform
+                      type: string
+                    certificates:
+                      additionalProperties:
+                        type: string
+                      description: Certificates holds the trusted device-attestation X.509
+                        certificates, keyed by name.
+                      type: object
+                    enforceAuthenticatorIntegrity:
+                      description: EnforceAuthenticatorIntegrity controls whether to periodically
+                        re-verify that registered...
+                      type: boolean
+                    enforceAuthenticatorIntegrityMaxAge:
+                      description: >-
+                        EnforceAuthenticatorIntegrityMaxAge is the maximum
+                        elapsed time, in seconds, since an
+
+                        authenticator...
+                      format: int32
+                      type: integer
+                    forceRegistration:
+                      description: >-
+                        ForceRegistration controls whether to reject
+                        registration of a credential already registered to
+
+                        a...
+                      type: boolean
+                    origin:
+                      description: Origin is the relying-party origin; must match the browser's
+                        window.location.
+                      type: string
+                    relyingPartyId:
+                      description: "RelyingPartyId is the relying-party identifier: a domain string
+                        that scopes credentials to this..."
+                      type: string
+                    relyingPartyName:
+                      description: RelyingPartyName is the human-readable relying-party name shown to
+                        users during ceremonies.
+                      type: string
+                    requireResidentKey:
+                      description: RequireResidentKey controls whether the authenticator must create a
+                        client-side resident...
+                      type: boolean
+                    userVerification:
+                      description: UserVerification is the relying-party requirement regarding user
+                        verification during a ceremony.
+                      enum:
+                        - discouraged
+                        - preferred
+                        - required
+                      type: string
+                  type: object
+                webProtectionSettings:
+                  description: WebProtectionSettings holds the HTTP security headers applied to
+                    the domain's login and consent...
+                  properties:
+                    csp:
+                      description: Csp holds the Content Security Policy configuration for the
+                        domain's login and consent pages.
+                      properties:
+                        directives:
+                          description: Directives lists the CSP directives, one per entry, in the form
+                            "directive-name value".
+                          items:
+                            type: string
+                          type: array
+                        enabled:
+                          description: Enabled controls whether CSP is enabled for the domain when not
+                            inherited. Defaults to false.
+                          type: boolean
+                        inherited:
+                          description: Inherited controls whether CSP settings are inherited from the
+                            gateway defaults (gravitee.yml).
+                          type: boolean
+                        reportOnly:
+                          description: ReportOnly delivers the policy as
+                            Content-Security-Policy-Report-Only when true.
+                          type: boolean
+                        scriptInlineNonce:
+                          description: ScriptInlineNonce controls whether inline scripts are allowed via a
+                            per-request nonce.
+                          type: boolean
+                      type: object
+                    xframe:
+                      description: Xframe controls whether the domain's pages may be embedded in
+                        frames on other origins.
+                      properties:
+                        action:
+                          description: "Action is the X-Frame-Options action. Supported values: DENY,
+                            SAMEORIGIN."
+                          enum:
+                            - DENY
+                            - SAMEORIGIN
+                          type: string
+                        enabled:
+                          description: Enabled controls whether X-Frame-Options is enabled for the domain
+                            when not inherited.
+                          type: boolean
+                        inherited:
+                          description: Inherited controls whether X-Frame-Options settings are inherited
+                            from the gateway defaults...
+                          type: boolean
+                      type: object
+                    xss:
+                      description: Xss controls the legacy X-XSS-Protection response header.
+                      properties:
+                        action:
+                          description: Action is the value of the X-XSS-Protection header.
+                          type: string
+                        enabled:
+                          description: Enabled controls whether X-XSS-Protection is enabled for the domain
+                            when not inherited.
+                          type: boolean
+                        inherited:
+                          description: Inherited controls whether X-XSS-Protection settings are inherited
+                            from the gateway defaults...
+                          type: boolean
+                      type: object
+                  type: object
+              required:
+                - contextRef
+                - name
+                - path
+              type: object
+            status:
+              description: AMSecurityDomainStatus defines the observed state of an AM security
+                domain.
+              properties:
+                conditions:
+                  default: []
+                  description: Conditions describe the current conditions of the security domain.
+                  items:
+                    description: Condition contains details for one aspect of the current state of
+                      this API Resource.
+                    properties:
+                      lastTransitionTime:
+                        description: lastTransitionTime is the last time the condition transitioned from
+                          one status to another.
+                        format: date-time
+                        type: string
+                      message:
+                        description: message is a human readable message indicating details about the
+                          transition.
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        description: observedGeneration represents the .metadata.generation that the
+                          condition was set based upon.
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        description: reason contains a programmatic identifier indicating the reason for
+                          the condition's last transition.
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        description: status of the condition, one of True, False, Unknown.
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  maxItems: 8
+                  type: array
+                  x-kubernetes-list-map-keys:
+                    - type
+                  x-kubernetes-list-type: map
+                environmentId:
+                  description: The environment ID defined in the AM context.
+                  type: string
+                id:
+                  description: The ID of the security domain in the AM instance.
+                  type: string
+                organizationId:
+                  description: The organization ID defined in the AM context.
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

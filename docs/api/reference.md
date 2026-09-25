@@ -9,6 +9,7 @@
 - [gravitee.io/v1alpha1/context](#graviteeiov1alpha1context)
 - [gravitee.io/v1alpha1/dictionary](#graviteeiov1alpha1dictionary)
 - [gravitee.io/v1alpha1/docs](#graviteeiov1alpha1docs)
+- [gravitee.io/v1alpha1/domain](#graviteeiov1alpha1domain)
 - [gravitee.io/v1alpha1/gateway](#graviteeiov1alpha1gateway)
 - [gravitee.io/v1alpha1/group](#graviteeiov1alpha1group)
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
@@ -34,6 +35,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 
 ### Resource Types
 - [AMContext](#amcontext)
+- [AMSecurityDomain](#amsecuritydomain)
 - [ApiDefinition](#apidefinition)
 - [ApiResource](#apiresource)
 - [ApiV4Definition](#apiv4definition)
@@ -101,6 +103,85 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the context.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+
+
+#### AMSecurityDomain
+
+
+
+
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AMSecurityDomain` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AMSecurityDomainSpec](#amsecuritydomainspec)_ |  |  |  |
+| `status` _[AMSecurityDomainStatus](#amsecuritydomainstatus)_ |  |  |  |
+
+
+#### AMSecurityDomainSpec
+
+
+
+AMSecurityDomainSpec defines the desired state of an AM security domain.
+
+
+
+_Appears in:_
+- [AMSecurityDomain](#amsecuritydomain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `accountSettings` _[AccountSettings](#accountsettings)_ | AccountSettings holds the user account settings for the domain: brute-force protection,<br />registration, password reset, remember-me, and MFA challenge behavior. |  | Optional: \{\} <br /> |
+| `alertEnabled` _boolean_ | AlertEnabled controls whether alerting is enabled for the domain. |  | Optional: \{\} <br /> |
+| `certificateSettings` _[CertificateSettings](#certificatesettings)_ | CertificateSettings holds the domain-level certificate settings. |  | Optional: \{\} <br /> |
+| `corsSettings` _[CorsSettings](#corssettings)_ | CorsSettings holds the Cross-Origin Resource Sharing configuration controlling which web origins<br />may call the domain's endpoints from a browser. |  | Optional: \{\} <br /> |
+| `dataPlaneId` _string_ | DataPlaneId is the identifier of the data plane this domain is connected to. Optional at<br />creation and resolved from the environment's data planes when omitted. Immutable afterwards: an<br />apply that names a different one is rejected. |  | MaxLength: 255 <br />Optional: \{\} <br /> |
+| `description` _string_ | Description is the human-readable description of the domain. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether the domain handles incoming authentication and authorization requests.<br />Defaults to true. | true | Optional: \{\} <br /> |
+| `keyRetrievalSettings` _[KeyRetrievalSettings](#keyretrievalsettings)_ | KeyRetrievalSettings holds the fetch, SSRF and cache limits applied to every trusted domain in<br />the security domain. |  | Optional: \{\} <br /> |
+| `loginSettings` _[LoginSettings](#loginsettings)_ | LoginSettings holds the configuration of the domain's login flow and the features offered on the<br />sign-in page. |  | Optional: \{\} <br /> |
+| `master` _boolean_ | Master controls whether this is the master domain of its environment. A master domain may<br />perform cross-domain token introspection. Defaults to false. |  | Optional: \{\} <br /> |
+| `name` _string_ | Name is the human-readable name of the domain. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `oidc` _[OidcSettings](#oidcsettings)_ | Oidc holds the OpenID Connect settings for the domain. CIMD (client identity metadata document)<br />settings are not exposed by the Automation API and are reset on update. |  | Optional: \{\} <br /> |
+| `passwordSettings` _[PasswordSettings](#passwordsettings)_ | PasswordSettings holds the password policy applied to users of the domain: complexity<br />requirements, expiry, and history. |  | Optional: \{\} <br /> |
+| `path` _string_ | Path is the context path the domain is served under, relative to the gateway. Must start with a<br />slash. |  | MaxLength: 255 <br />MinLength: 1 <br />Pattern: `^/.*` <br />Required: \{\} <br /> |
+| `saml` _[SamlSettings](#samlsettings)_ | Saml holds the settings for the domain acting as a SAML 2.0 identity provider (IdP). |  | Optional: \{\} <br /> |
+| `scim` _[SCIMSettings](#scimsettings)_ | Scim holds the configuration of the domain's SCIM 2.0 provisioning endpoints. |  | Optional: \{\} <br /> |
+| `secretExpirationSettings` _[SecretExpirationSettings](#secretexpirationsettings)_ | SecretExpirationSettings controls whether client secrets in the domain expire and after how<br />long. |  | Optional: \{\} <br /> |
+| `selfServiceAccountManagementSettings` _[SelfServiceAccountManagementSettings](#selfserviceaccountmanagementsettings)_ | SelfServiceAccountManagementSettings controls whether end users can manage their own account<br />(for example, reset their password) and the rules that apply. |  | Optional: \{\} <br /> |
+| `tags` _string array_ | Tags lists the sharding tags that control which gateways deploy this domain. |  | Optional: \{\} <br /> |
+| `tokenExchangeSettings` _[TokenExchangeSettings](#tokenexchangesettings)_ | TokenExchangeSettings holds the OAuth 2.0 Token Exchange (RFC 8693) configuration for the<br />domain, covering impersonation and delegation. |  | Optional: \{\} <br /> |
+| `uma` _[UMASettings](#umasettings)_ | Uma holds the configuration of the domain's User-Managed Access (UMA 2.0) authorization<br />features. |  | Optional: \{\} <br /> |
+| `vhostMode` _boolean_ | VhostMode controls whether the domain is exposed through its virtual hosts rather than the<br />default context path. When true, vhosts must be supplied. Defaults to false. |  | Optional: \{\} <br /> |
+| `vhosts` _[VirtualHost](#virtualhost) array_ | Vhosts lists the virtual hosts the domain is exposed on, overriding the default context path. |  | Optional: \{\} <br /> |
+| `webAuthnSettings` _[WebAuthnSettings](#webauthnsettings)_ | WebAuthnSettings holds the WebAuthn (FIDO2) relying-party configuration governing passwordless<br />and multi-factor authentication for the domain. |  | Optional: \{\} <br /> |
+| `webProtectionSettings` _[WebProtectionSettings](#webprotectionsettings)_ | WebProtectionSettings holds the HTTP security headers applied to the domain's login and consent<br />pages. |  | Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ |  |  | Required: \{\} <br /> |
+
+
+#### AMSecurityDomainStatus
+
+
+
+AMSecurityDomainStatus defines the observed state of an AM security domain.
+
+
+
+_Appears in:_
+- [AMSecurityDomain](#amsecuritydomain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 
 
 #### ApiDefinition
@@ -2872,6 +2953,646 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/domain
+
+
+
+
+#### AccountSettings
+
+
+
+AccountSettings are user account settings for the domain:
+brute-force protection, registration, password reset, remember-me, and MFA challenge behavior.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `accountBlockedDuration` _integer_ | AccountBlockedDuration is the duration, in seconds, for which the account remains blocked after<br />too many failed login attempts. |  | Optional: \{\} <br /> |
+| `autoLoginAfterRegistration` _boolean_ | AutoLoginAfterRegistration controls whether the user is automatically logged in after completing<br />registration. Defaults to false. |  | Optional: \{\} <br /> |
+| `autoLoginAfterResetPassword` _boolean_ | AutoLoginAfterResetPassword controls whether the user is automatically logged in after a<br />password reset. Defaults to false. |  | Optional: \{\} <br /> |
+| `completeRegistrationWhenResetPassword` _boolean_ | CompleteRegistrationWhenResetPassword controls whether resetting a password also completes a<br />pending registration. Defaults to false. |  | Optional: \{\} <br /> |
+| `defaultIdentityProviderForRegistration` _string_ | DefaultIdentityProviderForRegistration is the key of an identity provider that exists under this<br />domain, used as the default for user registration. Resolved against the domain's identity<br />providers when applied; a value that does not match an existing identity provider is rejected<br />with a 400 response. |  | Optional: \{\} <br /> |
+| `deletePasswordlessDevicesAfterResetPassword` _boolean_ | DeletePasswordlessDevicesAfterResetPassword controls whether passwordless (WebAuthn) devices are<br />deleted when the password is reset. Defaults to false. |  | Optional: \{\} <br /> |
+| `dynamicUserRegistration` _boolean_ | DynamicUserRegistration controls whether dynamic (self-service) user registration is enabled.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited controls whether account settings are inherited from the parent (domain). When true,<br />the other fields are ignored. Has no effect when applied to domains. Defaults to true. |  | Optional: \{\} <br /> |
+| `loginAttemptsDetectionEnabled` _boolean_ | LoginAttemptsDetectionEnabled controls whether brute-force authentication attempts are detected<br />and blocked. Defaults to false. |  | Optional: \{\} <br /> |
+| `loginAttemptsResetTime` _integer_ | LoginAttemptsResetTime is the time, in seconds, after which the login attempt counter is reset<br />when the maximum has not been reached. |  | Optional: \{\} <br /> |
+| `maxLoginAttempts` _integer_ | MaxLoginAttempts is the maximum number of failed login attempts before the account is blocked. |  | Optional: \{\} <br /> |
+| `mfaChallengeAttemptsDetectionEnabled` _boolean_ | MfaChallengeAttemptsDetectionEnabled controls whether failed MFA challenge attempts are detected<br />and blocked. Defaults to false. |  | Optional: \{\} <br /> |
+| `mfaChallengeAttemptsResetTime` _integer_ | MfaChallengeAttemptsResetTime is the time, in seconds, after which the MFA challenge attempt<br />counter is reset. |  | Optional: \{\} <br /> |
+| `mfaChallengeMaxAttempts` _integer_ | MfaChallengeMaxAttempts is the maximum number of failed MFA challenge attempts before the user<br />is blocked. |  | Optional: \{\} <br /> |
+| `mfaChallengeSendVerifyAlertEmail` _boolean_ | MfaChallengeSendVerifyAlertEmail controls whether to send an alert email after too many failed<br />MFA challenge attempts. Defaults to false. |  | Optional: \{\} <br /> |
+| `redirectUriAfterRegistration` _string_ | RedirectUriAfterRegistration is the URL the user is redirected to after registration. |  | Optional: \{\} <br /> |
+| `redirectUriAfterResetPassword` _string_ | RedirectUriAfterResetPassword is the URL the user is redirected to after a password reset. |  | Optional: \{\} <br /> |
+| `rememberMe` _boolean_ | RememberMe controls whether users can remain logged in for a fixed duration (remember-me).<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `rememberMeDuration` _integer_ | RememberMeDuration is the duration, in seconds, for which a remembered session stays valid. |  | Optional: \{\} <br /> |
+| `resetPasswordConfirmIdentity` _boolean_ | ResetPasswordConfirmIdentity controls whether the user must confirm their identity before<br />resetting a password. Defaults to false. |  | Optional: \{\} <br /> |
+| `resetPasswordCustomForm` _boolean_ | ResetPasswordCustomForm controls whether a custom form is used for the password-reset step.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `resetPasswordCustomFormFields` _[FormField](#formfield) array_ | ResetPasswordCustomFormFields lists the custom fields rendered on the password-reset form. |  | Optional: \{\} <br /> |
+| `resetPasswordInvalidateTokens` _boolean_ | ResetPasswordInvalidateTokens controls whether existing tokens are invalidated when the password<br />is reset. Defaults to false. |  | Optional: \{\} <br /> |
+| `sendRecoverAccountEmail` _boolean_ | SendRecoverAccountEmail controls whether to send an account-recovery email. Defaults to false. |  | Optional: \{\} <br /> |
+| `sendVerifyRegistrationAccountEmail` _boolean_ | SendVerifyRegistrationAccountEmail controls whether to send a registration-verification email.<br />Defaults to false. |  | Optional: \{\} <br /> |
+
+
+#### CIBASettings
+
+
+
+CIBASettings is the Client-Initiated Backchannel Authentication configuration.
+
+
+
+_Appears in:_
+- [OidcSettings](#oidcsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `authReqExpiry` _integer_ | AuthReqExpiry is the default validity period, in seconds, of the issued auth_req_id. |  | Optional: \{\} <br /> |
+| `bindingMessageLength` _integer_ | BindingMessageLength is the maximum number of characters accepted for the binding_message<br />parameter. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether Client-Initiated Backchannel Authentication is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `tokenReqInterval` _integer_ | TokenReqInterval is the minimum delay, in seconds, that a client must wait between two polls of<br />the token endpoint for the same auth_req_id (POLL or PING delivery mode). |  | Optional: \{\} <br /> |
+
+
+#### CertificateSettings
+
+
+
+CertificateSettings are domain-level certificate settings.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `fallbackCertificate` _string_ | FallbackCertificate is the key of a certificate managed under this domain, used as the fallback<br />certificate when a client does not specify one. Must reference a certificate created via the<br />domain's certificate endpoints. |  | Optional: \{\} <br /> |
+
+
+#### ClientRegistrationSettings
+
+
+
+ClientRegistrationSettings is the OpenID Connect Dynamic Client Registration configuration.
+
+
+
+_Appears in:_
+- [OidcSettings](#oidcsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `allowHttpSchemeRedirectUri` _boolean_ | AllowHttpSchemeRedirectUri controls whether the unsecured http scheme is permitted in redirect<br />URIs. Defaults to false. |  | Optional: \{\} <br /> |
+| `allowLocalhostRedirectUri` _boolean_ | AllowLocalhostRedirectUri controls whether localhost is permitted as a redirect URI host.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `allowRedirectUriParamsExpressionLanguage` _boolean_ | AllowRedirectUriParamsExpressionLanguage controls whether expression language is permitted in<br />redirect URI parameters. Defaults to false. |  | Optional: \{\} <br /> |
+| `allowWildCardRedirectUri` _boolean_ | AllowWildCardRedirectUri controls whether wildcards are permitted in redirect URIs. Defaults to<br />false. |  | Optional: \{\} <br /> |
+| `allowedScopes` _string array_ | AllowedScopes lists the scopes permitted on client registration requests when the allowed list<br />is enabled. |  | Optional: \{\} <br /> |
+| `allowedScopesEnabled` _boolean_ | AllowedScopesEnabled controls whether registered client scopes are restricted to an allowed<br />list. Defaults to false. |  | Optional: \{\} <br /> |
+| `clientTemplateEnabled` _boolean_ | ClientTemplateEnabled controls whether a client may be used as a template for dynamic client<br />registration. Defaults to false. |  | Optional: \{\} <br /> |
+| `defaultScopes` _string array_ | DefaultScopes lists the default scopes added to every client registration request. |  | Optional: \{\} <br /> |
+| `dynamicClientRegistrationEnabled` _boolean_ | DynamicClientRegistrationEnabled controls whether Dynamic Client Registration is enabled for the<br />domain. Defaults to false. |  | Optional: \{\} <br /> |
+| `openDynamicClientRegistrationEnabled` _boolean_ | OpenDynamicClientRegistrationEnabled controls whether open (unauthenticated) Dynamic Client<br />Registration is enabled for the domain. Defaults to false. |  | Optional: \{\} <br /> |
+
+
+#### CorsSettings
+
+
+
+CorsSettings is the Cross-Origin Resource Sharing configuration for the domain.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `allowCredentials` _boolean_ | AllowCredentials controls whether the browser may send credentials (cookies, authorization<br />headers) with cross-origin requests. Defaults to false. |  | Optional: \{\} <br /> |
+| `allowedHeaders` _string array_ | AllowedHeaders lists the request headers permitted on cross-origin requests. |  | Optional: \{\} <br /> |
+| `allowedMethods` _string array_ | AllowedMethods lists the HTTP methods permitted on cross-origin requests. |  | Optional: \{\} <br /> |
+| `allowedOrigins` _string array_ | AllowedOrigins lists the origins permitted to make cross-origin requests. Use "*" to allow any<br />origin. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether CORS handling is enabled for the domain when not inherited. Defaults to<br />false. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited controls whether CORS settings are inherited from the gateway defaults (gravitee.yml).<br />When null, legacy behaviour applies: enabled=true overrides and enabled=false inherits. Defaults<br />to true. |  | Optional: \{\} <br /> |
+| `maxAge` _integer_ | MaxAge is how long, in seconds, a browser may cache the result of a preflight request. Defaults<br />to 86400. |  | Optional: \{\} <br /> |
+
+
+#### CspSettings
+
+
+
+CspSettings is the Content Security Policy configuration.
+
+
+
+_Appears in:_
+- [WebProtectionSettings](#webprotectionsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `directives` _string array_ | Directives lists the CSP directives, one per entry, in the form "directive-name value". A<br />trailing semicolon is optional. Directive names must be valid CSP tokens and must not repeat;<br />values are not interpreted. Directives that take no value, such as "upgrade-insecure-requests",<br />may be supplied on their own. When reportOnly is enabled, a "report-uri" or "report-to"<br />directive is required. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether CSP is enabled for the domain when not inherited. Defaults to false. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited controls whether CSP settings are inherited from the gateway defaults (gravitee.yml).<br />When null, legacy behaviour applies: enabled=true overrides and enabled=false inherits. Defaults<br />to true. |  | Optional: \{\} <br /> |
+| `reportOnly` _boolean_ | ReportOnly delivers the policy as Content-Security-Policy-Report-Only when true. |  | Optional: \{\} <br /> |
+| `scriptInlineNonce` _boolean_ | ScriptInlineNonce controls whether inline scripts are allowed via a per-request nonce. Defaults<br />to true. |  | Optional: \{\} <br /> |
+
+
+#### Domain
+
+
+
+Domain is the spec of a security domain managed by the Automation API.
+Certificates, identity providers, and reporters are not embedded;
+they are managed via the domain's sub-resource endpoints.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `accountSettings` _[AccountSettings](#accountsettings)_ | AccountSettings holds the user account settings for the domain: brute-force protection,<br />registration, password reset, remember-me, and MFA challenge behavior. |  | Optional: \{\} <br /> |
+| `alertEnabled` _boolean_ | AlertEnabled controls whether alerting is enabled for the domain. |  | Optional: \{\} <br /> |
+| `certificateSettings` _[CertificateSettings](#certificatesettings)_ | CertificateSettings holds the domain-level certificate settings. |  | Optional: \{\} <br /> |
+| `corsSettings` _[CorsSettings](#corssettings)_ | CorsSettings holds the Cross-Origin Resource Sharing configuration controlling which web origins<br />may call the domain's endpoints from a browser. |  | Optional: \{\} <br /> |
+| `dataPlaneId` _string_ | DataPlaneId is the identifier of the data plane this domain is connected to. Optional at<br />creation and resolved from the environment's data planes when omitted. Immutable afterwards: an<br />apply that names a different one is rejected. |  | MaxLength: 255 <br />Optional: \{\} <br /> |
+| `description` _string_ | Description is the human-readable description of the domain. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether the domain handles incoming authentication and authorization requests.<br />Defaults to true. | true | Optional: \{\} <br /> |
+| `keyRetrievalSettings` _[KeyRetrievalSettings](#keyretrievalsettings)_ | KeyRetrievalSettings holds the fetch, SSRF and cache limits applied to every trusted domain in<br />the security domain. |  | Optional: \{\} <br /> |
+| `loginSettings` _[LoginSettings](#loginsettings)_ | LoginSettings holds the configuration of the domain's login flow and the features offered on the<br />sign-in page. |  | Optional: \{\} <br /> |
+| `master` _boolean_ | Master controls whether this is the master domain of its environment. A master domain may<br />perform cross-domain token introspection. Defaults to false. |  | Optional: \{\} <br /> |
+| `name` _string_ | Name is the human-readable name of the domain. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `oidc` _[OidcSettings](#oidcsettings)_ | Oidc holds the OpenID Connect settings for the domain. CIMD (client identity metadata document)<br />settings are not exposed by the Automation API and are reset on update. |  | Optional: \{\} <br /> |
+| `passwordSettings` _[PasswordSettings](#passwordsettings)_ | PasswordSettings holds the password policy applied to users of the domain: complexity<br />requirements, expiry, and history. |  | Optional: \{\} <br /> |
+| `path` _string_ | Path is the context path the domain is served under, relative to the gateway. Must start with a<br />slash. |  | MaxLength: 255 <br />MinLength: 1 <br />Pattern: `^/.*` <br />Required: \{\} <br /> |
+| `saml` _[SamlSettings](#samlsettings)_ | Saml holds the settings for the domain acting as a SAML 2.0 identity provider (IdP). |  | Optional: \{\} <br /> |
+| `scim` _[SCIMSettings](#scimsettings)_ | Scim holds the configuration of the domain's SCIM 2.0 provisioning endpoints. |  | Optional: \{\} <br /> |
+| `secretExpirationSettings` _[SecretExpirationSettings](#secretexpirationsettings)_ | SecretExpirationSettings controls whether client secrets in the domain expire and after how<br />long. |  | Optional: \{\} <br /> |
+| `selfServiceAccountManagementSettings` _[SelfServiceAccountManagementSettings](#selfserviceaccountmanagementsettings)_ | SelfServiceAccountManagementSettings controls whether end users can manage their own account<br />(for example, reset their password) and the rules that apply. |  | Optional: \{\} <br /> |
+| `tags` _string array_ | Tags lists the sharding tags that control which gateways deploy this domain. |  | Optional: \{\} <br /> |
+| `tokenExchangeSettings` _[TokenExchangeSettings](#tokenexchangesettings)_ | TokenExchangeSettings holds the OAuth 2.0 Token Exchange (RFC 8693) configuration for the<br />domain, covering impersonation and delegation. |  | Optional: \{\} <br /> |
+| `uma` _[UMASettings](#umasettings)_ | Uma holds the configuration of the domain's User-Managed Access (UMA 2.0) authorization<br />features. |  | Optional: \{\} <br /> |
+| `vhostMode` _boolean_ | VhostMode controls whether the domain is exposed through its virtual hosts rather than the<br />default context path. When true, vhosts must be supplied. Defaults to false. |  | Optional: \{\} <br /> |
+| `vhosts` _[VirtualHost](#virtualhost) array_ | Vhosts lists the virtual hosts the domain is exposed on, overriding the default context path. |  | Optional: \{\} <br /> |
+| `webAuthnSettings` _[WebAuthnSettings](#webauthnsettings)_ | WebAuthnSettings holds the WebAuthn (FIDO2) relying-party configuration governing passwordless<br />and multi-factor authentication for the domain. |  | Optional: \{\} <br /> |
+| `webProtectionSettings` _[WebProtectionSettings](#webprotectionsettings)_ | WebProtectionSettings holds the HTTP security headers applied to the domain's login and consent<br />pages. |  | Optional: \{\} <br /> |
+
+
+#### FormField
+
+
+
+FormField is a custom field rendered on a domain form.
+
+
+
+_Appears in:_
+- [AccountSettings](#accountsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | Key is the identifier of the field, mapped to a user attribute. |  | Optional: \{\} <br /> |
+| `label` _string_ | Label is the label displayed for the field. |  | Optional: \{\} <br /> |
+| `type` _string_ | Type is the input type of the field. |  | Optional: \{\} <br /> |
+
+
+#### IdJagSettings
+
+
+
+IdJagSettings is the ID-JAG issuance behavior of token exchange.
+
+
+
+_Appears in:_
+- [TokenExchangeSettings](#tokenexchangesettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `laxValidation` _boolean_ | LaxValidation also accepts an access token issued to the requesting client as the subject token.<br />By default only an ID token is accepted. |  | Optional: \{\} <br /> |
+
+
+#### KeyRetrievalSettings
+
+
+
+KeyRetrievalSettings are the fetch, SSRF and cache limits
+applied to every trusted domain in the security domain.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `allowPrivateIpAddress` _boolean_ | AllowPrivateIpAddress controls whether key material can be fetched from private IP addresses.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `allowUnsecuredHttpUri` _boolean_ | AllowUnsecuredHttpUri controls whether key material can be fetched over unsecured HTTP URIs.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `cacheMaxEntries` _integer_ | CacheMaxEntries is the maximum number of key material entries retained in the cache. Defaults to<br />50. |  | Optional: \{\} <br /> |
+| `cacheTtlSeconds` _integer_ | CacheTtlSeconds is the time-to-live, in seconds, for cached key material. Defaults to 300. |  | Optional: \{\} <br /> |
+| `fetchTimeoutMs` _integer_ | FetchTimeoutMs is the timeout, in milliseconds, for fetching key material. Defaults to 5000. |  | Optional: \{\} <br /> |
+| `maxResponseSizeKb` _integer_ | MaxResponseSizeKb is the maximum key material response size, in kilobytes. Defaults to 32. |  | Optional: \{\} <br /> |
+
+
+#### LoginSettings
+
+
+
+LoginSettings is the configuration of the domain's login flow.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `certificateBasedAuthEnabled` _boolean_ | CertificateBasedAuthEnabled controls whether certificate-based authentication is offered.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `certificateBasedAuthUrl` _string_ | CertificateBasedAuthUrl is the URL used for certificate-based authentication. |  | Optional: \{\} <br /> |
+| `forgotPasswordEnabled` _boolean_ | ForgotPasswordEnabled controls whether users can initiate a forgot-password flow from the login<br />page. Defaults to false. |  | Optional: \{\} <br /> |
+| `hideForm` _boolean_ | HideForm controls whether the login form is hidden (for example when only social or<br />identifier-first login is offered). Defaults to false. |  | Optional: \{\} <br /> |
+| `identifierFirstEnabled` _boolean_ | IdentifierFirstEnabled controls whether identifier-first login is enabled, prompting for the<br />username before the password. Defaults to false. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited controls whether these login settings are inherited from a parent scope rather than<br />defined here. When true, the other fields are ignored. Defaults to true. |  | Optional: \{\} <br /> |
+| `magicLinkAuthEnabled` _boolean_ | MagicLinkAuthEnabled controls whether magic-link authentication is offered. Defaults to false. |  | Optional: \{\} <br /> |
+| `passwordlessDeviceNamingEnabled` _boolean_ | PasswordlessDeviceNamingEnabled controls whether users can name their passwordless devices.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `passwordlessEnabled` _boolean_ | PasswordlessEnabled controls whether passwordless (WebAuthn) authentication is offered. Defaults<br />to false. |  | Optional: \{\} <br /> |
+| `passwordlessEnforcePasswordEnabled` _boolean_ | PasswordlessEnforcePasswordEnabled controls whether a password is still required alongside<br />passwordless authentication. Defaults to false. |  | Optional: \{\} <br /> |
+| `passwordlessEnforcePasswordMaxAge` _integer_ | PasswordlessEnforcePasswordMaxAge is the period, in seconds, after which the user's credentials<br />must be re-entered to keep using passwordless authentication. |  | Optional: \{\} <br /> |
+| `passwordlessRememberDeviceEnabled` _boolean_ | PasswordlessRememberDeviceEnabled controls whether a passwordless device can be remembered to<br />skip future challenges. Defaults to false. |  | Optional: \{\} <br /> |
+| `registerEnabled` _boolean_ | RegisterEnabled controls whether users can self-register from the login page. Defaults to false. |  | Optional: \{\} <br /> |
+| `rememberMeEnabled` _boolean_ | RememberMeEnabled controls whether the login page offers a remember-me option. Defaults to<br />false. |  | Optional: \{\} <br /> |
+| `resetPasswordOnExpiration` _boolean_ | ResetPasswordOnExpiration controls whether the user is forced to reset their password once it<br />expires. |  | Optional: \{\} <br /> |
+
+
+#### OidcSettings
+
+
+
+OidcSettings holds OpenID Connect settings for the domain.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `cibaSettings` _[CIBASettings](#cibasettings)_ | CibaSettings holds the Client-Initiated Backchannel Authentication (CIBA) settings for the<br />domain. CIBA lets a relying party initiate end-user authentication from a separate consumption<br />device, without redirecting the user through the browser. Authentication device notifiers are<br />not managed by the Automation API and are not exposed here. |  | Optional: \{\} <br /> |
+| `clientRegistrationSettings` _[ClientRegistrationSettings](#clientregistrationsettings)_ | ClientRegistrationSettings holds the OpenID Connect Dynamic Client Registration configuration<br />for the domain. |  | Optional: \{\} <br /> |
+| `postLogoutRedirectUris` _string array_ | PostLogoutRedirectUris lists the URLs the user may be redirected to after sign-out<br />(post_logout_redirect_uri). |  | Optional: \{\} <br /> |
+| `redirectUriStrictMatching` _boolean_ | RedirectUriStrictMatching controls whether redirect_uri and post_logout_redirect_uri values are<br />matched strictly during OpenID Connect flows. Defaults to false. |  | Optional: \{\} <br /> |
+| `requestUris` _string array_ | RequestUris lists the allowed request_uri values for passing OpenID Connect request objects by<br />reference. |  | Optional: \{\} <br /> |
+| `securityProfileSettings` _[SecurityProfileSettings](#securityprofilesettings)_ | SecurityProfileSettings holds the Financial-grade API (FAPI) security profile configuration for<br />the domain. |  | Optional: \{\} <br /> |
+| `workloadIdentitySettings` _[SpiffeDomainSettings](#spiffedomainsettings)_ | WorkloadIdentitySettings holds the workload identity (SPIFFE) settings for the domain. |  | Optional: \{\} <br /> |
+
+
+#### PasswordSettings
+
+
+
+PasswordSettings is the password policy applied to domain users.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `excludePasswordsInDictionary` _boolean_ | ExcludePasswordsInDictionary controls whether passwords found in a common-password dictionary<br />are rejected. |  | Optional: \{\} <br /> |
+| `excludeUserProfileInfoInPassword` _boolean_ | ExcludeUserProfileInfoInPassword controls whether passwords containing the user's profile<br />information are rejected. |  | Optional: \{\} <br /> |
+| `expiryDuration` _integer_ | ExpiryDuration is the number of days after which a password expires and must be changed. |  | Optional: \{\} <br /> |
+| `includeNumbers` _boolean_ | IncludeNumbers controls whether a password must contain at least one number. |  | Optional: \{\} <br /> |
+| `includeSpecialCharacters` _boolean_ | IncludeSpecialCharacters controls whether a password must contain at least one special<br />character. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited controls whether these password settings are inherited from a parent scope rather than<br />defined here. When true, the other fields are ignored. Defaults to true. |  | Optional: \{\} <br /> |
+| `lettersInMixedCase` _boolean_ | LettersInMixedCase controls whether a password must contain both uppercase and lowercase<br />letters. |  | Optional: \{\} <br /> |
+| `maxConsecutiveLetters` _integer_ | MaxConsecutiveLetters is the maximum number of identical consecutive characters allowed in a<br />password. |  | Optional: \{\} <br /> |
+| `maxLength` _integer_ | MaxLength is the maximum number of characters a password may contain. Defaults to 128. |  | Optional: \{\} <br /> |
+| `minLength` _integer_ | MinLength is the minimum number of characters a password must contain. Defaults to 8. |  | Optional: \{\} <br /> |
+| `oldPasswords` _integer_ | OldPasswords is the number of previous passwords retained in history and barred from reuse. |  | Optional: \{\} <br /> |
+| `passwordHistoryEnabled` _boolean_ | PasswordHistoryEnabled controls whether password history is enforced to prevent reuse of recent<br />passwords. Defaults to false. |  | Optional: \{\} <br /> |
+
+
+#### ResetPasswordSettings
+
+
+
+ResetPasswordSettings controls user-initiated password resets.
+
+
+
+_Appears in:_
+- [SelfServiceAccountManagementSettings](#selfserviceaccountmanagementsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `oldPasswordRequired` _boolean_ | OldPasswordRequired controls whether the user must supply their current password to set a new<br />one. Defaults to false. |  | Optional: \{\} <br /> |
+| `tokenAge` _integer_ | TokenAge is the lifetime, in seconds, of the password-reset token. |  | Optional: \{\} <br /> |
+
+
+#### SCIMSettings
+
+
+
+SCIMSettings is the SCIM 2.0 provisioning configuration.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled controls whether the SCIM provisioning API is enabled for the domain. Defaults to false. |  | Optional: \{\} <br /> |
+| `idpSelectionEnabled` _boolean_ | IdpSelectionEnabled controls whether an identity provider is selected for SCIM-provisioned users<br />using a selection rule. Defaults to false. |  | Optional: \{\} <br /> |
+| `idpSelectionRule` _string_ | IdpSelectionRule is the expression that selects the identity provider for a SCIM-provisioned<br />user. |  | Optional: \{\} <br /> |
+
+
+#### SamlSettings
+
+
+
+SamlSettings holds SAML 2.0 identity provider settings for the domain.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `certificate` _string_ | Certificate is the key of a certificate managed under this domain, used to sign SAML responses.<br />Must reference a certificate created via the domain's certificate endpoints. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether the domain exposes the SAML 2.0 IdP protocol. Defaults to false. |  | Optional: \{\} <br /> |
+| `entityId` _string_ | EntityId is the URL or URN that uniquely identifies this IdP (the SAML entity ID). |  | Optional: \{\} <br /> |
+
+
+#### SecretExpirationSettings
+
+
+
+SecretExpirationSettings controls client secret expiration.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled controls whether client-secret expiration is enabled. |  | Optional: \{\} <br /> |
+| `expiryTimeSeconds` _integer_ | ExpiryTimeSeconds is the lifetime, in seconds, of a client secret before it expires. |  | Optional: \{\} <br /> |
+
+
+#### SecurityProfileSettings
+
+
+
+SecurityProfileSettings holds FAPI security profile settings.
+
+
+
+_Appears in:_
+- [OidcSettings](#oidcsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enableFapiBrazil` _boolean_ | EnableFapiBrazil controls whether the Open Banking Brasil Financial-grade API security profile<br />(version 1.0) is applied. Defaults to false. |  | Optional: \{\} <br /> |
+| `enablePlainFapi` _boolean_ | EnablePlainFapi controls whether the standard Financial-grade API security profile (version 1.0)<br />is applied. Defaults to false. |  | Optional: \{\} <br /> |
+
+
+#### SelfServiceAccountManagementSettings
+
+
+
+SelfServiceAccountManagementSettings controls end-user self-service account management.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled controls whether self-service account management is enabled for end users. Defaults to<br />false. |  | Optional: \{\} <br /> |
+| `resetPassword` _[ResetPasswordSettings](#resetpasswordsettings)_ | ResetPassword holds the rules applied to a self-service password reset. |  | Optional: \{\} <br /> |
+
+
+#### SpiffeDomainSettings
+
+
+
+SpiffeDomainSettings are the workload identity (SPIFFE) settings for the domain.
+Key retrieval limits are configured in keyRetrievalSettings.
+
+
+
+_Appears in:_
+- [OidcSettings](#oidcsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `clockSkewSeconds` _integer_ | ClockSkewSeconds is the allowed clock skew, in seconds, when validating JWT temporal claims.<br />Defaults to 30. |  | Optional: \{\} <br /> |
+| `defaultAllowedAlgorithms` _string array_ | DefaultAllowedAlgorithms is the default allowlist of signature algorithms accepted for SPIFFE<br />JWT validation. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether SPIFFE workload identity support is enabled for the domain. Defaults to<br />false. |  | Optional: \{\} <br /> |
+| `maxJwtLifetimeSeconds` _integer_ | MaxJwtLifetimeSeconds is the maximum accepted JWT lifetime, in seconds, computed as exp minus<br />iat. Defaults to 300. |  | Optional: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [AMSecurityDomainStatus](#amsecuritydomainstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+
+
+#### TokenExchangeOAuthSettings
+
+
+
+TokenExchangeOAuthSettings is the OAuth-specific token-exchange behavior.
+
+
+
+_Appears in:_
+- [TokenExchangeSettings](#tokenexchangesettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `inherited` _boolean_ | Inherited controls whether these settings are inherited from the domain defaults rather than<br />defined here. Defaults to true. |  | Optional: \{\} <br /> |
+| `scopeHandling` _string_ | ScopeHandling is how scopes are handled when issuing the exchanged token. downscoping restricts<br />the issued token to a subset of the original scopes. Defaults to downscoping. |  | Enum: [downscoping permissive] <br />Optional: \{\} <br /> |
+
+
+#### TokenExchangeSettings
+
+
+
+TokenExchangeSettings is the OAuth 2.0 Token Exchange (RFC 8693) configuration.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `allowDelegation` _boolean_ | AllowDelegation controls whether delegation is allowed, where an actor acts on behalf of the<br />subject and an "act" claim is added to the issued token. At least one of allowImpersonation or<br />allowDelegation must be enabled. Defaults to false. |  | Optional: \{\} <br /> |
+| `allowImpersonation` _boolean_ | AllowImpersonation controls whether impersonation is allowed, where the issued token represents<br />the subject directly. At least one of allowImpersonation or allowDelegation must be enabled.<br />Defaults to true. |  | Optional: \{\} <br /> |
+| `allowedActorTokenTypes` _string array_ | AllowedActorTokenTypes lists the token types accepted as the actor token when delegating. |  | Optional: \{\} <br /> |
+| `allowedRequestedTokenTypes` _string array_ | AllowedRequestedTokenTypes lists the token types that may be requested as the result of an<br />exchange. |  | Optional: \{\} <br /> |
+| `allowedSubjectTokenTypes` _string array_ | AllowedSubjectTokenTypes lists the token types accepted as the subject token in an exchange. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether token exchange is enabled for the domain. Defaults to false. |  | Optional: \{\} <br /> |
+| `idJagSettings` _[IdJagSettings](#idjagsettings)_ | IdJagSettings holds the ID-JAG issuance behavior of token exchange. |  | Optional: \{\} <br /> |
+| `maxDelegationDepth` _integer_ | MaxDelegationDepth is the maximum depth of the delegation chain (nested "act" claims). Clamped<br />to the range 1–100. Defaults to 25. |  | Maximum: 100 <br />Minimum: 1 <br />Optional: \{\} <br /> |
+| `tokenExchangeOAuthSettings` _[TokenExchangeOAuthSettings](#tokenexchangeoauthsettings)_ | TokenExchangeOAuthSettings holds the OAuth-specific token-exchange behavior, such as how scopes<br />are handled, with optional inheritance from domain defaults. |  | Optional: \{\} <br /> |
+
+
+#### UMASettings
+
+
+
+UMASettings is the User-Managed Access (UMA 2.0) configuration.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled controls whether User-Managed Access is enabled for the domain. Defaults to false. |  | Optional: \{\} <br /> |
+
+
+#### VirtualHost
+
+
+
+VirtualHost is a virtual host the domain is exposed on.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `host` _string_ | Host is the hostname the domain is served on. |  | Optional: \{\} <br /> |
+| `overrideEntrypoint` _boolean_ | OverrideEntrypoint controls whether this virtual host overrides the organization entry point.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `path` _string_ | Path is the context path the domain is served under on this host. |  | Optional: \{\} <br /> |
+
+
+#### WebAuthnSettings
+
+
+
+WebAuthnSettings is the WebAuthn (FIDO2) relying-party configuration.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `attestationConveyancePreference` _string_ | AttestationConveyancePreference is the relying-party preference for attestation conveyance<br />during credential creation. none requests no attestation, indirect allows anonymized<br />attestation, and direct requests the authenticator's attestation statement. Defaults to none. |  | Enum: [direct indirect none] <br />Optional: \{\} <br /> |
+| `authenticatorAttachment` _string_ | AuthenticatorAttachment is the preferred authenticator attachment. platform selects<br />authenticators bound to the device (such as a fingerprint reader); cross_platform selects<br />roaming authenticators (such as a security key). |  | Enum: [cross_platform platform] <br />Optional: \{\} <br /> |
+| `certificates` _object (keys:string, values:string)_ | Certificates holds the trusted device-attestation X.509 certificates, keyed by name. |  | Optional: \{\} <br /> |
+| `enforceAuthenticatorIntegrity` _boolean_ | EnforceAuthenticatorIntegrity controls whether to periodically re-verify that registered<br />authenticators remain valid against the FIDO2 Metadata Service. Defaults to false. |  | Optional: \{\} <br /> |
+| `enforceAuthenticatorIntegrityMaxAge` _integer_ | EnforceAuthenticatorIntegrityMaxAge is the maximum elapsed time, in seconds, since an<br />authenticator was last verified before it is re-checked on the next passwordless login. |  | Optional: \{\} <br /> |
+| `forceRegistration` _boolean_ | ForceRegistration controls whether to reject registration of a credential already registered to<br />a different user. Defaults to false. |  | Optional: \{\} <br /> |
+| `origin` _string_ | Origin is the relying-party origin; must match the browser's window.location.origin during<br />registration and authentication ceremonies. |  | Optional: \{\} <br /> |
+| `relyingPartyId` _string_ | RelyingPartyId is the relying-party identifier: a domain string that scopes credentials to this<br />entity. A credential can only be used with the relying party it was registered against. |  | Optional: \{\} <br /> |
+| `relyingPartyName` _string_ | RelyingPartyName is the human-readable relying-party name shown to users during ceremonies. |  | Optional: \{\} <br /> |
+| `requireResidentKey` _boolean_ | RequireResidentKey controls whether the authenticator must create a client-side resident<br />(discoverable) credential. Defaults to false. |  | Optional: \{\} <br /> |
+| `userVerification` _string_ | UserVerification is the relying-party requirement regarding user verification during a ceremony.<br />required enforces verification, preferred requests it when available, and discouraged avoids it.<br />Defaults to preferred. |  | Enum: [discouraged preferred required] <br />Optional: \{\} <br /> |
+
+
+#### WebProtectionSettings
+
+
+
+WebProtectionSettings are HTTP security headers for login and consent pages.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `csp` _[CspSettings](#cspsettings)_ | Csp holds the Content Security Policy configuration for the domain's login and consent pages. |  | Optional: \{\} <br /> |
+| `xframe` _[XFrameSettings](#xframesettings)_ | Xframe controls whether the domain's pages may be embedded in frames on other origins. |  | Optional: \{\} <br /> |
+| `xss` _[XssProtectionSettings](#xssprotectionsettings)_ | Xss controls the legacy X-XSS-Protection response header. |  | Optional: \{\} <br /> |
+
+
+#### XFrameSettings
+
+
+
+XFrameSettings is the X-Frame-Options configuration.
+
+
+
+_Appears in:_
+- [WebProtectionSettings](#webprotectionsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `action` _string_ | Action is the X-Frame-Options action. Supported values: DENY, SAMEORIGIN. Leave unset to omit<br />the header. |  | Enum: [DENY SAMEORIGIN] <br />Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether X-Frame-Options is enabled for the domain when not inherited. Defaults<br />to false. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited controls whether X-Frame-Options settings are inherited from the gateway defaults<br />(gravitee.yml). When null, legacy behaviour applies: enabled=true overrides and enabled=false<br />inherits. Defaults to true. |  | Optional: \{\} <br /> |
+
+
+#### XssProtectionSettings
+
+
+
+XssProtectionSettings is the X-XSS-Protection configuration.
+
+
+
+_Appears in:_
+- [WebProtectionSettings](#webprotectionsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `action` _string_ | Action is the value of the X-XSS-Protection header. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled controls whether X-XSS-Protection is enabled for the domain when not inherited. Defaults<br />to false. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited controls whether X-XSS-Protection settings are inherited from the gateway defaults<br />(gravitee.yml). When null, legacy behaviour applies: enabled=true overrides and enabled=false<br />inherits. Defaults to true. |  | Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/gateway
 
 
@@ -3874,6 +4595,7 @@ _Appears in:_
 
 
 _Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
 - [ApiBase](#apibase)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
 - [ApiEntry](#apientry)
