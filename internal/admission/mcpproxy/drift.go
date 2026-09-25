@@ -50,6 +50,13 @@ func validateUpdate(
 		}
 	}
 
+	// A proxy the platform never received, a studio still waiting for its servers for instance, has
+	// nothing to drift from: comparing would apply the remote-missing policy (deny by default) and
+	// refuse the very edit that unblocks it, a serverRef typo fix included.
+	if oldObj.Status.ID == "" {
+		return errs
+	}
+
 	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemoteMcpProxy,
 		drift.MapDTO(model.ToMcpProxyDTO)))
 	return errs

@@ -67,3 +67,38 @@ var _ = Describe("LastSpecHashPredicate McpProxy", func() {
 		Expect(p.Update(event.UpdateEvent{ObjectOld: oldObj, ObjectNew: newObj})).To(BeFalse())
 	})
 })
+
+func syncedCatalogMcpServer(id string) *v1alpha1.CatalogMcpServer {
+	srv := catalogMcpServer("https://mcp.example.com/mcp")
+	srv.Status.ID = id
+	return srv
+}
+
+var _ = Describe("CatalogMcpServerSyncedPredicate", func() {
+	p := predicate.CatalogMcpServerSyncedPredicate{}
+
+	It("passes the update that first syncs the server", func() {
+		Expect(p.Update(event.UpdateEvent{
+			ObjectOld: syncedCatalogMcpServer(""),
+			ObjectNew: syncedCatalogMcpServer("8c21f0a2"),
+		})).To(BeTrue())
+	})
+
+	It("drops a status update that leaves the platform id unchanged", func() {
+		Expect(p.Update(event.UpdateEvent{
+			ObjectOld: syncedCatalogMcpServer("8c21f0a2"),
+			ObjectNew: syncedCatalogMcpServer("8c21f0a2"),
+		})).To(BeFalse())
+	})
+
+	It("drops the update of a server that is still not synced", func() {
+		Expect(p.Update(event.UpdateEvent{
+			ObjectOld: syncedCatalogMcpServer(""),
+			ObjectNew: syncedCatalogMcpServer(""),
+		})).To(BeFalse())
+	})
+
+	It("drops a create, including the replay of a synced server when the operator starts", func() {
+		Expect(p.Create(event.CreateEvent{Object: syncedCatalogMcpServer("8c21f0a2")})).To(BeFalse())
+	})
+})
