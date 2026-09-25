@@ -168,6 +168,12 @@ spec:
                       type: object
                     oauth:
                       properties:
+                        additionalClientMetadata:
+                          additionalProperties:
+                            type: string
+                          description: DCR metadata sent to the provider, e.g. `software_id` to select a
+                            client template
+                          type: object
                         applicationType:
                           description: Oauth client application type
                           enum:
