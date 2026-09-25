@@ -29,6 +29,7 @@ const (
 	CRDResourceGroup                      = "groups"
 	CRDPortalResource                     = "portals"
 	CRDPortalThemeResource                = "portalthemes"
+	CRDCatalogMcpServerResource           = "catalogmcpservers"
 
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"
@@ -62,6 +63,7 @@ const (
 	DocumentationFinalizer           = "finalizers.gravitee.io/documentations"
 	PortalThemeFinalizer             = "finalizers.gravitee.io/portalthemes"
 	CatalogMcpServerFinalizer        = "finalizers.gravitee.io/catalogmcpservers"
+	McpProxyFinalizer                = "finalizers.gravitee.io/mcpproxies"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 	GraviteeClassParametersFinalizer = "finalizers.gravitee.io/gatewayclassparameters"

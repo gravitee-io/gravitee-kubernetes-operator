@@ -31,35 +31,37 @@ import (
 type IndexField string
 
 const (
-	ApiContextField              IndexField = "context"
-	ApiV4ContextField            IndexField = "api-v4-context"
-	SecretRefField               IndexField = "secretRef"
-	ApiResourceField             IndexField = "resource"
-	ApiNotificationRefsField     IndexField = "api-notificationRefs"
-	ApiGroupField                IndexField = "api-group"
-	ApiV4NotificationRefsField   IndexField = "api-v4-notificationRefs"
-	ApiV4GroupField              IndexField = "api-v4-group"
-	ApiV4ResourceField           IndexField = "api-v4-resource"
-	ApiV4SharedPolicyGroupsField IndexField = "api-v4-spg"
-	ApiTemplateField             IndexField = "api-template"
-	TLSSecretField               IndexField = "tls-secret"
-	AppContextField              IndexField = "app-context"
-	ApiV2SubsField               IndexField = "api-v2-subscription"
-	ApiV4SubsField               IndexField = "api-v4-subscription"
-	AppSubsField                 IndexField = "app-subscription"
-	SPGContextField              IndexField = "spg-context"
-	GroupContextField            IndexField = "group-context"
-	DictionaryContextField       IndexField = "dictionary-context"
-	PortalContextField           IndexField = "portal-context"
-	PortalListingPortalField     IndexField = "portallisting-portal"
-	PortalListingApiField        IndexField = "portallisting-api"
-	PortalLinkPortalField        IndexField = "portallink-portal"
-	PortalLinkApiField           IndexField = "portallink-api"
-	DocumentationPortalField     IndexField = "documentation-portal"
-	DocumentationApiField        IndexField = "documentation-api"
-	PortalThemeContextField      IndexField = "portaltheme-context"
-	PortalThemeField             IndexField = "portal-theme"
-	CatalogMcpServerContextField IndexField = "catalogmcpserver-context"
+	ApiContextField               IndexField = "context"
+	ApiV4ContextField             IndexField = "api-v4-context"
+	SecretRefField                IndexField = "secretRef"
+	ApiResourceField              IndexField = "resource"
+	ApiNotificationRefsField      IndexField = "api-notificationRefs"
+	ApiGroupField                 IndexField = "api-group"
+	ApiV4NotificationRefsField    IndexField = "api-v4-notificationRefs"
+	ApiV4GroupField               IndexField = "api-v4-group"
+	ApiV4ResourceField            IndexField = "api-v4-resource"
+	ApiV4SharedPolicyGroupsField  IndexField = "api-v4-spg"
+	ApiTemplateField              IndexField = "api-template"
+	TLSSecretField                IndexField = "tls-secret"
+	AppContextField               IndexField = "app-context"
+	ApiV2SubsField                IndexField = "api-v2-subscription"
+	ApiV4SubsField                IndexField = "api-v4-subscription"
+	AppSubsField                  IndexField = "app-subscription"
+	SPGContextField               IndexField = "spg-context"
+	GroupContextField             IndexField = "group-context"
+	DictionaryContextField        IndexField = "dictionary-context"
+	PortalContextField            IndexField = "portal-context"
+	PortalListingPortalField      IndexField = "portallisting-portal"
+	PortalListingApiField         IndexField = "portallisting-api"
+	PortalLinkPortalField         IndexField = "portallink-portal"
+	PortalLinkApiField            IndexField = "portallink-api"
+	DocumentationPortalField      IndexField = "documentation-portal"
+	DocumentationApiField         IndexField = "documentation-api"
+	PortalThemeContextField       IndexField = "portaltheme-context"
+	PortalThemeField              IndexField = "portal-theme"
+	CatalogMcpServerContextField  IndexField = "catalogmcpserver-context"
+	McpProxyContextField          IndexField = "mcpproxy-context"
+	McpProxyCatalogMcpServerField IndexField = "mcpproxy-catalogmcpserver"
 )
 
 func (f IndexField) String() string {
@@ -123,6 +125,10 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexPortalThemeRef))
 	collect(newIndexer(ctx, cache, &v1alpha1.CatalogMcpServer{}, CatalogMcpServerContextField,
 		indexCatalogMcpServerManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.McpProxy{}, McpProxyContextField,
+		indexMcpProxyManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.McpProxy{}, McpProxyCatalogMcpServerField,
+		indexMcpProxyCatalogMcpServers))
 
 	return errors.NewAggregate(errs)
 }
@@ -390,6 +396,22 @@ func indexCatalogMcpServerManagementContexts(srv *v1alpha1.CatalogMcpServer, fie
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(srv, srv.Spec.Context))
+}
+
+func indexMcpProxyManagementContexts(proxy *v1alpha1.McpProxy, fields *[]string) {
+	if proxy.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(proxy, proxy.Spec.Context))
+}
+
+// indexMcpProxyCatalogMcpServers indexes a Studio by every catalog server it references, through
+// a selected tool or an upstreamAuth entry.
+func indexMcpProxyCatalogMcpServers(proxy *v1alpha1.McpProxy, fields *[]string) {
+	for _, server := range proxy.Spec.ServerRefs(proxy.GetNamespace()) {
+		*fields = append(*fields, server.String())
+	}
 }
 
 func indexPortalListingPortal(listing *v1alpha1.PortalListing, fields *[]string) {

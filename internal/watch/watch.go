@@ -52,6 +52,7 @@ type Interface interface {
 	WatchPortals(index search.IndexField) *handler.Funcs
 	WatchPortalThemes(index search.IndexField) *handler.Funcs
 	WatchApis(index search.IndexField) *handler.Funcs
+	WatchCatalogMcpServers(index search.IndexField) *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
 }
 
@@ -191,6 +192,16 @@ func (w *Type) WatchPortalThemes(index search.IndexField) *handler.Funcs {
 // WatchApis can be used to trigger a reconciliation when an API is created or
 // updated on resources that reference it (e.g. PortalListings).
 func (w *Type) WatchApis(index search.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
+	}
+}
+
+// WatchCatalogMcpServers can be used to trigger a reconciliation when a CatalogMcpServer is
+// created or updated on resources that reference it (e.g. McpProxy studios), so that a studio
+// applied before its servers is synced once they land.
+func (w *Type) WatchCatalogMcpServers(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),

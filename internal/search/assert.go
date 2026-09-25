@@ -65,6 +65,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoMcpProxies(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -269,6 +273,29 @@ func assertNoCatalogMcpServers(ctx context.Context, ctxRef refs.NamespacedName, 
 				"kubectl get catalogmcpservers.gravitee.io "+
 				kubectlCommand,
 			contextName, len(servers.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func assertNoMcpProxies(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	proxies := &v1alpha1.McpProxyList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		McpProxyContextField,
+		ctxRef,
+		proxies,
+	); err != nil {
+		return err
+	}
+
+	if len(proxies.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d mcp proxies are relying on this context. "+
+				reviewMessage+
+				"kubectl get mcpproxies.gravitee.io "+
+				kubectlCommand,
+			contextName, len(proxies.Items), contextName,
 		)
 	}
 	return nil
