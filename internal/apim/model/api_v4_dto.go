@@ -15,6 +15,9 @@
 package model
 
 import (
+	"encoding/json"
+	"slices"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
@@ -364,11 +367,25 @@ type APIV4AnalyticsDTO struct {
 	ReporterMetricsEnabled *bool `json:"reporterMetricsEnabled,omitempty" drift:"empty-is-true"`
 	// Always sent: the Automation API reads an absent field as an empty selection, which reports
 	// nothing, so an unset CRD value must go out as null to keep reporting CONNECTED and ERROR.
-	ConnectionEvents []v4.ConnectionEvent `json:"connectionEvents"`
-	OtelLogs         *APIV4OtelLogsDTO    `json:"otelLogs,omitempty"`
-	Sampling         *APIV4SamplingDTO    `json:"sampling,omitempty"`
-	Logging          *APIV4LoggingDTO     `json:"logging,omitempty"`
-	Tracing          *APIV4TracingDTO     `json:"tracing,omitempty"`
+	ConnectionEvents APIV4ConnectionEventsDTO `json:"connectionEvents"`
+	OtelLogs         *APIV4OtelLogsDTO        `json:"otelLogs,omitempty"`
+	Sampling         *APIV4SamplingDTO        `json:"sampling,omitempty"`
+	Logging          *APIV4LoggingDTO         `json:"logging,omitempty"`
+	Tracing          *APIV4TracingDTO         `json:"tracing,omitempty"`
+}
+
+// APIV4ConnectionEventsDTO is a set: APIM does not return the events in the
+// order they were sent, so both drift sides are sorted when decoded.
+type APIV4ConnectionEventsDTO []v4.ConnectionEvent
+
+func (events *APIV4ConnectionEventsDTO) UnmarshalJSON(data []byte) error {
+	var decoded []v4.ConnectionEvent
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	slices.Sort(decoded)
+	*events = decoded
+	return nil
 }
 
 type APIV4ApiServicesDTO struct {

@@ -15,6 +15,9 @@
 package apim
 
 import (
+	"encoding/json"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -183,6 +186,18 @@ var _ = Describe("API v4 Drift detection", func() {
 		result := drift.DetectWithNamespace(crd, remote, "")
 		Expect(result.DriftDetected()).To(BeTrue())
 		Expect(result.String()).To(ContainSubstring(`visibility: PUBLIC != PRIVATE`))
+	})
+
+	It("compares native connection events as a set", func() {
+		events := []v4.ConnectionEvent{v4.ConnectionEventConnected, v4.ConnectionEventDisconnected}
+		crd := model.ToAPIV4DTO(&v4.Api{V4BaseApi: &v4.V4BaseApi{
+			ApiBase:   &base.ApiBase{},
+			Analytics: &v4.Analytics{Enabled: true, ConnectionEvents: &events},
+		}})
+		var remote model.APIV4DTO
+		Expect(json.Unmarshal([]byte(`{"analytics": {"enabled": true, "connectionEvents": ["DISCONNECTED", "CONNECTED"]}}`), &remote)).To(Succeed())
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
 
 	Describe("All properties regression test", func() {
