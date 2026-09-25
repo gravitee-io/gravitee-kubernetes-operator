@@ -201,12 +201,12 @@ const (
 	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"
 
 	// AM.
-	AMContextSecretFile         = "am_context/dev/am-context-secret.yml"
-	AMContextFile               = "am_context/dev/am-context.yml"
-	AMContextBadTokenFile       = "am_context/dev/am-context-bad-token.yml"
-	AMContextUnreachableFile    = "am_context/dev/am-context-unreachable.yml"
-	AMSecurityDomainBasicFile   = "am/security_domain/security-domain-basic.yml"
-	AMSecurityDomainFullFile    = "am/security_domain/security-domain-with-settings.yml"
+	AMContextSecretFile       = "am_context/dev/am-context-secret.yml"
+	AMContextFile             = "am_context/dev/am-context.yml"
+	AMContextBadTokenFile     = "am_context/dev/am-context-bad-token.yml"
+	AMContextUnreachableFile  = "am_context/dev/am-context-unreachable.yml"
+	AMSecurityDomainBasicFile = "am/security_domain/security-domain-basic.yml"
+	AMSecurityDomainFullFile  = "am/security_domain/security-domain-with-settings.yml"
 
 	// Use cases.
 	SubscribeJWTUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"

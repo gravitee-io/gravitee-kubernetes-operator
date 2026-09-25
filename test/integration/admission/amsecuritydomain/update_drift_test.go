@@ -124,4 +124,3 @@ var _ = Describe("Validate drift - remote fetch failure", labels.WithContext, fu
 		}
 	})
 })
-

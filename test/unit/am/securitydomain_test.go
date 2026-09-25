@@ -94,7 +94,7 @@ var _ = Describe("AMSecurityDomain UpdateStatus", func() {
 			OrgEnv: am.OrgEnv{OrgID: "org-1", EnvID: "env-1"},
 		}
 
-		err := internal.UpdateStatus(nil, obj, resp)
+		err := internal.UpdateStatus(context.Background(), obj, resp)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(obj.Status.Status.ID).To(Equal("domain-key-123"))
 		Expect(obj.Status.Status.OrgID).To(Equal("org-1"))

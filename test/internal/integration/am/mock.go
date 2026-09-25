@@ -90,9 +90,9 @@ func AuthConfig() auth.Config {
 		},
 		Permissions: []auth.RoutePermission{
 			{
-				Path:   "/organizations/{orgId}/environments/{envId}/domains",
-				Get:    "DOMAIN_LIST",
-				Put:    "DOMAIN_UPDATE",
+				Path: "/organizations/{orgId}/environments/{envId}/domains",
+				Get:  "DOMAIN_LIST",
+				Put:  "DOMAIN_UPDATE",
 			},
 			{
 				Path:   "/organizations/{orgId}/environments/{envId}/domains/{domainKey}",
