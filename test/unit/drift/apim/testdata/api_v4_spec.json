@@ -339,7 +339,22 @@
     },
     "tracing": {
       "enabled": true,
-      "verbose": true
+      "verbose": true,
+      "redaction": {
+        "defaultReplacement": "[MASKED]",
+        "rules": [
+          {
+            "attributeNamePattern": "http.request.header.authorization",
+            "valuePattern": "^Bearer ",
+            "maskingStrategy": {
+              "type": "PARTIAL",
+              "replacement": "#",
+              "prefixLength": 7,
+              "suffixLength": 2
+            }
+          }
+        ]
+      }
     }
   },
   "services": {

@@ -5657,6 +5657,75 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Specify if Tracing is Enabled or not |  |  |
 | `verbose` _boolean_ | Specify if Tracing is Verbose or not |  |  |
+| `redaction` _[TracingRedaction](#tracingredaction)_ | Masking applied to span attributes before traces are exported |  | Optional: \{\} <br /> |
+
+
+#### TracingMaskingStrategy
+
+
+
+
+
+
+
+_Appears in:_
+- [TracingRedactionRule](#tracingredactionrule)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _[TracingMaskingType](#tracingmaskingtype)_ | FULL replaces the whole value, PARTIAL keeps a visible prefix and suffix |  | Enum: [FULL PARTIAL] <br />Required: \{\} <br /> |
+| `replacement` _string_ | FULL: replacement text, defaults to `[REDACTED]`. PARTIAL: mask character, defaults to `*` |  | Optional: \{\} <br /> |
+| `prefixLength` _integer_ | PARTIAL only: number of leading characters kept visible |  | Minimum: 0 <br />Optional: \{\} <br /> |
+| `suffixLength` _integer_ | PARTIAL only: number of trailing characters kept visible |  | Minimum: 0 <br />Optional: \{\} <br /> |
+
+
+#### TracingMaskingType
+
+_Underlying type:_ _string_
+
+
+
+_Validation:_
+- Enum: [FULL PARTIAL]
+
+_Appears in:_
+- [TracingMaskingStrategy](#tracingmaskingstrategy)
+
+
+
+#### TracingRedaction
+
+
+
+
+
+
+
+_Appears in:_
+- [Tracing](#tracing)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `defaultReplacement` _string_ | Replacement for FULL rules that set none, defaults to `[REDACTED]` |  | Optional: \{\} <br /> |
+| `rules` _[TracingRedactionRule](#tracingredactionrule) array_ | Masking rules, each matching span attributes by key and optionally by value |  | Optional: \{\} <br /> |
+
+
+#### TracingRedactionRule
+
+
+
+
+
+
+
+_Appears in:_
+- [TracingRedaction](#tracingredaction)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `attributeNamePattern` _string_ | Span attribute key: glob, short name, or `regex:`-prefixed Java regex |  | MinLength: 1 <br />Required: \{\} <br /> |
+| `maskingStrategy` _[TracingMaskingStrategy](#tracingmaskingstrategy)_ | How the matched value is masked |  | Optional: \{\} <br /> |
+| `valuePattern` _string_ | Java regex the attribute value must partially match for the rule to apply |  | Optional: \{\} <br /> |
 
 
 #### V4BaseApi
