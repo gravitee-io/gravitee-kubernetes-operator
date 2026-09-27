@@ -123,8 +123,12 @@ func mcpProxyRemote(dto model.McpProxyDTO) model.McpProxyDTO {
 		auth.APIKey, auth.Token, auth.Password, auth.ClientSecret = nil, nil, nil, nil
 		return auth
 	}
-	if dto.UpstreamAuth != nil {
-		dto.UpstreamAuth = new(strip(*dto.UpstreamAuth))
+	if dto.Proxy != nil {
+		proxy := *dto.Proxy
+		if proxy.UpstreamAuth != nil {
+			proxy.UpstreamAuth = new(strip(*proxy.UpstreamAuth))
+		}
+		dto.Proxy = &proxy
 	}
 	if dto.Studio != nil {
 		studio := *dto.Studio
@@ -175,7 +179,9 @@ func withFlowExecution(crd *v1alpha1.McpProxy, execution *v4.FlowExecution) *v1a
 }
 
 func withUpstreamAuth(dto model.McpProxyDTO, auth *model.McpProxyAuthDTO) model.McpProxyDTO {
-	dto.UpstreamAuth = auth
+	proxy := *dto.Proxy
+	proxy.UpstreamAuth = auth
+	dto.Proxy = &proxy
 	return dto
 }
 

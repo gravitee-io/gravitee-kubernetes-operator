@@ -26,7 +26,7 @@
       {"name": "Tokens", "security": {"type": "OAUTH2", "oauth2": {"provider": "auth0"}}},
       {
         "name": "Keys",
-        "security": {"type": "API_KEY", "apiKey": {"source": "HEADER", "header": "X-Drift-Key", "propagate": true}},
+        "security": {"type": "API_KEY", "apiKey": {"source": "HEADER", "apiKeyHeader": "X-Drift-Key", "propagateApiKey": true}},
         "flows": [{"name": "Plan guardrails", "enabled": true, "request": [{"name": "Log", "policy": "logging", "enabled": true}]}]
       }
     ]

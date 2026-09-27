@@ -33,10 +33,10 @@ type PlanAPIKey struct {
 	Source APIKeySource `json:"source"`
 	// Custom header carrying the key. Omitted means the gateway default.
 	// +kubebuilder:validation:Optional
-	Header *string `json:"header,omitempty"`
+	APIKeyHeader *string `json:"apiKeyHeader,omitempty"`
 	// Forward the key to the upstream server.
 	// +kubebuilder:validation:Optional
-	Propagate bool `json:"propagate,omitempty"`
+	PropagateAPIKey bool `json:"propagateApiKey,omitempty"`
 }
 
 // PlanOAuth2 configures an OAuth 2.0 plan.

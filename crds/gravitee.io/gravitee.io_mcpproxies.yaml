@@ -434,10 +434,10 @@ spec:
                           apiKey:
                             description: Required when type is API_KEY.
                             properties:
-                              header:
+                              apiKeyHeader:
                                 description: Custom header carrying the key. Omitted means the gateway default.
                                 type: string
-                              propagate:
+                              propagateApiKey:
                                 description: Forward the key to the upstream server.
                                 type: boolean
                               source:
@@ -514,19 +514,19 @@ spec:
                         apiKey:
                           description: Required when type is API_KEY.
                           properties:
-                            header:
-                              description: Name of the header carrying the key.
-                              type: string
-                            value:
+                            apiKey:
                               description: >-
                                 The key: a literal, a secret:// URI resolved by
                                 the gateway, or a templated Secret value
 
                                 ([[ secret...
                               type: string
+                            apiKeyHeader:
+                              description: Name of the header carrying the key.
+                              type: string
                           required:
-                            - header
-                            - value
+                            - apiKey
+                            - apiKeyHeader
                           type: object
                         basic:
                           description: Required when type is BASIC.
@@ -669,10 +669,7 @@ spec:
                               apiKey:
                                 description: Required when type is API_KEY.
                                 properties:
-                                  header:
-                                    description: Name of the header carrying the key.
-                                    type: string
-                                  value:
+                                  apiKey:
                                     description: >-
                                       The key: a literal, a secret:// URI
                                       resolved by the gateway, or a templated
@@ -680,9 +677,12 @@ spec:
 
                                       ([[ secret...
                                     type: string
+                                  apiKeyHeader:
+                                    description: Name of the header carrying the key.
+                                    type: string
                                 required:
-                                  - header
-                                  - value
+                                  - apiKey
+                                  - apiKeyHeader
                                 type: object
                               basic:
                                 description: Required when type is BASIC.

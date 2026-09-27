@@ -129,10 +129,10 @@ var _ = Describe("MCP proxy", func() {
 	})
 
 	Describe("PROXY wire mapping", func() {
-		It("derives the hrid and moves the proxy block to the top level", func() {
+		It("derives the hrid and sends the proxy block as declared", func() {
 			dto := model.ToMcpProxyDTO(newMcpProxy(nil))
 			Expect(dto.HRID).To(Equal("gravitee-github-mcp"))
-			Expect(*dto.ServerURL).To(Equal("https://api.githubcopilot.com/mcp/"))
+			Expect(dto.Proxy.ServerURL).To(Equal("https://api.githubcopilot.com/mcp/"))
 			Expect(dto.Studio).To(BeNil())
 		})
 
@@ -147,7 +147,7 @@ var _ = Describe("MCP proxy", func() {
 
 		DescribeTable("sends no upstream auth for a passthrough proxy",
 			func(auth *mcpproxy.UpstreamAuth) {
-				Expect(model.ToMcpProxyDTO(newMcpProxy(auth)).UpstreamAuth).To(BeNil())
+				Expect(model.ToMcpProxyDTO(newMcpProxy(auth)).Proxy.UpstreamAuth).To(BeNil())
 			},
 			Entry("when omitted", nil),
 			Entry("when NONE", &mcpproxy.UpstreamAuth{Type: mcpproxy.UpstreamAuthTypeNone}),
@@ -155,11 +155,11 @@ var _ = Describe("MCP proxy", func() {
 
 		DescribeTable("flattens each upstream auth variant",
 			func(auth mcpproxy.UpstreamAuth, expected string) {
-				Expect(marshal(model.ToMcpProxyDTO(newMcpProxy(&auth)).UpstreamAuth)).To(MatchJSON(expected))
+				Expect(marshal(model.ToMcpProxyDTO(newMcpProxy(&auth)).Proxy.UpstreamAuth)).To(MatchJSON(expected))
 			},
 			Entry("API_KEY", mcpproxy.UpstreamAuth{
 				Type:   mcpproxy.UpstreamAuthTypeAPIKey,
-				APIKey: &mcpproxy.APIKeyAuth{Header: "X-Api-Key", Value: "k"},
+				APIKey: &mcpproxy.APIKeyAuth{APIKeyHeader: "X-Api-Key", APIKey: "k"},
 			}, `{"type": "API_KEY", "apiKeyHeader": "X-Api-Key", "apiKey": "k"}`),
 			Entry("BEARER", mcpproxy.UpstreamAuth{
 				Type:   mcpproxy.UpstreamAuthTypeBearer,
@@ -194,11 +194,11 @@ var _ = Describe("MCP proxy", func() {
 			Entry("KEY_LESS", mcpproxy.PlanSecurity{Type: mcpproxy.PlanSecurityKeyLess}, `{"type": "KEY_LESS"}`),
 			Entry("API_KEY without propagation", mcpproxy.PlanSecurity{
 				Type:   mcpproxy.PlanSecurityAPIKey,
-				APIKey: &mcpproxy.PlanAPIKey{Source: "HEADER", Header: new("X-Key")},
+				APIKey: &mcpproxy.PlanAPIKey{Source: "HEADER", APIKeyHeader: new("X-Key")},
 			}, `{"type": "API_KEY", "source": "HEADER", "apiKeyHeader": "X-Key"}`),
 			Entry("API_KEY with propagation", mcpproxy.PlanSecurity{
 				Type:   mcpproxy.PlanSecurityAPIKey,
-				APIKey: &mcpproxy.PlanAPIKey{Source: "BEARER", Propagate: true},
+				APIKey: &mcpproxy.PlanAPIKey{Source: "BEARER", PropagateAPIKey: true},
 			}, `{"type": "API_KEY", "source": "BEARER", "propagateApiKey": true}`),
 			Entry("OAUTH2", mcpproxy.PlanSecurity{
 				Type:   mcpproxy.PlanSecurityOAuth2,
@@ -284,8 +284,10 @@ var _ = Describe("MCP proxy", func() {
 				"mode": "PROXY",
 				"protocolVersion": "2025-03-26",
 				"state": "STARTED",
-				"serverUrl": "https://api.githubcopilot.com/mcp/",
-				"upstreamAuth": {"type": "BEARER", "token": "secret://kubernetes/github-mcp:token"},
+				"proxy": {
+					"serverUrl": "https://api.githubcopilot.com/mcp/",
+					"upstreamAuth": {"type": "BEARER", "token": "secret://kubernetes/github-mcp:token"}
+				},
 				"identityProviders": [
 					{"name": "am", "type": "GRAVITEE_AM"},
 					{

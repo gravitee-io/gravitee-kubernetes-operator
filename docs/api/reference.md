@@ -3570,8 +3570,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `header` _string_ | Name of the header carrying the key. |  | Required: \{\} <br /> |
-| `value` _string_ | The key: a literal, a secret:// URI resolved by the gateway, or a templated Secret value<br />([[ secret `my-secret/key` ]]). Never returned by the platform. |  | Required: \{\} <br /> |
+| `apiKeyHeader` _string_ | Name of the header carrying the key. |  | Required: \{\} <br /> |
+| `apiKey` _string_ | The key: a literal, a secret:// URI resolved by the gateway, or a templated Secret value<br />([[ secret `my-secret/key` ]]). Never returned by the platform. |  | Required: \{\} <br /> |
 
 
 #### APIKeySource
@@ -3919,8 +3919,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `source` _[APIKeySource](#apikeysource)_ |  |  | Enum: [HEADER BEARER QUERY_PARAMETER] <br />Required: \{\} <br /> |
-| `header` _string_ | Custom header carrying the key. Omitted means the gateway default. |  | Optional: \{\} <br /> |
-| `propagate` _boolean_ | Forward the key to the upstream server. |  | Optional: \{\} <br /> |
+| `apiKeyHeader` _string_ | Custom header carrying the key. Omitted means the gateway default. |  | Optional: \{\} <br /> |
+| `propagateApiKey` _boolean_ | Forward the key to the upstream server. |  | Optional: \{\} <br /> |
 
 
 #### PlanOAuth2
