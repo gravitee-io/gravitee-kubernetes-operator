@@ -27,9 +27,9 @@ import (
 )
 
 // McpProxyDTO is the automation API wire representation of an McpProxy (PUT /aim/mcp-proxies).
-// The platform refuses unknown properties, so this carries exactly the wire fields: the CRD's
-// proxy block is flattened to serverUrl and upstreamAuth, and every union is flat, discriminated
-// by type.
+// The platform refuses unknown properties, so this carries exactly the wire fields. It has the CRD's
+// structure (GKO-C5): the only differences are references resolved to HRIDs and union variants,
+// which the CRD nests in one block per variant and the wire keeps flat, discriminated by type.
 type McpProxyDTO struct {
 	HRID            string  `json:"hrid,omitempty" drift:"ignore"`
 	EntityID        string  `json:"entityId"`
@@ -39,15 +39,20 @@ type McpProxyDTO struct {
 	Mode            string  `json:"mode"`
 	ProtocolVersion string  `json:"protocolVersion"`
 	// Declared lifecycle on a PUT; the lifecycle the platform observes in a response.
-	State     string  `json:"state"`
-	ServerURL *string `json:"serverUrl,omitempty" drift:"empty-is-nil"`
-	// Nil for a passthrough proxy: the platform stores NONE as no authentication and omits it.
-	UpstreamAuth      *McpProxyAuthDTO              `json:"upstreamAuth,omitempty" drift:"empty-is-nil"`
+	State             string                        `json:"state"`
+	Proxy             *McpProxyProxyDTO             `json:"proxy,omitempty" drift:"empty-is-nil"`
 	Studio            *McpProxyStudioDTO            `json:"studio,omitempty" drift:"empty-is-nil"`
 	FlowExecution     *v4.FlowExecution             `json:"flowExecution,omitempty" drift:"empty-is-nil"`
 	Flows             []McpProxyFlowDTO             `json:"flows,omitempty" drift:"empty-is-nil"`
 	IdentityProviders []McpProxyIdentityProviderDTO `json:"identityProviders,omitempty" drift:"empty-is-nil"`
 	Plans             []McpProxyPlanDTO             `json:"plans"`
+}
+
+// McpProxyProxyDTO is what a PROXY fronts: one upstream and the credential presented to it.
+type McpProxyProxyDTO struct {
+	ServerURL string `json:"serverUrl"`
+	// Nil for a passthrough proxy: the platform stores NONE as no authentication and omits it.
+	UpstreamAuth *McpProxyAuthDTO `json:"upstreamAuth,omitempty" drift:"empty-is-nil"`
 }
 
 // McpProxyAuthDTO is the wire shape of an upstream credential. Secret values are never
@@ -180,9 +185,9 @@ func ToMcpProxyDTO(crd *v1alpha1.McpProxy) McpProxyDTO {
 	switch mode {
 	case mcpproxy.ModeProxy:
 		if spec.Proxy != nil {
-			dto.ServerURL = new(spec.Proxy.ServerURL)
+			dto.Proxy = &McpProxyProxyDTO{ServerURL: spec.Proxy.ServerURL}
 			if auth := spec.Proxy.UpstreamAuth; auth != nil && auth.Type != mcpproxy.UpstreamAuthTypeNone {
-				dto.UpstreamAuth = new(toMcpProxyAuthDTO(*auth))
+				dto.Proxy.UpstreamAuth = new(toMcpProxyAuthDTO(*auth))
 			}
 		}
 	case mcpproxy.ModeStudio:
@@ -250,8 +255,8 @@ func toMcpProxyAuthDTO(auth mcpproxy.UpstreamAuth) McpProxyAuthDTO {
 	switch auth.Type {
 	case mcpproxy.UpstreamAuthTypeAPIKey:
 		if auth.APIKey != nil {
-			dto.APIKeyHeader = new(auth.APIKey.Header)
-			dto.APIKey = new(auth.APIKey.Value)
+			dto.APIKeyHeader = new(auth.APIKey.APIKeyHeader)
+			dto.APIKey = new(auth.APIKey.APIKey)
 		}
 	case mcpproxy.UpstreamAuthTypeBearer:
 		if auth.Bearer != nil {
@@ -295,8 +300,8 @@ func toMcpProxyPlanSecurityDTO(security mcpproxy.PlanSecurity) McpProxyPlanSecur
 	case mcpproxy.PlanSecurityAPIKey:
 		if security.APIKey != nil {
 			dto.Source = new(string(security.APIKey.Source))
-			dto.APIKeyHeader = security.APIKey.Header
-			dto.PropagateAPIKey = security.APIKey.Propagate
+			dto.APIKeyHeader = security.APIKey.APIKeyHeader
+			dto.PropagateAPIKey = security.APIKey.PropagateAPIKey
 		}
 	case mcpproxy.PlanSecurityOAuth2:
 		if security.OAuth2 != nil {

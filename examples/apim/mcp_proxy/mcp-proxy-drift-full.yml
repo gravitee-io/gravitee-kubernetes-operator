@@ -75,8 +75,8 @@ spec:
         type: API_KEY
         apiKey:
           source: HEADER
-          header: X-Drift-Key
-          propagate: true
+          apiKeyHeader: X-Drift-Key
+          propagateApiKey: true
       flows:
         - name: Plan guardrails
           request:

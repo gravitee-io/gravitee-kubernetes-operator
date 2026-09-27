@@ -29,11 +29,11 @@ const (
 type APIKeyAuth struct {
 	// Name of the header carrying the key.
 	// +kubebuilder:validation:Required
-	Header string `json:"header"`
+	APIKeyHeader string `json:"apiKeyHeader"`
 	// The key: a literal, a secret:// URI resolved by the gateway, or a templated Secret value
 	// ([[ secret `my-secret/key` ]]). Never returned by the platform.
 	// +kubebuilder:validation:Required
-	Value string `json:"value"`
+	APIKey string `json:"apiKey"`
 }
 
 // BearerAuth is a bearer token sent in the Authorization header.

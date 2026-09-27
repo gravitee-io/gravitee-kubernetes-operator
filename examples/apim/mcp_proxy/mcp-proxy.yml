@@ -61,4 +61,4 @@ spec:
         type: API_KEY
         apiKey:
           source: HEADER
-          header: X-Gravitee-Api-Key
+          apiKeyHeader: X-Gravitee-Api-Key
