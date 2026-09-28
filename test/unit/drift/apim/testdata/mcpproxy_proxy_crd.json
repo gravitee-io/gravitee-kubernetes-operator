@@ -6,7 +6,6 @@
     "name": "Drift full",
     "description": "Every PROXY field the drift comparison covers",
     "contextPath": "/mcp/drift-full",
-    "protocolVersion": "2025-03-26",
     "mode": "PROXY",
     "state": "STARTED",
     "proxy": {

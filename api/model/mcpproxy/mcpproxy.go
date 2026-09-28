@@ -103,10 +103,6 @@ type Type struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern=`^/`
 	ContextPath string `json:"contextPath"`
-	// MCP protocol version the proxy speaks.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum="2024-11-05";"2025-03-26";"2025-11-25"
-	ProtocolVersion string `json:"protocolVersion"`
 	// PROXY requires the proxy block, STUDIO the studio block. Immutable.
 	// +kubebuilder:validation:Required
 	Mode Mode `json:"mode"`

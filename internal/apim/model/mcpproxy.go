@@ -31,13 +31,12 @@ import (
 // structure (GKO-C5): the only differences are references resolved to HRIDs and union variants,
 // which the CRD nests in one block per variant and the wire keeps flat, discriminated by type.
 type McpProxyDTO struct {
-	HRID            string  `json:"hrid,omitempty" drift:"ignore"`
-	EntityID        string  `json:"entityId"`
-	Name            string  `json:"name"`
-	Description     *string `json:"description,omitempty" drift:"empty-is-nil"`
-	ContextPath     string  `json:"contextPath"`
-	Mode            string  `json:"mode"`
-	ProtocolVersion string  `json:"protocolVersion"`
+	HRID        string  `json:"hrid,omitempty" drift:"ignore"`
+	EntityID    string  `json:"entityId"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty" drift:"empty-is-nil"`
+	ContextPath string  `json:"contextPath"`
+	Mode        string  `json:"mode"`
 	// Declared lifecycle on a PUT; the lifecycle the platform observes in a response.
 	State             string                        `json:"state"`
 	Proxy             *McpProxyProxyDTO             `json:"proxy,omitempty" drift:"empty-is-nil"`
@@ -170,7 +169,6 @@ func ToMcpProxyDTO(crd *v1alpha1.McpProxy) McpProxyDTO {
 		Description:       spec.Description,
 		ContextPath:       spec.ContextPath,
 		Mode:              string(spec.Mode),
-		ProtocolVersion:   spec.ProtocolVersion,
 		State:             string(state),
 		FlowExecution:     toMcpProxyFlowExecution(spec.FlowExecution),
 		Flows:             toMcpProxyFlowDTOs(spec.Flows),

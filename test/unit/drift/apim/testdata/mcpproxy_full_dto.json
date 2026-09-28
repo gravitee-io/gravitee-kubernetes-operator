@@ -5,7 +5,6 @@
   "description": "Every field the proxy accepts",
   "contextPath": "/mcp/drift-full",
   "mode": "PROXY",
-  "protocolVersion": "2025-03-26",
   "state": "STARTED",
   "proxy": {
     "serverUrl": "https://mcp.example.com/mcp",

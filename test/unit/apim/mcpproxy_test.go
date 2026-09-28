@@ -40,12 +40,11 @@ func newMcpProxy(auth *mcpproxy.UpstreamAuth) *v1alpha1.McpProxy {
 		Spec: v1alpha1.McpProxySpec{
 			Context: &refs.NamespacedName{Name: "dev-ctx"},
 			Type: mcpproxy.Type{
-				EntityID:        "mcp-proxy.github",
-				Name:            "GitHub",
-				ContextPath:     "/mcp/github",
-				ProtocolVersion: "2025-03-26",
-				Mode:            mcpproxy.ModeProxy,
-				State:           mcpproxy.StateStarted,
+				EntityID:    "mcp-proxy.github",
+				Name:        "GitHub",
+				ContextPath: "/mcp/github",
+				Mode:        mcpproxy.ModeProxy,
+				State:       mcpproxy.StateStarted,
 				Proxy: &mcpproxy.Proxy{
 					ServerURL:    "https://api.githubcopilot.com/mcp/",
 					UpstreamAuth: auth,
@@ -68,12 +67,11 @@ func newMcpStudio() *v1alpha1.McpProxy {
 		Spec: v1alpha1.McpProxySpec{
 			Context: &refs.NamespacedName{Name: "dev-ctx"},
 			Type: mcpproxy.Type{
-				EntityID:        "mcp-proxy.support",
-				Name:            "Support Studio",
-				ContextPath:     "/mcp/support",
-				ProtocolVersion: "2025-03-26",
-				Mode:            mcpproxy.ModeStudio,
-				State:           mcpproxy.StateStarted,
+				EntityID:    "mcp-proxy.support",
+				Name:        "Support Studio",
+				ContextPath: "/mcp/support",
+				Mode:        mcpproxy.ModeStudio,
+				State:       mcpproxy.StateStarted,
 				Studio: &mcpproxy.Studio{
 					Tools: []mcpproxy.StudioTool{
 						{ServerRef: refs.NamespacedName{Name: "jira-mcp", Namespace: "tools"}, Tool: "create_ticket"},
@@ -279,7 +277,6 @@ var _ = Describe("MCP proxy", func() {
 				"name": "GitHub",
 				"contextPath": "/mcp/github",
 				"mode": "PROXY",
-				"protocolVersion": "2025-03-26",
 				"state": "STARTED",
 				"proxy": {
 					"serverUrl": "https://api.githubcopilot.com/mcp/",
@@ -326,7 +323,6 @@ var _ = Describe("MCP proxy", func() {
 				"entityId": "mcp-proxy.support",
 				"name": "Support Studio",
 				"contextPath": "/mcp/support",
-				"protocolVersion": "2025-03-26",
 				"mode": "STUDIO",
 				"state": "STARTED",
 				"studio": {
@@ -390,7 +386,6 @@ var _ = Describe("MCP proxy", func() {
 				"name": "Support Studio",
 				"contextPath": "/mcp/support",
 				"mode": "STUDIO",
-				"protocolVersion": "2025-03-26",
 				"state": "STOPPED",
 				"studio": {
 					"tools": [{"server": "gravitee-github-mcp", "tool": "create_issue", "entityId": "mcp-tool.github.create_issue"}],
