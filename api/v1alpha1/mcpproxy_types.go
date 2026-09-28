@@ -39,9 +39,6 @@ var _ core.ConditionAware = &McpProxy{}
 // +kubebuilder:validation:XValidation:rule="self.mode == 'STUDIO' || !has(self.studio)",message="studio must not be set when mode is not STUDIO"
 // +kubebuilder:validation:XValidation:rule="self.mode == oldSelf.mode",message="mode is immutable"
 // +kubebuilder:validation:XValidation:rule="self.entityId == oldSelf.entityId",message="entityId is immutable"
-// +kubebuilder:validation:XValidation:rule="self.name == oldSelf.name",message="name is immutable"
-// +kubebuilder:validation:XValidation:rule="self.protocolVersion == oldSelf.protocolVersion",message="protocolVersion is immutable"
-// +kubebuilder:validation:XValidation:rule="has(self.description) == has(oldSelf.description) && (!has(self.description) || self.description == oldSelf.description)",message="description is immutable"
 type McpProxySpec struct {
 	mcpproxy.Type `json:",inline"`
 	// Reference to a ManagementContext that determines which APIM instance this proxy is created in.

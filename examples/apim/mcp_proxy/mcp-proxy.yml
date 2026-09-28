@@ -28,7 +28,6 @@ spec:
     name: dev-ctx
   # Declared and immutable: the identity an authorization policy names.
   entityId: mcp-proxy.github
-  # name, description and protocolVersion are fixed at creation.
   name: GitHub MCP
   contextPath: /mcp/github
   protocolVersion: "2025-03-26"

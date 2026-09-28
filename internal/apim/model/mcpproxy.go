@@ -158,10 +158,6 @@ type McpProxyState struct {
 func ToMcpProxyDTO(crd *v1alpha1.McpProxy) McpProxyDTO {
 	spec := crd.Spec.Type
 
-	mode := spec.Mode
-	if mode == "" {
-		mode = mcpproxy.ModeProxy
-	}
 	state := spec.State
 	if state == "" {
 		state = mcpproxy.StateStarted
@@ -173,7 +169,7 @@ func ToMcpProxyDTO(crd *v1alpha1.McpProxy) McpProxyDTO {
 		Name:              spec.Name,
 		Description:       spec.Description,
 		ContextPath:       spec.ContextPath,
-		Mode:              string(mode),
+		Mode:              string(spec.Mode),
 		ProtocolVersion:   spec.ProtocolVersion,
 		State:             string(state),
 		FlowExecution:     toMcpProxyFlowExecution(spec.FlowExecution),
@@ -182,7 +178,7 @@ func ToMcpProxyDTO(crd *v1alpha1.McpProxy) McpProxyDTO {
 		Plans:             toMcpProxyPlanDTOs(spec.Plans),
 	}
 
-	switch mode {
+	switch spec.Mode {
 	case mcpproxy.ModeProxy:
 		if spec.Proxy != nil {
 			dto.Proxy = &McpProxyProxyDTO{ServerURL: spec.Proxy.ServerURL}
