@@ -21,7 +21,6 @@ spec:
   entityId: mcp-proxy.drift-minimal
   name: Drift minimal
   contextPath: /mcp/drift-minimal
-  protocolVersion: "2025-03-26"
   mode: PROXY
   proxy:
     serverUrl: https://mcp.example.com/mcp

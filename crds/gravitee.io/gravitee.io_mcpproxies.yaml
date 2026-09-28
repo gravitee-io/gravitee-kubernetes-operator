@@ -492,13 +492,6 @@ spec:
                   x-kubernetes-list-map-keys:
                     - name
                   x-kubernetes-list-type: map
-                protocolVersion:
-                  description: MCP protocol version the proxy speaks.
-                  enum:
-                    - 2024-11-05
-                    - 2025-03-26
-                    - 2025-11-25
-                  type: string
                 proxy:
                   description: Required when mode is PROXY.
                   properties:
@@ -785,7 +778,6 @@ spec:
                 - mode
                 - name
                 - plans
-                - protocolVersion
               type: object
               x-kubernetes-validations:
                 - message: proxy must be set when mode is PROXY

@@ -806,7 +806,6 @@ _Appears in:_
 | `name` _string_ | Display name. |  | Required: \{\} <br /> |
 | `description` _string_ |  |  | Optional: \{\} <br /> |
 | `contextPath` _string_ |  |  | Pattern: `^/` <br />Required: \{\} <br /> |
-| `protocolVersion` _string_ | MCP protocol version the proxy speaks. |  | Enum: [2024-11-05 2025-03-26 2025-11-25] <br />Required: \{\} <br /> |
 | `mode` _[Mode](#mode)_ | PROXY requires the proxy block, STUDIO the studio block. Immutable. |  | Enum: [PROXY STUDIO] <br />Required: \{\} <br /> |
 | `proxy` _[Proxy](#proxy)_ | Required when mode is PROXY. |  | Optional: \{\} <br /> |
 | `studio` _[Studio](#studio)_ | Required when mode is STUDIO. |  | Optional: \{\} <br /> |
@@ -4110,7 +4109,6 @@ _Appears in:_
 | `name` _string_ | Display name. |  | Required: \{\} <br /> |
 | `description` _string_ |  |  | Optional: \{\} <br /> |
 | `contextPath` _string_ |  |  | Pattern: `^/` <br />Required: \{\} <br /> |
-| `protocolVersion` _string_ | MCP protocol version the proxy speaks. |  | Enum: [2024-11-05 2025-03-26 2025-11-25] <br />Required: \{\} <br /> |
 | `mode` _[Mode](#mode)_ | PROXY requires the proxy block, STUDIO the studio block. Immutable. |  | Enum: [PROXY STUDIO] <br />Required: \{\} <br /> |
 | `proxy` _[Proxy](#proxy)_ | Required when mode is PROXY. |  | Optional: \{\} <br /> |
 | `studio` _[Studio](#studio)_ | Required when mode is STUDIO. |  | Optional: \{\} <br /> |

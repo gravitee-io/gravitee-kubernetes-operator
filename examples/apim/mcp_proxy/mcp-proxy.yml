@@ -30,7 +30,6 @@ spec:
   entityId: mcp-proxy.github
   name: GitHub MCP
   contextPath: /mcp/github
-  protocolVersion: "2025-03-26"
   mode: PROXY
   proxy:
     serverUrl: https://api.githubcopilot.com/mcp/

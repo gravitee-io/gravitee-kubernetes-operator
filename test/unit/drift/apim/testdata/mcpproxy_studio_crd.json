@@ -5,7 +5,6 @@
     "entityId": "mcp-proxy.dev-tools",
     "name": "Developer Tools",
     "contextPath": "/mcp/dev-tools",
-    "protocolVersion": "2025-03-26",
     "mode": "STUDIO",
     "state": "STARTED",
     "studio": {
