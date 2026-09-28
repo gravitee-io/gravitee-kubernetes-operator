@@ -30,7 +30,7 @@ import (
 
 // validateCreate runs the checks in order: the context, the derived HRID, the studio references,
 // then the platform dry run. Schema and CEL own the spec-only rules (entityId grammar, union
-// pairing, and the immutable mode and entityId).
+// pairing, mode and the immutable fields).
 func validateCreate(ctx context.Context, proxy *v1alpha1.McpProxy) *errors.AdmissionErrors {
 	errs := validateContext(ctx, proxy)
 	if errs.IsSevere() {
