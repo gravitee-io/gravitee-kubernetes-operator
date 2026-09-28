@@ -82,7 +82,6 @@ spec:
                     - name
                   type: object
                 description:
-                  description: Immutable.
                   type: string
                 entityId:
                   description: >-
@@ -295,14 +294,13 @@ spec:
                     - name
                   x-kubernetes-list-type: map
                 mode:
-                  default: PROXY
                   description: PROXY requires the proxy block, STUDIO the studio block. Immutable.
                   enum:
                     - PROXY
                     - STUDIO
                   type: string
                 name:
-                  description: Display name. Immutable.
+                  description: Display name.
                   type: string
                 plans:
                   items:
@@ -495,7 +493,7 @@ spec:
                     - name
                   x-kubernetes-list-type: map
                 protocolVersion:
-                  description: MCP protocol version the proxy speaks. Immutable.
+                  description: MCP protocol version the proxy speaks.
                   enum:
                     - 2024-11-05
                     - 2025-03-26
@@ -784,6 +782,7 @@ spec:
               required:
                 - contextPath
                 - entityId
+                - mode
                 - name
                 - plans
                 - protocolVersion
@@ -801,14 +800,6 @@ spec:
                   rule: self.mode == oldSelf.mode
                 - message: entityId is immutable
                   rule: self.entityId == oldSelf.entityId
-                - message: name is immutable
-                  rule: self.name == oldSelf.name
-                - message: protocolVersion is immutable
-                  rule: self.protocolVersion == oldSelf.protocolVersion
-                - message: description is immutable
-                  rule: has(self.description) == has(oldSelf.description) &&
-                    (!has(self.description) || self.description ==
-                    oldSelf.description)
             status:
               description: McpProxyStatus defines the observed state of a McpProxy.
               properties:

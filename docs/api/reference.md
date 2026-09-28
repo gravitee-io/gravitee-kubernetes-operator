@@ -803,11 +803,11 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `entityId` _string_ | Stable identity of the proxy, the name authorization policies reference: lowercase,<br />dot-separated segments, first segment `mcp-proxy`. Immutable. |  | MaxLength: 255 <br />Pattern: `^mcp-proxy\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
-| `name` _string_ | Display name. Immutable. |  | Required: \{\} <br /> |
-| `description` _string_ | Immutable. |  | Optional: \{\} <br /> |
+| `name` _string_ | Display name. |  | Required: \{\} <br /> |
+| `description` _string_ |  |  | Optional: \{\} <br /> |
 | `contextPath` _string_ |  |  | Pattern: `^/` <br />Required: \{\} <br /> |
-| `protocolVersion` _string_ | MCP protocol version the proxy speaks. Immutable. |  | Enum: [2024-11-05 2025-03-26 2025-11-25] <br />Required: \{\} <br /> |
-| `mode` _[Mode](#mode)_ | PROXY requires the proxy block, STUDIO the studio block. Immutable. | PROXY | Enum: [PROXY STUDIO] <br />Optional: \{\} <br /> |
+| `protocolVersion` _string_ | MCP protocol version the proxy speaks. |  | Enum: [2024-11-05 2025-03-26 2025-11-25] <br />Required: \{\} <br /> |
+| `mode` _[Mode](#mode)_ | PROXY requires the proxy block, STUDIO the studio block. Immutable. |  | Enum: [PROXY STUDIO] <br />Required: \{\} <br /> |
 | `proxy` _[Proxy](#proxy)_ | Required when mode is PROXY. |  | Optional: \{\} <br /> |
 | `studio` _[Studio](#studio)_ | Required when mode is STUDIO. |  | Optional: \{\} <br /> |
 | `state` _[LifecycleState](#lifecyclestate)_ | STARTED starts the proxy and redeploys it when it changed; STOPPED stops it and keeps later<br />changes stored until it is started again. | STARTED | Enum: [STARTED STOPPED] <br />Optional: \{\} <br /> |
@@ -4107,11 +4107,11 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `entityId` _string_ | Stable identity of the proxy, the name authorization policies reference: lowercase,<br />dot-separated segments, first segment `mcp-proxy`. Immutable. |  | MaxLength: 255 <br />Pattern: `^mcp-proxy\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
-| `name` _string_ | Display name. Immutable. |  | Required: \{\} <br /> |
-| `description` _string_ | Immutable. |  | Optional: \{\} <br /> |
+| `name` _string_ | Display name. |  | Required: \{\} <br /> |
+| `description` _string_ |  |  | Optional: \{\} <br /> |
 | `contextPath` _string_ |  |  | Pattern: `^/` <br />Required: \{\} <br /> |
-| `protocolVersion` _string_ | MCP protocol version the proxy speaks. Immutable. |  | Enum: [2024-11-05 2025-03-26 2025-11-25] <br />Required: \{\} <br /> |
-| `mode` _[Mode](#mode)_ | PROXY requires the proxy block, STUDIO the studio block. Immutable. | PROXY | Enum: [PROXY STUDIO] <br />Optional: \{\} <br /> |
+| `protocolVersion` _string_ | MCP protocol version the proxy speaks. |  | Enum: [2024-11-05 2025-03-26 2025-11-25] <br />Required: \{\} <br /> |
+| `mode` _[Mode](#mode)_ | PROXY requires the proxy block, STUDIO the studio block. Immutable. |  | Enum: [PROXY STUDIO] <br />Required: \{\} <br /> |
 | `proxy` _[Proxy](#proxy)_ | Required when mode is PROXY. |  | Optional: \{\} <br /> |
 | `studio` _[Studio](#studio)_ | Required when mode is STUDIO. |  | Optional: \{\} <br /> |
 | `state` _[LifecycleState](#lifecyclestate)_ | STARTED starts the proxy and redeploys it when it changed; STOPPED stops it and keeps later<br />changes stored until it is started again. | STARTED | Enum: [STARTED STOPPED] <br />Optional: \{\} <br /> |

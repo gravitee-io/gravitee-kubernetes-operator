@@ -136,13 +136,10 @@ var _ = Describe("MCP proxy", func() {
 			Expect(dto.Studio).To(BeNil())
 		})
 
-		It("defaults the mode and the lifecycle", func() {
+		It("defaults the lifecycle", func() {
 			proxy := newMcpProxy(nil)
-			proxy.Spec.Mode = ""
 			proxy.Spec.State = ""
-			dto := model.ToMcpProxyDTO(proxy)
-			Expect(dto.Mode).To(Equal("PROXY"))
-			Expect(dto.State).To(Equal("STARTED"))
+			Expect(model.ToMcpProxyDTO(proxy).State).To(Equal("STARTED"))
 		})
 
 		DescribeTable("sends no upstream auth for a passthrough proxy",
