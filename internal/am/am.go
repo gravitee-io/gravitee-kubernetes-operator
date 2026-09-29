@@ -26,10 +26,12 @@ import (
 	"github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg"
 	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/apicontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	ghttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
@@ -141,4 +143,24 @@ func HasErrors(err error, response func() (*http.Response, []byte)) error {
 	resp, body := response()
 	resp.Body = io.NopCloser(bytes.NewReader(body))
 	return gerrors.FromResponse(resp)
+}
+
+// GetDomain returns the AMSecurityDomain a domain sub-resource references, looked up in the
+// sub-resource's own namespace.
+func GetDomain(ctx context.Context, obj core.AMDomainSubResource) (*v1alpha1.AMSecurityDomain, error) {
+	ref := DomainRef(obj)
+	owner := &v1alpha1.AMSecurityDomain{}
+	err := k8s.GetClient().Get(ctx, ref.NamespacedName(), owner)
+	return owner, err
+}
+
+// DomainKey returns the AM key of the domain a sub-resource references: its namespace-name HRID.
+func DomainKey(obj core.AMDomainSubResource) string {
+	return DomainRef(obj).HRID()
+}
+
+// DomainRef returns the domain a sub-resource references, always in the sub-resource's own namespace:
+// a cross-namespace domainRef is rejected by admission.
+func DomainRef(obj core.AMDomainSubResource) *refs.NamespacedName {
+	return &refs.NamespacedName{Namespace: obj.GetRef().GetNamespace(), Name: obj.GetDomainRef().GetName()}
 }
