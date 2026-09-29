@@ -72,6 +72,37 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	return nil
 }
 
+// AssertNoAMContextRef fails when AMSecurityDomains still reference the AMContext, as AssertNoContextRef does
+// for a ManagementContext. It has the shape of a lifecycle.DeleteGuardFunc. Identity providers reach an AMContext
+// only through their domain, so domains are enough. A domain being deleted still counts: its finalizer needs the
+// context to delete it in AM.
+func AssertNoAMContextRef(ctx context.Context, amContext *v1alpha1.AMContext) error {
+	ctxRef := refs.NewNamespacedName(amContext.GetNamespace(), amContext.GetName())
+	return assertNoAMSecurityDomains(ctx, ctxRef, amContext.GetName())
+}
+
+func assertNoAMSecurityDomains(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	domains := &v1alpha1.AMSecurityDomainList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		AMSecurityContextField,
+		ctxRef,
+		domains,
+	); err != nil {
+		return err
+	}
+	if len(domains.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d AM security domains are relying on this context. "+
+				reviewMessage+
+				"kubectl get amsecuritydomains.gravitee.io "+
+				kubectlCommand,
+			contextName, len(domains.Items), contextName,
+		)
+	}
+	return nil
+}
+
 func assertNoApiDefinitions(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := FindByFieldReferencing(
