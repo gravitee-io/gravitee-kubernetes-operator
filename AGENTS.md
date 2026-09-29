@@ -51,7 +51,7 @@ make run                       # Run operator locally (APPLY_CRDS=true ENABLE_GA
 All CRDs belong to the `gravitee.io` API group, version `v1alpha1`:
 
 - **APIM resources:** `ApiDefinition` (v2), `ApiV4Definition` (v4), `ManagementContext` (cluster-scoped), `ApiResource`, `Application`, `Subscription`, `Group`, `Notification`, `SharedPolicyGroup`
-- **AM resources:** `AMContext` (namespaced, bearer-only, no cloud). Later stories add IdentityProvider, SecurityDomain, Certificate, Reporter
+- **AM resources:** `AMContext` (namespaced, bearer-only, no cloud), `AMSecurityDomain`. Later stories add IdentityProvider, Certificate, Reporter
 - **Gateway API resources:** `GatewayClassParameters`, plus standard `HTTPRoute`/`KafkaRoute`
 
 Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core interfaces that all CRD types implement are in `internal/core/interface.go` (`Object`, `Spec`, `Status`, `ContextAwareObject`, etc.).
@@ -60,7 +60,7 @@ Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core inte
 
 Three controller families, each under `controllers/`:
 - **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription)
-- **`am/`** — `amcontext` (more AM kinds follow)
+- **`am/`** — `amcontext`, `securitydomain` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
 Each controller follows the standard Kubebuilder reconciler pattern:
@@ -94,11 +94,10 @@ Sibling of `internal/apim`, not a fork. Bearer-only, no cloud. Talks to AM's Aut
 
 | Package | Role |
 |---------|------|
-| `internal/am/am.go` | The `AM` facade, built per reconcile from an `AMContext` |
-| `internal/am/client/` | HTTP client + `AutomationTarget` `{base}/automation/organizations/{org}/environments/{env}` |
-| `internal/am/service/` | One file per resource. Today: `Domains.Probe()` |
+| `internal/am/am.go` | `am.Client`: the am-sdk client (`gravitee-automation-tools/am-sdk`) built from an `AMContext` by `NewSDKClient`, plus `Probe` and `HasErrors` |
+| `internal/am/<resource>/` | One package per resource: DTO mapping, SDK calls (`Upsert`, `DryRun`, `GetRemote`, `Delete`), client factory, checks. Today: `securitydomain/` |
 
-Auth is `bearerToken` / `secretRef` only — no `credentials` field. Controllers obtain a client with `am.FromContextRef(ctx, obj.ContextRef(), obj.GetNamespace())`. New AM resources stay Automation API only.
+The SDK builds `{baseUrl}{path, default /automation}/organizations/{org}/environments/{env}` and sends requests through `internal/http.NewStdClient`, so the operator's proxy, TLS and trust store settings apply. Auth is `bearerToken` / `secretRef` only — no `credentials` field. A resource's client factory resolves its AMContext with `dynamic.ResolveAMContext` (templates compiled) and calls `am.NewSDKClient`; see `securitydomain.CreateAMClient`. Wrap every SDK call in `am.HasErrors`, which keeps AM's error message. New AM resources stay Automation API only and are wired through `internal/lifecycle`.
 
 #### Management API vs Automation API
 
