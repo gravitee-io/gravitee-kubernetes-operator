@@ -19,6 +19,7 @@ parameters:
     type: string
     default: "v3.19.4"
   kubernetes-version:
+    description: kubectl for the Gateway API conformance job. The APIM kind cluster uses hack/make/versions.mk.
     type: string
     default: "v1.34.1"
   trigger:
@@ -336,8 +337,11 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/load-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - kubernetes/install_kubectl:
-          kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
+      - run:
+          name: Install kubectl
+          command: |
+            curl -Lo /tmp/kubectl "https://dl.k8s.io/release/v$(make -s print-k8s-version)/bin/linux/amd64/kubectl"
+            sudo install -m 0755 /tmp/kubectl /usr/local/bin/kubectl
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
       - keeper/env-export:
@@ -346,7 +350,7 @@ jobs:
       - run:
           name: Install kind
           command: |
-            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            curl -Lo /tmp/kind "https://github.com/kubernetes-sigs/kind/releases/download/$(make -s print-kind-version)/kind-linux-amd64"
             chmod +x /tmp/kind
             sudo mv /tmp/kind /usr/local/bin/
       - gravitee/docker-login:
