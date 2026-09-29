@@ -57,3 +57,6 @@ prompts
 plans
 /.claude/settings.local.json
 /package-lock.json
+
+# crdgen amended specs
+*.gen.yaml
