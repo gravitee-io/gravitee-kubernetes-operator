@@ -83,7 +83,8 @@ func AdmissionClient(ctx context.Context, obj *v1alpha1.AMIdentityProvider) (*am
 }
 
 // DryRun validates the identity provider against AM without persisting it. It is skipped without a client
-// (domain not in AM yet), and an unreachable AM gives a warning: the identity provider is admitted.
+// (domain not in AM yet). Any AM error, an unreachable AM included, rejects it, as for the domain and the
+// APIM resources.
 func DryRun(ctx context.Context, client *am.Client, dto IdentityProvider) *gerrors.AdmissionErrors {
 	errs := gerrors.NewAdmissionErrors()
 	if client == nil {
