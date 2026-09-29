@@ -20,10 +20,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gravitee-io-labs/gravitee-automation-tools/am-mock-server/server"
-	pkg "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg"
-	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/apicontext"
-	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/auth"
+	"github.com/gravitee-io/gravitee-automation-sdk/am-mock-server/server"
+	pkg "github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2/pkg"
+	"github.com/gravitee-io/gravitee-automation-sdk/common/pkg/apicontext"
+	"github.com/gravitee-io/gravitee-automation-sdk/common/pkg/auth"
 )
 
 const (

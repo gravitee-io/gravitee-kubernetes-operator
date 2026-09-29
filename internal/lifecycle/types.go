@@ -20,7 +20,7 @@ package lifecycle
 import (
 	"context"
 
-	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/store"
+	"github.com/gravitee-io/gravitee-automation-sdk/common/pkg/store"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
