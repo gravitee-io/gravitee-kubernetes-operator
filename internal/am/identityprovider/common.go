@@ -22,7 +22,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/securitydomain"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
 )
 
@@ -53,10 +52,11 @@ func ResolveDomain(ctx context.Context, obj *v1alpha1.AMIdentityProvider, _ stri
 
 // CreateAMClient builds the AM client from the AMContext of the parent domain.
 // A missing domain returns the NotFound as-is: on delete, the lifecycle then releases the finalizer.
+// The domain is read again here, as in Owner and ResolveDomain: the hooks cannot share it, and the
+// reads hit the manager's informer cache, not the API server.
 func CreateAMClient(ctx context.Context, obj *v1alpha1.AMIdentityProvider) (*am.Client, error) {
-	domain := &v1alpha1.AMSecurityDomain{}
-	key := am.DomainRef(obj).NamespacedName()
-	if err := k8s.GetClient().Get(ctx, key, domain); err != nil {
+	domain, err := am.GetDomain(ctx, obj)
+	if err != nil {
 		return nil, err
 	}
 	return securitydomain.CreateAMClient(ctx, domain)
