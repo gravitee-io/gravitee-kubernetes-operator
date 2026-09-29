@@ -16,6 +16,8 @@ package drift
 
 import (
 	"fmt"
+	"strings"
+	"unicode"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -46,10 +48,23 @@ func applyRemoteFetchPolicy(obj client.Object, err error, errs *errors.Admission
 func applyPolicy(policy env.DriftPolicy, message func() string, errs *errors.AdmissionErrors) {
 	switch policy {
 	case env.DriftPolicyWarn:
-		errs.AddWarning(message())
+		// The API server drops a warning holding a control character: one warning per line, other control
+		// characters (a tab in a drifted value) blanked.
+		for _, line := range strings.Split(message(), "\n") {
+			if strings.TrimSpace(line) != "" {
+				errs.AddWarning(strings.Map(blankControl, line))
+			}
+		}
 	case env.DriftPolicyAllow:
 		log.Global.Warn(message())
 	default:
 		errs.AddSevere(message())
 	}
+}
+
+func blankControl(r rune) rune {
+	if unicode.IsControl(r) {
+		return ' '
+	}
+	return r
 }

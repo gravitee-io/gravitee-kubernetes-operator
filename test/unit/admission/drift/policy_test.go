@@ -28,6 +28,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/net"
 )
 
 var _ = Describe("Drift policies fetch policies", func() {
@@ -102,8 +103,13 @@ var _ = Describe("Drift policies fetch policies", func() {
 			Expect(errs.Severe).To(BeEmpty())
 		}
 		if expectWarning {
-			Expect(errs.Warning).To(HaveLen(1))
+			Expect(errs.Warning).NotTo(BeEmpty())
 			Expect(errs.Warning[0].Message).To(ContainSubstring("drift detected"))
+			Expect(errs.Warning).To(ContainElement(HaveField("Message", ContainSubstring(`"updated" != "remote"`))))
+			for _, w := range errs.Warning {
+				_, err := net.NewWarningHeader(299, "-", w.Message)
+				Expect(err).NotTo(HaveOccurred(), "the API server drops a warning it cannot put in a header: %q", w.Message)
+			}
 		} else {
 			Expect(errs.Warning).To(BeEmpty())
 		}
@@ -112,6 +118,17 @@ var _ = Describe("Drift policies fetch policies", func() {
 		Entry("warn reports the drift with a kubectl warning", env.DriftPolicyWarn, false, true),
 		Entry("allow reports nothing", env.DriftPolicyAllow, false, false),
 	)
+
+	It("reports a drifted value holding a control character with a warning the API server keeps", func() {
+		env.Config.DriftDetection.Policy = env.DriftPolicyWarn
+		errs := validateWithRemoteName("re\tmote")
+
+		Expect(errs.Warning).To(ContainElement(HaveField("Message", ContainSubstring("re mote"))))
+		for _, w := range errs.Warning {
+			_, err := net.NewWarningHeader(299, "-", w.Message)
+			Expect(err).NotTo(HaveOccurred(), "the API server drops a warning it cannot put in a header: %q", w.Message)
+		}
+	})
 })
 
 func validateWithRemoteError(remoteErr error) *errors.AdmissionErrors {
@@ -142,6 +159,10 @@ func validateWithRemoteError(remoteErr error) *errors.AdmissionErrors {
 }
 
 func validateWithDrift() *errors.AdmissionErrors {
+	return validateWithRemoteName("remote")
+}
+
+func validateWithRemoteName(remoteName string) *errors.AdmissionErrors {
 	stored := &v1alpha1.Dictionary{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"},
 		TypeMeta: metav1.TypeMeta{
@@ -157,7 +178,7 @@ func validateWithDrift() *errors.AdmissionErrors {
 	updated := stored.DeepCopy()
 	updated.Spec.Name = "updated"
 	remote := stored.DeepCopy()
-	remote.Spec.Name = "remote"
+	remote.Spec.Name = remoteName
 
 	return admdrift.ValidateDriftWithContext(
 		context.Background(),
