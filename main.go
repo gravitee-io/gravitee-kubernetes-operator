@@ -46,6 +46,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/kafkaroute"
 
 	amctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amctx"
+	amidpAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amidentityprovider"
 	amsdAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amsecuritydomain"
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
@@ -653,6 +654,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (amsdAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (amidpAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	if err := (subAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
