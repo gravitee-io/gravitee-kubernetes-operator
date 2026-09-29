@@ -15,6 +15,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
@@ -147,14 +148,19 @@ type SubscribableStatus interface {
 }
 
 // +k8s:deepcopy-gen=false
+type OrgEnvIDGetter interface {
+	GetOrgID() string
+	GetEnvID() string
+}
+
+// +k8s:deepcopy-gen=false
 type ContextAwareObject interface {
 	Object
+	OrgEnvIDGetter
 	ContextRef() ObjectRef
 	HasContext() bool
 	GetID() string
 	PopulateIDs(context ContextModel, automationAPIManaged bool)
-	GetOrgID() string
-	GetEnvID() string
 }
 
 // +k8s:deepcopy-gen=false
@@ -166,10 +172,9 @@ type SecretAware interface {
 // +k8s:deepcopy-gen=false
 type ContextModel interface {
 	SecretAware
+	OrgEnvIDGetter
 	GetURL() string
 	GetPath() *string
-	GetEnvID() string
-	GetOrgID() string
 	HasAuthentication() bool
 	GetAuth() Auth
 }
@@ -276,4 +281,8 @@ type ConditionAware interface {
 type ConditionAwareObject interface {
 	ConditionAware
 	Object
+}
+
+type APIClient interface {
+	Probe(context.Context) error
 }
