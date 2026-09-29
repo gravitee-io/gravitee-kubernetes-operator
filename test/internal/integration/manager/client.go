@@ -22,17 +22,21 @@ import (
 )
 
 func Client() client.Client {
+	Instance()
 	return k8s.GetClient()
 }
 
 func GetLatest[T client.Object](ctx context.Context, obj T) error {
+	Instance()
 	return k8s.GetLatest(ctx, obj)
 }
 
 func Delete[T client.Object](ctx context.Context, obj T) error {
+	Instance()
 	return k8s.Delete(ctx, obj)
 }
 
 func UpdateSafely[T client.Object](ctx context.Context, objNew T) error {
+	Instance()
 	return k8s.Update(ctx, objNew)
 }
