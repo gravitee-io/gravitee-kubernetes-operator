@@ -53,6 +53,8 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.AMContext:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.AMSecurityDomain:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.ApiResource:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Application:
@@ -126,6 +128,9 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.AMContext:
 		oo, _ := e.ObjectOld.(*v1alpha1.AMContext)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *v1alpha1.AMSecurityDomain:
+		oo, _ := e.ObjectOld.(*v1alpha1.AMSecurityDomain)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.ApiResource:
 		oo, _ := e.ObjectOld.(*v1alpha1.ApiResource)

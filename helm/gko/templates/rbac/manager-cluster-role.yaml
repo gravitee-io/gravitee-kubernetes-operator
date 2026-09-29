@@ -183,6 +183,32 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
+      - amsecuritydomains
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - amsecuritydomains/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - amsecuritydomains/status
+    verbs:
+      - get
+      - update
+      - patch
+  - apiGroups:
+      - gravitee.io
+    resources:
       - managementcontexts
     verbs:
       - get
