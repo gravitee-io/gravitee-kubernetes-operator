@@ -4,6 +4,7 @@
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
+include hack/make/versions.mk
 include hack/make/tool.mk
 include hack/make/build.mk
 include hack/make/docker.mk

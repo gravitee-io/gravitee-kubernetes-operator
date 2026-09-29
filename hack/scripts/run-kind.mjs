@@ -111,7 +111,13 @@ async function createKindCluster() {
     setQuoteEscape();
     return;
   }
-  await $`kind create cluster --config ${KIND_CONFIG}/kind.yaml ${REDIRECT}`;
+  if (!$.env.K8S_VERSION) {
+    throw new Error(
+      "K8S_VERSION is not set: run make start-cluster (see hack/make/versions.mk)",
+    );
+  }
+  const nodeImage = `kindest/node:v${$.env.K8S_VERSION}`;
+  await $`kind create cluster --config ${KIND_CONFIG}/kind.yaml --image ${nodeImage} ${REDIRECT}`;
   setQuoteEscape();
 }
 

@@ -2,15 +2,15 @@
 
 .PHONY: start-cluster
 start-cluster: ## Init and start a local cluster
-	@npx zx ./hack/scripts/run-kind.mjs
+	@K8S_VERSION=$(K8S_VERSION) npx zx ./hack/scripts/run-kind.mjs
 
 .PHONY: start-cluster-ui
 start-cluster-ui: ## Init and start a local cluster
-	@APIM_UI=true npx zx ./hack/scripts/run-kind.mjs
+	@APIM_UI=true K8S_VERSION=$(K8S_VERSION) npx zx ./hack/scripts/run-kind.mjs
 
 .PHONY: start-bare-cluster
 start-bare-cluster: ## Start a plain kind cluster (no Gravitee pods)
-	kind create cluster --name gravitee
+	kind create cluster --name gravitee --image kindest/node:v$(K8S_VERSION)
 
 .PHONY: start-conformance-cluster
 start-conformance-cluster: ## Init and start a local cluster for gateway-api conformance tests

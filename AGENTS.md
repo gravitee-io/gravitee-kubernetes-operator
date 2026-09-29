@@ -38,7 +38,7 @@ go tool ginkgo test/unit/predicate/...
 go tool ginkgo --focus "should ..." test/integration/apidefinition/v2/...
 
 # Local development
-make start-cluster             # Create local KinD cluster with APIM
+make start-cluster             # Create local KinD cluster with APIM (Kubernetes/kind versions: hack/make/versions.mk)
 make delete-cluster            # Delete local KinD cluster
 make install                   # Install CRDs into current cluster
 make run                       # Run operator locally (APPLY_CRDS=true ENABLE_GATEWAY_API=false)
