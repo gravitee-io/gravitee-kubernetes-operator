@@ -53,4 +53,20 @@ var _ = Describe("InitCache", func() {
 		Expect(index).ToNot(BeNil())
 		Expect(index(domain)).To(ConsistOf("ns/am-ctx"))
 	})
+
+	It("indexes an AMIdentityProvider by its domain, in its own namespace", func() {
+		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+
+		idp := func(domainRef refs.NamespacedName) *v1alpha1.AMIdentityProvider {
+			p := &v1alpha1.AMIdentityProvider{ObjectMeta: metav1.ObjectMeta{Name: "idp", Namespace: "ns"}}
+			p.Spec.DomainRef = domainRef
+			return p
+		}
+
+		index := c.indexers[search.AMIdentityProviderDomainField.String()]
+		Expect(index).ToNot(BeNil())
+		Expect(index(idp(refs.NamespacedName{Name: "domain"}))).To(ConsistOf("ns/domain"))
+		Expect(index(idp(refs.NamespacedName{Name: "domain", Namespace: "other"}))).To(ConsistOf("ns/domain"))
+	})
 })
