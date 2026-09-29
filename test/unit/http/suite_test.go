@@ -12,25 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package am
+package http_test
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-func toHttpAuth(ctx core.ContextModel) *http.Auth {
-	if !ctx.HasAuthentication() {
-		return nil
-	}
-	return &http.Auth{
-		Token: toBearer(ctx.GetAuth()),
-	}
-}
-
-func toBearer(auth core.Auth) http.BearerToken {
-	if auth == nil || auth.GetBearerToken() == "" {
-		return ""
-	}
-	return http.BearerToken(auth.GetBearerToken())
+func TestHTTP(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "HTTP unit tests suite")
 }
