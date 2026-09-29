@@ -13,6 +13,15 @@ TIMEOUT ?= 1200s
 it: use-cluster install ## Run integration tests
 	go tool ginkgo $(IT_ARGS) --timeout $(TIMEOUT)  test/integration/...
 
+ENVTEST_ARGS ?= ""
+.PHONY: envtest
+envtest: ## Run envtest suites (no cluster needed)
+	assets="$$(go tool setup-envtest use $(K8S_VERSION) -p path)" && \
+	KUBEBUILDER_ASSETS="$$assets" \
+	GKO_TEST_ENVTEST=true \
+	KUBECONFIG=/dev/null \
+	go tool ginkgo $(ENVTEST_ARGS) test/envtest/...
+
 UT_ARGS ?= ""
 .PHONY: unit
 unit:  ## Run unit tests

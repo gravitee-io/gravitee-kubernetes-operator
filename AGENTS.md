@@ -29,6 +29,7 @@ npx --yes -p @commitlint/cli -p @commitlint/config-conventional \
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
 make it                        # Run integration tests (Ginkgo, requires cluster) — test/integration/...
+make envtest                   # Run envtest suites (Ginkgo, no cluster: kube-apiserver + etcd) — test/envtest/...
 
 # Run a single unit test suite
 go tool ginkgo test/unit/apim/...
@@ -214,11 +215,12 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 
 ## Testing
 
-**A story ships unit tests here. It does not add integration tests, and it does not write e2e tests.**
+**A story ships unit and envtest suites here. It does not add integration tests, and it does not write e2e tests.**
 
 | Layer | Where | What belongs there |
 |-------|-------|--------------------|
 | Unit | `test/unit/<area>/` in this repo | Pure logic: DTO mapping, drift tags, validation predicates, templating, helpers. Ginkgo v2; dot-imports for `ginkgo/v2` and `gomega` are allowed |
+| Envtest | `test/envtest/<area>/` in this repo | Controllers and admission against a real kube-apiserver + etcd with in-process mocks (AM today). No cluster needed; run with `make envtest` |
 | Critical user journey | [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e) | Platform behaviour end to end (reconciliation, `.status`, admission rejection, drift, deletion). One journey per **epic**, one body run through every provisioner (UI, GKO, TF), written from the PRD by a separate agent with no knowledge of this code |
 | Helm | `helm/gko/tests/` | helm-unittest YAML tests |
 
