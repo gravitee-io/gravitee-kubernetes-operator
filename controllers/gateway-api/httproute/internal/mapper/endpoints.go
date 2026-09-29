@@ -79,12 +79,11 @@ func buildEndpointGroup(
 		endpointGroup.LoadBalancer = v4.NewLoadBalancer(v4.WeightedRoundRobin)
 	}
 
-	applyBackendTimeout(endpointGroup, rule)
-
 	eps, err := buildEndpoints(ctx, route, match, matchIndex, backendRefs, rewrite)
 	if err != nil {
 		return nil, err
 	}
+	applyBackendTimeout(eps, rule)
 	endpointGroup.Endpoints = eps
 	return endpointGroup, nil
 }
@@ -323,7 +322,9 @@ func getEndpointPath(match gwAPIv1.HTTPRouteMatch) string {
 	return strings.TrimSuffix(*match.Path.Value, "/")
 }
 
-func applyBackendTimeout(group *v4.EndpointGroup, rule gwAPIv1.HTTPRouteRule) {
+// applyBackendTimeout sets the rule's backendRequest timeout as the read timeout of each endpoint.
+// The endpoints do not inherit the group configuration, so the gateway reads it from theirs.
+func applyBackendTimeout(endpoints []*v4.Endpoint, rule gwAPIv1.HTTPRouteRule) {
 	if rule.Timeouts == nil || rule.Timeouts.BackendRequest == nil {
 		return
 	}
@@ -333,16 +334,9 @@ func applyBackendTimeout(group *v4.EndpointGroup, rule gwAPIv1.HTTPRouteRule) {
 		return
 	}
 
-	if group.SharedConfig == nil {
-		group.SharedConfig = utils.NewGenericStringMap()
+	for _, ep := range endpoints {
+		getOrCreateHTTPConfig(ep).Put("readTimeout", duration.Milliseconds())
 	}
-	httpConfig := utils.NewGenericStringMap()
-	if duration == 0 {
-		httpConfig.Put("readTimeout", 0)
-	} else {
-		httpConfig.Put("readTimeout", duration.Milliseconds())
-	}
-	group.SharedConfig.Put("http", httpConfig)
 }
 
 // If several backends are provided, skip backends with a weight defined to 0.
