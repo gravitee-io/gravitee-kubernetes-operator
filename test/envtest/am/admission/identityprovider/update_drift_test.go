@@ -20,7 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io-labs/gravitee-automation-tools/common/pkg/unstructured"
+	"github.com/gravitee-io/gravitee-automation-sdk/common/pkg/unstructured"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amidentityprovider"
 	internal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/identityprovider"

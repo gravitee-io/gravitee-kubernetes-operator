@@ -17,7 +17,7 @@ package amsecuritydomain
 import (
 	"context"
 
-	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg/sdk"
+	amsdk "github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	internal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/securitydomain"
