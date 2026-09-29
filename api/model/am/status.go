@@ -41,3 +41,9 @@ type Status struct {
 	// +kubebuilder:default={}
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
+
+type DomainSubResourceStatus struct {
+	Status `json:",inline"`
+	// +kubebuilder:validation:Optional
+	DomainKey string `json:"domainKey"`
+}
