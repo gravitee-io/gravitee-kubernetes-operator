@@ -120,6 +120,19 @@ func ErrorRequeuingReconcile(ctx context.Context, err error, obj client.Object) 
 	)
 }
 
+// WarnRequeuingReconcile logs a recoverable error as a warning: logr has no warning level, so it is an
+// info line carrying "severity": "warning" and the error.
+func WarnRequeuingReconcile(ctx context.Context, err error, obj client.Object) {
+	log.FromContext(ctx).Info(
+		"Requeuing reconcile of resource due to an error",
+		KeyValues(obj,
+			"kind", obj.GetObjectKind().GroupVersionKind().GroupKind().String(),
+			"severity", "warning",
+			"error", err.Error(),
+		)...,
+	)
+}
+
 func ErrorAbortingReconcile(ctx context.Context, err error, obj client.Object) {
 	log.FromContext(ctx).Error(
 		err,
