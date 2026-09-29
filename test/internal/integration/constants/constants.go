@@ -207,6 +207,7 @@ const (
 	AMContextUnreachableFile  = "am_context/dev/am-context-unreachable.yml"
 	AMSecurityDomainBasicFile = "am/security_domain/security-domain-basic.yml"
 	AMSecurityDomainFullFile  = "am/security_domain/security-domain-with-settings.yml"
+	AMIdentityProviderFile    = "am/identity_provider/idp-inline-with-domain-ref.yml"
 
 	// Use cases.
 	SubscribeJWTUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
