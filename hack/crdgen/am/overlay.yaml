@@ -1,0 +1,54 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+overlay: 1.1.0
+info:
+  title: Shape the AM Automation OAS into CRD spec structs
+  version: 0.0.1
+actions:
+  # Names: drop the Automation prefix on every schema reached from AutomationDomain.
+  - target: $.components.schemas.AutomationDomain
+    update: { x-go-type-name: Domain }
+  - target: $.components.schemas.AutomationAccountSettings
+    update: { x-go-type-name: AccountSettings }
+  - target: $.components.schemas.AutomationCertificateSettings
+    update: { x-go-type-name: CertificateSettings }
+  - target: $.components.schemas.AutomationOidcSettings
+    update: { x-go-type-name: OidcSettings }
+  - target: $.components.schemas.AutomationCIBASettings
+    update: { x-go-type-name: CIBASettings }
+  - target: $.components.schemas.AutomationClientRegistrationSettings
+    update: { x-go-type-name: ClientRegistrationSettings }
+  - target: $.components.schemas.AutomationSamlSettings
+    update: { x-go-type-name: SamlSettings }
+
+  # key: not in the CRD, always namespace-name (the HRID the IdP resolves from domainRef).
+  - target: $.components.schemas.AutomationDomain.required[?(@ == 'key')]
+    remove: true
+  - target: $.components.schemas.AutomationDomain.properties.key
+    remove: true
+  - target: $.components.schemas.AutomationDomain.properties.enabled
+    update: { x-gko-default: keep }
+  # TODO(AM OAS): add `pattern: ^/.*` to AutomationDomain.path, then drop this action.
+  - target: $.components.schemas.AutomationDomain.properties.path
+    update:
+      x-kubebuilder: ["validation:Pattern=`^/.*`"]
+  # TODO(AM OAS): add `minimum: 1` / `maximum: 100` to TokenExchangeSettings.maxDelegationDepth, then drop this action.
+  - target: $.components.schemas.TokenExchangeSettings.properties.maxDelegationDepth
+    update:
+      x-kubebuilder: ["validation:Minimum=1", "validation:Maximum=100"]
+  # TODO(AM OAS): add `enum: [DENY, SAMEORIGIN]` to XFrameSettings.action, then drop this action.
+  - target: $.components.schemas.XFrameSettings.properties.action
+    update:
+      x-kubebuilder: ["validation:Enum=DENY;SAMEORIGIN"]
