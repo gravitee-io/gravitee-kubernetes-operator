@@ -30,6 +30,7 @@ const (
 	CRDPortalResource                     = "portals"
 	CRDPortalThemeResource                = "portalthemes"
 	CRDAMSecurityDomainResource           = "amsecuritydomains"
+	CRDAMIdentityProviderResource         = "amidentityproviders"
 
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"
@@ -71,6 +72,7 @@ const (
 	HTTPRouteFinalizer               = "finalizers.gravitee.io/httproute"
 	KafkaRouteFinalizer              = "finalizers.gravitee.io/kafkaroute"
 	AMSecurityDomainFinalizer        = "finalizers.gravitee.io/amsecuritydomains"
+	AMIdentityProviderFinalizer      = "finalizers.gravitee.io/amidentityproviders"
 
 	GraviteeGatewayClassController = "apim.gravitee.io/gateway"
 
