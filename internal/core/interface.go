@@ -237,6 +237,7 @@ type ObjectRef interface {
 	HasNameSpace() bool
 	IsMissingNamespace() bool
 	SetNamespace(ns string)
+	HRID() string
 }
 
 // +k8s:deepcopy-gen=false
@@ -285,4 +286,9 @@ type ConditionAwareObject interface {
 
 type APIClient interface {
 	Probe(context.Context) error
+}
+
+type AMDomainSubResource interface {
+	GetRef() ObjectRef
+	GetDomainRef() ObjectRef
 }
