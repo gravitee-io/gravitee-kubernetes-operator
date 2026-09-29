@@ -62,6 +62,7 @@ const (
 	CatalogMcpServerContextField  IndexField = "catalogmcpserver-context"
 	McpProxyContextField          IndexField = "mcpproxy-context"
 	McpProxyCatalogMcpServerField IndexField = "mcpproxy-catalogmcpserver"
+	AMSecurityContextField        IndexField = "am-sec-domain-context"
 )
 
 func (f IndexField) String() string {
@@ -129,6 +130,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexMcpProxyManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.McpProxy{}, McpProxyCatalogMcpServerField,
 		indexMcpProxyCatalogMcpServers))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
+		indexAMSecurityDomainContext))
 
 	return errors.NewAggregate(errs)
 }
@@ -458,4 +461,11 @@ func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {
 		cp.Namespace = obj.GetNamespace()
 	}
 	return cp.String()
+}
+
+func indexAMSecurityDomainContext(asd *v1alpha1.AMSecurityDomain, fields *[]string) {
+	if !asd.HasContext() {
+		return
+	}
+	*fields = append(*fields, ensureNamespacedRef(asd, asd.ContextRef()))
 }
