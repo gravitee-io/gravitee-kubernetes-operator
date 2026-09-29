@@ -178,6 +178,32 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
+      - amidentityproviders
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - amidentityproviders/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - amidentityproviders/status
+    verbs:
+      - get
+      - update
+      - patch
+  - apiGroups:
+      - gravitee.io
+    resources:
       - amsecuritydomains
     verbs:
       - get
