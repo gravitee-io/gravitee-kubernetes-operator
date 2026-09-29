@@ -754,9 +754,7 @@ func buildServiceSpec(
 		return
 	}
 
-	svc.Spec.Type = *params.Spec.Kubernetes.Service.Type
-	svc.Spec.ExternalTrafficPolicy = params.Spec.Kubernetes.Service.ExternalTrafficPolicy
-	svc.Spec.LoadBalancerClass = params.Spec.Kubernetes.Service.LoadBalancerClass
+	SetServiceType(svc, params.Spec.Kubernetes.Service)
 
 	if svc.Annotations == nil {
 		svc.Annotations = make(map[string]string)
@@ -1162,6 +1160,26 @@ func getProbePort(probe *coreV1.Probe) *int32 {
 		return &port.IntVal
 	}
 	return nil
+}
+
+// SetServiceType applies the service type from the GatewayClassParameters, with the fields
+// Kubernetes accepts for that type only. The API server rejects externalTrafficPolicy outside
+// NodePort and LoadBalancer services, and loadBalancerClass outside LoadBalancer services; both
+// are cleared otherwise, so that a service moving to ClusterIP drops the values it held before.
+func SetServiceType(svc *coreV1.Service, params *gateway.Service) {
+	svc.Spec.Type = *params.Type
+
+	switch svc.Spec.Type {
+	case coreV1.ServiceTypeLoadBalancer:
+		svc.Spec.ExternalTrafficPolicy = params.ExternalTrafficPolicy
+		svc.Spec.LoadBalancerClass = params.LoadBalancerClass
+	case coreV1.ServiceTypeNodePort:
+		svc.Spec.ExternalTrafficPolicy = params.ExternalTrafficPolicy
+		svc.Spec.LoadBalancerClass = nil
+	default:
+		svc.Spec.ExternalTrafficPolicy = ""
+		svc.Spec.LoadBalancerClass = nil
+	}
 }
 
 func setServicePorts(
