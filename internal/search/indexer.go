@@ -63,6 +63,7 @@ const (
 	McpProxyContextField          IndexField = "mcpproxy-context"
 	McpProxyCatalogMcpServerField IndexField = "mcpproxy-catalogmcpserver"
 	AMSecurityContextField        IndexField = "am-sec-domain-context"
+	AMIdentityProviderDomainField IndexField = "am-idp-domain"
 )
 
 func (f IndexField) String() string {
@@ -132,6 +133,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexMcpProxyCatalogMcpServers))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
 		indexAMSecurityDomainContext))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMIdentityProvider{}, AMIdentityProviderDomainField,
+		indexAMIdentityProviderDomain))
 
 	return errors.NewAggregate(errs)
 }
@@ -461,6 +464,13 @@ func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {
 		cp.Namespace = obj.GetNamespace()
 	}
 	return cp.String()
+}
+
+// indexAMIdentityProviderDomain indexes an identity provider under its domain, always looked up in the
+// identity provider's own namespace (a cross-namespace domainRef is rejected).
+func indexAMIdentityProviderDomain(idp *v1alpha1.AMIdentityProvider, fields *[]string) {
+	domain := refs.NewNamespacedName(idp.GetNamespace(), idp.Spec.DomainRef.Name)
+	*fields = append(*fields, domain.String())
 }
 
 func indexAMSecurityDomainContext(asd *v1alpha1.AMSecurityDomain, fields *[]string) {

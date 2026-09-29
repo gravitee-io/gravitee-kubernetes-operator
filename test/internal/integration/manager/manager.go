@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/identityprovider"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/securitydomain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
@@ -310,6 +311,14 @@ func start() {
 		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("amsecuritydomain-controller"),
 		Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.AMSecurityDomainList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&identityprovider.Reconciler{
+		Client:    mgr.GetClient(),
+		Lifecycle: identityprovider.NewLifecycle(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("amidentityprovider-controller"),
+		Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.AMIdentityProviderList{}),
 	}).SetupWithManager(mgr))
 
 	mgrCtx, mgrCancel := context.WithCancel(ctrl.SetupSignalHandler())
