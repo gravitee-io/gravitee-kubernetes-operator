@@ -51,6 +51,7 @@ type Files struct {
 	PortalTheme        string
 	AMContext          string
 	AMSecurityDomain   string
+	AMIdentityProvider string
 }
 
 type FSBuilder struct {
@@ -149,6 +150,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if amSD := decodeIfDefined(f.AMSecurityDomain, &v1alpha1.AMSecurityDomain{}, amSecurityDomainKind); amSD != nil {
 		setupAMSecurityDomain(obj, amSD, suffix)
+	}
+
+	if idp := decodeIfDefined(f.AMIdentityProvider, &v1alpha1.AMIdentityProvider{}, amIdentityProviderKind); idp != nil {
+		setupAMIdentityProvider(obj, idp, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -434,6 +439,15 @@ func setupAMSecurityDomain(obj *Objects, sd **v1alpha1.AMSecurityDomain, suffix 
 	}
 }
 
+func setupAMIdentityProvider(obj *Objects, idp **v1alpha1.AMIdentityProvider, suffix string) {
+	obj.AMIdentityProvider = *idp
+	obj.AMIdentityProvider.Name += suffix
+	obj.AMIdentityProvider.Namespace = constants.Namespace
+	if obj.AMSecurityDomain != nil {
+		obj.AMIdentityProvider.Spec.DomainRef = refs.NamespacedName{Name: obj.AMSecurityDomain.Name}
+	}
+}
+
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
 	obj.SharedPolicyGroup = *sub
 	obj.SharedPolicyGroup.Name += suffix
@@ -583,5 +597,10 @@ func (b *FSBuilder) WithAMContext(file string) *FSBuilder {
 
 func (b *FSBuilder) WithAMSecurityDomain(file string) *FSBuilder {
 	b.files.AMSecurityDomain = file
+	return b
+}
+
+func (b *FSBuilder) WithAMIdentityProvider(file string) *FSBuilder {
+	b.files.AMIdentityProvider = file
 	return b
 }
