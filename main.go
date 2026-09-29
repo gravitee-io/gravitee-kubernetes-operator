@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/identityprovider"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/securitydomain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
@@ -487,6 +488,17 @@ func registerAMControllers(mgr manager.Manager) {
 		Lifecycle: securitydomain.NewLifecycle(),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for AM security domains")
+		os.Exit(1)
+	}
+
+	if err := (&identityprovider.Reconciler{
+		Client:    k8s.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("amidentityproviders-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AMIdentityProviderList{}),
+		Lifecycle: identityprovider.NewLifecycle(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for AM identity providers")
 		os.Exit(1)
 	}
 }

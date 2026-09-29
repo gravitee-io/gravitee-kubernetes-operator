@@ -31,36 +31,37 @@ import (
 type IndexField string
 
 const (
-	ApiContextField              IndexField = "context"
-	ApiV4ContextField            IndexField = "api-v4-context"
-	SecretRefField               IndexField = "secretRef"
-	ApiResourceField             IndexField = "resource"
-	ApiNotificationRefsField     IndexField = "api-notificationRefs"
-	ApiGroupField                IndexField = "api-group"
-	ApiV4NotificationRefsField   IndexField = "api-v4-notificationRefs"
-	ApiV4GroupField              IndexField = "api-v4-group"
-	ApiV4ResourceField           IndexField = "api-v4-resource"
-	ApiV4SharedPolicyGroupsField IndexField = "api-v4-spg"
-	ApiTemplateField             IndexField = "api-template"
-	TLSSecretField               IndexField = "tls-secret"
-	AppContextField              IndexField = "app-context"
-	ApiV2SubsField               IndexField = "api-v2-subscription"
-	ApiV4SubsField               IndexField = "api-v4-subscription"
-	AppSubsField                 IndexField = "app-subscription"
-	SPGContextField              IndexField = "spg-context"
-	GroupContextField            IndexField = "group-context"
-	DictionaryContextField       IndexField = "dictionary-context"
-	PortalContextField           IndexField = "portal-context"
-	PortalListingPortalField     IndexField = "portallisting-portal"
-	PortalListingApiField        IndexField = "portallisting-api"
-	PortalLinkPortalField        IndexField = "portallink-portal"
-	PortalLinkApiField           IndexField = "portallink-api"
-	DocumentationPortalField     IndexField = "documentation-portal"
-	DocumentationApiField        IndexField = "documentation-api"
-	PortalThemeContextField      IndexField = "portaltheme-context"
-	PortalThemeField             IndexField = "portal-theme"
-	CatalogMcpServerContextField IndexField = "catalogmcpserver-context"
-	AMSecurityContextField       IndexField = "am-sec-domain-context"
+	ApiContextField               IndexField = "context"
+	ApiV4ContextField             IndexField = "api-v4-context"
+	SecretRefField                IndexField = "secretRef"
+	ApiResourceField              IndexField = "resource"
+	ApiNotificationRefsField      IndexField = "api-notificationRefs"
+	ApiGroupField                 IndexField = "api-group"
+	ApiV4NotificationRefsField    IndexField = "api-v4-notificationRefs"
+	ApiV4GroupField               IndexField = "api-v4-group"
+	ApiV4ResourceField            IndexField = "api-v4-resource"
+	ApiV4SharedPolicyGroupsField  IndexField = "api-v4-spg"
+	ApiTemplateField              IndexField = "api-template"
+	TLSSecretField                IndexField = "tls-secret"
+	AppContextField               IndexField = "app-context"
+	ApiV2SubsField                IndexField = "api-v2-subscription"
+	ApiV4SubsField                IndexField = "api-v4-subscription"
+	AppSubsField                  IndexField = "app-subscription"
+	SPGContextField               IndexField = "spg-context"
+	GroupContextField             IndexField = "group-context"
+	DictionaryContextField        IndexField = "dictionary-context"
+	PortalContextField            IndexField = "portal-context"
+	PortalListingPortalField      IndexField = "portallisting-portal"
+	PortalListingApiField         IndexField = "portallisting-api"
+	PortalLinkPortalField         IndexField = "portallink-portal"
+	PortalLinkApiField            IndexField = "portallink-api"
+	DocumentationPortalField      IndexField = "documentation-portal"
+	DocumentationApiField         IndexField = "documentation-api"
+	PortalThemeContextField       IndexField = "portaltheme-context"
+	PortalThemeField              IndexField = "portal-theme"
+	CatalogMcpServerContextField  IndexField = "catalogmcpserver-context"
+	AMSecurityContextField        IndexField = "am-sec-domain-context"
+	AMIdentityProviderDomainField IndexField = "am-idp-domain"
 )
 
 func (f IndexField) String() string {
@@ -126,6 +127,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexCatalogMcpServerManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
 		indexAMSecurityDomainContext))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMIdentityProvider{}, AMIdentityProviderDomainField,
+		indexAMIdentityProviderDomain))
 
 	return errors.NewAggregate(errs)
 }
@@ -439,6 +442,13 @@ func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {
 		cp.Namespace = obj.GetNamespace()
 	}
 	return cp.String()
+}
+
+// indexAMIdentityProviderDomain indexes an identity provider under its domain, always looked up in the
+// identity provider's own namespace (a cross-namespace domainRef is rejected).
+func indexAMIdentityProviderDomain(idp *v1alpha1.AMIdentityProvider, fields *[]string) {
+	domain := refs.NewNamespacedName(idp.GetNamespace(), idp.Spec.DomainRef.Name)
+	*fields = append(*fields, domain.String())
 }
 
 func indexAMSecurityDomainContext(asd *v1alpha1.AMSecurityDomain, fields *[]string) {

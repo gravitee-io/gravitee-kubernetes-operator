@@ -53,6 +53,7 @@ type Interface interface {
 	WatchPortalThemes(index search.IndexField) *handler.Funcs
 	WatchApis(index search.IndexField) *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
+	WatchDomains(index search.IndexField) *handler.Funcs
 }
 
 type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
@@ -194,6 +195,26 @@ func (w *Type) WatchApis(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),
+	}
+}
+
+// WatchDomains queues the resources indexed under an AMSecurityDomain when it is created,
+// and once AM has created it (its status key is set): before that, they cannot be created under it.
+func (w *Type) WatchDomains(index search.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.updateWhenDomainReady(index),
+	}
+}
+
+func (w *Type) updateWhenDomainReady(field search.IndexField) UpdateFunc {
+	lookup := w.UpdateFromLookup(field)
+	return func(ctx context.Context, e event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+		oldDomain, okOld := e.ObjectOld.(*v1alpha1.AMSecurityDomain)
+		newDomain, okNew := e.ObjectNew.(*v1alpha1.AMSecurityDomain)
+		if okOld && okNew && oldDomain.Status.Key == "" && newDomain.Status.Key != "" {
+			lookup(ctx, e, q)
+		}
 	}
 }
 
