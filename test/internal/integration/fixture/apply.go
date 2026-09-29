@@ -47,6 +47,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyAMSecurityDomain(cli, ctx)
 	}
 
+	if o.AMIdentityProvider != nil {
+		o.applyAMIdentityProvider(cli, ctx)
+	}
+
 	if o.Context != nil {
 		o.applyContext(cli, ctx)
 	}
@@ -312,6 +316,20 @@ func (o *Objects) applyAMContext(cli client.Client, ctx context.Context) {
 		}
 		return assert.HasFinalizer(o.AMContext, core.AMContextFinalizer)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMContext.Name)
+}
+
+func (o *Objects) applyAMIdentityProvider(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.AMIdentityProvider)).ToNot(HaveOccurred())
+	Eventually(func() error {
+		err := manager.GetLatest(ctx, o.AMIdentityProvider)
+		if err != nil {
+			return err
+		}
+		if err = assert.AMIdentityProviderAccepted(o.AMIdentityProvider); err != nil {
+			return assert.AMIdentityProviderFailed(o.AMIdentityProvider)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMIdentityProvider.Name)
 }
 
 func (o *Objects) applyAMSecurityDomain(cli client.Client, ctx context.Context) {
