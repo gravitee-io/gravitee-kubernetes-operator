@@ -116,6 +116,10 @@ func (t *Type) GetApiKeys() []core.ApiKeyModel {
 	return keys
 }
 
+func (t *ApiRef) HRID() string {
+	return t.NamespacedName.HRID()
+}
+
 type AutomationApiKeySpec struct {
 	Key      string  `json:"key"`
 	ExpireAt *string `json:"expireAt,omitempty"`
