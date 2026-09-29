@@ -18,6 +18,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/securitydomain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 
@@ -236,6 +238,21 @@ func init() {
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("portaltheme-controller"),
 		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalThemeList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&amcontext.Reconciler{
+		Client:   Client(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("amcontext-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.AMContextList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&securitydomain.Reconciler{
+		Client:    Client(),
+		Lifecycle: securitydomain.NewLifecycle(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("amsecuritydomain-controller"),
+		Watcher:   watch.New(context.Background(), Client(), &v1alpha1.AMSecurityDomainList{}),
 	}).SetupWithManager(mgr))
 
 	go func() {

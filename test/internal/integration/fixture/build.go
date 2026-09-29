@@ -49,6 +49,8 @@ type Files struct {
 	PortalLink         string
 	Documentation      string
 	PortalTheme        string
+	AMContext          string
+	AMSecurityDomain   string
 }
 
 type FSBuilder struct {
@@ -139,6 +141,14 @@ func (b *FSBuilder) Build() *Objects {
 
 	if notif := decodeIfDefined(f.Notification, &v1alpha1.Notification{}, notificationKind); notif != nil {
 		setupNotification(obj, notif, suffix)
+	}
+
+	if amCtx := decodeIfDefined(f.AMContext, &v1alpha1.AMContext{}, amCtxKind); amCtx != nil {
+		setupAMContext(obj, amCtx, suffix)
+	}
+
+	if amSD := decodeIfDefined(f.AMSecurityDomain, &v1alpha1.AMSecurityDomain{}, amSecurityDomainKind); amSD != nil {
+		setupAMSecurityDomain(obj, amSD, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -407,6 +417,23 @@ func setupPortalTheme(obj *Objects, thm **v1alpha1.PortalTheme, suffix string) {
 	obj.PortalTheme.Namespace = constants.Namespace
 }
 
+func setupAMContext(obj *Objects, ctx **v1alpha1.AMContext, suffix string) {
+	obj.AMContext = *ctx
+	obj.AMContext.Name += suffix
+	obj.AMContext.Namespace = constants.Namespace
+}
+
+func setupAMSecurityDomain(obj *Objects, sd **v1alpha1.AMSecurityDomain, suffix string) {
+	obj.AMSecurityDomain = *sd
+	obj.AMSecurityDomain.Name += suffix
+	obj.AMSecurityDomain.Spec.Name += suffix
+	obj.AMSecurityDomain.Spec.Path += suffix
+	obj.AMSecurityDomain.Namespace = constants.Namespace
+	if obj.AMContext != nil {
+		obj.AMSecurityDomain.Spec.Context = obj.AMContext.GetNamespacedName()
+	}
+}
+
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
 	obj.SharedPolicyGroup = *sub
 	obj.SharedPolicyGroup.Name += suffix
@@ -546,5 +573,15 @@ func (b *FSBuilder) WithPortalTheme(file string) *FSBuilder {
 
 func (b *FSBuilder) WithNotification(file string) *FSBuilder {
 	b.files.Notification = file
+	return b
+}
+
+func (b *FSBuilder) WithAMContext(file string) *FSBuilder {
+	b.files.AMContext = file
+	return b
+}
+
+func (b *FSBuilder) WithAMSecurityDomain(file string) *FSBuilder {
+	b.files.AMSecurityDomain = file
 	return b
 }
