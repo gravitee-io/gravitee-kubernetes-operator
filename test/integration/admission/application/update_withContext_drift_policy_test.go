@@ -61,9 +61,7 @@ var _ = Describe("Validate drift policies", labels.WithContext, func() {
 
 		warnings, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Application, newApp)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(HaveLen(1))
-		Expect(warnings[0]).To(ContainSubstring("drift detected"))
-		Expect(warnings[0]).To(ContainSubstring(driftDescriptionAssert))
+		Expect(warnings).To(HaveExactElements("drift detected:", driftDescriptionAssert))
 	})
 
 	It("should allow the update with no admission output when drift policy is allow", func() {
