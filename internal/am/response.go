@@ -15,22 +15,18 @@
 package am
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+	"fmt"
+	"net/http"
 )
 
-func toHttpAuth(ctx core.ContextModel) *http.Auth {
-	if !ctx.HasAuthentication() {
-		return nil
-	}
-	return &http.Auth{
-		Token: toBearer(ctx.GetAuth()),
-	}
+// BaseResponse is what an AM upsert reports back to the CR status: the AM key, organization and environment.
+type BaseResponse struct {
+	OrgEnv `json:",inline"`
+	Key    string `json:"key"`
 }
 
-func toBearer(auth core.Auth) http.BearerToken {
-	if auth == nil || auth.GetBearerToken() == "" {
-		return ""
-	}
-	return http.BearerToken(auth.GetBearerToken())
+// UnexpectedResponse reports an AM response the SDK could not decode (no JSON body for the status).
+func UnexpectedResponse(resp *http.Response) error {
+	return fmt.Errorf("unexpected AM response: status %d, content type %q",
+		resp.StatusCode, resp.Header.Get("Content-Type"))
 }

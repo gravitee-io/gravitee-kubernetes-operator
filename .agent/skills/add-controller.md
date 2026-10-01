@@ -421,7 +421,7 @@ When a referenced object is optional and missing, degrade rather than fail: mark
 
 ## 8. Wire it up in `main.go`
 
-Add the reconciler to `registerAutomationAPIControllers`:
+Add the reconciler to `registerAPIMAutomationAPIControllers`:
 
 ```go
 if err := (&myresource.Reconciler{

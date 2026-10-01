@@ -12,25 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package service
+package mapper
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/client"
+	"encoding/json"
+	"fmt"
 )
 
-const domainsPath = "domains"
+// MapViaJSON converts src to T through its JSON form. An error means some field did not fit: the partial
+// result must not be used.
+func MapViaJSON[T any](src any) (T, error) {
+	var dst T
+	if src == nil {
+		return dst, nil
+	}
 
-type Domains struct {
-	*client.Client
-}
+	data, err := json.Marshal(src)
+	if err != nil {
+		return dst, fmt.Errorf("mapping %T to %T: %w", src, dst, err)
+	}
 
-func NewDomains(c *client.Client) *Domains {
-	return &Domains{Client: c}
-}
+	if err := json.Unmarshal(data, &dst); err != nil {
+		return dst, fmt.Errorf("mapping %T to %T: %w", src, dst, err)
+	}
 
-// Probe checks that AM's Automation API is reachable at this org/env.
-// A 200 is the whole contract: the body is discarded.
-func (svc *Domains) Probe() error {
-	url := svc.AutomationTarget(domainsPath).WithQueryParam("size", "1")
-	return svc.HTTP.Get(url.String(), nil)
+	return dst, nil
 }

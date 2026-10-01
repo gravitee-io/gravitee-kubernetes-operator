@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -51,8 +52,7 @@ func (a AdmissionCtrl) ValidateUpdate(
 }
 
 func (a AdmissionCtrl) ValidateDelete(
-	_ context.Context, _ *v1alpha1.AMContext,
+	ctx context.Context, obj *v1alpha1.AMContext,
 ) (admission.Warnings, error) {
-	// Nothing references an AMContext until AM-7506.
-	return admission.Warnings{}, nil
+	return admission.Warnings{}, search.AssertNoAMContextRef(ctx, obj)
 }

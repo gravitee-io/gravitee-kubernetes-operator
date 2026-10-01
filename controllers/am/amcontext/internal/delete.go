@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -34,8 +35,9 @@ func Delete(
 		return nil
 	}
 
-	// No AssertNoContextRef: that helper only knows APIM kinds.
-	// AM resources that reference an AMContext land in AM-7506.
+	if err := search.AssertNoAMContextRef(ctx, instance); err != nil {
+		return err
+	}
 
 	if instance.HasSecretRef() {
 		secret := &v1.Secret{}
