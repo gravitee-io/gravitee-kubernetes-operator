@@ -19,6 +19,7 @@ parameters:
     type: string
     default: "v3.19.4"
   kubernetes-version:
+    description: kubectl for the Gateway API conformance job. The APIM kind cluster and envtest use hack/make/versions.mk.
     type: string
     default: "v1.34.1"
   trigger:
@@ -184,6 +185,45 @@ jobs:
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
+  job-envtest:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    steps:
+      - checkout
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - run:
+          name: Generate cache key for envtest assets
+          command: make -s print-k8s-version > /tmp/k8s_version
+      - restore_cache:
+          keys:
+            - envtest-assets-{{ checksum "/tmp/k8s_version" }}
+      - run:
+          name: Run envtest suites
+          command: |
+            ENVTEST_ARGS="--junit-report=junit-envtest.xml --cover --coverprofile=cover-envtest.out --coverpkg=github.com/gravitee-io/gravitee-kubernetes-operator/... --output-dir=/tmp/junit/reports" \
+             make -s envtest
+      - save_cache:
+          key: envtest-assets-{{ checksum "/tmp/k8s_version" }}
+          paths:
+            - ~/.local/share/kubebuilder-envtest
+      - store_test_results:
+          path: /tmp/junit/reports
+      - persist_to_workspace:
+          root: /tmp/junit/reports
+          paths:
+            - cover-envtest.out
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-envtest.out
+          destination: cover-envtest.out
+      - go/save-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+
   job-conformance-test:
     machine:
       image: ubuntu-2204:2024.01.2
@@ -336,8 +376,11 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/load-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - kubernetes/install_kubectl:
-          kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
+      - run:
+          name: Install kubectl
+          command: |
+            curl -Lo /tmp/kubectl "https://dl.k8s.io/release/v$(make -s print-k8s-version)/bin/linux/amd64/kubectl"
+            sudo install -m 0755 /tmp/kubectl /usr/local/bin/kubectl
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
       - keeper/env-export:
@@ -346,7 +389,7 @@ jobs:
       - run:
           name: Install kind
           command: |
-            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            curl -Lo /tmp/kind "https://github.com/kubernetes-sigs/kind/releases/download/$(make -s print-kind-version)/kind-linux-amd64"
             chmod +x /tmp/kind
             sudo mv /tmp/kind /usr/local/bin/
       - gravitee/docker-login:
@@ -912,6 +955,8 @@ workflows:
           name: Lint resources
       - job-unit-test:
           name: Run unit tests
+      - job-envtest:
+          name: Run envtest suites
       - job-integration-test:
           matrix:
             parameters:
@@ -976,6 +1021,12 @@ workflows:
             branches:
               only:
                 - master
+      - job-envtest:
+          name: Run envtest suites (master)
+          filters:
+            branches:
+              only:
+                - master
       - job-integration-test:
           matrix:
             parameters:
@@ -1000,6 +1051,7 @@ workflows:
           requires:
             - job-integration-test-withContext
             - job-integration-test-withoutContext
+            - Run envtest suites (master)
             - Run Conformance Test (master)
           filters:
             branches:
@@ -1070,6 +1122,8 @@ workflows:
         - test
         - << pipeline.parameters.trigger >>
     jobs:
+      - job-envtest:
+          name: Run envtest suites
       - job-integration-test:
           matrix:
             parameters:
