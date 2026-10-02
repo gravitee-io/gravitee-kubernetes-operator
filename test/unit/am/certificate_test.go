@@ -178,11 +178,13 @@ var _ = Describe("AMCertificate UpdateStatus", func() {
 					OrgEnv: am.OrgEnv{OrgID: "DEFAULT", EnvID: "DEFAULT"},
 				},
 			},
+			Name:      "Default",
+			Type:      "javakeystore-am-certificate",
 			ExpiresAt: expiresAt,
 		}
 	}
 
-	It("copies the keys and expiresAt", func() {
+	It("copies the keys, the name and type AM stored, and expiresAt", func() {
 		expiresAt := time.Date(2027, 10, 1, 0, 0, 0, 0, time.UTC)
 		cert := &v1alpha1.AMCertificate{}
 
@@ -192,6 +194,8 @@ var _ = Describe("AMCertificate UpdateStatus", func() {
 		Expect(cert.Status.DomainKey).To(Equal("ns-domain"))
 		Expect(cert.Status.OrgID).To(Equal("DEFAULT"))
 		Expect(cert.Status.EnvID).To(Equal("DEFAULT"))
+		Expect(cert.Status.Name).To(Equal("Default"))
+		Expect(cert.Status.Type).To(Equal("javakeystore-am-certificate"))
 		Expect(cert.Status.ExpiresAt).ToNot(BeNil())
 		Expect(cert.Status.ExpiresAt.Time).To(BeTemporally("==", expiresAt))
 	})
