@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -47,6 +48,8 @@ func Upsert(ctx context.Context, client *am.Client, dto Certificate) (Response, 
 				},
 			},
 		},
+		Name:      utils.SafeDereference(resp.JSON200.Name),
+		Type:      utils.SafeDereference(resp.JSON200.Type),
 		ExpiresAt: resp.JSON200.ExpiresAt,
 	}, nil
 }
@@ -71,6 +74,8 @@ func UpdateStatus(_ context.Context, obj *v1alpha1.AMCertificate, resp Response)
 	obj.Status.DomainKey = resp.DomainKey
 	obj.Status.OrgID = resp.GetOrgID()
 	obj.Status.EnvID = resp.GetEnvID()
+	obj.Status.Name = resp.Name
+	obj.Status.Type = resp.Type
 	obj.Status.ExpiresAt = nil
 	if resp.ExpiresAt != nil {
 		obj.Status.ExpiresAt = new(metav1.NewTime(*resp.ExpiresAt))

@@ -30,9 +30,12 @@ type Certificate struct {
 	DomainKey string
 }
 
-// Response is the upsert response of a certificate: the sub-resource keys and its expiry, when AM knows it.
+// Response is the upsert response of a certificate: the sub-resource keys, the name and type AM stored (its own
+// for the system certificate) and the expiry, when AM knows it.
 type Response struct {
 	am.DomainSubResourceResponse
+	Name      string
+	Type      string
 	ExpiresAt *time.Time
 }
 
