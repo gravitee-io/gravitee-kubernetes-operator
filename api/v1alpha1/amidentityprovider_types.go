@@ -46,7 +46,7 @@ func (spec *AMIdentityProviderSpec) Hash() string {
 
 // AMIdentityProviderStatus defines the observed state of an AM identity provider.
 type AMIdentityProviderStatus struct {
-	am.DomainSubResourceStatus `json:",inline"`
+	am.IdentityProviderStatus `json:",inline"`
 }
 
 func (s *AMIdentityProviderStatus) DeepCopyFrom(obj client.Object) error {
@@ -84,8 +84,8 @@ func (s *AMIdentityProviderStatus) IsFailed() bool {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
-// +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.status.name`
+// +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.status.type`
 // +kubebuilder:printcolumn:name="Domain",type=string,JSONPath=`.spec.domainRef.name`
 // +kubebuilder:resource:shortName=graviteeamidentityproviders
 // +kubebuilder:storageversion

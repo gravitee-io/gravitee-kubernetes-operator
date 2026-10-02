@@ -22,6 +22,7 @@ import (
 
 	amsdk "github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -123,4 +124,19 @@ func GetRemote(ctx context.Context, client *am.Client, dto IdentityProvider) (Id
 		return IdentityProvider{}, am.UnexpectedResponse(resp.HTTPResponse)
 	}
 	return IdentityProvider{IdentityProvider: *resp.JSON200, DomainKey: dto.DomainKey}, nil
+}
+
+// ToIdentityProviderDTOForDrift wraps ToIdentityProviderDTO and blanks "name", "configuration" and "type" for the
+// system identity provider: AM ignores them and returns its own.
+func ToIdentityProviderDTOForDrift(obj *v1alpha1.AMIdentityProvider) (IdentityProvider, error) {
+	dto, err := ToIdentityProviderDTO(obj)
+	if err != nil {
+		return IdentityProvider{}, err
+	}
+	if utils.SafeDereference(dto.System) {
+		dto.Name = nil
+		dto.Configuration = nil
+		dto.Type = nil
+	}
+	return dto, nil
 }

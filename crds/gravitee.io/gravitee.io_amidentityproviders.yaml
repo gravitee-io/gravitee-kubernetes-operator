@@ -31,10 +31,10 @@ spec:
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
-        - jsonPath: .spec.name
+        - jsonPath: .status.name
           name: Name
           type: string
-        - jsonPath: .spec.type
+        - jsonPath: .status.type
           name: Type
           type: string
         - jsonPath: .spec.domainRef.name
@@ -201,8 +201,16 @@ spec:
                 key:
                   description: The Key of the security domain in the AM instance.
                   type: string
+                name:
+                  description: The name of the identity provider in AM. For the system identity
+                    provider, the one AM builds.
+                  type: string
                 organizationId:
                   description: The organization Key defined in the AM context.
+                  type: string
+                type:
+                  description: The plugin type of the identity provider in AM. For the system
+                    identity provider, the one AM builds.
                   type: string
               type: object
           type: object

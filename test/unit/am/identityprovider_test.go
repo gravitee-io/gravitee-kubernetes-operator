@@ -141,6 +141,58 @@ var _ = Describe("AMIdentityProvider DTO mapping", func() {
 	})
 })
 
+var _ = Describe("AMIdentityProvider drift mapping", func() {
+	It("blanks name, type and configuration of the system identity provider: AM supplies them", func() {
+		idp := idpWithReadyDomain()
+		idp.Spec.System = new(true)
+
+		dto, err := internal.ToIdentityProviderDTOForDrift(idp)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(dto.Name).To(BeNil())
+		Expect(dto.Type).To(BeNil())
+		Expect(dto.Configuration).To(BeNil())
+		Expect(dto.Key).To(Equal("ns-idp"))
+	})
+
+	It("keeps name, type and configuration of a regular identity provider", func() {
+		idp := idpWithReadyDomain()
+
+		dto, err := internal.ToIdentityProviderDTOForDrift(idp)
+		Expect(err).ToNot(HaveOccurred())
+		expected, err := internal.ToIdentityProviderDTO(idp)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(dto).To(Equal(expected))
+	})
+})
+
+var _ = Describe("AMIdentityProvider UpdateStatus", func() {
+	It("copies the keys, and the name and type AM stored", func() {
+		idp := &v1alpha1.AMIdentityProvider{}
+		resp := internal.Response{
+			DomainSubResourceResponse: am.DomainSubResourceResponse{
+				DomainKey: "ns-domain",
+				BaseResponse: am.BaseResponse{
+					Key:    "ns-idp",
+					OrgEnv: am.OrgEnv{OrgID: "DEFAULT", EnvID: "DEFAULT"},
+				},
+			},
+			Name: "Default Identity Provider",
+			Type: "gravitee-am-idp",
+		}
+
+		Expect(internal.UpdateStatus(context.Background(), idp, resp)).To(Succeed())
+
+		Expect(idp.Status.Key).To(Equal("ns-idp"))
+		Expect(idp.Status.DomainKey).To(Equal("ns-domain"))
+		Expect(idp.Status.OrgID).To(Equal("DEFAULT"))
+		Expect(idp.Status.EnvID).To(Equal("DEFAULT"))
+		Expect(idp.Status.Name).To(Equal("Default Identity Provider"))
+		Expect(idp.Status.Type).To(Equal("gravitee-am-idp"))
+	})
+})
+
 // warnings returns the warnings as the webhook reports them.
 func warnings(errs *gerrors.AdmissionErrors) []string {
 	w, _ := errs.Map()

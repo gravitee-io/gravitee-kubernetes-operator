@@ -170,6 +170,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
 
 
 #### AMSecurityDomain
@@ -1451,6 +1453,7 @@ _Appears in:_
 
 _Appears in:_
 - [AMIdentityProviderStatus](#amidentityproviderstatus)
+- [IdentityProviderStatus](#identityproviderstatus)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1459,6 +1462,28 @@ _Appears in:_
 | `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+
+
+#### IdentityProviderStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [AMIdentityProviderStatus](#amidentityproviderstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
 
 
 #### Status
@@ -1473,6 +1498,7 @@ _Appears in:_
 - [AMIdentityProviderStatus](#amidentityproviderstatus)
 - [AMSecurityDomainStatus](#amsecuritydomainstatus)
 - [DomainSubResourceStatus](#domainsubresourcestatus)
+- [IdentityProviderStatus](#identityproviderstatus)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
