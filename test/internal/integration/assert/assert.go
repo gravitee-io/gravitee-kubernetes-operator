@@ -223,6 +223,15 @@ func AMIdentityProviderFailed(idp *v1alpha1.AMIdentityProvider) error {
 	return Equals(reconcileCondition, true, idp.Status.IsFailed())
 }
 
+func AMCertificateAccepted(cert *v1alpha1.AMCertificate) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(cert.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func AMCertificateFailed(cert *v1alpha1.AMCertificate) error {
+	return Equals(reconcileCondition, true, cert.Status.IsFailed())
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }

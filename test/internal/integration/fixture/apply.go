@@ -51,6 +51,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyAMIdentityProvider(cli, ctx)
 	}
 
+	if o.AMCertificate != nil {
+		o.applyAMCertificate(cli, ctx)
+	}
+
 	if o.Context != nil {
 		o.applyContext(cli, ctx)
 	}
@@ -330,6 +334,20 @@ func (o *Objects) applyAMIdentityProvider(cli client.Client, ctx context.Context
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMIdentityProvider.Name)
+}
+
+func (o *Objects) applyAMCertificate(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.AMCertificate)).ToNot(HaveOccurred())
+	Eventually(func() error {
+		err := manager.GetLatest(ctx, o.AMCertificate)
+		if err != nil {
+			return err
+		}
+		if err = assert.AMCertificateAccepted(o.AMCertificate); err != nil {
+			return assert.AMCertificateFailed(o.AMCertificate)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMCertificate.Name)
 }
 
 func (o *Objects) applyAMSecurityDomain(cli client.Client, ctx context.Context) {
