@@ -31,6 +31,14 @@ type IdentityProvider struct {
 	DomainKey string
 }
 
+// Response is the upsert response of an identity provider: the sub-resource keys, and the name and type AM
+// stored (its own for the system identity provider).
+type Response struct {
+	am.DomainSubResourceResponse
+	Name string
+	Type string
+}
+
 // ToIdentityProviderDTO converts an AMIdentityProvider object into an IdentityProvider DTO, applying defaults and keys.
 func ToIdentityProviderDTO(obj *v1alpha1.AMIdentityProvider) (IdentityProvider, error) {
 	dto, err := mapper.MapViaJSON[amsdk.IdentityProvider](obj.Spec.IdentityProvider)

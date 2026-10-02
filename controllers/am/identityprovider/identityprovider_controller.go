@@ -35,7 +35,7 @@ import (
 )
 
 type Lifecycle = lifecycle.ResourceLifecycle[
-	*v1alpha1.AMIdentityProvider, identityprovider.IdentityProvider, *am.Client, am.DomainSubResourceResponse,
+	*v1alpha1.AMIdentityProvider, identityprovider.IdentityProvider, *am.Client, identityprovider.Response,
 ]
 
 // Reconciler reconciles an AMIdentityProvider object.
