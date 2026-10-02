@@ -12,24 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package am_test
+package reporter
 
-import (
-	"testing"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-)
-
-func TestAM(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "AM unit tests suite")
-}
-
-var _ = BeforeSuite(func() {
-	env.Config.EnableTemplating = false
-	drift.Init()
-})
+//go:generate go tool oapi-codegen -config ../../../../hack/crdgen/am/reporter.cfg.yaml ../../../../hack/crdgen/am/openapi.gen.yaml
