@@ -15,13 +15,10 @@
 package identityprovider
 
 import (
-	"context"
-
 	amsdk "github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/securitydomain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
 )
 
@@ -51,21 +48,4 @@ func ToIdentityProviderDTO(obj *v1alpha1.AMIdentityProvider) (IdentityProvider, 
 		IdentityProvider: dto,
 		DomainKey:        am.DomainKey(obj),
 	}, nil
-}
-
-// ResolveDomain validates the existence of the parent domain and ensures its readiness for the identity provider operations.
-func ResolveDomain(ctx context.Context, obj *v1alpha1.AMIdentityProvider, _ string) error {
-	return am.ResolveDomain(ctx, obj, obj.IsBeingDeleted())
-}
-
-// CreateAMClient builds the AM client from the AMContext of the parent domain.
-// A missing domain returns the NotFound as-is: on delete, the lifecycle then releases the finalizer.
-// The domain is read again here, as in Owner and ResolveDomain: the hooks cannot share it, and the
-// reads hit the manager's informer cache, not the API server.
-func CreateAMClient(ctx context.Context, obj *v1alpha1.AMIdentityProvider) (*am.Client, error) {
-	domain, err := am.GetDomain(ctx, obj)
-	if err != nil {
-		return nil, err
-	}
-	return securitydomain.CreateAMClient(ctx, domain)
 }
