@@ -71,6 +71,18 @@ var _ = Describe("InitCache", func() {
 		Expect(index(idp(refs.NamespacedName{Name: "domain", Namespace: "other"}))).To(ConsistOf("ns/domain"))
 	})
 
+	It("indexes an AMCertificate by its domain, in its own namespace", func() {
+		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+
+		cert := &v1alpha1.AMCertificate{ObjectMeta: metav1.ObjectMeta{Name: "cert", Namespace: "ns"}}
+		cert.Spec.DomainRef = refs.NamespacedName{Name: "domain", Namespace: "other"}
+
+		index := c.indexers[search.AMCertificateDomainField.String()]
+		Expect(index).ToNot(BeNil())
+		Expect(index(cert)).To(ConsistOf("ns/domain"))
+	})
+
 	It("indexes an AMSecurityDomain by its fallback certificate key, in its own namespace", func() {
 		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
 		Expect(search.InitCache(context.Background(), c)).To(Succeed())
