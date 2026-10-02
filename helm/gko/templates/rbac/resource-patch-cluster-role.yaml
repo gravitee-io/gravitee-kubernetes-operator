@@ -51,6 +51,7 @@ rules:
       - amcontexts.gravitee.io
       - amsecuritydomains.gravitee.io
       - amidentityproviders.gravitee.io
+      - amcertificates.gravitee.io
       - managementcontexts.gravitee.io
       - apidefinitions.gravitee.io
       - apiv4definitions.gravitee.io

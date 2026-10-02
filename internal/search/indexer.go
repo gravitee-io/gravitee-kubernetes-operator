@@ -64,6 +64,7 @@ const (
 	McpProxyCatalogMcpServerField IndexField = "mcpproxy-catalogmcpserver"
 	AMSecurityContextField        IndexField = "am-sec-domain-context"
 	AMIdentityProviderDomainField IndexField = "am-idp-domain"
+	AMCertificateDomainField      IndexField = "am-cert-domain"
 )
 
 func (f IndexField) String() string {
@@ -135,6 +136,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexAMSecurityDomainContext))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMIdentityProvider{}, AMIdentityProviderDomainField,
 		indexAMIdentityProviderDomain))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMCertificate{}, AMCertificateDomainField,
+		indexAMCertificateDomain))
 
 	return errors.NewAggregate(errs)
 }
@@ -470,6 +473,13 @@ func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {
 // identity provider's own namespace (a cross-namespace domainRef is rejected).
 func indexAMIdentityProviderDomain(idp *v1alpha1.AMIdentityProvider, fields *[]string) {
 	domain := refs.NewNamespacedName(idp.GetNamespace(), idp.Spec.DomainRef.Name)
+	*fields = append(*fields, domain.String())
+}
+
+// indexAMCertificateDomain indexes a certificate under its domain, always looked up in the
+// certificate's own namespace (a cross-namespace domainRef is rejected).
+func indexAMCertificateDomain(cert *v1alpha1.AMCertificate, fields *[]string) {
+	domain := refs.NewNamespacedName(cert.GetNamespace(), cert.Spec.DomainRef.Name)
 	*fields = append(*fields, domain.String())
 }
 

@@ -209,6 +209,32 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
+      - amcertificates
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - amcertificates/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - amcertificates/status
+    verbs:
+      - get
+      - update
+      - patch
+  - apiGroups:
+      - gravitee.io
+    resources:
       - amsecuritydomains
     verbs:
       - get
