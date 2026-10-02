@@ -232,6 +232,15 @@ func AMCertificateFailed(cert *v1alpha1.AMCertificate) error {
 	return Equals(reconcileCondition, true, cert.Status.IsFailed())
 }
 
+func AMReporterAccepted(reporter *v1alpha1.AMReporter) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(reporter.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func AMReporterFailed(reporter *v1alpha1.AMReporter) error {
+	return Equals(reconcileCondition, true, reporter.Status.IsFailed())
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }

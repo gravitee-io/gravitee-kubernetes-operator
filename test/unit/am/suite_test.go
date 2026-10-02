@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 )
 
@@ -30,4 +31,5 @@ func TestAM(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	env.Config.EnableTemplating = false
+	drift.Init()
 })
