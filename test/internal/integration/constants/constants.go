@@ -208,6 +208,9 @@ const (
 	AMSecurityDomainBasicFile = "am/security_domain/security-domain-basic.yml"
 	AMSecurityDomainFullFile  = "am/security_domain/security-domain-with-settings.yml"
 	AMIdentityProviderFile    = "am/identity_provider/idp-inline-with-domain-ref.yml"
+	AMCertificateInlineFile   = "am/certificate/dev/certificate-pkcs12-inline.yml"
+	AMCertificateSecretFile   = "am/certificate/dev/certificate-pkcs12-secret.yml"
+	AMCertificateKeystoreFile = "am/certificate/dev/certificate-keystore-secret.yml"
 
 	// Use cases.
 	SubscribeJWTUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
