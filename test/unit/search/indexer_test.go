@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	amdomain "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/am/domain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -68,5 +69,24 @@ var _ = Describe("InitCache", func() {
 		Expect(index).ToNot(BeNil())
 		Expect(index(idp(refs.NamespacedName{Name: "domain"}))).To(ConsistOf("ns/domain"))
 		Expect(index(idp(refs.NamespacedName{Name: "domain", Namespace: "other"}))).To(ConsistOf("ns/domain"))
+	})
+
+	It("indexes an AMSecurityDomain by its fallback certificate key, in its own namespace", func() {
+		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+
+		domain := func(settings *amdomain.CertificateSettings) *v1alpha1.AMSecurityDomain {
+			d := &v1alpha1.AMSecurityDomain{ObjectMeta: metav1.ObjectMeta{Name: "domain", Namespace: "ns"}}
+			d.Spec.CertificateSettings = settings
+			return d
+		}
+
+		index := c.indexers[search.AMSecurityDomainFallbackCertificateField.String()]
+		Expect(index).ToNot(BeNil())
+		Expect(index(domain(&amdomain.CertificateSettings{FallbackCertificate: new("ns-cert")}))).
+			To(ConsistOf("ns/ns-cert"))
+		Expect(index(domain(nil))).To(BeEmpty())
+		Expect(index(domain(&amdomain.CertificateSettings{}))).To(BeEmpty())
+		Expect(index(domain(&amdomain.CertificateSettings{FallbackCertificate: new("")}))).To(BeEmpty())
 	})
 })
