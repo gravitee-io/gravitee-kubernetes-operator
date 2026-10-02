@@ -86,6 +86,8 @@ actions:
   - target: $.components.schemas.AutomationCertificate.properties.system
     update:
       x-gko-default: keep
+      description: >-
+        Whether this is the domain's system certificate. Immutable after creation. When true, only domainRef is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.
       x-kubebuilder: ['validation:XValidation:rule="self == oldSelf",message="system is immutable"']
 
   # name, type and configuration are required unless system is true (CEL, checked without the webhook).
