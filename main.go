@@ -29,6 +29,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
 	amcertificate "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/certificate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/identityprovider"
+	amreporter "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/reporter"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/securitydomain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
@@ -525,6 +526,17 @@ func registerAMControllers(mgr manager.Manager) {
 		Lifecycle: amcertificate.NewLifecycle(),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for AM certificates")
+		os.Exit(1)
+	}
+
+	if err := (&amreporter.Reconciler{
+		Client:    k8s.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("amreporters-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AMReporterList{}),
+		Lifecycle: amreporter.NewLifecycle(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for AM reporters")
 		os.Exit(1)
 	}
 }
