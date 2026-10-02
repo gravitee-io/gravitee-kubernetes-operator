@@ -47,6 +47,7 @@ type Objects struct {
 	AMContext          *v1alpha1.AMContext
 	AMSecurityDomain   *v1alpha1.AMSecurityDomain
 	AMIdentityProvider *v1alpha1.AMIdentityProvider
+	AMCertificate      *v1alpha1.AMCertificate
 
 	randomSuffix   string
 	navigationRoot string
