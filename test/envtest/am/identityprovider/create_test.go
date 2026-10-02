@@ -43,6 +43,8 @@ var _ = Describe("Create", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(idp.Status.Key).To(Equal(dto.Key))
 		Expect(idp.Status.DomainKey).To(Equal(dto.DomainKey))
+		Expect(idp.Status.Name).To(Equal(*idp.Spec.Name))
+		Expect(idp.Status.Type).To(Equal(*idp.Spec.Type))
 
 		By("expecting the identity provider in AM, under the domain")
 

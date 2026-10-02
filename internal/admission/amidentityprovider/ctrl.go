@@ -38,7 +38,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
 			ClientFactory: internal.AdmissionClient,
 			PreCheck:      internal.PreCheck,
-			ToDTO:         internal.ToIdentityProviderDTO,
+			ToDTO:         internal.ToIdentityProviderDTOForDrift,
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
 		}),

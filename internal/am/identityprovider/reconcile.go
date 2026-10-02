@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -25,26 +26,30 @@ import (
 )
 
 // Upsert creates or updates the identity provider under its domain in AM.
-func Upsert(ctx context.Context, client *am.Client, dto IdentityProvider) (am.DomainSubResourceResponse, error) {
+func Upsert(ctx context.Context, client *am.Client, dto IdentityProvider) (Response, error) {
 	resp, err := client.UpsertIdentityProviderWithResponse(ctx, dto.DomainKey, nil, dto.IdentityProvider)
 	if err = am.HasErrors(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
-		return am.DomainSubResourceResponse{}, err
+		return Response{}, err
 	}
 	if resp.JSON200 == nil {
-		return am.DomainSubResourceResponse{}, am.UnexpectedResponse(resp.HTTPResponse)
+		return Response{}, am.UnexpectedResponse(resp.HTTPResponse)
 	}
 
-	return am.DomainSubResourceResponse{
-		DomainKey: dto.DomainKey,
-		BaseResponse: am.BaseResponse{
-			Key: resp.JSON200.Key,
-			OrgEnv: am.OrgEnv{
-				OrgID: client.GetOrgID(),
-				EnvID: client.GetEnvID(),
+	return Response{
+		DomainSubResourceResponse: am.DomainSubResourceResponse{
+			DomainKey: dto.DomainKey,
+			BaseResponse: am.BaseResponse{
+				Key: resp.JSON200.Key,
+				OrgEnv: am.OrgEnv{
+					OrgID: client.GetOrgID(),
+					EnvID: client.GetEnvID(),
+				},
 			},
 		},
+		Name: utils.SafeDereference(resp.JSON200.Name),
+		Type: utils.SafeDereference(resp.JSON200.Type),
 	}, nil
 }
 
@@ -63,11 +68,13 @@ func Delete(ctx context.Context, client *am.Client, dto IdentityProvider) error 
 }
 
 // UpdateStatus copies the upsert response into the CR status.
-func UpdateStatus(_ context.Context, obj *v1alpha1.AMIdentityProvider, resp am.DomainSubResourceResponse) error {
+func UpdateStatus(_ context.Context, obj *v1alpha1.AMIdentityProvider, resp Response) error {
 	obj.Status.Key = resp.Key
 	obj.Status.DomainKey = resp.DomainKey
 	obj.Status.OrgID = resp.GetOrgID()
 	obj.Status.EnvID = resp.GetEnvID()
+	obj.Status.Name = resp.Name
+	obj.Status.Type = resp.Type
 	return nil
 }
 
