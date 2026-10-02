@@ -60,6 +60,7 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&Subscription{}, &SubscriptionList{},
 		&AMSecurityDomain{}, &AMSecurityDomainList{},
 		&AMIdentityProvider{}, &AMIdentityProviderList{},
+		&AMCertificate{}, &AMCertificateList{},
 	)
 	metav1.AddToGroupVersion(s, GroupVersion)
 	return nil
