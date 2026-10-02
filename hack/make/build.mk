@@ -17,7 +17,7 @@ manifests-for-docs: ## Generate CustomResourceDefinition objects.
 
 .PHONY: generate
 generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	go run ./hack/crdgen -module github.com/gravitee-io-labs/gravitee-automation-tools/am-sdk/v2 -spec openapi/openapi.yaml -overlay hack/crdgen/am/overlay.yaml -out hack/crdgen/am/openapi.gen.yaml
+	go run ./hack/crdgen -module github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 -spec openapi/openapi.yaml -overlay hack/crdgen/am/overlay.yaml -out hack/crdgen/am/openapi.gen.yaml
 	go generate ./api/model/am/...
 	go tool controller-gen object:headerFile="hack/license.go.txt" paths="./..."
 
