@@ -98,7 +98,7 @@ _Appears in:_
 | `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration, a free-form object sent to AM as a JSON string. The keystore file field (`jks` or `content`) is a JSON string `\{"name":"...","content":"<base64>"\}`. |  | Optional: \{\} <br /> |
 | `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
 | `name` _string_ | Name Human-readable name of the certificate. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
-| `system` _boolean_ | System Whether this is the domain's system certificate. Immutable after creation. When true, only key is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
+| `system` _boolean_ | System Whether this is the domain's system certificate. Immutable after creation. When true, only domainRef is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
 | `type` _string_ | Type Certificate plugin type identifier. Immutable after creation. |  | MinLength: 1 <br />Optional: \{\} <br /> |
 
 
@@ -2958,7 +2958,7 @@ _Appears in:_
 | `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration, a free-form object sent to AM as a JSON string. The keystore file field (`jks` or `content`) is a JSON string `\{"name":"...","content":"<base64>"\}`. |  | Optional: \{\} <br /> |
 | `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
 | `name` _string_ | Name Human-readable name of the certificate. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
-| `system` _boolean_ | System Whether this is the domain's system certificate. Immutable after creation. When true, only key is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
+| `system` _boolean_ | System Whether this is the domain's system certificate. Immutable after creation. When true, only domainRef is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
 | `type` _string_ | Type Certificate plugin type identifier. Immutable after creation. |  | MinLength: 1 <br />Optional: \{\} <br /> |
 
 

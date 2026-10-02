@@ -20,6 +20,7 @@ import (
 
 	amsdk "github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -91,4 +92,18 @@ func GetRemote(ctx context.Context, client *am.Client, dto Certificate) (Certifi
 		return Certificate{}, am.UnexpectedResponse(resp.HTTPResponse)
 	}
 	return Certificate{Certificate: *resp.JSON200, DomainKey: dto.DomainKey}, nil
+}
+
+// ToCertificateDTOForDrift wraps ToCertificateDTO and blanks "name", "configuration" and "type" for system certificates
+func ToCertificateDTOForDrift(obj *v1alpha1.AMCertificate) (Certificate, error) {
+	dto, err := ToCertificateDTO(obj)
+	if err != nil {
+		return Certificate{}, err
+	}
+	if utils.SafeDereference(dto.System) {
+		dto.Name = nil
+		dto.Configuration = nil
+		dto.Type = nil
+	}
+	return dto, nil
 }

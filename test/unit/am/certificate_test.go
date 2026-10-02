@@ -96,6 +96,32 @@ var _ = Describe("AMCertificate DTO mapping", func() {
 	})
 })
 
+var _ = Describe("AMCertificate drift mapping", func() {
+	It("blanks name, type and configuration of a system certificate: AM supplies them", func() {
+		cert := certWithReadyDomain()
+		cert.Spec.System = new(true)
+
+		dto, err := certificate.ToCertificateDTOForDrift(cert)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(dto.Name).To(BeNil())
+		Expect(dto.Type).To(BeNil())
+		Expect(dto.Configuration).To(BeNil())
+		Expect(dto.Key).To(Equal("ns-cert"))
+	})
+
+	It("keeps name, type and configuration of a regular certificate", func() {
+		cert := certWithReadyDomain()
+
+		dto, err := certificate.ToCertificateDTOForDrift(cert)
+		Expect(err).ToNot(HaveOccurred())
+		expected, err := certificate.ToCertificateDTO(cert)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(dto).To(Equal(expected))
+	})
+})
+
 var _ = Describe("AMCertificate PreCheck", func() {
 	ctx := context.Background()
 

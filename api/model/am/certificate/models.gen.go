@@ -33,7 +33,7 @@ type Certificate struct {
 	// +kubebuilder:validation:MaxLength=255
 	Name *string `json:"name,omitempty"`
 
-	// System Whether this is the domain's system certificate. Immutable after creation. When true, only key is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.
+	// System Whether this is the domain's system certificate. Immutable after creation. When true, only domainRef is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.
 	// +kubebuilder:validation:Optional
 	// Defaults to false.
 	// +kubebuilder:default=false
