@@ -33,6 +33,7 @@ const (
 	CRDAMSecurityDomainResource           = "amsecuritydomains"
 	CRDAMIdentityProviderResource         = "amidentityproviders"
 	CRDAMCertificateResource              = "amcertificates"
+	CRDAMReporterResource                 = "amreporters"
 
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"
@@ -77,6 +78,7 @@ const (
 	AMSecurityDomainFinalizer        = "finalizers.gravitee.io/amsecuritydomains"
 	AMIdentityProviderFinalizer      = "finalizers.gravitee.io/amidentityproviders"
 	AMCertificateFinalizer           = "finalizers.gravitee.io/amcertificates"
+	AMReporterFinalizer              = "finalizers.gravitee.io/amreporters"
 
 	GraviteeGatewayClassController = "apim.gravitee.io/gateway"
 
