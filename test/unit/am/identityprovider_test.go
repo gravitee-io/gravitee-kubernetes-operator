@@ -62,29 +62,29 @@ var _ = Describe("AMIdentityProvider ResolveDomain", func() {
 
 	It("resolves a domain AM has created", func() {
 		cluster(domain("ns-domain"))
-		Expect(internal.ResolveDomain(context.Background(), idp(), ns)).To(Succeed())
+		Expect(am.ResolveSubResourceDomain(context.Background(), idp(), ns)).To(Succeed())
 	})
 
 	It("fails with ErrDomainNotReady while AM has not created the domain", func() {
 		cluster(domain(""))
-		err := internal.ResolveDomain(context.Background(), idp(), ns)
+		err := am.ResolveSubResourceDomain(context.Background(), idp(), ns)
 		Expect(errors.Is(err, am.ErrDomainNotReady)).To(BeTrue(), "got %v", err)
 	})
 
 	It("returns NotFound when the domain does not exist", func() {
 		cluster()
-		err := internal.ResolveDomain(context.Background(), idp(), ns)
+		err := am.ResolveSubResourceDomain(context.Background(), idp(), ns)
 		Expect(apierrors.IsNotFound(err)).To(BeTrue(), "got %v", err)
 	})
 
 	It("does not require a ready domain on delete", func() {
 		cluster(domain(""))
-		Expect(internal.ResolveDomain(context.Background(), deleting(idp()), ns)).To(Succeed())
+		Expect(am.ResolveSubResourceDomain(context.Background(), deleting(idp()), ns)).To(Succeed())
 	})
 
 	It("returns NotFound on delete when the domain is gone", func() {
 		cluster()
-		err := internal.ResolveDomain(context.Background(), deleting(idp()), ns)
+		err := am.ResolveSubResourceDomain(context.Background(), deleting(idp()), ns)
 		Expect(apierrors.IsNotFound(err)).To(BeTrue(), "got %v", err)
 	})
 })
