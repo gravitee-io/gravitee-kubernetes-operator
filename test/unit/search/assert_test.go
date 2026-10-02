@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	amdomain "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/am/domain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -77,5 +78,54 @@ var _ = Describe("AssertNoAMContextRef", func() {
 		cluster(domain("d1", "other-ctx"))
 
 		Expect(search.AssertNoAMContextRef(context.Background(), amContext)).To(Succeed())
+	})
+})
+
+var _ = Describe("AssertNoAMCertificateRef", func() {
+	const ns = "ns"
+
+	// key in AM: ns-cert
+	cert := &v1alpha1.AMCertificate{ObjectMeta: metav1.ObjectMeta{Name: "cert", Namespace: ns}}
+	domain := func(name, namespace, fallback string) *v1alpha1.AMSecurityDomain {
+		d := &v1alpha1.AMSecurityDomain{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace}}
+		d.Spec.CertificateSettings = &amdomain.CertificateSettings{FallbackCertificate: new(fallback)}
+		return d
+	}
+	// cluster registers a fake client indexing domains with the index function InitCache registers.
+	cluster := func(objects ...client.Object) {
+		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+		scheme := runtime.NewScheme()
+		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
+		field := search.AMSecurityDomainFallbackCertificateField.String()
+		k8s.RegisterClient(fake.NewClientBuilder().
+			WithScheme(scheme).
+			WithObjects(objects...).
+			WithIndex(&v1alpha1.AMSecurityDomain{}, field, c.indexers[field]).
+			Build())
+	}
+
+	It("fails with the number of domains that use the certificate as fallback", func() {
+		cluster(domain("d1", ns, "ns-cert"), domain("d2", ns, "ns-other"), domain("d3", ns, "ns-cert"))
+
+		err := search.AssertNoAMCertificateRef(context.Background(), cert)
+
+		Expect(err).To(MatchError(ContainSubstring(
+			"[cert] cannot be deleted because 2 AM security domains use it as fallback certificate")))
+	})
+
+	It("ignores a domain being deleted", func() {
+		deleting := domain("d1", ns, "ns-cert")
+		deleting.Finalizers = []string{"finalizers.gravitee.io/amsecuritydomains"}
+		deleting.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+		cluster(deleting)
+
+		Expect(search.AssertNoAMCertificateRef(context.Background(), cert)).To(Succeed())
+	})
+
+	It("ignores a domain of another namespace", func() {
+		cluster(domain("d1", "other", "ns-cert"))
+
+		Expect(search.AssertNoAMCertificateRef(context.Background(), cert)).To(Succeed())
 	})
 })
