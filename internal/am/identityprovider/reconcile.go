@@ -22,7 +22,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Upsert creates or updates the identity provider under its domain in AM.
@@ -76,10 +75,4 @@ func UpdateStatus(_ context.Context, obj *v1alpha1.AMIdentityProvider, resp Resp
 	obj.Status.Name = resp.Name
 	obj.Status.Type = resp.Type
 	return nil
-}
-
-// GetOwner returns the AMSecurityDomain that owns the identity provider (a plain owner, not blocking deletion).
-func GetOwner(ctx context.Context, obj *v1alpha1.AMIdentityProvider) (client.Object, bool, error) {
-	d, e := am.GetDomain(ctx, obj)
-	return d, false, e
 }

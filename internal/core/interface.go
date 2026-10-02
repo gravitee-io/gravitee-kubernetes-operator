@@ -291,4 +291,5 @@ type APIClient interface {
 type AMDomainSubResource interface {
 	GetRef() ObjectRef
 	GetDomainRef() ObjectRef
+	IsBeingDeleted() bool
 }
