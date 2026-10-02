@@ -42,6 +42,8 @@ var _ = Describe("Create", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(cert.Status.Key).To(Equal(dto.Key))
 		Expect(cert.Status.DomainKey).To(Equal(dto.DomainKey))
+		Expect(cert.Status.Name).To(Equal(*cert.Spec.Name))
+		Expect(cert.Status.Type).To(Equal(*cert.Spec.Type))
 
 		By("expecting the certificate in AM, under the domain")
 

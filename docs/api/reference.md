@@ -120,6 +120,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
 | `expiresAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#time-v1-meta)_ | When the certificate expires, as reported by AM. |  | Optional: \{\} <br /> |
 
 
@@ -1503,6 +1505,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
 | `expiresAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#time-v1-meta)_ | When the certificate expires, as reported by AM. |  | Optional: \{\} <br /> |
 
 
