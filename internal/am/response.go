@@ -25,6 +25,12 @@ type BaseResponse struct {
 	Key    string `json:"key"`
 }
 
+// DomainSubResourceResponse is the upsert response of a resource that lives under a domain.
+type DomainSubResourceResponse struct {
+	BaseResponse `json:",inline"`
+	DomainKey    string `json:"domainKey"`
+}
+
 // UnexpectedResponse reports an AM response the SDK could not decode (no JSON body for the status).
 func UnexpectedResponse(resp *http.Response) error {
 	return fmt.Errorf("unexpected AM response: status %d, content type %q",

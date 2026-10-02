@@ -50,6 +50,7 @@ rules:
     resourceNames:
       - amcontexts.gravitee.io
       - amsecuritydomains.gravitee.io
+      - amidentityproviders.gravitee.io
       - managementcontexts.gravitee.io
       - apidefinitions.gravitee.io
       - apiv4definitions.gravitee.io
