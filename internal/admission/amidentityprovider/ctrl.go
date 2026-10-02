@@ -36,7 +36,7 @@ type AdmissionCtrl struct {
 func NewAdmissionCtrl() AdmissionCtrl {
 	return AdmissionCtrl{
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
-			ClientFactory: internal.AdmissionClient,
+			ClientFactory: am.AdmissionSubResourceClient[*v1alpha1.AMIdentityProvider],
 			PreCheck:      internal.PreCheck,
 			ToDTO:         internal.ToIdentityProviderDTOForDrift,
 			DryRun:        internal.DryRun,
