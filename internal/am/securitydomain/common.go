@@ -15,12 +15,9 @@
 package securitydomain
 
 import (
-	"context"
-
 	domain "github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
 )
 
@@ -36,9 +33,4 @@ func ToDomainDTO(obj *v1alpha1.AMSecurityDomain) (domain.Domain, error) {
 
 func domainKey(obj *v1alpha1.AMSecurityDomain) string {
 	return refs.NewNamespacedNameFromObject(obj).HRID()
-}
-
-// CreateAMClient builds the AM client from the domain's AMContext, resolved with its templates compiled.
-func CreateAMClient(ctx context.Context, obj *v1alpha1.AMSecurityDomain) (*am.Client, error) {
-	return am.ClientForDomain(ctx, obj)
 }

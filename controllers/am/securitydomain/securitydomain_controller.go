@@ -50,7 +50,7 @@ func NewLifecycle() Lifecycle {
 	return lifecycle.NewResourceLifecycle(Lifecycle{
 		Finalizer:     core.AMSecurityDomainFinalizer,
 		ResolveRefs:   nil,
-		ClientFactory: internal.CreateAMClient,
+		ClientFactory: am.ClientForDomain,
 		ToDTO:         internal.ToDomainDTO,
 		Delete:        internal.Delete,
 		Upsert:        internal.Upsert,

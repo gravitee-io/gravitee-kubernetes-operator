@@ -113,7 +113,7 @@ func AdmissionSubResourceClient[T core.AMDomainSubResource](ctx context.Context,
 // ClientForDomain builds the AM client from the domain's AMContext, resolved with its templates compiled.
 func ClientForDomain(ctx context.Context, domain *v1alpha1.AMSecurityDomain) (*Client, error) {
 	if !domain.HasContext() {
-		return nil, fmt.Errorf("contextRef empty on %s [%s/%s]", domain.Kind, domain.GetName(), domain.GetNamespace())
+		return nil, fmt.Errorf("contextRef empty on AMSecurityDomain [%s/%s]", domain.GetName(), domain.GetNamespace())
 	}
 
 	// resolved like the APIM contexts: templates compiled, fetched from the API server

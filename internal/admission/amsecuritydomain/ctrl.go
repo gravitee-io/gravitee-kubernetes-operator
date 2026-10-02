@@ -37,7 +37,7 @@ type AdmissionCtrl struct {
 func NewAdmissionCtrl() AdmissionCtrl {
 	return AdmissionCtrl{
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
-			ClientFactory: internal.CreateAMClient,
+			ClientFactory: am.ClientForDomain,
 			PreCheck:      internal.ValidateKey,
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
