@@ -70,3 +70,13 @@ type CertificateStatus struct {
 	// +kubebuilder:validation:Optional
 	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
 }
+
+type ReporterStatus struct {
+	DomainSubResourceStatus `json:",inline"`
+	// The name of the reporter in AM. For the system reporter, the one AM builds.
+	// +kubebuilder:validation:Optional
+	Name string `json:"name,omitempty"`
+	// The plugin type of the reporter in AM. For the system reporter, the one AM builds.
+	// +kubebuilder:validation:Optional
+	Type string `json:"type,omitempty"`
+}

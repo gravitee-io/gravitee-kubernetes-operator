@@ -115,6 +115,59 @@ actions:
   - target: $.components.schemas.AutomationCertificate.required
     update: ["domainRef"]
 
+  - target: $.components.schemas.AutomationReporter
+    update: { x-go-type-name: Reporter }
+
+  # key: remove it for now, only lives in the SDK
+  - target: $.components.schemas.AutomationReporter.required[?(@ == 'key')]
+    remove: true
+  - target: $.components.schemas.AutomationReporter.properties.key
+    remove: true
+
+  # configuration: free-form object in the CRD, JSON string in AM.
+  - target: $.components.schemas.AutomationReporter.properties.configuration
+    update:
+      x-go-type: utils.GenericStringMap
+      x-go-type-import:
+        path: github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils
+      description: >-
+        Plugin-specific configuration, a free-form object sent to AM as a JSON string. Its shape is defined by the reporter type.
+
+  # system: immutable, like domainRef below.
+  - target: $.components.schemas.AutomationReporter.properties.system
+    update:
+      x-gko-default: keep
+      description: >-
+        Whether this is the domain's system reporter. Immutable after creation. When true, only domainRef is required; the reporter is built from the domains.reporters.default.* system settings and the name, type, configuration, attributeMappings and attributeMappingEventTypes fields are ignored.
+      x-kubebuilder: ['validation:XValidation:rule="self == oldSelf",message="system is immutable"']
+  - target: $.components.schemas.AutomationReporter.properties.enabled
+    update: { x-gko-default: keep }
+
+  # name, type and configuration are required unless system is true (CEL, checked without the webhook).
+  # type is immutable: compared on the spec, since it is optional (a field rule misses adding or removing it).
+  - target: $.components.schemas.AutomationReporter
+    update:
+      x-kubebuilder:
+        - 'validation:XValidation:rule="(has(self.system) && self.system) || (has(self.name) && has(self.type) && has(self.configuration))",message="name, type and configuration are required unless system is true"'
+        - 'validation:XValidation:rule="has(self.type) == has(oldSelf.type) && (!has(self.type) || self.type == oldSelf.type)",message="type is immutable"'
+
+  # the parent ref to domain, immutable: changing it would orphan the reporter in the old domain.
+  - target: $.components.schemas.AutomationReporter.properties
+    update:
+      domainRef:
+        type: object
+        description: Domain CRD reference
+        x-go-type-skip-optional-pointer: true
+        x-go-type: refs.NamespacedName
+        x-go-type-import:
+          path: github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs
+        # name: minLength 1, as a CEL rule since refs.NamespacedName is shared by every CRD.
+        x-kubebuilder:
+          - 'validation:XValidation:rule="self == oldSelf",message="domainRef is immutable"'
+          - 'validation:XValidation:rule="size(self.name) > 0",message="domainRef.name must not be empty"'
+  - target: $.components.schemas.AutomationReporter.required
+    update: ["domainRef"]
+
   # Names: drop the Automation prefix on every schema reached from AutomationDomain.
   - target: $.components.schemas.AutomationDomain
     update: { x-go-type-name: Domain }
