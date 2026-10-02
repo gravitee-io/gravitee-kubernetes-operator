@@ -24,6 +24,7 @@
 - [gravitee.io/v1alpha1/portallisting](#graviteeiov1alpha1portallisting)
 - [gravitee.io/v1alpha1/portaltheme](#graviteeiov1alpha1portaltheme)
 - [gravitee.io/v1alpha1/refs](#graviteeiov1alpha1refs)
+- [gravitee.io/v1alpha1/reporter](#graviteeiov1alpha1reporter)
 - [gravitee.io/v1alpha1/sharedpolicygroups](#graviteeiov1alpha1sharedpolicygroups)
 - [gravitee.io/v1alpha1/status](#graviteeiov1alpha1status)
 - [gravitee.io/v1alpha1/subscription](#graviteeiov1alpha1subscription)
@@ -40,6 +41,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [AMCertificate](#amcertificate)
 - [AMContext](#amcontext)
 - [AMIdentityProvider](#amidentityprovider)
+- [AMReporter](#amreporter)
 - [AMSecurityDomain](#amsecuritydomain)
 - [ApiDefinition](#apidefinition)
 - [ApiResource](#apiresource)
@@ -236,6 +238,70 @@ _Appears in:_
 | `domainKey` _string_ |  |  | Optional: \{\} <br /> |
 | `name` _string_ | The name of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
 | `type` _string_ | The plugin type of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
+
+
+#### AMReporter
+
+
+
+
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AMReporter` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AMReporterSpec](#amreporterspec)_ |  |  |  |
+| `status` _[AMReporterStatus](#amreporterstatus)_ |  |  |  |
+
+
+#### AMReporterSpec
+
+
+
+AMReporterSpec defines the desired state of an AM reporter.
+
+
+
+_Appears in:_
+- [AMReporter](#amreporter)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `attributeMappingEventTypes` _string array_ | AttributeMappingEventTypes Audit event types the attribute mappings apply to. Empty means every event type. Ignored when system is true. |  | Optional: \{\} <br /> |
+| `attributeMappings` _[ReporterAttributeMapping](#reporterattributemapping) array_ | AttributeMappings Additional attributes exported alongside the regular audit payload. Each entry pairs an expression read from the audit context with the field name its value is exported under. Ignored when system is true; a system reporter exports no additional attributes. |  | Optional: \{\} <br /> |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration, a free-form object sent to AM as a JSON string. Its shape is defined by the reporter type. |  | Optional: \{\} <br /> |
+| `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
+| `enabled` _boolean_ | Enabled Whether the reporter is enabled.<br />Defaults to true. | true | Optional: \{\} <br /> |
+| `name` _string_ | Name Human-readable name of the reporter. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
+| `system` _boolean_ | System Whether this is the domain's system reporter. Immutable after creation. When true, only domainRef is required; the reporter is built from the domains.reporters.default.* system settings and the name, type, configuration, attributeMappings and attributeMappingEventTypes fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
+| `type` _string_ | Type Reporter plugin type identifier. Immutable after creation. |  | Optional: \{\} <br /> |
+
+
+#### AMReporterStatus
+
+
+
+AMReporterStatus defines the observed state of an AM reporter.
+
+
+
+_Appears in:_
+- [AMReporter](#amreporter)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the reporter in AM. For the system reporter, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the reporter in AM. For the system reporter, the one AM builds. |  | Optional: \{\} <br /> |
 
 
 #### AMSecurityDomain
@@ -1541,8 +1607,10 @@ _Appears in:_
 _Appears in:_
 - [AMCertificateStatus](#amcertificatestatus)
 - [AMIdentityProviderStatus](#amidentityproviderstatus)
+- [AMReporterStatus](#amreporterstatus)
 - [CertificateStatus](#certificatestatus)
 - [IdentityProviderStatus](#identityproviderstatus)
+- [ReporterStatus](#reporterstatus)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1575,6 +1643,28 @@ _Appears in:_
 | `type` _string_ | The plugin type of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
 
 
+#### ReporterStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [AMReporterStatus](#amreporterstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the reporter in AM. For the system reporter, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the reporter in AM. For the system reporter, the one AM builds. |  | Optional: \{\} <br /> |
+
+
 #### Status
 
 
@@ -1586,10 +1676,12 @@ _Appears in:_
 _Appears in:_
 - [AMCertificateStatus](#amcertificatestatus)
 - [AMIdentityProviderStatus](#amidentityproviderstatus)
+- [AMReporterStatus](#amreporterstatus)
 - [AMSecurityDomainStatus](#amsecuritydomainstatus)
 - [CertificateStatus](#certificatestatus)
 - [DomainSubResourceStatus](#domainsubresourcestatus)
 - [IdentityProviderStatus](#identityproviderstatus)
+- [ReporterStatus](#reporterstatus)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -5583,6 +5675,7 @@ _Appears in:_
 _Appears in:_
 - [AMCertificateSpec](#amcertificatespec)
 - [AMIdentityProviderSpec](#amidentityproviderspec)
+- [AMReporterSpec](#amreporterspec)
 - [AMSecurityDomainSpec](#amsecuritydomainspec)
 - [ApiBase](#apibase)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
@@ -5606,6 +5699,7 @@ _Appears in:_
 - [PortalListingSpec](#portallistingspec)
 - [PortalSpec](#portalspec)
 - [PortalThemeSpec](#portalthemespec)
+- [Reporter](#reporter)
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
 - [StudioTool](#studiotool)
@@ -5621,6 +5715,59 @@ _Appears in:_
 | `name` _string_ |  |  |  |
 | `namespace` _string_ |  |  | Optional: \{\} <br /> |
 | `kind` _string_ |  |  | Optional: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/reporter
+
+Package reporter provides primitives to interact with the openapi HTTP API.
+
+Code generated by github.com/oapi-codegen/oapi-codegen/v2 version v2.8.0 DO NOT EDIT.
+
+
+
+
+
+
+#### Reporter
+
+
+
+Reporter A reporter managed under a domain by the Automation API. Reporters persist audit events to a backend. The key field is the stable, immutable identity used for idempotent create-or-update.
+
+
+
+_Appears in:_
+- [AMReporterSpec](#amreporterspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `attributeMappingEventTypes` _string array_ | AttributeMappingEventTypes Audit event types the attribute mappings apply to. Empty means every event type. Ignored when system is true. |  | Optional: \{\} <br /> |
+| `attributeMappings` _[ReporterAttributeMapping](#reporterattributemapping) array_ | AttributeMappings Additional attributes exported alongside the regular audit payload. Each entry pairs an expression read from the audit context with the field name its value is exported under. Ignored when system is true; a system reporter exports no additional attributes. |  | Optional: \{\} <br /> |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration, a free-form object sent to AM as a JSON string. Its shape is defined by the reporter type. |  | Optional: \{\} <br /> |
+| `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
+| `enabled` _boolean_ | Enabled Whether the reporter is enabled.<br />Defaults to true. | true | Optional: \{\} <br /> |
+| `name` _string_ | Name Human-readable name of the reporter. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
+| `system` _boolean_ | System Whether this is the domain's system reporter. Immutable after creation. When true, only domainRef is required; the reporter is built from the domains.reporters.default.* system settings and the name, type, configuration, attributeMappings and attributeMappingEventTypes fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
+| `type` _string_ | Type Reporter plugin type identifier. Immutable after creation. |  | Optional: \{\} <br /> |
+
+
+#### ReporterAttributeMapping
+
+
+
+ReporterAttributeMapping Exports one additional attribute, read from the audit context by expression, under a chosen field name.
+
+
+
+_Appears in:_
+- [AMReporterSpec](#amreporterspec)
+- [Reporter](#reporter)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `exportedName` _string_ | ExportedName The name the evaluated value takes on the exported payload. |  | Optional: \{\} <br /> |
+| `expression` _string_ | Expression Expression evaluated against the audit context. |  | Optional: \{\} <br /> |
 
 
 
@@ -5878,6 +6025,7 @@ _Appears in:_
 _Appears in:_
 - [AMCertificateSpec](#amcertificatespec)
 - [AMIdentityProviderSpec](#amidentityproviderspec)
+- [AMReporterSpec](#amreporterspec)
 - [Certificate](#certificate)
 - [ConsumerConfiguration](#consumerconfiguration)
 - [DynamicPropertyService](#dynamicpropertyservice)
@@ -5896,6 +6044,7 @@ _Appears in:_
 - [PlanSecurity](#plansecurity)
 - [Plugin](#plugin)
 - [Policy](#policy)
+- [Reporter](#reporter)
 - [Resource](#resource)
 - [Service](#service)
 - [Step](#step)
