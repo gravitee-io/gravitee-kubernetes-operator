@@ -16,9 +16,7 @@ package identityprovider
 
 import (
 	"context"
-	"errors"
 	"net/http"
-	"strings"
 
 	amsdk "github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -26,7 +24,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // PreCheck validates the identity provider
@@ -50,37 +47,9 @@ func PreCheck(ctx context.Context, obj *v1alpha1.AMIdentityProvider) *gerrors.Ad
 
 	errs.MergeWith(am.WarnMissingDomain(ctx, obj, obj.IsBeingDeleted()))
 
-	if obj.Spec.System != nil && *obj.Spec.System {
-		fields := make([]string, 0)
-		if obj.Spec.Configuration != nil && len(obj.Spec.Configuration.Object) > 0 {
-			fields = append(fields, "configuration")
-		}
-		if obj.Spec.Name != nil && len(*obj.Spec.Name) > 0 {
-			fields = append(fields, "name")
-		}
-		if obj.Spec.Type != nil && len(*obj.Spec.Type) > 0 {
-			fields = append(fields, "type")
-		}
-		if len(fields) > 0 {
-			errs.AddWarningf("'%s' will be ignored when 'system' is 'true'.", strings.Join(fields, "', '"))
-		}
-	}
+	errs.MergeWith(am.WarnSystemIgnoredFields(obj.Spec.System, obj.Spec.Name, obj.Spec.Type, obj.Spec.Configuration))
 
 	return errs
-}
-
-// AdmissionClient builds the AM client for admission. A domain that is missing or not yet created in AM
-// gives no client and no error: the identity provider is admitted (apply in any order) and the AM calls
-// are skipped. A missing AMContext still fails.
-func AdmissionClient(ctx context.Context, obj *v1alpha1.AMIdentityProvider) (*am.Client, error) {
-	err := ResolveDomain(ctx, obj, obj.GetNamespace())
-	if apierrors.IsNotFound(err) || errors.Is(err, am.ErrDomainNotReady) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	return CreateAMClient(ctx, obj)
 }
 
 // DryRun validates the identity provider against AM without persisting it. It is skipped without a client

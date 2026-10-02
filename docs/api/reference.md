@@ -6,6 +6,7 @@
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
 - [gravitee.io/v1alpha1/catalogmcpserver](#graviteeiov1alpha1catalogmcpserver)
+- [gravitee.io/v1alpha1/certificate](#graviteeiov1alpha1certificate)
 - [gravitee.io/v1alpha1/context](#graviteeiov1alpha1context)
 - [gravitee.io/v1alpha1/dictionary](#graviteeiov1alpha1dictionary)
 - [gravitee.io/v1alpha1/docs](#graviteeiov1alpha1docs)
@@ -36,6 +37,7 @@
 Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 
 ### Resource Types
+- [AMCertificate](#amcertificate)
 - [AMContext](#amcontext)
 - [AMIdentityProvider](#amidentityprovider)
 - [AMSecurityDomain](#amsecuritydomain)
@@ -59,6 +61,68 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [SharedPolicyGroup](#sharedpolicygroup)
 - [Subscription](#subscription)
 
+
+
+#### AMCertificate
+
+
+
+
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AMCertificate` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AMCertificateSpec](#amcertificatespec)_ |  |  |  |
+| `status` _[AMCertificateStatus](#amcertificatestatus)_ |  |  |  |
+
+
+#### AMCertificateSpec
+
+
+
+AMCertificateSpec defines the desired state of an AM certificate.
+
+
+
+_Appears in:_
+- [AMCertificate](#amcertificate)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration, a free-form object sent to AM as a JSON string. The keystore file field (`jks` or `content`) is a JSON string `\{"name":"...","content":"<base64>"\}`. |  | Optional: \{\} <br /> |
+| `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
+| `name` _string_ | Name Human-readable name of the certificate. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
+| `system` _boolean_ | System Whether this is the domain's system certificate. Immutable after creation. When true, only domainRef is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
+| `type` _string_ | Type Certificate plugin type identifier. Immutable after creation. |  | MinLength: 1 <br />Optional: \{\} <br /> |
+
+
+#### AMCertificateStatus
+
+
+
+AMCertificateStatus defines the observed state of an AM certificate.
+
+
+
+_Appears in:_
+- [AMCertificate](#amcertificate)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
+| `expiresAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#time-v1-meta)_ | When the certificate expires, as reported by AM. |  | Optional: \{\} <br /> |
 
 
 #### AMContext
@@ -1423,6 +1487,29 @@ _Appears in:_
 | `secretRef` _[NamespacedName](#namespacedname)_ | A secret reference holding a "bearerToken" key. |  |  |
 
 
+#### CertificateStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [AMCertificateStatus](#amcertificatestatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
+| `expiresAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#time-v1-meta)_ | When the certificate expires, as reported by AM. |  | Optional: \{\} <br /> |
+
+
 #### Context
 
 
@@ -1452,7 +1539,9 @@ _Appears in:_
 
 
 _Appears in:_
+- [AMCertificateStatus](#amcertificatestatus)
 - [AMIdentityProviderStatus](#amidentityproviderstatus)
+- [CertificateStatus](#certificatestatus)
 - [IdentityProviderStatus](#identityproviderstatus)
 
 | Field | Description | Default | Validation |
@@ -1495,8 +1584,10 @@ _Appears in:_
 
 
 _Appears in:_
+- [AMCertificateStatus](#amcertificatestatus)
 - [AMIdentityProviderStatus](#amidentityproviderstatus)
 - [AMSecurityDomainStatus](#amsecuritydomainstatus)
+- [CertificateStatus](#certificatestatus)
 - [DomainSubResourceStatus](#domainsubresourcestatus)
 - [IdentityProviderStatus](#identityproviderstatus)
 
@@ -2841,6 +2932,38 @@ _Appears in:_
 | `entityId` _string_ | Stable catalog identity of the server, the name authorization policies reference:<br />lowercase, dot-separated segments, first segment `mcp-server`. Validated, never<br />repaired, and immutable once the server exists. |  | MaxLength: 255 <br />Pattern: `^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
 | `description` _string_ |  |  | Optional: \{\} <br /> |
 | `connection` _[Connection](#connection)_ |  |  | Required: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/certificate
+
+Package certificate provides primitives to interact with the openapi HTTP API.
+
+Code generated by github.com/oapi-codegen/oapi-codegen/v2 version v2.8.0 DO NOT EDIT.
+
+
+
+
+
+
+#### Certificate
+
+
+
+Certificate A certificate managed under a domain by the Automation API. The key field is the stable, immutable identity used for idempotent create-or-update.
+
+
+
+_Appears in:_
+- [AMCertificateSpec](#amcertificatespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration, a free-form object sent to AM as a JSON string. The keystore file field (`jks` or `content`) is a JSON string `\{"name":"...","content":"<base64>"\}`. |  | Optional: \{\} <br /> |
+| `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
+| `name` _string_ | Name Human-readable name of the certificate. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
+| `system` _boolean_ | System Whether this is the domain's system certificate. Immutable after creation. When true, only domainRef is required; the certificate is built from the domains.certificates.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
+| `type` _string_ | Type Certificate plugin type identifier. Immutable after creation. |  | MinLength: 1 <br />Optional: \{\} <br /> |
 
 
 
@@ -5439,6 +5562,7 @@ _Appears in:_
 
 
 _Appears in:_
+- [AMCertificateSpec](#amcertificatespec)
 - [AMIdentityProviderSpec](#amidentityproviderspec)
 - [AMSecurityDomainSpec](#amsecuritydomainspec)
 - [ApiBase](#apibase)
@@ -5450,6 +5574,7 @@ _Appears in:_
 - [Auth](#auth)
 - [Auth](#auth)
 - [CatalogMcpServerSpec](#catalogmcpserverspec)
+- [Certificate](#certificate)
 - [Cloud](#cloud)
 - [Console](#console)
 - [DictionarySpec](#dictionaryspec)
@@ -5732,7 +5857,9 @@ _Appears in:_
 
 
 _Appears in:_
+- [AMCertificateSpec](#amcertificatespec)
 - [AMIdentityProviderSpec](#amidentityproviderspec)
+- [Certificate](#certificate)
 - [ConsumerConfiguration](#consumerconfiguration)
 - [DynamicPropertyService](#dynamicpropertyservice)
 - [Endpoint](#endpoint)

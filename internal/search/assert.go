@@ -17,6 +17,7 @@ package search
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -24,6 +25,8 @@ import (
 )
 
 const kubectlCommand = "-A -o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'"
+const fallbackCertificateKubectlCommand = "-n %s -o jsonpath=" +
+	"'{.items[?(@.spec.certificateSettings.fallbackCertificate==\"%s\")].metadata.name}'"
 const reviewMessage = "You can review those by running the following command: "
 
 func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
@@ -79,6 +82,36 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 func AssertNoAMContextRef(ctx context.Context, amContext *v1alpha1.AMContext) error {
 	ctxRef := refs.NewNamespacedName(amContext.GetNamespace(), amContext.GetName())
 	return assertNoAMSecurityDomains(ctx, ctxRef, amContext.GetName())
+}
+
+// AssertNoAMCertificateRef fails when live AMSecurityDomains of the certificate's namespace use it as fallback
+// certificate: AM would refuse the delete and leave the CR Terminating. It has the shape of a
+// lifecycle.DeleteGuardFunc. A domain being deleted does not count: it takes its certificates with it in AM, and
+// the garbage collector deletes the certificate CR through this guard.
+func AssertNoAMCertificateRef(ctx context.Context, cert *v1alpha1.AMCertificate) error {
+	key := refs.NewNamespacedNameFromObject(cert).HRID()
+	domains := &v1alpha1.AMSecurityDomainList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		AMSecurityDomainFallbackCertificateField,
+		refs.NewNamespacedName(cert.GetNamespace(), key),
+		domains,
+	); err != nil {
+		return err
+	}
+	live := slices.DeleteFunc(domains.Items, func(d v1alpha1.AMSecurityDomain) bool {
+		return d.IsBeingDeleted()
+	})
+	if len(live) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d AM security domains use it as fallback certificate. "+
+				reviewMessage+
+				"kubectl get amsecuritydomains.gravitee.io "+
+				fallbackCertificateKubectlCommand,
+			cert.GetName(), len(live), cert.GetNamespace(), key,
+		)
+	}
+	return nil
 }
 
 func assertNoAMSecurityDomains(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {

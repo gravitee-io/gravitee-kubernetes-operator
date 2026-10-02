@@ -64,6 +64,9 @@ const (
 	McpProxyCatalogMcpServerField IndexField = "mcpproxy-catalogmcpserver"
 	AMSecurityContextField        IndexField = "am-sec-domain-context"
 	AMIdentityProviderDomainField IndexField = "am-idp-domain"
+	AMCertificateDomainField      IndexField = "am-cert-domain"
+
+	AMSecurityDomainFallbackCertificateField IndexField = "am-domain-fallback-cert"
 )
 
 func (f IndexField) String() string {
@@ -133,8 +136,12 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexMcpProxyCatalogMcpServers))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
 		indexAMSecurityDomainContext))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityDomainFallbackCertificateField,
+		indexAMSecurityDomainFallbackCertificate))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMIdentityProvider{}, AMIdentityProviderDomainField,
 		indexAMIdentityProviderDomain))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMCertificate{}, AMCertificateDomainField,
+		indexAMCertificateDomain))
 
 	return errors.NewAggregate(errs)
 }
@@ -473,9 +480,27 @@ func indexAMIdentityProviderDomain(idp *v1alpha1.AMIdentityProvider, fields *[]s
 	*fields = append(*fields, domain.String())
 }
 
+// indexAMCertificateDomain indexes a certificate under its domain, always looked up in the
+// certificate's own namespace (a cross-namespace domainRef is rejected).
+func indexAMCertificateDomain(cert *v1alpha1.AMCertificate, fields *[]string) {
+	domain := refs.NewNamespacedName(cert.GetNamespace(), cert.Spec.DomainRef.Name)
+	*fields = append(*fields, domain.String())
+}
+
 func indexAMSecurityDomainContext(asd *v1alpha1.AMSecurityDomain, fields *[]string) {
 	if !asd.HasContext() {
 		return
 	}
 	*fields = append(*fields, ensureNamespacedRef(asd, asd.ContextRef()))
+}
+
+// indexAMSecurityDomainFallbackCertificate indexes a domain under the AM key of its fallback certificate, in the
+// domain's namespace, where a certificate's key is its namespace-name HRID.
+func indexAMSecurityDomainFallbackCertificate(asd *v1alpha1.AMSecurityDomain, fields *[]string) {
+	settings := asd.Spec.CertificateSettings
+	if settings == nil || settings.FallbackCertificate == nil || *settings.FallbackCertificate == "" {
+		return
+	}
+	cert := refs.NewNamespacedName(asd.GetNamespace(), *settings.FallbackCertificate)
+	*fields = append(*fields, cert.String())
 }

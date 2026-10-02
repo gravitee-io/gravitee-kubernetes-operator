@@ -50,9 +50,9 @@ type Reconciler struct {
 func NewLifecycle() Lifecycle {
 	return lifecycle.NewResourceLifecycle(Lifecycle{
 		Finalizer:     core.AMIdentityProviderFinalizer,
-		ResolveRefs:   identityprovider.ResolveDomain,
-		Owner:         identityprovider.GetOwner,
-		ClientFactory: identityprovider.CreateAMClient,
+		ResolveRefs:   am.ResolveSubResourceDomain[*v1alpha1.AMIdentityProvider],
+		Owner:         am.GetSubResourceOwner[*v1alpha1.AMIdentityProvider],
+		ClientFactory: am.CreateSubResourceClient[*v1alpha1.AMIdentityProvider],
 		ToDTO:         identityprovider.ToIdentityProviderDTO,
 		Delete:        identityprovider.Delete,
 		Upsert:        identityprovider.Upsert,

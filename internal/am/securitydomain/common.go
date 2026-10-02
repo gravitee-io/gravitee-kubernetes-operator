@@ -15,14 +15,9 @@
 package securitydomain
 
 import (
-	"context"
-	"fmt"
-
 	domain "github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
 )
 
@@ -38,23 +33,4 @@ func ToDomainDTO(obj *v1alpha1.AMSecurityDomain) (domain.Domain, error) {
 
 func domainKey(obj *v1alpha1.AMSecurityDomain) string {
 	return refs.NewNamespacedNameFromObject(obj).HRID()
-}
-
-// CreateAMClient builds the AM client from the domain's AMContext, resolved with its templates compiled.
-func CreateAMClient(ctx context.Context, obj *v1alpha1.AMSecurityDomain) (*am.Client, error) {
-	if !obj.HasContext() {
-		return nil, fmt.Errorf("contextRef empty on %s [%s/%s]", obj.Kind, obj.GetName(), obj.GetNamespace())
-	}
-
-	// resolved like the APIM contexts: templates compiled, fetched from the API server
-	resolved, err := dynamic.ResolveAMContext(ctx, obj.ContextRef(), obj.GetNamespace())
-	if err != nil {
-		return nil, fmt.Errorf("AMContext [%s]: %w", obj.ContextRef().String(), err)
-	}
-	amContext, ok := resolved.(*v1alpha1.AMContext)
-	if !ok {
-		return nil, fmt.Errorf("AMContext [%s]: unexpected type %T", obj.ContextRef().String(), resolved)
-	}
-
-	return am.NewSDKClient(ctx, amContext)
 }
