@@ -53,6 +53,7 @@ type Files struct {
 	AMSecurityDomain   string
 	AMIdentityProvider string
 	AMCertificate      string
+	AMReporter         string
 }
 
 type FSBuilder struct {
@@ -159,6 +160,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if cert := decodeIfDefined(f.AMCertificate, &v1alpha1.AMCertificate{}, amCertificateKind); cert != nil {
 		setupAMCertificate(obj, cert, suffix)
+	}
+
+	if reporter := decodeIfDefined(f.AMReporter, &v1alpha1.AMReporter{}, amReporterKind); reporter != nil {
+		setupAMReporter(obj, reporter, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -462,6 +467,15 @@ func setupAMCertificate(obj *Objects, cert **v1alpha1.AMCertificate, suffix stri
 	}
 }
 
+func setupAMReporter(obj *Objects, reporter **v1alpha1.AMReporter, suffix string) {
+	obj.AMReporter = *reporter
+	obj.AMReporter.Name += suffix
+	obj.AMReporter.Namespace = constants.Namespace
+	if obj.AMSecurityDomain != nil {
+		obj.AMReporter.Spec.DomainRef = refs.NamespacedName{Name: obj.AMSecurityDomain.Name}
+	}
+}
+
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
 	obj.SharedPolicyGroup = *sub
 	obj.SharedPolicyGroup.Name += suffix
@@ -621,5 +635,10 @@ func (b *FSBuilder) WithAMIdentityProvider(file string) *FSBuilder {
 
 func (b *FSBuilder) WithAMCertificate(file string) *FSBuilder {
 	b.files.AMCertificate = file
+	return b
+}
+
+func (b *FSBuilder) WithAMReporter(file string) *FSBuilder {
+	b.files.AMReporter = file
 	return b
 }

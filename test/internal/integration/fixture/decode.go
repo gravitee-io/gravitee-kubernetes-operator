@@ -52,6 +52,7 @@ var (
 	amSecurityDomainKind   = v1alpha1.GroupVersion.WithKind("AMSecurityDomain")
 	amIdentityProviderKind = v1alpha1.GroupVersion.WithKind("AMIdentityProvider")
 	amCertificateKind      = v1alpha1.GroupVersion.WithKind("AMCertificate")
+	amReporterKind         = v1alpha1.GroupVersion.WithKind("AMReporter")
 )
 
 func decodeIfDefined[T client.Object](path string, rcv T, kind schema.GroupVersionKind) *T {

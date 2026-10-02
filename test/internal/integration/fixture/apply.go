@@ -55,6 +55,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyAMCertificate(cli, ctx)
 	}
 
+	if o.AMReporter != nil {
+		o.applyAMReporter(cli, ctx)
+	}
+
 	if o.Context != nil {
 		o.applyContext(cli, ctx)
 	}
@@ -348,6 +352,20 @@ func (o *Objects) applyAMCertificate(cli client.Client, ctx context.Context) {
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMCertificate.Name)
+}
+
+func (o *Objects) applyAMReporter(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.AMReporter)).ToNot(HaveOccurred())
+	Eventually(func() error {
+		err := manager.GetLatest(ctx, o.AMReporter)
+		if err != nil {
+			return err
+		}
+		if err = assert.AMReporterAccepted(o.AMReporter); err != nil {
+			return assert.AMReporterFailed(o.AMReporter)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMReporter.Name)
 }
 
 func (o *Objects) applyAMSecurityDomain(cli client.Client, ctx context.Context) {
