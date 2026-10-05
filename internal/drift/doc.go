@@ -90,6 +90,7 @@
 //     With expired and/or scheduled, items implementing [Expiring] / [Schedulable] are dropped first
 //     (APIM omits those client certificates from GET responses).
 //   - unstructured (struct): for unstructured types; hoists "object" child fields to root via PostFunc.
+//     With masked, a remote value of "********" is equivalent (see below).
 //
 // # Drift Tag Function Arguments
 //
@@ -160,6 +161,19 @@
 //
 //	// Strip "my-namespace-" prefix before comparing
 //	ID string `json:"id,omitempty" drift:"ignore-namespace-prefix"`
+//
+// ### unstructured
+//
+// Syntax: `drift:"unstructured"` or `drift:"unstructured:masked"`
+//
+// Compares a free-form object tree leaf by leaf, hoisting the "object" children to the root.
+// With `masked`, any leaf the remote returns as `********` is equivalent, whatever the CRD
+// holds, nested maps and slice items included: AM masks plugin-sensitive configuration values
+// in every response, so the stored value cannot be compared. Other leaves are compared as usual.
+//
+// Example:
+//
+//	Configuration *unstructured.Stringified `json:"configuration,omitempty" drift:"unstructured:masked"`
 //
 // # Defaults without a drift tag
 //
