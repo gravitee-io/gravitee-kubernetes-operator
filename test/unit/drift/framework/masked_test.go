@@ -51,6 +51,21 @@ var _ = Describe("unstructured:masked", func() {
 		),
 	)
 
+	It("detects drift on a list the remote returns masked", func() {
+		crd := masked(map[string]any{"secrets": []any{"s3cret", "other"}})
+		remote := masked(map[string]any{"secrets": "********"})
+		expectDrift(drift.DetectWithNamespace(crd, remote, ""), `config:
+  secrets: [s3cret other] != "********"`)
+	})
+
+	It("detects drift on an object the remote returns masked", func() {
+
+		crd := masked(map[string]any{"store": map[string]any{"name": "keystore.p12", "content": "b64"}})
+		remote := masked(map[string]any{"store": "********"})
+		expectDrift(drift.DetectWithNamespace(crd, remote, ""), `config:
+  store: map[content:b64 name:keystore.p12] != "********"`)
+	})
+
 	It("detects drift on unmasked values only", func() {
 		crd := masked(map[string]any{"password": "s3cret", "host": "a"})
 		remote := masked(map[string]any{"password": "********", "host": "b"})

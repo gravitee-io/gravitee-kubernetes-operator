@@ -17,7 +17,7 @@ type AutomationIdentityProvider = IdentityProvider
 // +kubebuilder:validation:XValidation:rule="(has(self.system) && self.system) || (has(self.name) && has(self.type) && has(self.configuration))",message="name, type and configuration are required unless system is true"
 // +kubebuilder:validation:XValidation:rule="has(self.type) == has(oldSelf.type) && (!has(self.type) || self.type == oldSelf.type)",message="type is immutable"
 type IdentityProvider struct {
-	// Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. Sensitive values, as flagged by the plugin, are returned as ******** in every response. Sending ******** back on update keeps the stored value; sending it on create is rejected.
+	// Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. Sensitive values, as flagged by the plugin, are returned as ******** in every response; an unset sensitive value is omitted. Sending ******** back on update keeps the stored value; sending it on create is rejected.
 	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 

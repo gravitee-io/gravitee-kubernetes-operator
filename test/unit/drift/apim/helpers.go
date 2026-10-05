@@ -14,51 +14,9 @@
 
 package apim
 
-import (
-	"fmt"
-	"strings"
+import "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/driftassert"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+var (
+	expectNoDrift                           = driftassert.NoDrift
+	expectedEquivalentNotHavingAnyZeroValue = driftassert.EquivalentNotHavingAnyZeroValue
 )
-
-func expectNoDrift(r drift.Result) {
-	GinkgoHelper()
-	Expect(r.String()).To(BeEmpty())
-	Expect(r.DriftDetected()).To(BeFalse())
-}
-
-// expectedEquivalentNotHavingAnyZeroValue is a helper to check that no property is not tested.
-// It requires that no value is zero (nil, empty string, empty slice, false booleans etc.).
-func expectedEquivalentNotHavingAnyZeroValue(crd, remote any) {
-	detect := drift.DetectWithNamespace(crd, remote, "")
-	expectNoDrift(detect)
-	doAssertNoResultHasZeroOrNilValue(detect, []string{})
-}
-
-func doAssertNoResultHasZeroOrNilValue(r drift.Result, ancestors []string) {
-	GinkgoHelper()
-	if r.Equivalent != drift.CannotCompare && r.Property != "" && (r.Index == nil || len(r.Children()) == 0) {
-		Expect(r.CRDValue).NotTo(BeZero(),
-			"%s.%s is not tested",
-			strings.Join(ancestors, "."),
-			r.Property)
-	}
-	if r.Children() != nil {
-		if r.Property != "" {
-			// this to ensure readability of the error message
-			var index string
-			if r.Index != nil {
-				index = fmt.Sprintf("[%v]", *r.Index)
-			}
-			ancestors = append(ancestors, r.Property+index)
-		}
-		// we need to copy the slice to have clean tree when errors are displayed
-		copyOfAncestors := make([]string, len(ancestors))
-		copy(copyOfAncestors, ancestors)
-		for _, child := range r.Children() {
-			doAssertNoResultHasZeroOrNilValue(*child, copyOfAncestors)
-		}
-	}
-}
