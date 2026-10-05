@@ -1,0 +1,10 @@
+{
+  "key": "default-signing",
+  "name": "Inline signing certificate",
+  "type": "pkcs12-am-certificate",
+  "system": false,
+  "configuration": "{\"content\":\"********\",\"alias\":\"signing\",\"storepass\":\"********\",\"keypass\":\"********\",\"algorithm\":\"RS256\",\"use\":[\"sig\"]}",
+  "createdAt": "2026-10-05T10:00:00Z",
+  "updatedAt": "2026-10-05T10:00:00Z",
+  "expiresAt": "2027-10-05T10:00:00Z"
+}

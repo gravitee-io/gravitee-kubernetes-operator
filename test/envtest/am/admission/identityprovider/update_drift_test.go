@@ -82,4 +82,32 @@ var _ = Describe("Validate drift", func() {
 		Eventually(validateUpdate(idp), constants.EventualTimeout, constants.Interval).
 			Should(MatchError(And(ContainSubstring("drift detected"), ContainSubstring("Renamed in AM"))))
 	})
+
+	// maskedUsers is the fixture's inline users as AM returns them: the password masked.
+	maskedUsers := func(email string) *unstructured.Stringified {
+		return unstructured.StringifiedFrom(map[string]any{"users": []any{map[string]any{
+			"username":  "jdoe",
+			"firstname": "John",
+			"lastname":  "Doe",
+			"email":     email,
+			"password":  "********",
+		}}})
+	}
+
+	It("should not drift on a password AM returns masked", func() {
+		idp := inAM(func(*v1alpha1.AMIdentityProviderSpec) {}, func(remote *internal.IdentityProvider) {
+			remote.Configuration = maskedUsers("john.doe@example.com")
+		})
+
+		Consistently(validateUpdate(idp), constants.ConsistentTimeout, constants.Interval).Should(Succeed())
+	})
+
+	It("should detect drift on a configuration value AM does not mask, next to a masked one", func() {
+		idp := inAM(func(*v1alpha1.AMIdentityProviderSpec) {}, func(remote *internal.IdentityProvider) {
+			remote.Configuration = maskedUsers("jane.doe@example.com")
+		})
+
+		Eventually(validateUpdate(idp), constants.EventualTimeout, constants.Interval).
+			Should(MatchError(And(ContainSubstring("drift detected"), ContainSubstring("jane.doe@example.com"))))
+	})
 })
