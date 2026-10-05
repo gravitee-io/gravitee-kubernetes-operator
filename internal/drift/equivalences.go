@@ -62,6 +62,8 @@ const (
 	ignoreOnlyStripNS   = "strip-ns"
 	ignoreOnlyExpired   = "expired"
 	ignoreOnlyScheduled = "scheduled"
+	maskedArg           = "masked"
+	maskedData          = "********"
 )
 
 // IgnoreOnlyArgs ignores items present only on one side, chosen by ctx.FuncArgs[0]
@@ -542,24 +544,41 @@ func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any, ctx DriftCo
 		e = defaultStructEquivalence(crd, remote, ctx)
 	}
 	e.PostFunc = func(r *Result) {
-		var objectChild *Result
-		r.children = slices.DeleteFunc(r.children, func(e *Result) bool {
-			if e.Property == "object" {
-				if len(e.children) > 0 {
-					objectChild = e
-				}
-				return true
-			}
-			return false
-		})
-
-		if objectChild != nil {
-			for _, c := range objectChild.children {
-				r.AppendChild(c, true)
-			}
+		pullUpObjectChildren(r)
+		if slices.Contains(ctx.FuncArgs, maskedArg) {
+			ignoreMaskedData(r)
 		}
 	}
 	return e
+}
+
+func pullUpObjectChildren(r *Result) {
+	var objectChild *Result
+	r.children = slices.DeleteFunc(r.children, func(e *Result) bool {
+		if e.Property == "object" {
+			if len(e.children) > 0 {
+				objectChild = e
+			}
+			return true
+		}
+		return false
+	})
+
+	if objectChild != nil {
+		for _, c := range objectChild.children {
+			r.AppendChild(c, true)
+		}
+	}
+}
+
+func ignoreMaskedData(r *Result) {
+	for _, c := range r.children {
+		if len(c.children) > 0 {
+			ignoreMaskedData(c)
+		} else if asString(c.RemoteValue) == maskedData && c.Equivalent == Inequivalent {
+			c.Equivalent = Equivalent
+		}
+	}
 }
 
 func EmptyIsTrue(crd any, remote any, ctx DriftContext) Equivalence {
