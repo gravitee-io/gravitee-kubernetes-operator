@@ -90,7 +90,7 @@
 //     With expired and/or scheduled, items implementing [Expiring] / [Schedulable] are dropped first
 //     (APIM omits those client certificates from GET responses).
 //   - unstructured (struct): for unstructured types; hoists "object" child fields to root via PostFunc.
-//     With masked, a remote value of "********" is equivalent (see below).
+//     With masked, a remote value of "********" is equivalent to a CRD string or absent value (see below).
 //
 // # Drift Tag Function Arguments
 //
@@ -167,9 +167,11 @@
 // Syntax: `drift:"unstructured"` or `drift:"unstructured:masked"`
 //
 // Compares a free-form object tree leaf by leaf, hoisting the "object" children to the root.
-// With `masked`, any leaf the remote returns as `********` is equivalent, whatever the CRD
-// holds, nested maps and slice items included: AM masks plugin-sensitive configuration values
-// in every response, so the stored value cannot be compared. Other leaves are compared as usual.
+// With `masked`, a leaf the remote returns as `********` is equivalent when the CRD holds a
+// string or nothing there, nested maps and slice items included: AM masks plugin-sensitive
+// configuration values in every response, so the stored value cannot be compared. A CRD object
+// or list against `********` is a type change and drifts. Other leaves are compared as usual.
+// Ignored on an embedded (inline) field, whose equivalence is never called.
 //
 // Example:
 //

@@ -492,6 +492,16 @@ func detectAny(key string, driftFunc driftFunc, crd valuePair, remote valuePair,
 		} else if crdElem.Kind() == reflect.Invalid {
 			crdElem = reflect.MakeSlice(remoteElem.Type(), 0, 0)
 		}
+		if crdElem.Kind() != remoteElem.Kind() {
+			// a slice against a scalar: compare the values as a whole, not the scalar's bytes as items
+			parent.AppendChild(&Result{
+				Equivalence: Equivalence{Equivalent: Inequivalent, Skip: true},
+				Property:    key,
+				CRDValue:    crd.Interface,
+				RemoteValue: remote.Interface,
+			}, true)
+			return false
+		}
 		detectItems(key, crdElem, remoteElem, parent, true, nil)
 		return false
 	}
