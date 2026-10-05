@@ -1,0 +1,273 @@
+{
+  "accountSettings": {
+    "accountBlockedDuration": 7200,
+    "autoLoginAfterRegistration": true,
+    "autoLoginAfterResetPassword": true,
+    "completeRegistrationWhenResetPassword": true,
+    "defaultIdentityProviderForRegistration": "default-inline-users",
+    "deletePasswordlessDevicesAfterResetPassword": true,
+    "dynamicUserRegistration": true,
+    "inherited": true,
+    "loginAttemptsDetectionEnabled": true,
+    "loginAttemptsResetTime": 600,
+    "maxLoginAttempts": 10,
+    "mfaChallengeAttemptsDetectionEnabled": true,
+    "mfaChallengeAttemptsResetTime": 600,
+    "mfaChallengeMaxAttempts": 3,
+    "mfaChallengeSendVerifyAlertEmail": true,
+    "redirectUriAfterRegistration": "http://localhost:3000/welcome",
+    "redirectUriAfterResetPassword": "http://localhost:3000/signin",
+    "rememberMe": true,
+    "rememberMeDuration": 604800,
+    "resetPasswordConfirmIdentity": true,
+    "resetPasswordCustomForm": true,
+    "resetPasswordCustomFormFields": [
+      {
+        "key": "email",
+        "label": "Email",
+        "type": "email"
+      }
+    ],
+    "resetPasswordInvalidateTokens": true,
+    "sendRecoverAccountEmail": true,
+    "sendVerifyRegistrationAccountEmail": true
+  },
+  "alertEnabled": true,
+  "certificateSettings": {
+    "fallbackCertificate": "default-signing"
+  },
+  "corsSettings": {
+    "allowCredentials": true,
+    "allowedHeaders": [
+      "Authorization",
+      "Content-Type"
+    ],
+    "allowedMethods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ],
+    "allowedOrigins": [
+      "http://localhost:3000"
+    ],
+    "enabled": true,
+    "inherited": true,
+    "maxAge": 86400
+  },
+  "dataPlaneId": "default",
+  "description": "Explicit desired state for manual-edit vs apply experiments",
+  "enabled": true,
+  "key": "default-comprehensive",
+  "keyRetrievalSettings": {
+    "allowPrivateIpAddress": true,
+    "allowUnsecuredHttpUri": true,
+    "cacheMaxEntries": 100,
+    "cacheTtlSeconds": 300,
+    "fetchTimeoutMs": 5000,
+    "maxResponseSizeKb": 64
+  },
+  "loginSettings": {
+    "certificateBasedAuthEnabled": true,
+    "certificateBasedAuthUrl": "http://localhost:8093/certificate-auth",
+    "forgotPasswordEnabled": true,
+    "hideForm": true,
+    "identifierFirstEnabled": true,
+    "inherited": true,
+    "magicLinkAuthEnabled": true,
+    "passwordlessDeviceNamingEnabled": true,
+    "passwordlessEnabled": true,
+    "passwordlessEnforcePasswordEnabled": true,
+    "passwordlessEnforcePasswordMaxAge": 2592000,
+    "passwordlessRememberDeviceEnabled": true,
+    "registerEnabled": true,
+    "rememberMeEnabled": true,
+    "resetPasswordOnExpiration": true
+  },
+  "master": true,
+  "name": "Comprehensive Domain",
+  "oidc": {
+    "cibaSettings": {
+      "authReqExpiry": 600,
+      "bindingMessageLength": 256,
+      "enabled": true,
+      "tokenReqInterval": 5
+    },
+    "clientRegistrationSettings": {
+      "allowHttpSchemeRedirectUri": true,
+      "allowLocalhostRedirectUri": true,
+      "allowRedirectUriParamsExpressionLanguage": true,
+      "allowWildCardRedirectUri": true,
+      "allowedScopes": [
+        "openid",
+        "profile"
+      ],
+      "allowedScopesEnabled": true,
+      "clientTemplateEnabled": true,
+      "defaultScopes": [
+        "openid"
+      ],
+      "dynamicClientRegistrationEnabled": true,
+      "openDynamicClientRegistrationEnabled": true
+    },
+    "postLogoutRedirectUris": [
+      "http://localhost:3000/logout"
+    ],
+    "redirectUriStrictMatching": true,
+    "requestUris": [
+      "http://localhost:3000/request"
+    ],
+    "securityProfileSettings": {
+      "enableFapiBrazil": true,
+      "enablePlainFapi": true
+    },
+    "workloadIdentitySettings": {
+      "allowPrivateIpAddress": true,
+      "allowUnsecuredHttpUri": true,
+      "cacheMaxEntries": 100,
+      "cacheTtlSeconds": 300,
+      "clockSkewSeconds": 5,
+      "defaultAllowedAlgorithms": [
+        "RS256"
+      ],
+      "enabled": true,
+      "fetchTimeoutMs": 5000,
+      "maxJwtLifetimeSeconds": 3600,
+      "maxResponseSizeKb": 64
+    }
+  },
+  "passwordSettings": {
+    "excludePasswordsInDictionary": true,
+    "excludeUserProfileInfoInPassword": true,
+    "expiryDuration": 90,
+    "includeNumbers": true,
+    "includeSpecialCharacters": true,
+    "inherited": true,
+    "lettersInMixedCase": true,
+    "maxConsecutiveLetters": 3,
+    "maxLength": 128,
+    "minLength": 8,
+    "oldPasswords": 5,
+    "passwordHistoryEnabled": true
+  },
+  "path": "/gko-comprehensive",
+  "saml": {
+    "certificate": "default-signing",
+    "enabled": true,
+    "entityId": "http://localhost:8093/gko-comprehensive/saml2/idp"
+  },
+  "scim": {
+    "enabled": true,
+    "idpSelectionEnabled": true,
+    "idpSelectionRule": "{#context.attributes['source'] == 'scim'}"
+  },
+  "secretExpirationSettings": {
+    "enabled": true,
+    "expiryTimeSeconds": 7776000
+  },
+  "selfServiceAccountManagementSettings": {
+    "enabled": true,
+    "resetPassword": {
+      "oldPasswordRequired": true,
+      "tokenAge": 3600
+    }
+  },
+  "tags": [
+    "gko",
+    "drift-test"
+  ],
+  "tokenExchangeSettings": {
+    "allowDelegation": true,
+    "allowImpersonation": true,
+    "allowedActorTokenTypes": [
+      "urn:ietf:params:oauth:token-type:access_token",
+      "urn:ietf:params:oauth:token-type:id_token"
+    ],
+    "allowedRequestedTokenTypes": [
+      "urn:ietf:params:oauth:token-type:access_token",
+      "urn:ietf:params:oauth:token-type:id_token"
+    ],
+    "allowedSubjectTokenTypes": [
+      "urn:ietf:params:oauth:token-type:access_token",
+      "urn:ietf:params:oauth:token-type:id_token"
+    ],
+    "enabled": true,
+    "idJagSettings": {
+      "laxValidation": true
+    },
+    "maxDelegationDepth": 25,
+    "tokenExchangeOAuthSettings": {
+      "inherited": true,
+      "scopeHandling": "downscoping"
+    },
+    "trustedIssuers": [
+      {
+        "certificate": "default-signing",
+        "issuer": "https://issuer.example.com",
+        "jwksUri": "https://issuer.example.com/jwks",
+        "keyResolutionMethod": "jwks_url",
+        "scopeMappings": {
+          "read": "openid"
+        },
+        "userBindingCriteria": [
+          {
+            "attribute": "email",
+            "expression": "{#token.email}"
+          }
+        ],
+        "userBindingEnabled": true
+      }
+    ]
+  },
+  "uma": {
+    "enabled": true
+  },
+  "vhostMode": true,
+  "vhosts": [
+    {
+      "host": "auth.localhost",
+      "overrideEntrypoint": true,
+      "path": "/gko-comprehensive"
+    }
+  ],
+  "webAuthnSettings": {
+    "attestationConveyancePreference": "none",
+    "authenticatorAttachment": "cross_platform",
+    "certificates": {
+      "root": "MIIBroot"
+    },
+    "enforceAuthenticatorIntegrity": true,
+    "enforceAuthenticatorIntegrityMaxAge": 10,
+    "forceRegistration": true,
+    "origin": "http://localhost:8093",
+    "relyingPartyId": "localhost",
+    "relyingPartyName": "GKO Drift Test",
+    "requireResidentKey": true,
+    "userVerification": "preferred"
+  },
+  "webProtectionSettings": {
+    "csp": {
+      "directives": [
+        "default-src 'self'",
+        "img-src 'self' data:",
+        "report-uri https://csp.example.com/report"
+      ],
+      "enabled": true,
+      "inherited": true,
+      "reportOnly": true,
+      "scriptInlineNonce": true
+    },
+    "xframe": {
+      "action": "SAMEORIGIN",
+      "enabled": true,
+      "inherited": true
+    },
+    "xss": {
+      "action": "1; mode=block",
+      "enabled": true,
+      "inherited": true
+    }
+  },
+  "createdAt": "2026-10-05T10:00:00Z",
+  "updatedAt": "2026-10-05T10:00:00Z"
+}
