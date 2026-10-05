@@ -130,8 +130,9 @@ func ClientForDomain(ctx context.Context, domain *v1alpha1.AMSecurityDomain) (*C
 }
 
 // WarnSystemIgnoredFields warns when a system sub-resource sets name, type or configuration: AM ignores them.
+// otherSetFields names the other fields the caller found set, which AM ignores as well.
 func WarnSystemIgnoredFields(
-	system *bool, name, typ *string, configuration *utils.GenericStringMap,
+	system *bool, name, typ *string, configuration *utils.GenericStringMap, otherSetFields ...string,
 ) *gerrors.AdmissionErrors {
 	errs := gerrors.NewAdmissionErrors()
 	if system == nil || !*system {
@@ -147,6 +148,7 @@ func WarnSystemIgnoredFields(
 	if typ != nil && len(*typ) > 0 {
 		fields = append(fields, "type")
 	}
+	fields = append(fields, otherSetFields...)
 	if len(fields) > 0 {
 		errs.AddWarningf("'%s' will be ignored when 'system' is 'true'.", strings.Join(fields, "', '"))
 	}
