@@ -67,6 +67,14 @@ var _ = Describe("unstructured:masked", func() {
   password: "s3cret" != "other"`)
 	})
 
+	It("detects drift on a masked-like value changed to another value", func() {
+		crd := masked(map[string]any{"password": "****"})
+		remote := masked(map[string]any{"password": "************"})
+
+		expectDrift(drift.DetectWithNamespace(crd, remote, ""), `config:
+  password: "****" != "************"`)
+	})
+
 	It("detects drift on a masked value without the masked argument", func() {
 		crd := withUnmaskedConfig{Config: unstructured.StringifiedFrom(map[string]any{"password": "s3cret"})}
 		remote := withUnmaskedConfig{Config: unstructured.StringifiedFrom(map[string]any{"password": "********"})}

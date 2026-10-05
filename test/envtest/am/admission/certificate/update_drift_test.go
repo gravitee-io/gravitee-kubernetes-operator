@@ -81,4 +81,14 @@ var _ = Describe("Validate drift", func() {
 		Eventually(validateUpdate(cert), constants.EventualTimeout, constants.Interval).
 			Should(MatchError(And(ContainSubstring("drift detected"), ContainSubstring("Renamed in AM"))))
 	})
+
+	It("should not drift on the passwords and keystore file AM returns masked", func() {
+		cert := inAM(func(*v1alpha1.AMCertificateSpec) {}, func(remote *internal.Certificate) {
+			remote.Configuration.Object["content"] = "********"
+			remote.Configuration.Object["storepass"] = "********"
+			remote.Configuration.Object["keypass"] = "********"
+		})
+
+		Consistently(validateUpdate(cert), constants.ConsistentTimeout, constants.Interval).Should(Succeed())
+	})
 })

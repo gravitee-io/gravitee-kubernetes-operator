@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "signing",
+    "namespace": "default"
+  },
+  "spec": {
+    "domainRef": {
+      "name": "basic-domain"
+    },
+    "name": "Inline signing certificate",
+    "type": "pkcs12-am-certificate",
+    "system": false,
+    "configuration": {
+      "content": "{\"name\":\"keystore.p12\",\"content\":\"aW5saW5lLWtleXN0b3Jl\"}",
+      "alias": "signing",
+      "storepass": "changeme",
+      "keypass": "changeme",
+      "algorithm": "RS256",
+      "use": ["sig"]
+    }
+  }
+}
