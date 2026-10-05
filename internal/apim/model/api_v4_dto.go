@@ -26,7 +26,7 @@ import (
 
 type APIV4DTO struct {
 	ID                               string                                          `json:"id,omitempty" drift:"ignore"`
-	HRID                             string                                          `json:"hrid,omitempty"`
+	HRID                             string                                          `json:"hrid,omitempty" drift:"ignore"`
 	CrossID                          string                                          `json:"crossId,omitempty" drift:"ignore"`
 	Name                             string                                          `json:"name"`
 	Version                          string                                          `json:"version"`
