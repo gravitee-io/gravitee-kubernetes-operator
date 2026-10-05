@@ -30,7 +30,8 @@ import (
 // key pattern and length;
 // domainRef.namespace must match the resource's own namespace;
 // If the domain is not found or ready, a warning is issued.
-// if 'system' is true: setting any of name, type, and configuration gives a warning.
+// if 'system' is true: setting any of name, type, configuration, attributeMappings and
+// attributeMappingEventTypes gives a warning.
 func PreCheck(ctx context.Context, obj *v1alpha1.AMReporter) *gerrors.AdmissionErrors {
 	errs := gerrors.NewAdmissionErrors()
 
@@ -46,9 +47,22 @@ func PreCheck(ctx context.Context, obj *v1alpha1.AMReporter) *gerrors.AdmissionE
 	}
 
 	errs.MergeWith(am.WarnMissingDomain(ctx, obj, obj.IsBeingDeleted()))
-	errs.MergeWith(am.WarnSystemIgnoredFields(obj.Spec.System, obj.Spec.Name, obj.Spec.Type, obj.Spec.Configuration))
+	errs.MergeWith(am.WarnSystemIgnoredFields(obj.Spec.System, obj.Spec.Name, obj.Spec.Type, obj.Spec.Configuration,
+		setAttributeMappingFields(obj.Spec)...))
 
 	return errs
+}
+
+// setAttributeMappingFields names the attribute mapping fields the spec sets.
+func setAttributeMappingFields(spec v1alpha1.AMReporterSpec) []string {
+	fields := make([]string, 0)
+	if len(spec.AttributeMappings) > 0 {
+		fields = append(fields, "attributeMappings")
+	}
+	if len(spec.AttributeMappingEventTypes) > 0 {
+		fields = append(fields, "attributeMappingEventTypes")
+	}
+	return fields
 }
 
 // DryRun validates the reporter against AM without persisting it. It is skipped without a client

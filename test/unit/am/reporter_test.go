@@ -232,7 +232,7 @@ var _ = Describe("AMReporter PreCheck", func() {
 		Expect(warnings(errs)).To(ContainElement(ContainSubstring("not found or not yet created in AM")))
 	})
 
-	It("warns that name, type and configuration are ignored for the system reporter", func() {
+	It("warns that name, type, configuration and the attribute mappings are ignored for the system reporter", func() {
 		r := reporterWithReadyDomain()
 		r.Spec.System = new(true)
 
@@ -240,7 +240,8 @@ var _ = Describe("AMReporter PreCheck", func() {
 
 		Expect(errs.IsSevere()).To(BeFalse())
 		Expect(warnings(errs)).To(ConsistOf(
-			"'configuration', 'name', 'type' will be ignored when 'system' is 'true'."))
+			"'configuration', 'name', 'type', 'attributeMappings', 'attributeMappingEventTypes' "+
+				"will be ignored when 'system' is 'true'."))
 	})
 })
 
