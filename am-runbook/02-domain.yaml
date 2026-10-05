@@ -1,0 +1,224 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Converted from domain-comprehensive/domain.tf. Not carried over (GKO has no CRD for them yet):
+# data plane (AM picks the environment's). Set later, once what they reference exists:
+# accountSettings.defaultIdentityProviderForRegistration (step 1.4), the fallback and SAML certificates (step 6.4).
+apiVersion: gravitee.io/v1alpha1
+kind: AMSecurityDomain
+metadata:
+  name: comprehensive
+  namespace: am-runbook
+  annotations:
+    gravitee.io/drift-detection: "true"
+spec:
+  contextRef:
+    name: am-ctx
+  name: "[GKO] Comprehensive Domain"
+  description: Explicit desired state for manual-edit vs apply experiments
+  path: /gko-comprehensive
+  enabled: true
+  alertEnabled: false
+  master: false
+  vhostMode: false
+  tags:
+    - gko
+    - drift-test
+
+  # inherited: false so AM applies the child fields instead of ignoring them.
+  accountSettings:
+    inherited: false
+    accountBlockedDuration: 7200
+    autoLoginAfterRegistration: false
+    autoLoginAfterResetPassword: false
+    completeRegistrationWhenResetPassword: false
+    deletePasswordlessDevicesAfterResetPassword: false
+    dynamicUserRegistration: false
+    loginAttemptsDetectionEnabled: true # drift probe
+    loginAttemptsResetTime: 600
+    maxLoginAttempts: 10
+    mfaChallengeAttemptsDetectionEnabled: false
+    mfaChallengeAttemptsResetTime: 600
+    mfaChallengeMaxAttempts: 3
+    mfaChallengeSendVerifyAlertEmail: false
+    redirectUriAfterRegistration: http://localhost:3000/welcome
+    redirectUriAfterResetPassword: http://localhost:3000/signin
+    rememberMe: false
+    rememberMeDuration: 604800
+    resetPasswordConfirmIdentity: false
+    resetPasswordCustomForm: false
+    resetPasswordCustomFormFields:
+      - key: email
+        label: Email
+        type: email
+    resetPasswordInvalidateTokens: false
+    sendRecoverAccountEmail: false
+    sendVerifyRegistrationAccountEmail: false
+
+  corsSettings:
+    enabled: false # drift probe: toggle in the AM console
+    allowCredentials: false
+    maxAge: 86400
+    allowedOrigins:
+      - http://localhost:3000
+    allowedMethods: [GET, POST, PUT, DELETE]
+    allowedHeaders: [Authorization, Content-Type]
+
+  loginSettings:
+    inherited: false
+    certificateBasedAuthEnabled: false
+    certificateBasedAuthUrl: http://localhost:8093/certificate-auth
+    forgotPasswordEnabled: false
+    hideForm: false
+    identifierFirstEnabled: false
+    magicLinkAuthEnabled: false
+    passwordlessDeviceNamingEnabled: false
+    passwordlessEnabled: false
+    passwordlessEnforcePasswordEnabled: false
+    passwordlessEnforcePasswordMaxAge: 2592000
+    passwordlessRememberDeviceEnabled: false
+    registerEnabled: false # drift probe
+    rememberMeEnabled: false
+    resetPasswordOnExpiration: true
+
+  oidc:
+    redirectUriStrictMatching: false # drift probe
+    postLogoutRedirectUris:
+      - http://localhost:3000/logout
+    requestUris:
+      - http://localhost:3000/request
+    cibaSettings:
+      enabled: false
+      authReqExpiry: 600
+      bindingMessageLength: 256
+      tokenReqInterval: 5
+    clientRegistrationSettings:
+      allowHttpSchemeRedirectUri: true
+      allowLocalhostRedirectUri: true
+      allowRedirectUriParamsExpressionLanguage: false
+      allowWildCardRedirectUri: false
+      allowedScopes: [openid, profile]
+      allowedScopesEnabled: false
+      clientTemplateEnabled: false
+      defaultScopes: [openid]
+      dynamicClientRegistrationEnabled: false
+      openDynamicClientRegistrationEnabled: false
+    securityProfileSettings:
+      enableFapiBrazil: false
+      enablePlainFapi: false
+    workloadIdentitySettings:
+      enabled: false
+      clockSkewSeconds: 5
+      defaultAllowedAlgorithms: [RS256]
+      maxJwtLifetimeSeconds: 3600
+
+  keyRetrievalSettings:
+    allowPrivateIpAddress: false
+    allowUnsecuredHttpUri: true
+    cacheMaxEntries: 100
+    cacheTtlSeconds: 300
+    fetchTimeoutMs: 5000
+    maxResponseSizeKb: 64
+
+  passwordSettings:
+    inherited: false
+    excludePasswordsInDictionary: true
+    excludeUserProfileInfoInPassword: true
+    expiryDuration: 90
+    includeNumbers: true
+    includeSpecialCharacters: true
+    lettersInMixedCase: false
+    maxConsecutiveLetters: 3
+    maxLength: 128
+    minLength: 8
+    oldPasswords: 5
+    passwordHistoryEnabled: false
+
+  saml:
+    enabled: false
+    entityId: http://localhost:8093/gko-comprehensive/saml2/idp
+
+  scim:
+    enabled: false
+    idpSelectionEnabled: false
+    idpSelectionRule: "{#context.attributes['source'] == 'scim'}"
+
+  secretExpirationSettings:
+    enabled: false
+    expiryTimeSeconds: 7776000
+
+  selfServiceAccountManagementSettings:
+    enabled: false
+    resetPassword:
+      oldPasswordRequired: false
+      tokenAge: 3600
+
+  tokenExchangeSettings:
+    enabled: false
+    allowDelegation: false
+    allowImpersonation: true
+    maxDelegationDepth: 25
+    allowedActorTokenTypes:
+      - urn:ietf:params:oauth:token-type:access_token
+      - urn:ietf:params:oauth:token-type:id_token
+    allowedRequestedTokenTypes:
+      - urn:ietf:params:oauth:token-type:access_token
+      - urn:ietf:params:oauth:token-type:id_token
+    allowedSubjectTokenTypes:
+      - urn:ietf:params:oauth:token-type:access_token
+      - urn:ietf:params:oauth:token-type:id_token
+    tokenExchangeOAuthSettings:
+      inherited: false
+      scopeHandling: downscoping
+    idJagSettings:
+      laxValidation: false
+
+  uma:
+    enabled: false
+
+  vhosts:
+    - host: auth.localhost
+      overrideEntrypoint: false
+      path: /gko-comprehensive
+
+  webProtectionSettings:
+    csp:
+      inherited: false
+      enabled: true
+      reportOnly: true # drift probe
+      directives:
+        - "default-src 'self'"
+        - "img-src 'self' data:"
+        - "report-uri https://csp.example.com/report"
+      scriptInlineNonce: true
+    xframe:
+      inherited: false
+      enabled: true
+      action: SAMEORIGIN
+    xss:
+      inherited: false
+      enabled: true
+      action: "1; mode=block"
+
+  webAuthnSettings:
+    attestationConveyancePreference: none
+    authenticatorAttachment: cross_platform
+    enforceAuthenticatorIntegrity: false
+    enforceAuthenticatorIntegrityMaxAge: 10
+    forceRegistration: false
+    origin: http://localhost:8093
+    relyingPartyId: localhost
+    relyingPartyName: GKO Drift Test
+    requireResidentKey: false
+    userVerification: preferred
