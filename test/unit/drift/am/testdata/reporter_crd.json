@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "name": "audit-kafka",
+    "namespace": "default"
+  },
+  "spec": {
+    "domainRef": {
+      "name": "basic-domain"
+    },
+    "name": "Audit to Kafka",
+    "type": "reporter-am-kafka",
+    "system": false,
+    "enabled": true,
+    "configuration": {
+      "bootstrapServers": "kafka:9092",
+      "topic": "audit",
+      "acks": "1",
+      "username": "gravitee",
+      "password": "s3cret"
+    },
+    "attributeMappings": [
+      {
+        "expression": "{#context.attributes['client']}",
+        "exportedName": "client"
+      }
+    ],
+    "attributeMappingEventTypes": ["USER_LOGIN"]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "key": "default-audit-kafka",
+  "name": "Audit to Kafka",
+  "type": "reporter-am-kafka",
+  "system": false,
+  "enabled": true,
+  "dataType": "AUDIT",
+  "configuration": "{\"bootstrapServers\":\"kafka:9092\",\"topic\":\"audit\",\"acks\":\"1\",\"username\":\"gravitee\",\"password\":\"********\"}",
+  "attributeMappings": [
+    {
+      "expression": "{#context.attributes['client']}",
+      "exportedName": "client"
+    }
+  ],
+  "attributeMappingEventTypes": ["USER_LOGIN"],
+  "createdAt": "2026-10-05T10:00:00Z",
+  "updatedAt": "2026-10-05T10:00:00Z"
+}
