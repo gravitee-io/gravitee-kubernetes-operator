@@ -240,7 +240,7 @@ var _ = Describe("AMReporter PreCheck", func() {
 
 		Expect(errs.IsSevere()).To(BeFalse())
 		Expect(warnings(errs)).To(ConsistOf(
-			"'configuration', 'name', 'type', 'attributeMappings', 'attributeMappingEventTypes' "+
+			"'configuration', 'name', 'type', 'attributeMappings', 'attributeMappingEventTypes' " +
 				"will be ignored when 'system' is 'true'."))
 	})
 })
