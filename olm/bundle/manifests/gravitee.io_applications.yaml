@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    gravitee.io/operator.version: 4.12.20
+    gravitee.io/operator.version: 4.12.21
   name: applications.gravitee.io
 spec:
   group: gravitee.io
@@ -168,6 +168,12 @@ spec:
                       type: object
                     oauth:
                       properties:
+                        additionalClientMetadata:
+                          additionalProperties:
+                            type: string
+                          description: DCR metadata sent to the provider, e.g. `software_id` to select a
+                            client template
+                          type: object
                         applicationType:
                           description: Oauth client application type
                           enum:
