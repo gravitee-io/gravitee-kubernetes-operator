@@ -27,6 +27,7 @@ const (
 	APIRoleScope         = RoleScope("API")
 	ApplicationRoleScope = RoleScope("APPLICATION")
 	IntegrationRoleScope = RoleScope("INTEGRATION")
+	APIProductRoleScope  = RoleScope("API_PRODUCT")
 )
 
 type Type struct {
@@ -40,8 +41,15 @@ type Type struct {
 	// +kubebuilder:default:=true
 	// If true, new members added to the API spec will
 	// be notified when the API is synced with APIM.
-	NotifyMembers bool     `json:"notifyMembers"`
-	Members       []Member `json:"members"`
+	NotifyMembers bool `json:"notifyMembers"`
+	// Default role, per scope, given to a member who joins the group, including members
+	// mapped from an identity provider. Keys are API, APPLICATION and API_PRODUCT.
+	// Omitted, the group's default roles in APIM are left as they are. Declared, the map is
+	// the whole set: a scope absent from it loses its default role.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:XValidation:rule="self.all(k, k in ['API', 'APPLICATION', 'API_PRODUCT'])",message="defaultMemberRoles keys must be API, APPLICATION or API_PRODUCT"
+	DefaultMemberRoles map[RoleScope]string `json:"defaultMemberRoles,omitempty"`
+	Members            []Member             `json:"members"`
 }
 
 type Member struct {

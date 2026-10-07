@@ -136,6 +136,14 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 			equivalenceFunc := equivalenceRegistry.Get(driftFunc.Name, fieldType.Kind())
 			this.context.FuncArgs = driftFunc.Args
 			equivalent := equivalenceFunc(crdPair.Interface, remotePair.Interface, this.context)
+			if equivalent.Skip && equivalent.Equivalent == Inequivalent {
+				this.AppendChild(&Result{
+					Property:    property,
+					Equivalence: equivalent,
+					CRDValue:    crdPair.Interface,
+					RemoteValue: remotePair.Interface,
+				}, ordered)
+			}
 			if !equivalent.Skip {
 				detectMapItems(property, driftFunc, crdPair.Value, remotePair.Value, this)
 			}
