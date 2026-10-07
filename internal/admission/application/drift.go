@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -35,7 +36,11 @@ func mergeDriftValidation(
 ) {
 	errs.MergeWith(drift.ValidateDrift(ctx, oldApp, newApp, resolveAppRefs, getRemoteApp,
 		drift.MapDTO(func(app *v1alpha1.Application) model.ApplicationDTO {
-			return model.ToApplicationDTO(app.Spec)
+			dto := model.ToApplicationDTO(app.Spec)
+			if k8s.HasTrueAnnotation(app, core.IgnoreGroupsAnnotation) {
+				dto.Groups = nil
+			}
+			return dto
 		}),
 	))
 }
@@ -44,19 +49,31 @@ func resolveAppRefs(ctx context.Context, app *v1alpha1.Application) error {
 	return appResolve.ResolveClientCertificates(ctx, app.Spec.Settings, app.GetNamespace(), app.GetName())
 }
 
+// getRemoteApp leaves the remote groups out of the comparison when the platform owns them.
 func getRemoteApp(apimClient *apim.APIM, app *v1alpha1.Application) (any, error) {
+	remote, err := fetchRemoteApp(apimClient, app)
+	if err != nil {
+		return nil, err
+	}
+	if k8s.HasTrueAnnotation(app, core.IgnoreGroupsAnnotation) {
+		remote.Groups = nil
+	}
+	return remote, nil
+}
+
+func fetchRemoteApp(apimClient *apim.APIM, app *v1alpha1.Application) (model.ApplicationDTO, error) {
 	automation := k8s.IsAutomationAPIManaged(app)
 	app.PopulateIDs(apimClient.Context, automation)
 	if !automation && app.GetID() != "" {
 		remoteApp, err := apimClient.Applications.GetWithUUID(app.GetID())
 		if err != nil {
-			return nil, err
+			return model.ApplicationDTO{}, err
 		}
 		return *remoteApp, nil
 	}
 	remoteApp, err := apimClient.Applications.GetByHRID(appHRID(app))
 	if err != nil {
-		return nil, err
+		return model.ApplicationDTO{}, err
 	}
 	return *remoteApp, nil
 }

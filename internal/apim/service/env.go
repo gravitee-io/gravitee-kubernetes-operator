@@ -22,6 +22,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	httputil "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -63,6 +65,10 @@ func (svc *Env) importGroup(grp *v1alpha1.Group, dryRun bool) (*group.Status, er
 	if setHridWithUUID {
 		dto.HRID = grp.Spec.ID
 		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	}
+
+	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
+		url = url.WithQueryParam("ignoreMembers", env.TrueString)
 	}
 
 	state := new(model.GroupState)

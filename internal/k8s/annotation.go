@@ -14,7 +14,15 @@
 
 package k8s
 
-import "sigs.k8s.io/controller-runtime/pkg/client"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+// HasTrueAnnotation reports whether the annotation key is set to "true" on the object.
+func HasTrueAnnotation(o client.Object, key string) bool {
+	return o.GetAnnotations()[key] == env.TrueString
+}
 
 func AddAnnotation(o client.Object, key, value string) {
 	a := o.GetAnnotations()

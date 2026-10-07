@@ -49,6 +49,9 @@ func validateCreate(ctx context.Context, app *v1alpha1.Application) *errors.Admi
 	if errs.IsSevere() {
 		return errs
 	}
+	if k8s.HasTrueAnnotation(app, core.IgnoreGroupsAnnotation) && len(app.Spec.Groups) > 0 {
+		errs.AddWarningf("spec.groups is not applied while %s is true", core.IgnoreGroupsAnnotation)
+	}
 	errs.MergeWith(validateDryRun(ctx, app))
 	return errs
 }

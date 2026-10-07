@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
@@ -43,6 +44,10 @@ func validateCreate(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.
 	errs.MergeWith(base.ValidateCreate(ctx, api))
 	if errs.IsSevere() {
 		return errs
+	}
+
+	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) && len(api.Spec.Groups)+len(api.Spec.GroupRefs) > 0 {
+		errs.AddWarningf("spec.groups and spec.groupRefs are not applied while %s is true", core.IgnoreGroupsAnnotation)
 	}
 
 	if api.HasContext() {
