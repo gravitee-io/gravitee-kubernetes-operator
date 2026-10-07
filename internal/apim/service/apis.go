@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
@@ -147,6 +148,10 @@ func (svc *APIs) applyV4(api *v1alpha1.ApiV4Definition, dryRun bool) (*base.Stat
 	if setHridWithUUID {
 		dto.HRID = api.Spec.ID
 		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	}
+
+	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) {
+		url = url.WithQueryParam("ignoreGroups", env.TrueString)
 	}
 
 	status := new(v4.AutomationStatus)

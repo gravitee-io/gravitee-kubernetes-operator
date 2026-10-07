@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -29,6 +30,9 @@ func validateCreate(ctx context.Context, group *v1alpha1.Group) *errors.Admissio
 	errs.Add(ctxref.Validate(ctx, group))
 	if errs.IsSevere() {
 		return errs
+	}
+	if k8s.HasTrueAnnotation(group, core.IgnoreMembersAnnotation) && len(group.Spec.Members) > 0 {
+		errs.AddWarningf("spec.members is not applied while %s is true", core.IgnoreMembersAnnotation)
 	}
 	errs.MergeWith(validateDryRun(ctx, group))
 	return errs

@@ -40,6 +40,12 @@ const (
 	GraviteePemRegistryLabel    = "kubernetes-pem-registry"
 	LastSpecHashAnnotation      = "gravitee.io/last-spec-hash"
 	DriftDetectionAnnotation    = "gravitee.io/drift-detection"
+	// IgnoreGroupsAnnotation, set to "true" on an ApiV4Definition or an Application, leaves the resource's
+	// groups to the platform: spec.groups is not applied (Automation API ignoreGroups query parameter).
+	IgnoreGroupsAnnotation = "gravitee.io/ignore-groups"
+	// IgnoreMembersAnnotation, set to "true" on a Group, leaves the group's members to the platform,
+	// typically to an identity provider's group mapping (Automation API ignoreMembers query parameter).
+	IgnoreMembersAnnotation = "gravitee.io/ignore-members"
 
 	Extends = "gravitee.io/extends"
 

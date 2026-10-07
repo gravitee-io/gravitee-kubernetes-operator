@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	corev1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
@@ -122,7 +123,8 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.ApiV4Definition:
 		oo, _ := e.ObjectOld.(*v1alpha1.ApiV4Definition)
-		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec) ||
+			annotationChanged(oo, no, core.IgnoreGroupsAnnotation)
 	case *v1alpha1.ManagementContext:
 		oo, _ := e.ObjectOld.(*v1alpha1.ManagementContext)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
@@ -134,7 +136,8 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.Application:
 		oo, _ := e.ObjectOld.(*v1alpha1.Application)
-		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec) ||
+			annotationChanged(oo, no, core.IgnoreGroupsAnnotation)
 	case *v1alpha1.Subscription:
 		oo, _ := e.ObjectOld.(*v1alpha1.Subscription)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
@@ -143,7 +146,8 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.Group:
 		oo, _ := e.ObjectOld.(*v1alpha1.Group)
-		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec) ||
+			annotationChanged(oo, no, core.IgnoreMembersAnnotation)
 	case *v1alpha1.Notification:
 		oo, _ := e.ObjectOld.(*v1alpha1.Notification)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
@@ -206,6 +210,11 @@ func (LastSpecHashPredicate) Delete(e event.DeleteEvent) bool {
 	default:
 		return t.GetDeletionTimestamp() != nil
 	}
+}
+
+// annotationChanged reports whether an annotation that changes what is sent to APIM was added, removed or changed.
+func annotationChanged(oldObj, newObj client.Object, key string) bool {
+	return oldObj.GetAnnotations()[key] != newObj.GetAnnotations()[key]
 }
 
 func shouldAlwaysReconcile() bool {

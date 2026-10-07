@@ -59,21 +59,37 @@ func resolveApiV4Refs(ctx context.Context, api *v1alpha1.ApiV4Definition) error 
 }
 
 func toAPIV4DTO(api *v1alpha1.ApiV4Definition) model.APIV4DTO {
-	return model.ToAPIV4DTO(&api.Spec.Api).WithResolvedVisibility()
+	dto := model.ToAPIV4DTO(&api.Spec.Api).WithResolvedVisibility()
+	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) {
+		dto.Groups = nil
+	}
+	return dto
 }
 
+// getRemoteApiV4 leaves the remote groups out of the comparison when the platform owns them.
 func getRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (any, error) {
+	remote, err := fetchRemoteApiV4(apimClient, api)
+	if err != nil {
+		return nil, err
+	}
+	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) {
+		remote.Groups = nil
+	}
+	return remote, nil
+}
+
+func fetchRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (model.APIV4DTO, error) {
 	if !k8s.IsAutomationAPIManaged(api) && api.GetID() != "" {
 		remote, err := apimClient.APIs.GetV4WithUUID(api.GetID())
 		if err != nil {
-			return nil, err
+			return model.APIV4DTO{}, err
 		}
 		return remote.WithResolvedVisibility(), nil
 	}
 	hrid := apiHRID(api)
 	remote, err := apimClient.APIs.GetV4ByHRID(hrid)
 	if err != nil {
-		return nil, err
+		return model.APIV4DTO{}, err
 	}
 	return remote.WithResolvedVisibility(), nil
 }

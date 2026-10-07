@@ -20,6 +20,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -118,6 +120,11 @@ func (svc *Applications) createOrUpdate(app *v1alpha1.Application, dryRun bool) 
 		app.Spec.HRID = app.Spec.ID
 		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
 	}
+
+	if k8s.HasTrueAnnotation(app, core.IgnoreGroupsAnnotation) {
+		url = url.WithQueryParam("ignoreGroups", env.TrueString)
+	}
+
 	status := new(application.Status)
 
 	if err := svc.HTTP.Put(url.String(), app.Spec, status); err != nil {

@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -41,7 +42,11 @@ func resolveRefs(context.Context, *v1alpha1.Group) error {
 }
 
 func toGroupPayload(grp *v1alpha1.Group) model.GroupDTO {
-	return model.ToGroupDTO(*grp.Spec.Type)
+	dto := model.ToGroupDTO(*grp.Spec.Type)
+	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
+		dto.Members = nil
+	}
+	return dto
 }
 
 func getRemoteGroup(apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
@@ -58,6 +63,9 @@ func getRemoteGroup(apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
+		remote.Members = nil
 	}
 	return remote.GroupDTO, nil
 }
