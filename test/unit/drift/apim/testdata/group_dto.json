@@ -13,5 +13,10 @@
         "INTEGRATION": "USER"
       }
     }
-  ]
+  ],
+  "defaultMemberRoles": {
+    "API": "USER",
+    "APPLICATION": "USER",
+    "API_PRODUCT": "USER"
+  }
 }

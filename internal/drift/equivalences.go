@@ -37,6 +37,7 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
 	RegisterEquivalenceFunc("time", reflect.Struct, TimeStruct)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.String, IgnoreRemoteDefault)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Map, IgnoreRemoteDefaultMap)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
@@ -338,6 +339,23 @@ func IgnoreRemoteDefault(crd any, remote any, context DriftContext) Equivalence 
 			return Equivalence{Equivalent: Equivalent}
 		}
 	}
+	return e
+}
+
+// IgnoreRemoteDefaultMap is the map form of IgnoreRemoteDefault: a CRD that declares no entry
+// (nil or empty map) accepts whatever APIM holds; a declared map is compared as a whole, an
+// entry present on one side only included. It never descends into the entries, whose string
+// values would otherwise fall under the string form and accept a remote-only entry.
+// Tag arguments are not supported on maps.
+func IgnoreRemoteDefaultMap(crd any, remote any, context DriftContext) Equivalence {
+	if crd == nil || reflect.ValueOf(crd).Len() == 0 {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+	if remote == nil || reflect.ValueOf(remote).Len() == 0 {
+		return Equivalence{Equivalent: Inequivalent, Skip: true}
+	}
+	e := DefaultEquivalence(crd, remote, context)
+	e.Skip = true
 	return e
 }
 

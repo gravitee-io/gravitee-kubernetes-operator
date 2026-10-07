@@ -3187,6 +3187,7 @@ _Validation:_
 
 _Appears in:_
 - [Member](#member)
+- [Type](#type)
 
 
 
@@ -3229,6 +3230,7 @@ _Appears in:_
 | `hrid` _string_ |  |  |  |
 | `name` _string_ |  |  | Required: \{\} <br /> |
 | `notifyMembers` _boolean_ | If true, new members added to the API spec will<br />be notified when the API is synced with APIM. | true | Optional: \{\} <br /> |
+| `defaultMemberRoles` _object (keys:[RoleScope](#rolescope), values:string)_ | Default role, per scope, given to a member who joins the group, including members<br />mapped from an identity provider. Keys are API, APPLICATION and API_PRODUCT.<br />Omitted, the group's default roles in APIM are left as they are. Declared, the map is<br />the whole set: a scope absent from it loses its default role. |  | Optional: \{\} <br /> |
 | `members` _[Member](#member) array_ |  |  |  |
 
 

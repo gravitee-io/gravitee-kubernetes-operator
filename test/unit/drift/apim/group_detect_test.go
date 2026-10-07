@@ -15,9 +15,11 @@
 package apim
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Group Drift detection", func() {
@@ -63,6 +65,17 @@ var _ = Describe("Group Drift detection", func() {
 				},
 			},
 		),
+		Entry("undeclared default member roles accept any remote defaults",
+			model.GroupDTO{Name: "My Group"},
+			model.GroupDTO{
+				Name:               "My Group",
+				DefaultMemberRoles: map[group.RoleScope]string{group.APIRoleScope: "USER"},
+			},
+		),
+		Entry("empty default member roles are undeclared",
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: map[group.RoleScope]string{}},
+			model.GroupDTO{Name: "My Group"},
+		),
 		Entry("crd members against empty remote are ignored",
 			model.GroupDTO{
 				Name: "e2e-group-no-roles",
@@ -74,6 +87,28 @@ var _ = Describe("Group Drift detection", func() {
 				Name:    "e2e-group-no-roles",
 				Members: []model.Member{},
 			},
+		),
+	)
+
+	DescribeTable("drifted default member roles",
+		func(crd, remote model.GroupDTO) {
+			result := drift.DetectWithNamespace(crd, remote, "")
+			Expect(result.DriftDetected()).To(BeTrue())
+		},
+		Entry("changed role",
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: map[group.RoleScope]string{group.APIRoleScope: "USER"}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: map[group.RoleScope]string{group.APIRoleScope: "OWNER"}},
+		),
+		Entry("scope added in APIM",
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: map[group.RoleScope]string{group.APIRoleScope: "USER"}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: map[group.RoleScope]string{
+				group.APIRoleScope:         "USER",
+				group.ApplicationRoleScope: "USER",
+			}},
+		),
+		Entry("removed in APIM",
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: map[group.RoleScope]string{group.APIRoleScope: "USER"}},
+			model.GroupDTO{Name: "My Group"},
 		),
 	)
 

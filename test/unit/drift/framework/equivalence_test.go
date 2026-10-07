@@ -281,6 +281,32 @@ var _ = Describe("IgnoreRemoteDefault", func() {
 	})
 })
 
+var _ = Describe("IgnoreRemoteDefault on maps", func() {
+	type withMap struct {
+		Roles map[string]string `json:"roles,omitempty" drift:"ignore-remote-default"`
+	}
+
+	DescribeTable("no drift",
+		func(crd, remote withMap) { expectNoDrift(drift.DetectWithNamespace(crd, remote, "")) },
+		Entry("nil crd map accepts any remote map", withMap{}, withMap{Roles: map[string]string{"API": "USER"}}),
+		Entry("empty crd map accepts any remote map", withMap{Roles: map[string]string{}}, withMap{Roles: map[string]string{"API": "USER"}}),
+		Entry("equal declared maps", withMap{Roles: map[string]string{"API": "USER"}}, withMap{Roles: map[string]string{"API": "USER"}}),
+	)
+
+	DescribeTable("drift",
+		func(crd, remote withMap) {
+			result := drift.DetectWithNamespace(crd, remote, "")
+			Expect(result.DriftDetected()).To(BeTrue())
+			Expect(result.String()).To(ContainSubstring("roles"))
+		},
+		Entry("changed value", withMap{Roles: map[string]string{"API": "USER"}}, withMap{Roles: map[string]string{"API": "OWNER"}}),
+		Entry("remote-only entry",
+			withMap{Roles: map[string]string{"API": "USER"}},
+			withMap{Roles: map[string]string{"API": "USER", "APPLICATION": "USER"}}),
+		Entry("missing remote map", withMap{Roles: map[string]string{"API": "USER"}}, withMap{}),
+	)
+})
+
 var _ = Describe("CaseInsensitive drift tags", func() {
 	DescribeTable("should report equivalence", func(a, b any) {
 		e := drift.CaseInsensitive(a, b, drift.DriftContext{})
