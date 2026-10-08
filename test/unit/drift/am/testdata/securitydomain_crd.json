@@ -56,7 +56,8 @@
       "allowCredentials": true,
       "maxAge": 86400,
       "allowedOrigins": [
-        "http://localhost:3000"
+        "http://localhost:3000",
+        "https://app.example.com"
       ],
       "allowedMethods": [
         "GET",
@@ -65,8 +66,8 @@
         "DELETE"
       ],
       "allowedHeaders": [
-        "Authorization",
-        "Content-Type"
+        "Content-Type",
+        "Authorization"
       ],
       "inherited": true
     },

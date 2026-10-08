@@ -6,7 +6,7 @@ require (
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.3.0
-	github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.1
+	github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.4
 	github.com/gravitee-io/gravitee-automation-sdk/common v1.2.0
 	github.com/moby/moby v27.5.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.28.0
