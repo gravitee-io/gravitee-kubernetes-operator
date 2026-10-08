@@ -49,6 +49,8 @@ var _ = Describe("Validate drift", func() {
 		resp, err := am.NewSDKClient().UpsertIdentityProviderWithResponse(ctx, dto.DomainKey, nil, dto.IdentityProvider)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(resp.JSON200).ToNot(BeNil(), string(resp.Body))
+		// synced as the controller leaves it: drift only runs for a resource AM accepted
+		idp.Status.Key = resp.JSON200.Key
 		return idp
 	}
 	validateUpdate := func(idp *v1alpha1.AMIdentityProvider) func() error {

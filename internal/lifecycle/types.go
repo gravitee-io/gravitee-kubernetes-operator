@@ -123,13 +123,13 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 	// Required. Use the same func as ResourceLifecycle.ToDTO.
 	ToDTO ToDTOFunc[T, D]
 
-	// DryRun runs on create/update after ToDTO, before PostCheck. Required.
+	// DryRun runs on create, and on an update that changes the spec, after ToDTO, before PostCheck. Required.
 	DryRun DryRunFunc[C, D]
 
 	// PostCheck runs on create/update after DryRun, before drift. Nil skips.
 	PostCheck AdmissionCheckFunc[T]
 
-	// GetRemote runs on update after PostCheck, for drift. Required.
+	// GetRemote runs on update after PostCheck, for drift, once the resource has an ID. Required.
 	GetRemote GetRemoteFunc[C, D]
 
 	// DeleteGuard runs on delete review only. Nil skips.
