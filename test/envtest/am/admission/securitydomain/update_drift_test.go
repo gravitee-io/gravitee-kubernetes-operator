@@ -17,6 +17,8 @@ package amsecuritydomain
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amsecuritydomain"
 	internal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/securitydomain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/am"
@@ -27,6 +29,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var _ = Describe("Validate drift", func() {
@@ -107,21 +110,49 @@ var _ = Describe("Validate drift", func() {
 
 var _ = Describe("Validate drift - remote fetch failure", func() {
 	ctx := context.Background()
+	admissionCtrl := amsecuritydomain.NewAdmissionCtrl()
 
-	It("should apply fetch-failure policy when domain does not exist remotely", func() {
-		admissionCtrl := amsecuritydomain.NewAdmissionCtrl()
-
+	// notInAM creates the AMContext only: the domain is never sent to the AM mock.
+	notInAM := func() *v1alpha1.AMSecurityDomain {
 		fixtures := fixture.Builder().
 			WithAMContext(constants.AMContextFile).
 			WithAMSecurityDomain(constants.AMSecurityDomainBasicFile).
 			Build()
 		Expect(manager.Client().Create(ctx, fixtures.AMContext)).To(Succeed())
+		return fixtures.AMSecurityDomain
+	}
 
-		newSD := fixtures.AMSecurityDomain.DeepCopy()
+	It("should apply fetch-failure policy when a synced domain no longer exists remotely", func() {
+		sd := notInAM()
+		dto, err := internal.ToDomainDTO(sd)
+		Expect(err).ToNot(HaveOccurred())
+		sd.Status.Key = dto.Key
+
+		newSD := sd.DeepCopy()
 		newSD.Spec.Description = new("changed")
 
-		_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.AMSecurityDomain, newSD)
+		_, err = admissionCtrl.ValidateUpdate(ctx, sd, newSD)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("not found during drift detection"))
+	})
+
+	It("should admit the finalizer save of a domain not created in AM yet", func() {
+		sd := notInAM()
+
+		newSD := sd.DeepCopy()
+		controllerutil.AddFinalizer(newSD, core.AMSecurityDomainFinalizer)
+
+		_, err := admissionCtrl.ValidateUpdate(ctx, sd, newSD)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("should admit a spec fix of a domain AM never accepted", func() {
+		sd := notInAM()
+
+		newSD := sd.DeepCopy()
+		newSD.Spec.Description = new("fixed")
+
+		_, err := admissionCtrl.ValidateUpdate(ctx, sd, newSD)
+		Expect(err).ToNot(HaveOccurred())
 	})
 })

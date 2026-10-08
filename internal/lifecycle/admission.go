@@ -58,6 +58,8 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 	if newObj.IsBeingDeleted() {
 		return errs
 	}
+	// Hashed before templateAndRefs, which compiles templates into newObj.
+	specChanged := oldObj.GetSpec().Hash() != newObj.GetSpec().Hash()
 
 	a.templateAndRefs(ctx, newObj, errs)
 	if errs.IsSevere() {
@@ -81,13 +83,24 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 		}
 	}
 
-	a.dryRun(ctx, apiClient, newObj, errs)
-	if errs.IsSevere() {
-		return errs
+	// A metadata-only update, the lifecycle's own finalizer and annotation writes included,
+	// sends nothing to the remote: only a spec change is dry-run.
+	if specChanged {
+		a.dryRun(ctx, apiClient, newObj, errs)
+		if errs.IsSevere() {
+			return errs
+		}
 	}
 
 	a.postCheck(ctx, newObj, errs)
 	if errs.IsSevere() {
+		return errs
+	}
+
+	// A resource the remote never accepted has nothing to drift from: comparing would apply the
+	// remote-missing policy (deny by default) and refuse the finalizer save before the first upsert,
+	// or the edit that fixes a refused spec.
+	if oldObj.GetID() == "" {
 		return errs
 	}
 
