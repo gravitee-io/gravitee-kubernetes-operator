@@ -27,9 +27,13 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	coreV1 "k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -208,6 +212,44 @@ var _ = Describe("Validate drift - remote fetch failure", func() {
 		newSD.Spec.Description = new("fixed")
 
 		_, err := admissionCtrl.ValidateUpdate(ctx, sd, newSD)
+		Expect(err).ToNot(HaveOccurred())
+	})
+})
+
+var _ = Describe("Validate drift - templated fields", func() {
+	ctx := context.Background()
+	admissionCtrl := amsecuritydomain.NewAdmissionCtrl()
+
+	It("should not drift when a templated value is changed locally", func() {
+		secret := &coreV1.Secret{
+			ObjectMeta: metaV1.ObjectMeta{Name: random.GetName(), Namespace: constants.Namespace},
+			Data:       map[string][]byte{"description": []byte("from secret")},
+		}
+		Expect(manager.Client().Create(ctx, secret)).To(Succeed())
+		DeferCleanup(func() {
+			Expect(client.IgnoreNotFound(manager.Client().Delete(ctx, secret))).To(Succeed())
+		})
+
+		fixtures := fixture.Builder().
+			WithAMContext(constants.AMContextFile).
+			WithAMSecurityDomain(constants.AMSecurityDomainBasicFile).
+			Build()
+		template := "[[ secret `" + secret.Name + "/description` ]]"
+		fixtures.AMSecurityDomain.Spec.Description = &template
+		fixtures.Apply()
+
+		By("expecting AM to hold the compiled value and the CRD to keep the template")
+		Expect(*fixtures.AMSecurityDomain.Spec.Description).To(Equal(template))
+		resp, err := am.NewSDKClient().GetDomainWithResponse(ctx, fixtures.AMSecurityDomain.Status.Key)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(resp.JSON200).ToNot(BeNil())
+		Expect(*resp.JSON200.Description).To(Equal("from secret"))
+
+		By("replacing the template with a literal value")
+		newSD := fixtures.AMSecurityDomain.DeepCopy()
+		newSD.Spec.Description = new("changed locally")
+
+		_, err = admissionCtrl.ValidateUpdate(ctx, fixtures.AMSecurityDomain, newSD)
 		Expect(err).ToNot(HaveOccurred())
 	})
 })
