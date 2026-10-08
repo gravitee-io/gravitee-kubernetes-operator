@@ -22,6 +22,7 @@ import (
 	"slices"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
@@ -50,16 +51,25 @@ func (l ResourceLifecycle[T, D, C, R]) Reconcile(
 	}
 	obj.SetNamespace(req.Namespace)
 
+	// The finalizer is saved before mutate: mutate writes template references to Secrets and ConfigMaps,
+	// and only a deletion reconcile releases them. Without a saved finalizer, there is no deletion reconcile.
+	if err := l.addFinalizer(ctx, cli, obj); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	k8s.ResetConditionsExceptAutomationAPI(asConditionAware(obj))
 	dc, ok := obj.DeepCopyObject().(T)
 	if !ok {
 		return ctrl.Result{}, fmt.Errorf("lifecycle: DeepCopyObject is not %T", obj)
 	}
 
-	events := event.NewRecorder(recorder)
-	_, err := util.CreateOrUpdate(ctx, cli, obj, func() error {
-		return l.mutate(ctx, cli, events, obj, dc)
-	})
+	// Not util.CreateOrUpdate: it reads obj again from the cache, which may not hold the finalizer saved above yet.
+	// obj is saved only when mutate succeeds: on error, its metadata changes are dropped and only the status is written.
+	before := obj.DeepCopyObject()
+	err := l.mutate(ctx, cli, event.NewRecorder(recorder), obj, dc)
+	if err == nil && !equality.Semantic.DeepEqual(before, obj) {
+		err = cli.Update(ctx, obj)
+	}
 
 	if copyErr := dc.GetStatus().DeepCopyTo(obj); copyErr != nil {
 		return ctrl.Result{}, copyErr
@@ -89,12 +99,10 @@ func (l ResourceLifecycle[T, D, C, R]) mutate(
 	events *event.Recorder,
 	obj, dc T,
 ) error {
-	if l.Finalizer != "" && !obj.IsBeingDeleted() {
-		util.AddFinalizer(obj, l.Finalizer)
-	}
 	k8s.AddAnnotation(obj, core.LastSpecHashAnnotation, hash.Calculate(obj.GetSpec()))
 
 	if obj.IsBeingDeleted() {
+		// The only place template references are released: the finalizer keeps obj until this branch has run.
 		if err := template.ReleaseReferences(ctx, obj); err != nil {
 			return err
 		}
@@ -112,6 +120,7 @@ func (l ResourceLifecycle[T, D, C, R]) mutate(
 			}
 		}
 	}
+	// Compile saves a reference to obj on each Secret and ConfigMap it reads, at once and whatever the upsert returns.
 	if err := template.Compile(ctx, dc, true); err != nil {
 		// not wrapped: a template source created later must be retried, as in the other controllers
 		return err
@@ -119,6 +128,22 @@ func (l ResourceLifecycle[T, D, C, R]) mutate(
 	return events.Record(event.Update, obj, func() error {
 		return l.upsert(ctx, dc)
 	})
+}
+
+// addFinalizer saves the finalizer with its own Update, before the reconcile touches any other object.
+// Added inside mutate, it would be lost whenever the upsert fails: a resource AM never accepted would then
+// be deleted at once, leaving its Secrets stuck on finalizers.gravitee.io/templating (GKO-3387).
+func (l ResourceLifecycle[T, D, C, R]) addFinalizer(ctx context.Context, cli client.Client, obj T) error {
+	if l.Finalizer == "" || obj.IsBeingDeleted() || !util.AddFinalizer(obj, l.Finalizer) {
+		return nil
+	}
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	if err := cli.Update(ctx, obj); err != nil {
+		return err
+	}
+	// Update clears the kind, which keys the references template.Compile records on Secrets and ConfigMaps.
+	obj.GetObjectKind().SetGroupVersionKind(gvk)
+	return nil
 }
 
 func (l ResourceLifecycle[T, D, C, R]) upsert(ctx context.Context, dc T) error {
