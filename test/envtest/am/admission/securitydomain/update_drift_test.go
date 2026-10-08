@@ -17,6 +17,7 @@ package amsecuritydomain
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/am/domain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amsecuritydomain"
@@ -104,6 +105,60 @@ var _ = Describe("Validate drift", func() {
 		Eventually(func() error {
 			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.AMSecurityDomain, newSD)
 			return err
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+	})
+})
+
+var _ = Describe("Validate drift - lists AM stores as sets", func() {
+	ctx := context.Background()
+	admissionCtrl := amsecuritydomain.NewAdmissionCtrl()
+
+	// applyWithSets applies a domain with tags and CORS methods, then stores remoteTags and the methods in the AM order.
+	applyWithSets := func(remoteTags []string) *fixture.Objects {
+		fixtures := fixture.Builder().
+			WithAMContext(constants.AMContextFile).
+			WithAMSecurityDomain(constants.AMSecurityDomainBasicFile).
+			Build()
+		fixtures.AMSecurityDomain.Spec.Tags = []string{"gko", "drift-test"}
+		fixtures.AMSecurityDomain.Spec.CorsSettings = &domain.CorsSettings{
+			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		}
+		fixtures.Apply()
+
+		By("storing the lists in the order AM returns them")
+		dto, err := internal.ToDomainDTO(fixtures.AMSecurityDomain)
+		Expect(err).ToNot(HaveOccurred())
+		dto.Tags = remoteTags
+		dto.CorsSettings.AllowedMethods = []string{"DELETE", "POST", "GET", "PUT"}
+		_, err = am.NewSDKClient().UpsertDomainWithResponse(ctx, nil, dto)
+		Expect(err).ToNot(HaveOccurred())
+		return fixtures
+	}
+
+	It("should not drift when AM returns tags and CORS methods in another order", func() {
+		fixtures := applyWithSets([]string{"drift-test", "gko"})
+
+		newSD := fixtures.AMSecurityDomain.DeepCopy()
+		newSD.Spec.Description = new("updated description")
+
+		Eventually(func() error {
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.AMSecurityDomain, newSD)
+			return err
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+	})
+
+	It("should detect drift when AM adds a tag", func() {
+		fixtures := applyWithSets([]string{"drift-test", "gko", "prod"})
+
+		newSD := fixtures.AMSecurityDomain.DeepCopy()
+		newSD.Spec.Description = new("updated description")
+
+		Eventually(func() error {
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.AMSecurityDomain, newSD)
+			return assert.DriftDetected(`tags: (2 unchanged)
+  <unchanged>
+              !=
+                 + "prod"`, err)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
 	})
 })

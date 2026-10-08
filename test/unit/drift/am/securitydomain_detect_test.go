@@ -43,6 +43,27 @@ var _ = Describe("Security domain drift detection", func() {
   enabled: true != false`)
 	})
 
+	It("detects drift when AM adds a tag", func() {
+		remote := remoteSecurityDomain()
+		remote.Tags = append(remote.Tags, "prod")
+
+		expectDrift(drift.DetectWithNamespace(securityDomainForDrift(), remote, ""), `tags: (2 unchanged)
+  <unchanged>
+              !=
+                 + "prod"`)
+	})
+
+	It("detects drift when AM drops a CORS method", func() {
+		remote := remoteSecurityDomain()
+		remote.CorsSettings.AllowedMethods = []string{"DELETE", "POST", "GET"}
+
+		expectDrift(drift.DetectWithNamespace(securityDomainForDrift(), remote, ""), `corsSettings:
+  allowedMethods: (3 unchanged)
+    + "PUT"
+            !=
+               <unchanged>`)
+	})
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(securityDomainForDrift(), remoteSecurityDomain())

@@ -12,7 +12,7 @@
       "exportedName": "client"
     }
   ],
-  "attributeMappingEventTypes": ["USER_LOGIN"],
+  "attributeMappingEventTypes": ["USER_LOGOUT", "USER_LOGIN"],
   "createdAt": "2026-10-05T10:00:00Z",
   "updatedAt": "2026-10-05T10:00:00Z"
 }
