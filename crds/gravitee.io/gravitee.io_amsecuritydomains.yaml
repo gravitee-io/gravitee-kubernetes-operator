@@ -211,6 +211,9 @@ spec:
                   required:
                     - name
                   type: object
+                  x-kubernetes-validations:
+                    - message: contextRef is immutable
+                      rule: self == oldSelf
                 corsSettings:
                   description: CorsSettings Cross-Origin Resource Sharing configuration
                     controlling which web origins may call the...

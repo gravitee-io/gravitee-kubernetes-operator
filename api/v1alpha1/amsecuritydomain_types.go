@@ -37,6 +37,7 @@ var _ core.ConditionAware = &AMSecurityDomain{}
 type AMSecurityDomainSpec struct {
 	domain.Domain `json:",inline"`
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable"
 	Context *refs.NamespacedName `json:"contextRef"`
 }
 
