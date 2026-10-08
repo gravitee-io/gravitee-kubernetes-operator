@@ -1295,6 +1295,21 @@ var _ = Describe("time.Time fields", func() {
 
 var _ = Describe("Merge", func() {
 
+	It("compares remote-only values that hold maps or slices without panicking", func() {
+		remote := struct {
+			Claims map[string]string
+			Scopes []string
+		}{Claims: map[string]string{"sub": "id"}, Scopes: []string{"openid"}}
+		inequivalent := drift.Equivalence{Equivalent: drift.Inequivalent}
+		or := drift.Result{Equivalence: inequivalent, RemoteValue: remote}
+		nr := drift.Result{Equivalence: inequivalent, RemoteValue: remote}
+
+		var merged drift.Result
+		Expect(func() { merged = drift.Merge(or, nr) }).ToNot(Panic())
+		Expect(merged.DriftDetected()).To(BeFalse())
+	})
+
+
 	DescribeTable("no drift",
 		func(oldCRD, newCRD, remote any) {
 			or := drift.DetectWithNamespace(oldCRD, remote, "")
