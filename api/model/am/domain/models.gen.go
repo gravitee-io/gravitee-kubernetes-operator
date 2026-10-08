@@ -27,7 +27,7 @@ type AccountSettings struct {
 	// Defaults to false.
 	CompleteRegistrationWhenResetPassword *bool `json:"completeRegistrationWhenResetPassword,omitempty"`
 
-	// DefaultIdentityProviderForRegistration Key of an identity provider that exists under this domain, used as the default for user registration. Resolved against the domain's identity providers when applied; a value that does not match an existing identity provider is rejected with a 400 response.
+	// DefaultIdentityProviderForRegistration Key of an identity provider managed under this domain, used as the default for user registration. The reference is not checked against existing identity providers: it can name one created after the domain or since deleted, and resolves whenever an identity provider with that key exists.
 	// +kubebuilder:validation:Optional
 	DefaultIdentityProviderForRegistration *string `json:"defaultIdentityProviderForRegistration,omitempty"`
 
@@ -131,10 +131,12 @@ type AutomationCIBASettings = CIBASettings
 type CIBASettings struct {
 	// AuthReqExpiry Default validity period, in seconds, of the issued auth_req_id.
 	// +kubebuilder:validation:Optional
+	// Defaults to 600.
 	AuthReqExpiry *int32 `json:"authReqExpiry,omitempty"`
 
 	// BindingMessageLength Maximum number of characters accepted for the binding_message parameter.
 	// +kubebuilder:validation:Optional
+	// Defaults to 256.
 	BindingMessageLength *int32 `json:"bindingMessageLength,omitempty"`
 
 	// Enabled Whether Client-Initiated Backchannel Authentication is enabled for the domain.
@@ -144,6 +146,7 @@ type CIBASettings struct {
 
 	// TokenReqInterval Minimum delay, in seconds, that a client must wait between two polls of the token endpoint for the same auth_req_id (POLL or PING delivery mode).
 	// +kubebuilder:validation:Optional
+	// Defaults to 5.
 	TokenReqInterval *int32 `json:"tokenReqInterval,omitempty"`
 }
 
@@ -152,7 +155,7 @@ type AutomationCertificateSettings = CertificateSettings
 
 // CertificateSettings Domain-level certificate settings.
 type CertificateSettings struct {
-	// FallbackCertificate Key of a certificate managed under this domain, used as the fallback certificate when a client does not specify one. Must reference a certificate created via the domain's certificate endpoints.
+	// FallbackCertificate Key of a certificate managed under this domain, used as the fallback certificate when a client does not specify one. The reference is not checked against existing certificates: it can name one created after the domain or since deleted, and resolves whenever a certificate with that key exists.
 	// +kubebuilder:validation:Optional
 	FallbackCertificate *string `json:"fallbackCertificate,omitempty"`
 }
@@ -221,6 +224,7 @@ type Domain struct {
 
 	// AlertEnabled Whether alerting is enabled for the domain.
 	// +kubebuilder:validation:Optional
+	// Defaults to false.
 	AlertEnabled *bool `json:"alertEnabled,omitempty"`
 
 	// CertificateSettings Domain-level certificate settings.
@@ -349,7 +353,7 @@ type AutomationSamlSettings = SamlSettings
 
 // SamlSettings Settings for the domain acting as a SAML 2.0 identity provider (IdP).
 type SamlSettings struct {
-	// Certificate Key of a certificate managed under this domain, used to sign SAML responses. Must reference a certificate created via the domain's certificate endpoints.
+	// Certificate Key of a certificate managed under this domain, used to sign SAML responses. The reference is not checked against existing certificates: it can name one created after the domain or since deleted, and resolves whenever a certificate with that key exists.
 	// +kubebuilder:validation:Optional
 	Certificate *string `json:"certificate,omitempty"`
 
@@ -445,7 +449,7 @@ type FormField struct {
 
 // IdJagSettings ID-JAG issuance behavior of token exchange.
 type IdJagSettings struct {
-	// LaxValidation Lax validation: also accept an access token issued to the requesting client as the subject token. By default only an ID token is accepted.
+	// LaxValidation Lax validation: also accept an access token as the subject token. By default only an ID token is accepted. The access token must be issued to the requesting client or, when an MCP server requests, have that MCP server as audience.
 	// +kubebuilder:validation:Optional
 	// Defaults to false.
 	LaxValidation *bool `json:"laxValidation,omitempty"`
@@ -707,6 +711,7 @@ type SpiffeDomainSettings struct {
 
 	// DefaultAllowedAlgorithms Default allowlist of signature algorithms accepted for SPIFFE JWT validation.
 	// +kubebuilder:validation:Optional
+	// Defaults to ["RS256","RS384","RS512","ES256","ES384","ES512","EdDSA"].
 	DefaultAllowedAlgorithms []string `json:"defaultAllowedAlgorithms,omitempty"`
 
 	// Enabled Whether SPIFFE workload identity support is enabled for the domain.
@@ -776,11 +781,11 @@ type TokenExchangeSettings struct {
 	// IdJagSettings ID-JAG issuance behavior of token exchange.
 	IdJagSettings *IdJagSettings `json:"idJagSettings,omitempty"`
 
-	// MaxDelegationDepth Maximum depth of the delegation chain (nested "act" claims). Clamped to the range 1–100.
+	// MaxDelegationDepth Maximum depth of the delegation chain (nested "act" claims). Range 1–100.
 	// +kubebuilder:validation:Optional
-	// Defaults to 25.
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=100
+	// Defaults to 25.
 	MaxDelegationDepth *int32 `json:"maxDelegationDepth,omitempty"`
 
 	// TokenExchangeOAuthSettings OAuth-specific token-exchange behavior, such as how scopes are handled, with optional inheritance from domain defaults.
@@ -931,7 +936,7 @@ type WebProtectionSettings struct {
 
 // XFrameSettings Controls whether the domain's pages may be embedded in frames on other origins.
 type XFrameSettings struct {
-	// Action X-Frame-Options action. Supported values: DENY, SAMEORIGIN. Leave empty to omit the header.
+	// Action X-Frame-Options action. Omit to leave the header out.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=DENY;SAMEORIGIN
 	Action *string `json:"action,omitempty"`

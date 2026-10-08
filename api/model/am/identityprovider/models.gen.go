@@ -29,14 +29,17 @@ type IdentityProvider struct {
 
 	// DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected.
 	// +kubebuilder:validation:Optional
+	// Defaults to [].
 	DomainWhitelist []string `json:"domainWhitelist,omitempty"`
 
 	// GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it.
 	// +kubebuilder:validation:Optional
+	// Defaults to {}.
 	GroupMapper map[string][]string `json:"groupMapper,omitempty"`
 
 	// Mappers Attribute mappers: maps provider claims to AM user profile attributes.
 	// +kubebuilder:validation:Optional
+	// Defaults to {}.
 	Mappers map[string]string `json:"mappers,omitempty"`
 
 	// Name Human-readable name of the identity provider.
@@ -47,6 +50,7 @@ type IdentityProvider struct {
 
 	// RoleMapper Role mapper: assigns AM roles based on provider attribute values. Each entry maps a role to the user attribute expressions that grant it.
 	// +kubebuilder:validation:Optional
+	// Defaults to {}.
 	RoleMapper map[string][]string `json:"roleMapper,omitempty"`
 
 	// System Whether this is the domain's system identity provider. Immutable after creation. When true, only key is required; the identity provider is built from the domains.identities.default.* system settings and the name, type, and configuration fields are ignored.

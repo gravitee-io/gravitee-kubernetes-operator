@@ -81,7 +81,7 @@ spec:
                       type: boolean
                     defaultIdentityProviderForRegistration:
                       description: DefaultIdentityProviderForRegistration Key of an identity provider
-                        that exists under this domain,...
+                        managed under this domain, used...
                       type: string
                     deletePasswordlessDevicesAfterResetPassword:
                       description: DeletePasswordlessDevicesAfterResetPassword Whether passwordless
@@ -190,7 +190,9 @@ spec:
                       type: boolean
                   type: object
                 alertEnabled:
-                  description: AlertEnabled Whether alerting is enabled for the domain.
+                  description: |-
+                    AlertEnabled Whether alerting is enabled for the domain.
+                    Defaults to false.
                   type: boolean
                 certificateSettings:
                   description: CertificateSettings Domain-level certificate settings.
@@ -413,8 +415,11 @@ spec:
                         settings for the domain.
                       properties:
                         authReqExpiry:
-                          description: AuthReqExpiry Default validity period, in seconds, of the issued
-                            auth_req_id.
+                          description: >-
+                            AuthReqExpiry Default validity period, in seconds,
+                            of the issued auth_req_id.
+
+                            Defaults to 600.
                           format: int32
                           type: integer
                         bindingMessageLength:
@@ -765,13 +770,13 @@ spec:
                       description: IdJagSettings ID-JAG issuance behavior of token exchange.
                       properties:
                         laxValidation:
-                          description: "LaxValidation Lax validation: also accept an access token issued
-                            to the requesting client as the..."
+                          description: "LaxValidation Lax validation: also accept an access token as the
+                            subject token."
                           type: boolean
                       type: object
                     maxDelegationDepth:
                       description: MaxDelegationDepth Maximum depth of the delegation chain (nested
-                        "act" claims).
+                        "act" claims). Range 1–100.
                       format: int32
                       maximum: 100
                       minimum: 1
@@ -982,8 +987,7 @@ spec:
                         frames on other origins.
                       properties:
                         action:
-                          description: "Action X-Frame-Options action. Supported values: DENY, SAMEORIGIN.
-                            Leave empty to omit the header."
+                          description: Action X-Frame-Options action. Omit to leave the header out.
                           enum:
                             - DENY
                             - SAMEORIGIN

@@ -22,10 +22,10 @@ import (
 	"github.com/pmezard/go-difflib/difflib"
 )
 
-// notEqOp is the aligned operator between CRD (left) and remote (right) lines.
+// notEqOpWithSpaces is the aligned operator between CRD (left) and remote (right) lines.
 // Subsequent differing rows keep the same column width with spaces so the
 // right-hand side stays aligned under the first difference.
-const notEqOpML = " " + notEqOp + " "
+const notEqOpML = " " + notEqOpWithSpaces + " "
 
 type lineRow struct {
 	identical int

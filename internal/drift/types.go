@@ -160,6 +160,10 @@ func (r *Result) Children() []*Result {
 	return r.children
 }
 
+func (r *Result) IsSet() bool {
+	return r.Index != nil && *r.Index < 0
+}
+
 // Merge merges Result with one another.
 // The first argument is the Result of detecting drift between "Old CRD" (in etcd) vs. Remote (O/R).
 // The second argument is the Result of detecting drift between "New CRD" (applied) vs. Remote (N/R).

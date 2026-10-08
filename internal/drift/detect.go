@@ -106,13 +106,17 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 			equivalent := equivalenceFunc(crdPair.Interface, remotePair.Interface, this.context)
 			if equivalent.Skip {
 				if equivalent.Equivalent == Inequivalent {
-					this.AppendChild(&Result{
+					child := this.AppendChild(&Result{
 						Property:    property,
 						Equivalence: equivalent,
 						CRDValue:    crdPair.Interface,
 						RemoteValue: remotePair.Interface,
 					}, ordered)
+					if equivalent.PostFunc != nil {
+						equivalent.PostFunc(child)
+					}
 				}
+
 				continue
 			}
 			crdPairToDetect := crdPair

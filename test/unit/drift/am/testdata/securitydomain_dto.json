@@ -43,12 +43,13 @@
       "Content-Type"
     ],
     "allowedMethods": [
-      "GET",
+      "DELETE",
       "POST",
-      "PUT",
-      "DELETE"
+      "GET",
+      "PUT"
     ],
     "allowedOrigins": [
+      "https://app.example.com",
       "http://localhost:3000"
     ],
     "enabled": true,
@@ -173,8 +174,8 @@
     }
   },
   "tags": [
-    "gko",
-    "drift-test"
+    "drift-test",
+    "gko"
   ],
   "tokenExchangeSettings": {
     "allowDelegation": true,

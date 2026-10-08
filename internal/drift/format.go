@@ -16,16 +16,21 @@ package drift
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"unicode/utf8"
 )
 
 const (
-	indentSpaces    = 2
-	maxDisplayRunes = 60
-	ellipsis        = "..."
-	propSuffix      = ": "
-	notEqOp         = " != "
+	indentSpaces       = 2
+	maxDisplayRunes    = 60
+	ellipsis           = "..."
+	column             = ":"
+	propSuffix         = column + " "
+	notEqOpWithSpaces  = " " + notEqOp + " "
+	notEqOp            = "!="
+	unchangedIndicator = "<unchanged>"
+	addition           = "+ "
 )
 
 func format(this *Result, b *strings.Builder, indent int) {
@@ -43,17 +48,69 @@ func formatValue(this *Result, b *strings.Builder, indent int) {
 	if left, right, ok := stringPair(this.CRDValue, this.RemoteValue); ok && isMultiline(left, right) {
 		formatMultilineStrings(b, indent, propertyLabel(this), left, right)
 		writeReason(this, b)
-		b.WriteString("\n")
-		return
+		goto newline
 	}
+	if left, right, ok := this.CRDValue, this.RemoteValue, this.IsSet(); ok {
+		addIndent(b, indent)
+		b.WriteString(fmt.Sprintf("%s%s", propertyLabel(this), column))
+		writeReason(this, b)
+		newLine(b)
+		formatSet(left, right, indent, b)
+		goto newline
+	}
+
 	addIndent(b, indent)
-	b.WriteString(fmt.Sprintf("%s%s%v%s%v", propertyLabel(this), propSuffix, resolve(this.CRDValue), notEqOp, resolve(this.RemoteValue)))
+	b.WriteString(fmt.Sprintf("%s%s%v%s%v", propertyLabel(this), propSuffix, resolve(this.CRDValue), notEqOpWithSpaces, resolve(this.RemoteValue)))
 	writeReason(this, b)
-	b.WriteString("\n")
+newline:
+	newLine(b)
+}
+
+func formatSet(left any, right any, indent int, b *strings.Builder) {
+	leftArray := asSlice(left)
+	indent += indentSpaces
+	indent = printSetItem(leftArray, b, indent)
+	addIndent(b, indent)
+	b.WriteString(fmt.Sprintf(" %s", notEqOp))
+	newLine(b)
+	indent += len(notEqOpWithSpaces)
+	rightArray := asSlice(right)
+	printSetItem(rightArray, b, indent)
+}
+
+func printSetItem(items []any, b *strings.Builder, indent int) int {
+	if len(items) == 0 {
+		addIndent(b, indent)
+		b.WriteString(unchangedIndicator)
+		indent += len(unchangedIndicator)
+		newLine(b)
+	} else {
+		m := 0
+		for _, x := range items {
+			s := fmt.Sprintf("%s%v", addition, resolve(x))
+			m = max(len(s), m)
+			addIndent(b, indent)
+			b.WriteString(s)
+			newLine(b)
+		}
+		indent += m
+	}
+	return indent
+}
+
+func asSlice(value any) []any {
+	r := make([]any, 0)
+	of := reflect.ValueOf(value)
+	if of.Kind() == reflect.Slice {
+		for i := 0; i < of.Len(); i++ {
+			r = append(r, of.Index(i).Interface())
+		}
+	}
+	return r
 }
 
 func propertyLabel(this *Result) string {
-	if this.Index != nil {
+	if ok := this.Index != nil; ok && !this.IsSet() {
 		return fmt.Sprintf("%s[%d]", this.Property, *this.Index)
 	}
 	return this.Property
@@ -86,7 +143,7 @@ func formatChildren(this *Result, b *strings.Builder, indent int) {
 		if child.DriftDetected() && len(child.children) > 0 {
 			addIndent(b, indent)
 			property := child.Property
-			if child.Index != nil {
+			if child.Index != nil && !child.IsSet() {
 				property += fmt.Sprintf("[%d]", *child.Index)
 			}
 			b.WriteString(fmt.Sprintf("%s:\n", property))
@@ -151,4 +208,8 @@ func addIndent(b *strings.Builder, amount int) {
 	if amount > 0 {
 		b.WriteString(strings.Repeat(" ", amount))
 	}
+}
+
+func newLine(b *strings.Builder) {
+	b.WriteString("\n")
 }

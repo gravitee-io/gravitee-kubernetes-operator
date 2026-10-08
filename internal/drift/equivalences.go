@@ -15,6 +15,7 @@
 package drift
 
 import (
+	"fmt"
 	"reflect"
 	"slices"
 	"strings"
@@ -54,6 +55,85 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("unstructured", reflect.Struct, DefaultEquivalencePostPullUpObjectChildren)
 	RegisterEquivalenceFunc("unstructured", reflect.Slice, DefaultEquivalencePostPullUpObjectChildren)
 	RegisterEquivalenceFunc("ignore-only", reflect.Slice, IgnoreOnlyArgs)
+	RegisterEquivalenceFunc("set", reflect.Slice, Set)
+}
+
+func Set(crd any, remote any, context DriftContext) Equivalence {
+	// only compare array of scalar types (pointers or not)
+	if !isCompItems(crd) || !isCompItems(remote) {
+		return defaultSliceEquivalence(crd, remote, context)
+	}
+	crdItems := uniqueItems(crd)
+	remoteItems := uniqueItems(remote)
+	uniqueInCRD := missingFrom(crdItems, remoteItems)
+	uniqueInRemote := missingFrom(remoteItems, crdItems)
+
+	// skip as the result is crafted inside the PostFunc
+	if len(uniqueInCRD) == 0 && len(uniqueInRemote) == 0 {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+	return Equivalence{
+		Equivalent: Inequivalent,
+		Skip:       true,
+		PostFunc: func(r *Result) {
+			r.Index = new(-1)
+			r.CRDValue = uniqueInCRD
+			r.RemoteValue = uniqueInRemote
+			if unchangedCount := len(crdItems) - len(uniqueInCRD); unchangedCount > 0 {
+				r.Reason = fmt.Sprintf("%d unchanged", unchangedCount)
+			}
+		},
+	}
+}
+
+// isCompItems tells if v is a slice of scalars or pointers to scalars. An absent slice (nil) is an empty set.
+func isCompItems(v any) bool {
+	if v == nil {
+		return true
+	}
+	itemType := reflect.TypeOf(v).Elem()
+	if itemType.Kind() == reflect.Pointer {
+		itemType = itemType.Elem()
+	}
+	return isScalar(itemType.Kind())
+}
+
+// uniqueItems returns the dereferenced items of the slice v, without duplicates, in declaration order.
+func uniqueItems(v any) []any {
+	if v == nil {
+		return nil
+	}
+	slice := reflect.ValueOf(v)
+	items := make([]any, 0, slice.Len())
+	seen := make(map[any]struct{}, slice.Len())
+	for i := range slice.Len() {
+		item := asInterface(slice.Index(i))
+		if _, ok := seen[item]; !ok {
+			seen[item] = struct{}{}
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
+func missingFrom(items []any, others []any) []any {
+	return slices.DeleteFunc(slices.Clone(items), func(item any) bool { return slices.Contains(others, item) })
+}
+
+func isScalar(kind reflect.Kind) bool {
+	switch kind {
+	case reflect.Bool,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+		reflect.Float32, reflect.Float64,
+		reflect.Complex64, reflect.Complex128,
+		reflect.String:
+		return true
+	case reflect.Invalid, reflect.Array, reflect.Chan, reflect.Func,
+		reflect.Interface, reflect.Map, reflect.Pointer,
+		reflect.Slice, reflect.Struct, reflect.UnsafePointer:
+	}
+	return false
 }
 
 const (
