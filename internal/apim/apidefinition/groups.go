@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,6 +51,10 @@ func ResolveGroupRefs(ctx context.Context, referer core.ConditionAwareObject, re
 					Build(),
 			)
 			continue
+		}
+		if group.Annotations[core.LastSpecHashAnnotation] != hash.Calculate(&group.Spec) {
+			log.Info(ctx, "Group referenced by the API is not synced to APIM yet, APIM may drop it",
+				"group", nsn.String())
 		}
 		if !slices.Contains(groups, group.Spec.Name) {
 			groups = append(groups, group.Spec.Name)
