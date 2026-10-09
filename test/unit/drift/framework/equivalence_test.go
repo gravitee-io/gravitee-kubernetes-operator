@@ -281,29 +281,32 @@ var _ = Describe("IgnoreRemoteDefault", func() {
 	})
 })
 
-var _ = Describe("IgnoreRemoteDefault on maps", func() {
-	type withMap struct {
-		Roles map[string]string `json:"roles,omitempty" drift:"ignore-remote-default"`
+var _ = Describe("IgnoreRemoteDefault on structs", func() {
+	type roles struct {
+		API         string `json:"api,omitempty"`
+		Application string `json:"application,omitempty"`
+	}
+	type withStruct struct {
+		Roles *roles `json:"roles,omitempty" drift:"ignore-remote-default"`
 	}
 
 	DescribeTable("no drift",
-		func(crd, remote withMap) { expectNoDrift(drift.DetectWithNamespace(crd, remote, "")) },
-		Entry("nil crd map accepts any remote map", withMap{}, withMap{Roles: map[string]string{"API": "USER"}}),
-		Entry("empty crd map accepts any remote map", withMap{Roles: map[string]string{}}, withMap{Roles: map[string]string{"API": "USER"}}),
-		Entry("equal declared maps", withMap{Roles: map[string]string{"API": "USER"}}, withMap{Roles: map[string]string{"API": "USER"}}),
+		func(crd, remote withStruct) { expectNoDrift(drift.DetectWithNamespace(crd, remote, "")) },
+		Entry("nil crd object accepts any remote object", withStruct{}, withStruct{Roles: &roles{API: "USER"}}),
+		Entry("equal declared objects", withStruct{Roles: &roles{API: "USER"}}, withStruct{Roles: &roles{API: "USER"}}),
+		Entry("empty crd object against a missing remote object", withStruct{Roles: &roles{}}, withStruct{}),
 	)
 
 	DescribeTable("drift",
-		func(crd, remote withMap) {
+		func(crd, remote withStruct) {
 			result := drift.DetectWithNamespace(crd, remote, "")
 			Expect(result.DriftDetected()).To(BeTrue())
 			Expect(result.String()).To(ContainSubstring("roles"))
 		},
-		Entry("changed value", withMap{Roles: map[string]string{"API": "USER"}}, withMap{Roles: map[string]string{"API": "OWNER"}}),
-		Entry("remote-only entry",
-			withMap{Roles: map[string]string{"API": "USER"}},
-			withMap{Roles: map[string]string{"API": "USER", "APPLICATION": "USER"}}),
-		Entry("missing remote map", withMap{Roles: map[string]string{"API": "USER"}}, withMap{}),
+		Entry("changed value", withStruct{Roles: &roles{API: "USER"}}, withStruct{Roles: &roles{API: "OWNER"}}),
+		Entry("remote-only field", withStruct{Roles: &roles{API: "USER"}}, withStruct{Roles: &roles{API: "USER", Application: "USER"}}),
+		Entry("empty crd object against a remote value", withStruct{Roles: &roles{}}, withStruct{Roles: &roles{API: "USER"}}),
+		Entry("missing remote object", withStruct{Roles: &roles{API: "USER"}}, withStruct{}),
 	)
 })
 

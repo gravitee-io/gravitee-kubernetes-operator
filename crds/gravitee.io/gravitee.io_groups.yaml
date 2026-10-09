@@ -63,17 +63,22 @@ spec:
                     - name
                   type: object
                 defaultMemberRoles:
-                  additionalProperties:
-                    type: string
                   description: >-
                     Default role, per scope, given to a member who joins the
                     group, including members
 
                     mapped from an...
+                  properties:
+                    api:
+                      description: Role on the APIs the group gives access to
+                      type: string
+                    apiProduct:
+                      description: Role on the API products the group gives access to
+                      type: string
+                    application:
+                      description: Role on the applications the group gives access to
+                      type: string
                   type: object
-                  x-kubernetes-validations:
-                    - message: defaultMemberRoles keys must be API, APPLICATION or API_PRODUCT
-                      rule: self.all(k, k in ['API', 'APPLICATION', 'API_PRODUCT'])
                 hrid:
                   type: string
                 id:

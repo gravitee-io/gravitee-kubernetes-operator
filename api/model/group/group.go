@@ -43,13 +43,24 @@ type Type struct {
 	// be notified when the API is synced with APIM.
 	NotifyMembers bool `json:"notifyMembers"`
 	// Default role, per scope, given to a member who joins the group, including members
-	// mapped from an identity provider. Keys are API, APPLICATION and API_PRODUCT.
-	// Omitted, the group's default roles in APIM are left as they are. Declared, the map is
-	// the whole set: a scope absent from it loses its default role.
+	// mapped from an identity provider.
+	// Omitted, the group's default roles in APIM are left as they are. Declared, the object is
+	// the whole set: a scope left out loses its default role, and {} clears all three.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:XValidation:rule="self.all(k, k in ['API', 'APPLICATION', 'API_PRODUCT'])",message="defaultMemberRoles keys must be API, APPLICATION or API_PRODUCT"
-	DefaultMemberRoles map[RoleScope]string `json:"defaultMemberRoles,omitempty"`
-	Members            []Member             `json:"members"`
+	DefaultMemberRoles *DefaultMemberRoles `json:"defaultMemberRoles,omitempty"`
+	Members            []Member            `json:"members"`
+}
+
+type DefaultMemberRoles struct {
+	// Role on the APIs the group gives access to
+	// +kubebuilder:validation:Optional
+	API string `json:"api,omitempty"`
+	// Role on the applications the group gives access to
+	// +kubebuilder:validation:Optional
+	Application string `json:"application,omitempty"`
+	// Role on the API products the group gives access to
+	// +kubebuilder:validation:Optional
+	APIProduct string `json:"apiProduct,omitempty"`
 }
 
 type Member struct {
