@@ -97,8 +97,11 @@ spec:
                 mappers:
                   additionalProperties:
                     type: string
-                  description: "Mappers Attribute mappers: maps provider claims to AM user profile
-                    attributes."
+                  description: >-
+                    Mappers Attribute mappers: maps provider claims to AM user
+                    profile attributes.
+
+                    Defaults to {}.
                   type: object
                 name:
                   description: Name Human-readable name of the identity provider.

@@ -56,6 +56,19 @@ func newGroup(name, ns string) *v1alpha1.Group {
 	}
 }
 
+// withSpecChange returns a copy of g with another context ref, which toDTO does not map.
+func withSpecChange(g *v1alpha1.Group) *v1alpha1.Group {
+	changed := g.DeepCopy()
+	changed.Spec.Context = &refs.NamespacedName{Name: "other-ctx", Namespace: g.Namespace}
+	return changed
+}
+
+// synced returns g as the remote accepted it, with an ID.
+func synced(g *v1alpha1.Group) *v1alpha1.Group {
+	g.Status.ID = g.Name
+	return g
+}
+
 func toDTO(g *v1alpha1.Group) (testDTO, error) {
 	return testDTO{Key: g.Name, Name: g.Name}, nil
 }
@@ -215,8 +228,7 @@ var _ = Describe("AdmissionLifecycle", func() {
 				return gerrors.NewAdmissionErrors()
 			}
 			oldG := newGroup("g1", "ns")
-			newG := newGroup("g1", "ns")
-			errs := a.ValidateUpdate(ctx, oldG, newG)
+			errs := a.ValidateUpdate(ctx, oldG, withSpecChange(oldG))
 			Expect(errs.IsSevere()).To(BeFalse())
 			Expect(order).To(Equal([]string{"precheck", "immutable", "dryrun"}))
 		})
@@ -336,7 +348,7 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 
 	It("applies the remote-missing policy when the remote is not found", func() {
 		a := withRemote(testDTO{}, gerrors.ServerError{StatusCode: 404})
-		g := newGroup("g1", "ns")
+		g := synced(newGroup("g1", "ns"))
 
 		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
 
@@ -346,7 +358,7 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 
 	It("rejects an unchanged CR when the remote changed", func() {
 		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
-		g := newGroup("g1", "ns")
+		g := synced(newGroup("g1", "ns"))
 
 		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
 
@@ -356,10 +368,69 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 
 	It("accepts when the remote matches", func() {
 		a := withRemote(testDTO{Key: "g1", Name: "g1"}, nil)
-		g := newGroup("g1", "ns")
+		g := synced(newGroup("g1", "ns"))
 
 		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
 
 		Expect(errs.IsSevere()).To(BeFalse())
+	})
+
+	// calls records the DryRun and GetRemote calls of a.
+	type calls struct{ dryRun, getRemote bool }
+	recording := func(a *groupAdmission, c *calls, dryRunErr string) {
+		a.DryRun = func(context.Context, *testClient, testDTO) *gerrors.AdmissionErrors {
+			c.dryRun = true
+			e := gerrors.NewAdmissionErrors()
+			if dryRunErr != "" {
+				e.AddSevere(dryRunErr)
+			}
+			return e
+		}
+		getRemote := a.GetRemote
+		a.GetRemote = func(ctx context.Context, tc *testClient, dto testDTO) (testDTO, error) {
+			c.getRemote = true
+			return getRemote(ctx, tc, dto)
+		}
+	}
+
+	It("admits the finalizer save of a resource never synced, without DryRun or GetRemote", func() {
+		a := withRemote(testDTO{}, gerrors.ServerError{StatusCode: 404})
+		var c calls
+		recording(&a, &c, "AM would refuse")
+		g := newGroup("g1", "ns")
+		withFinalizer := g.DeepCopy()
+		withFinalizer.Finalizers = []string{"finalizers.gravitee.io/test"}
+
+		errs := a.ValidateUpdate(ctx, g, withFinalizer)
+
+		Expect(errs.IsSevere()).To(BeFalse())
+		Expect(c).To(Equal(calls{}))
+	})
+
+	It("dry-runs, without drift, a spec fix of a resource never synced", func() {
+		a := withRemote(testDTO{}, gerrors.ServerError{StatusCode: 404})
+		var c calls
+		recording(&a, &c, "")
+		g := newGroup("g1", "ns")
+
+		errs := a.ValidateUpdate(ctx, g, withSpecChange(g))
+
+		Expect(errs.IsSevere()).To(BeFalse())
+		Expect(c).To(Equal(calls{dryRun: true}))
+	})
+
+	It("runs drift, without DryRun, on a metadata-only update of a synced resource", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		var c calls
+		recording(&a, &c, "")
+		g := synced(newGroup("g1", "ns"))
+		labelled := g.DeepCopy()
+		labelled.Labels = map[string]string{"team": "a"}
+
+		errs := a.ValidateUpdate(ctx, g, labelled)
+
+		Expect(errs.IsSevere()).To(BeTrue())
+		Expect(errs.Severe[0].Error()).To(ContainSubstring("drift detected"))
+		Expect(c).To(Equal(calls{getRemote: true}))
 	})
 })

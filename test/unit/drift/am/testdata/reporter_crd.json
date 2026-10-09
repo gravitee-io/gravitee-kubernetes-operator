@@ -24,6 +24,6 @@
         "exportedName": "client"
       }
     ],
-    "attributeMappingEventTypes": ["USER_LOGIN"]
+    "attributeMappingEventTypes": ["USER_LOGOUT", "USER_LOGIN", "USER_LOGIN"]
   }
 }

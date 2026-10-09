@@ -191,15 +191,3 @@ actions:
     remove: true
   - target: $.components.schemas.AutomationDomain.properties.enabled
     update: { x-gko-default: keep }
-  # TODO(AM OAS): add `pattern: ^/.*` to AutomationDomain.path, then drop this action.
-  - target: $.components.schemas.AutomationDomain.properties.path
-    update:
-      x-kubebuilder: ["validation:Pattern=`^/.*`"]
-  # TODO(AM OAS): add `minimum: 1` / `maximum: 100` to TokenExchangeSettings.maxDelegationDepth, then drop this action.
-  - target: $.components.schemas.TokenExchangeSettings.properties.maxDelegationDepth
-    update:
-      x-kubebuilder: ["validation:Minimum=1", "validation:Maximum=100"]
-  # TODO(AM OAS): add `enum: [DENY, SAMEORIGIN]` to XFrameSettings.action, then drop this action.
-  - target: $.components.schemas.XFrameSettings.properties.action
-    update:
-      x-kubebuilder: ["validation:Enum=DENY;SAMEORIGIN"]

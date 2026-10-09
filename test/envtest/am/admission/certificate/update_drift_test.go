@@ -48,6 +48,8 @@ var _ = Describe("Validate drift", func() {
 		resp, err := am.NewSDKClient().UpsertCertificateWithResponse(ctx, dto.DomainKey, nil, dto.Certificate)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(resp.JSON200).ToNot(BeNil(), string(resp.Body))
+		// synced as the controller leaves it: drift only runs for a resource AM accepted
+		cert.Status.Key = resp.JSON200.Key
 		return cert
 	}
 	validateUpdate := func(cert *v1alpha1.AMCertificate) func() error {

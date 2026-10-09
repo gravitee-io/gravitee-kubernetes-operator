@@ -209,11 +209,11 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. Sensitive values, as flagged by the plugin, are returned as ******** in every response; an unset sensitive value is omitted. Sending ******** back on update keeps the stored value; sending it on create is rejected. |  | Optional: \{\} <br /> |
 | `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
-| `domainWhitelist` _string array_ | DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected. |  | Optional: \{\} <br /> |
-| `groupMapper` _object (keys:string, values:string array)_ | GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
-| `mappers` _object (keys:string, values:string)_ | Mappers Attribute mappers: maps provider claims to AM user profile attributes. |  | Optional: \{\} <br /> |
+| `domainWhitelist` _string array_ | DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected.<br />Defaults to []. |  | Optional: \{\} <br /> |
+| `groupMapper` _object (keys:string, values:string array)_ | GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it.<br />Defaults to \{\}. |  | Optional: \{\} <br /> |
+| `mappers` _object (keys:string, values:string)_ | Mappers Attribute mappers: maps provider claims to AM user profile attributes.<br />Defaults to \{\}. |  | Optional: \{\} <br /> |
 | `name` _string_ | Name Human-readable name of the identity provider. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
-| `roleMapper` _object (keys:string, values:string array)_ | RoleMapper Role mapper: assigns AM roles based on provider attribute values. Each entry maps a role to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
+| `roleMapper` _object (keys:string, values:string array)_ | RoleMapper Role mapper: assigns AM roles based on provider attribute values. Each entry maps a role to the user attribute expressions that grant it.<br />Defaults to \{\}. |  | Optional: \{\} <br /> |
 | `system` _boolean_ | System Whether this is the domain's system identity provider. Immutable after creation. When true, only key is required; the identity provider is built from the domains.identities.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
 | `type` _string_ | Type Identity provider plugin type identifier. Immutable after creation. |  | Optional: \{\} <br /> |
 
@@ -337,7 +337,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `accountSettings` _[AutomationAccountSettings](#automationaccountsettings)_ | AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior. |  |  |
-| `alertEnabled` _boolean_ | AlertEnabled Whether alerting is enabled for the domain. |  | Optional: \{\} <br /> |
+| `alertEnabled` _boolean_ | AlertEnabled Whether alerting is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
 | `certificateSettings` _[AutomationCertificateSettings](#automationcertificatesettings)_ | CertificateSettings Domain-level certificate settings. |  |  |
 | `corsSettings` _[CorsSettings](#corssettings)_ | CorsSettings Cross-Origin Resource Sharing configuration controlling which web origins may call the domain's endpoints from a browser. |  |  |
 | `dataPlaneId` _string_ | DataPlaneId Identifier of the data plane this domain is connected to. Optional at creation and resolved from the environment's data planes when omitted. Immutable afterwards: an apply that names a different one is rejected. |  | MaxLength: 255 <br />Optional: \{\} <br /> |
@@ -3463,7 +3463,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `accountSettings` _[AutomationAccountSettings](#automationaccountsettings)_ | AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior. |  |  |
-| `alertEnabled` _boolean_ | AlertEnabled Whether alerting is enabled for the domain. |  | Optional: \{\} <br /> |
+| `alertEnabled` _boolean_ | AlertEnabled Whether alerting is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
 | `certificateSettings` _[AutomationCertificateSettings](#automationcertificatesettings)_ | CertificateSettings Domain-level certificate settings. |  |  |
 | `corsSettings` _[CorsSettings](#corssettings)_ | CorsSettings Cross-Origin Resource Sharing configuration controlling which web origins may call the domain's endpoints from a browser. |  |  |
 | `dataPlaneId` _string_ | DataPlaneId Identifier of the data plane this domain is connected to. Optional at creation and resolved from the environment's data planes when omitted. Immutable afterwards: an apply that names a different one is rejected. |  | MaxLength: 255 <br />Optional: \{\} <br /> |
@@ -3520,7 +3520,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `laxValidation` _boolean_ | LaxValidation Lax validation: also accept an access token issued to the requesting client as the subject token. By default only an ID token is accepted.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `laxValidation` _boolean_ | LaxValidation Lax validation: also accept an access token as the subject token. By default only an ID token is accepted. The access token must be issued to the requesting client or, when an MCP server requests, have that MCP server as audience.<br />Defaults to false. |  | Optional: \{\} <br /> |
 
 
 #### KeyRetrievalSettings
@@ -3715,7 +3715,7 @@ _Appears in:_
 | `cacheMaxEntries` _integer_ | CacheMaxEntries Deprecated: moved to keyRetrievalSettings.cacheMaxEntries.<br />Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set |  | Optional: \{\} <br /> |
 | `cacheTtlSeconds` _integer_ | CacheTtlSeconds Deprecated: moved to keyRetrievalSettings.cacheTtlSeconds.<br />Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set |  | Optional: \{\} <br /> |
 | `clockSkewSeconds` _integer_ | ClockSkewSeconds Allowed clock skew, in seconds, when validating JWT temporal claims.<br />Defaults to 30. |  | Optional: \{\} <br /> |
-| `defaultAllowedAlgorithms` _string array_ | DefaultAllowedAlgorithms Default allowlist of signature algorithms accepted for SPIFFE JWT validation. |  | Optional: \{\} <br /> |
+| `defaultAllowedAlgorithms` _string array_ | DefaultAllowedAlgorithms Default allowlist of signature algorithms accepted for SPIFFE JWT validation.<br />Defaults to ["RS256","RS384","RS512","ES256","ES384","ES512","EdDSA"]. |  | Optional: \{\} <br /> |
 | `enabled` _boolean_ | Enabled Whether SPIFFE workload identity support is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
 | `fetchTimeoutMs` _integer_ | FetchTimeoutMs Deprecated: moved to keyRetrievalSettings.fetchTimeoutMs.<br />Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set |  | Optional: \{\} <br /> |
 | `maxJwtLifetimeSeconds` _integer_ | MaxJwtLifetimeSeconds Maximum accepted JWT lifetime, in seconds, computed as exp minus iat.<br />Defaults to 300. |  | Optional: \{\} <br /> |
@@ -3760,7 +3760,7 @@ _Appears in:_
 | `allowedSubjectTokenTypes` _string array_ | AllowedSubjectTokenTypes Token types accepted as the subject token in an exchange. |  | Optional: \{\} <br /> |
 | `enabled` _boolean_ | Enabled Whether token exchange is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
 | `idJagSettings` _[IdJagSettings](#idjagsettings)_ | IdJagSettings ID-JAG issuance behavior of token exchange. |  |  |
-| `maxDelegationDepth` _integer_ | MaxDelegationDepth Maximum depth of the delegation chain (nested "act" claims). Clamped to the range 1–100.<br />Defaults to 25. |  | Maximum: 100 <br />Minimum: 1 <br />Optional: \{\} <br /> |
+| `maxDelegationDepth` _integer_ | MaxDelegationDepth Maximum depth of the delegation chain (nested "act" claims). Range 1–100.<br />Defaults to 25. |  | Maximum: 100 <br />Minimum: 1 <br />Optional: \{\} <br /> |
 | `tokenExchangeOAuthSettings` _[TokenExchangeOAuthSettings](#tokenexchangeoauthsettings)_ | TokenExchangeOAuthSettings OAuth-specific token-exchange behavior, such as how scopes are handled, with optional inheritance from domain defaults. |  |  |
 | `trustedIssuers` _[TrustedIssuer](#trustedissuer) array_ | TrustedIssuers Deprecated: use the trusted-domains API instead. External issuers whose JWTs may be accepted as subject or actor tokens. A projection over the security domain's token-exchange trusted domains; a write replaces the list, so an omitted issuer is no longer trusted.<br />Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set |  | Optional: \{\} <br /> |
 
@@ -3901,7 +3901,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `action` _string_ | Action X-Frame-Options action. Supported values: DENY, SAMEORIGIN. Leave empty to omit the header. |  | Enum: [DENY SAMEORIGIN] <br />Optional: \{\} <br /> |
+| `action` _string_ | Action X-Frame-Options action. Omit to leave the header out. |  | Enum: [DENY SAMEORIGIN] <br />Optional: \{\} <br /> |
 | `enabled` _boolean_ | Enabled Whether X-Frame-Options is enabled for the domain when not inherited.<br />Defaults to false. |  | Optional: \{\} <br /> |
 | `inherited` _boolean_ | Inherited Whether X-Frame-Options settings are inherited from the gateway defaults (gravitee.yml). When null, legacy behaviour applies: enabled=true overrides and enabled=false inherits.<br />Defaults to true. |  | Optional: \{\} <br /> |
 
@@ -4256,11 +4256,11 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. Sensitive values, as flagged by the plugin, are returned as ******** in every response; an unset sensitive value is omitted. Sending ******** back on update keeps the stored value; sending it on create is rejected. |  | Optional: \{\} <br /> |
 | `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
-| `domainWhitelist` _string array_ | DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected. |  | Optional: \{\} <br /> |
-| `groupMapper` _object (keys:string, values:string array)_ | GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
-| `mappers` _object (keys:string, values:string)_ | Mappers Attribute mappers: maps provider claims to AM user profile attributes. |  | Optional: \{\} <br /> |
+| `domainWhitelist` _string array_ | DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected.<br />Defaults to []. |  | Optional: \{\} <br /> |
+| `groupMapper` _object (keys:string, values:string array)_ | GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it.<br />Defaults to \{\}. |  | Optional: \{\} <br /> |
+| `mappers` _object (keys:string, values:string)_ | Mappers Attribute mappers: maps provider claims to AM user profile attributes.<br />Defaults to \{\}. |  | Optional: \{\} <br /> |
 | `name` _string_ | Name Human-readable name of the identity provider. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
-| `roleMapper` _object (keys:string, values:string array)_ | RoleMapper Role mapper: assigns AM roles based on provider attribute values. Each entry maps a role to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
+| `roleMapper` _object (keys:string, values:string array)_ | RoleMapper Role mapper: assigns AM roles based on provider attribute values. Each entry maps a role to the user attribute expressions that grant it.<br />Defaults to \{\}. |  | Optional: \{\} <br /> |
 | `system` _boolean_ | System Whether this is the domain's system identity provider. Immutable after creation. When true, only key is required; the identity provider is built from the domains.identities.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
 | `type` _string_ | Type Identity provider plugin type identifier. Immutable after creation. |  | Optional: \{\} <br /> |
 
