@@ -95,7 +95,7 @@ Sibling of `internal/apim`, not a fork. Bearer-only, no cloud. Talks to AM's Aut
 
 | Package | Role |
 |---------|------|
-| `internal/am/am.go` | `am.Client`: the am-sdk client (`gravitee-automation-tools/am-sdk`) built from an `AMContext` by `NewSDKClient`, plus `Probe` and `HasErrors` |
+| `internal/am/am.go` | `am.Client`: the am-sdk client (`gravitee-automation-sdk/am-sdk`) built from an `AMContext` by `NewSDKClient`, plus `Probe` and `HasErrors` |
 | `internal/am/<resource>/` | One package per resource: DTO mapping, SDK calls (`Upsert`, `DryRun`, `GetRemote`, `Delete`), client factory, checks. Today: `securitydomain/` |
 
 The SDK builds `{baseUrl}{path, default /automation}/organizations/{org}/environments/{env}` and sends requests through `internal/http.NewStdClient`, so the operator's proxy, TLS and trust store settings apply. Auth is `bearerToken` / `secretRef` only — no `credentials` field. A resource's client factory resolves its AMContext with `dynamic.ResolveAMContext` (templates compiled) and calls `am.NewSDKClient`; see `securitydomain.CreateAMClient`. Wrap every SDK call in `am.HasErrors`, which keeps AM's error message. New AM resources stay Automation API only and are wired through `internal/lifecycle`.
