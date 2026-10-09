@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -53,9 +54,7 @@ func Delete(
 
 	api.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(api))
 
-	err = apim.Subscription.Delete(api, subscription)
-
-	if err != nil {
+	if err := errors.IgnoreNotFound(apim.Subscription.Delete(api, subscription)); err != nil {
 		return err
 	}
 
