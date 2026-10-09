@@ -25,6 +25,7 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -142,6 +143,10 @@ func validateDryRun(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.
 	errs := errors.NewAdmissionErrors()
 
 	cp := api.DeepCopy()
+	if err := apidefinition.PrepareV4SpecForAutomation(ctx, cp, false); err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
 
 	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
@@ -150,7 +155,6 @@ func validateDryRun(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.
 	}
 
 	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
-	cp.SetDefinitionContext(v4.NewDefaultKubernetesContext().MergeWith(cp.GetDefinitionContext()))
 	status, err := apimClient.APIs.DryRunImportV4(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
