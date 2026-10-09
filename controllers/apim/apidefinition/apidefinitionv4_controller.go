@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -59,20 +60,32 @@ func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	return Reconcile(ctx, apiDefinition, r.Recorder)
 }
 
+// SetupWithManager filters events per watch rather than with a controller-wide event filter: a
+// group becoming synced to APIM is an update that leaves its spec unchanged, which
+// LastSpecHashPredicate would drop, leaving the API imported without that group.
 func (r *V4Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	lastSpecHash := builder.WithPredicates(predicate.LastSpecHashPredicate{})
+
 	newController := ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.ApiV4Definition{}).
-		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.ApiV4ContextField)).
-		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(search.ApiV4ResourceField)).
-		Watches(&v1alpha1.SharedPolicyGroup{}, r.Watcher.WatchSharedPolicyGroups(search.ApiV4SharedPolicyGroupsField)).
-		Watches(&v1alpha1.Notification{}, r.Watcher.WatchNotifications(search.ApiV4NotificationRefsField)).
-		Watches(&v1alpha1.Group{}, r.Watcher.WatchGroups(search.ApiV4GroupField))
+		For(&v1alpha1.ApiV4Definition{}, lastSpecHash).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.ApiV4ContextField), lastSpecHash).
+		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(search.ApiV4ResourceField), lastSpecHash).
+		Watches(
+			&v1alpha1.SharedPolicyGroup{},
+			r.Watcher.WatchSharedPolicyGroups(search.ApiV4SharedPolicyGroupsField),
+			lastSpecHash,
+		).
+		Watches(&v1alpha1.Notification{}, r.Watcher.WatchNotifications(search.ApiV4NotificationRefsField), lastSpecHash).
+		Watches(
+			&v1alpha1.Group{},
+			r.Watcher.WatchGroups(search.ApiV4GroupField),
+			builder.WithPredicates(predicate.GroupSyncedPredicate{}),
+		)
 
 	if env.Config.EnableTemplating {
 		newController.
-			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("apiv4definitions")).
-			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("apiv4definitions"))
+			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("apiv4definitions"), lastSpecHash).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("apiv4definitions"), lastSpecHash)
 	}
 
 	return newController.Complete(r)

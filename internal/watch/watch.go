@@ -163,6 +163,9 @@ func (w *Type) WatchNotifications(index search.IndexField) *handler.Funcs {
 	}
 }
 
+// WatchGroups enqueues the APIs that reference a Group when an event on the group passes the
+// controller's predicates. Which events re-run an API is up to those predicates: the v4 API
+// controller passes the update that syncs the group to APIM (GroupSyncedPredicate).
 func (w *Type) WatchGroups(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
