@@ -12,11 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package framework
+package am
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/driftassert"
+import (
+	"embed"
+	"encoding/json"
 
-var (
-	expectDrift   = driftassert.Drift
-	expectNoDrift = driftassert.NoDrift
+	. "github.com/onsi/ginkgo/v2"
 )
+
+//go:embed testdata/*.json
+var driftFixtures embed.FS
+
+func loadFixture[T any](name string) T {
+	GinkgoHelper()
+
+	var value T
+
+	data, err := driftFixtures.ReadFile("testdata/" + name)
+	if err != nil {
+		Fail(err.Error())
+	}
+
+	if err := json.Unmarshal(data, &value); err != nil {
+		Fail(err.Error())
+	}
+
+	return value
+}

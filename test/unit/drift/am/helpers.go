@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package framework
+package am
 
 import "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/driftassert"
 
 var (
-	expectDrift   = driftassert.Drift
-	expectNoDrift = driftassert.NoDrift
+	expectDrift                             = driftassert.Drift
+	expectNoDrift                           = driftassert.NoDrift
+	expectedEquivalentNotHavingAnyZeroValue = driftassert.EquivalentNotHavingAnyZeroValue
 )

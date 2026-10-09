@@ -173,7 +173,7 @@ Do **not** define a DTO for drift. Reuse the resource's existing `internal/apim/
 | `rfc3339` | Date-time strings (timezone-tolerant) |
 | `time` | `time.Time` fields, compared as instants (timezone-tolerant). Required on every `time.Time`: an untagged one panics |
 | `case-insensitive` | Enums APIM may echo back in a different case |
-| `unstructured` | `GenericStringMap` / `unstructured.Unstructured` JSON blobs |
+| `unstructured` (optionally `:masked`) | `GenericStringMap` / `unstructured.Unstructured` JSON blobs. With `:masked`, a remote value of exactly `********` is equivalent at any depth to a CRD string or absent value (AM-masked plugin secrets); a CRD object or list against it drifts |
 | `ignore-remote-default` (optionally `:A,B`) | Strings the CRD may leave unset, which APIM then resolves on its own. Bare, any remote value is accepted (cross-resource portal `visibility`); with `:A,B`, only the listed server defaults are (`flowMode`, documentation `area`) |
 | `ignore-namespace-prefix` | Strings APIM prefixes with the namespace |
 
@@ -201,9 +201,9 @@ See `internal/drift/types.go` (`Merge` comment) and `internal/drift/doc.go`.
 
 #### Testing
 
-Unit only, in `test/unit/drift/apim/`: table-driven `drift.Detect` tests over your DTO, covering each tag you added and `To*DTO` parity. Do not re-test the framework. Call `drift.Init()` in the suite `BeforeSuite`. Behaviour against a live APIM belongs in the e2e repo (see [Testing](#testing)).
+Unit only, in `test/unit/drift/apim/` (`test/unit/drift/am/` for AM): table-driven `drift.Detect` tests over your DTO, covering each tag you added and `To*DTO` parity. Do not re-test the framework. Call `drift.Init()` in the suite `BeforeSuite`. Behaviour against a live APIM belongs in the e2e repo (see [Testing](#testing)).
 
-Reference implementations: `internal/admission/application/drift.go`, `internal/admission/subscription/drift.go`, `test/unit/drift/apim/`.
+Reference implementations: `internal/admission/application/drift.go`, `internal/admission/subscription/drift.go`, `test/unit/drift/apim/`, `test/unit/drift/am/`.
 
 ### Internal Packages (internal/)
 

@@ -81,4 +81,14 @@ var _ = Describe("Validate drift", func() {
 		Eventually(validateUpdate(reporter), constants.EventualTimeout, constants.Interval).
 			Should(MatchError(And(ContainSubstring("drift detected"), ContainSubstring("Renamed in AM"))))
 	})
+
+	It("should not drift on a password AM returns masked", func() {
+		reporter := inAM(func(spec *v1alpha1.AMReporterSpec) {
+			spec.Configuration.Put("password", "s3cret")
+		}, func(remote *internal.Reporter) {
+			remote.Configuration.Object["password"] = "********"
+		})
+
+		Consistently(validateUpdate(reporter), constants.ConsistentTimeout, constants.Interval).Should(Succeed())
+	})
 })

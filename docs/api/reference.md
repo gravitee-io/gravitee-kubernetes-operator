@@ -207,7 +207,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. Sensitive values, as flagged by the plugin, are returned as ******** in every response. Sending ******** back on update keeps the stored value; sending it on create is rejected. |  | Optional: \{\} <br /> |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. Sensitive values, as flagged by the plugin, are returned as ******** in every response; an unset sensitive value is omitted. Sending ******** back on update keeps the stored value; sending it on create is rejected. |  | Optional: \{\} <br /> |
 | `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
 | `domainWhitelist` _string array_ | DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected. |  | Optional: \{\} <br /> |
 | `groupMapper` _object (keys:string, values:string array)_ | GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
@@ -4254,7 +4254,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. Sensitive values, as flagged by the plugin, are returned as ******** in every response. Sending ******** back on update keeps the stored value; sending it on create is rejected. |  | Optional: \{\} <br /> |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. Sensitive values, as flagged by the plugin, are returned as ******** in every response; an unset sensitive value is omitted. Sending ******** back on update keeps the stored value; sending it on create is rejected. |  | Optional: \{\} <br /> |
 | `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
 | `domainWhitelist` _string array_ | DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected. |  | Optional: \{\} <br /> |
 | `groupMapper` _object (keys:string, values:string array)_ | GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |

@@ -1,0 +1,19 @@
+{
+  "key": "default-inline-users",
+  "name": "Inline users",
+  "type": "inline-am-idp",
+  "system": false,
+  "configuration": "{\"passwordEncoder\":\"BCrypt\",\"users\":[{\"username\":\"jdoe\",\"email\":\"john.doe@example.com\",\"password\":\"********\"}]}",
+  "domainWhitelist": ["example.com"],
+  "groupMapper": {
+    "admins": ["{#profile.group == 'admin'}"]
+  },
+  "mappers": {
+    "email": "mail"
+  },
+  "roleMapper": {
+    "domain-admin": ["{#profile.role == 'admin'}"]
+  },
+  "createdAt": "2026-10-05T10:00:00Z",
+  "updatedAt": "2026-10-05T10:00:00Z"
+}

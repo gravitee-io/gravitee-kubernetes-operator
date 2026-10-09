@@ -12,11 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package framework
+package am
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/driftassert"
+import (
+	"testing"
 
-var (
-	expectDrift   = driftassert.Drift
-	expectNoDrift = driftassert.NoDrift
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
+
+func TestDrift(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "AM drift detection unit tests suite")
+}
+
+var _ = BeforeSuite(func() {
+	drift.Init()
+})
