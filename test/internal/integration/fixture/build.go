@@ -52,6 +52,7 @@ type Files struct {
 	AMContext          string
 	AMSecurityDomain   string
 	AMIdentityProvider string
+	AMCertificate      string
 }
 
 type FSBuilder struct {
@@ -154,6 +155,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if idp := decodeIfDefined(f.AMIdentityProvider, &v1alpha1.AMIdentityProvider{}, amIdentityProviderKind); idp != nil {
 		setupAMIdentityProvider(obj, idp, suffix)
+	}
+
+	if cert := decodeIfDefined(f.AMCertificate, &v1alpha1.AMCertificate{}, amCertificateKind); cert != nil {
+		setupAMCertificate(obj, cert, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -448,6 +453,15 @@ func setupAMIdentityProvider(obj *Objects, idp **v1alpha1.AMIdentityProvider, su
 	}
 }
 
+func setupAMCertificate(obj *Objects, cert **v1alpha1.AMCertificate, suffix string) {
+	obj.AMCertificate = *cert
+	obj.AMCertificate.Name += suffix
+	obj.AMCertificate.Namespace = constants.Namespace
+	if obj.AMSecurityDomain != nil {
+		obj.AMCertificate.Spec.DomainRef = refs.NamespacedName{Name: obj.AMSecurityDomain.Name}
+	}
+}
+
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
 	obj.SharedPolicyGroup = *sub
 	obj.SharedPolicyGroup.Name += suffix
@@ -602,5 +616,10 @@ func (b *FSBuilder) WithAMSecurityDomain(file string) *FSBuilder {
 
 func (b *FSBuilder) WithAMIdentityProvider(file string) *FSBuilder {
 	b.files.AMIdentityProvider = file
+	return b
+}
+
+func (b *FSBuilder) WithAMCertificate(file string) *FSBuilder {
+	b.files.AMCertificate = file
 	return b
 }

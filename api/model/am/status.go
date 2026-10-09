@@ -57,3 +57,16 @@ type IdentityProviderStatus struct {
 	// +kubebuilder:validation:Optional
 	Type string `json:"type,omitempty"`
 }
+
+type CertificateStatus struct {
+	DomainSubResourceStatus `json:",inline"`
+	// The name of the certificate in AM. For the system certificate, the one AM builds.
+	// +kubebuilder:validation:Optional
+	Name string `json:"name,omitempty"`
+	// The plugin type of the certificate in AM. For the system certificate, the one AM builds.
+	// +kubebuilder:validation:Optional
+	Type string `json:"type,omitempty"`
+	// When the certificate expires, as reported by AM.
+	// +kubebuilder:validation:Optional
+	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
+}
