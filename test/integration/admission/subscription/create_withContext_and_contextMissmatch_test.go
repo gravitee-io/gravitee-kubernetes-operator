@@ -46,6 +46,9 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 	appCtx := fixtures.Context.DeepCopy()
 	appCtx.Name = random.GetName()
+	// Same APIM as the API context, through another host: a distinct target for admission,
+	// while the application still reconciles.
+	appCtx.Spec.BaseUrl = "http://127.0.0.1:30083"
 
 	clientID := random.GetName()
 	fixtures.Application.Spec.Settings.App.ClientID = &clientID
@@ -66,11 +69,14 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"error",
 				errors.NewSeveref(
-					"management contexts must match between application [%s] and API [%s], got [%v] and [%v]",
+					"management contexts of application [%s] and API [%s] must target the same environment, "+
+						"got [%s] (%s) and [%s] (%s)",
 					fixtures.Application.GetRef(),
 					fixtures.APIv4.GetRef(),
-					fixtures.Application.ContextRef(),
-					fixtures.APIv4.ContextRef(),
+					appCtx.GetRef(),
+					"http://127.0.0.1:30083/management/organizations/DEFAULT/environments/DEFAULT",
+					fixtures.Context.GetRef(),
+					"http://localhost:30083/management/organizations/DEFAULT/environments/DEFAULT",
 				),
 				err,
 			)
