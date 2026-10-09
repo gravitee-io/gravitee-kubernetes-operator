@@ -31,15 +31,11 @@ import (
 func validateSharedPolicyGroups(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if api.Spec.Flows != nil {
-		errs.Add(validateFlowSharedPolicyGroups(ctx, api.Spec.Flows, api.Namespace))
-	}
+	errs.MergeWith(validateFlowSharedPolicyGroups(ctx, api.Spec.Flows, api.Namespace))
 
 	if api.Spec.Plans != nil {
 		for _, plan := range *api.Spec.Plans {
-			if plan.Flows != nil {
-				errs.Add(validateFlowSharedPolicyGroups(ctx, plan.Flows, api.Namespace))
-			}
+			errs.MergeWith(validateFlowSharedPolicyGroups(ctx, plan.Flows, api.Namespace))
 		}
 	}
 
@@ -47,44 +43,30 @@ func validateSharedPolicyGroups(ctx context.Context, api *v1alpha1.ApiV4Definiti
 }
 
 func validateFlowSharedPolicyGroups(ctx context.Context, flows []*v4.Flow,
-	parentNS string) *errors.AdmissionError {
+	parentNS string) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
 	for _, flow := range flows {
-		for _, flowStep := range flow.Request {
-			return validateSharedPolicyGroup(ctx, flowStep, parentNS, "REQUEST")
+		phases := []struct {
+			phase sharedpolicygroups.FlowPhase
+			steps []*v4.FlowStep
+		}{
+			{"REQUEST", flow.Request},
+			{"RESPONSE", flow.Response},
+			{"CONNECT", flow.Connect},
+			{"INTERACT", flow.Interact},
+			{"PUBLISH", flow.Publish},
+			{"SUBSCRIBE", flow.Subscribe},
 		}
 
-		for _, flowStep := range flow.Response {
-			if flowStep.SharedPolicyGroup != nil {
-				return validateSharedPolicyGroup(ctx, flowStep, parentNS, "RESPONSE")
-			}
-		}
-
-		for _, flowStep := range flow.Connect {
-			if flowStep.SharedPolicyGroup != nil {
-				return validateSharedPolicyGroup(ctx, flowStep, parentNS, "CONNECT")
-			}
-		}
-
-		for _, flowStep := range flow.Interact {
-			if flowStep.SharedPolicyGroup != nil {
-				return validateSharedPolicyGroup(ctx, flowStep, parentNS, "INTERACT")
-			}
-		}
-
-		for _, flowStep := range flow.Publish {
-			if flowStep.SharedPolicyGroup != nil {
-				return validateSharedPolicyGroup(ctx, flowStep, parentNS, "PUBLISH")
-			}
-		}
-
-		for _, flowStep := range flow.Subscribe {
-			if flowStep.SharedPolicyGroup != nil {
-				return validateSharedPolicyGroup(ctx, flowStep, parentNS, "SUBSCRIBE")
+		for _, p := range phases {
+			for _, flowStep := range p.steps {
+				errs.Add(validateSharedPolicyGroup(ctx, flowStep, parentNS, p.phase))
 			}
 		}
 	}
 
-	return nil
+	return errs
 }
 
 func validateSharedPolicyGroup(ctx context.Context, flowStep *v4.FlowStep, parentNS string,

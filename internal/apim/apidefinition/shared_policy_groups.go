@@ -29,8 +29,8 @@ import (
 )
 
 // ResolveSharedPolicyGroups inlines SharedPolicyGroup references into flow steps.
-func ResolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4DefinitionSpec) error {
-	err := resolveFLowSharedPolicyGroupsReferences(ctx, spec.Flows)
+func ResolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4DefinitionSpec, updateMetadata bool) error {
+	err := resolveFLowSharedPolicyGroupsReferences(ctx, spec.Flows, updateMetadata)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func ResolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4Definiti
 	}
 
 	for _, plan := range *spec.Plans {
-		err := resolveFLowSharedPolicyGroupsReferences(ctx, plan.Flows)
+		err := resolveFLowSharedPolicyGroupsReferences(ctx, plan.Flows, updateMetadata)
 		if err != nil {
 			return err
 		}
@@ -49,44 +49,44 @@ func ResolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4Definiti
 	return nil
 }
 
-func resolveFLowSharedPolicyGroupsReferences(ctx context.Context, flows []*v4.Flow) error {
+func resolveFLowSharedPolicyGroupsReferences(ctx context.Context, flows []*v4.Flow, updateMetadata bool) error {
 	if len(flows) == 0 {
 		return nil
 	}
 
 	for _, flow := range flows {
 		for _, flowStep := range flow.Request {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
+			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
 			if err != nil {
 				return err
 			}
 		}
 		for _, flowStep := range flow.Response {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
+			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
 			if err != nil {
 				return err
 			}
 		}
 		for _, flowStep := range flow.Connect {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
+			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
 			if err != nil {
 				return err
 			}
 		}
 		for _, flowStep := range flow.Interact {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
+			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
 			if err != nil {
 				return err
 			}
 		}
 		for _, flowStep := range flow.Publish {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
+			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
 			if err != nil {
 				return err
 			}
 		}
 		for _, flowStep := range flow.Subscribe {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
+			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
 			if err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ func resolveFLowSharedPolicyGroupsReferences(ctx context.Context, flows []*v4.Fl
 	return nil
 }
 
-func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep) error {
+func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep, updateMetadata bool) error {
 	if flowStep.SharedPolicyGroup == nil {
 		return nil
 	}
@@ -113,14 +113,14 @@ func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep) e
 		return gerrors.NewResolveRefError(err)
 	}
 
-	if err := template.Compile(ctx, spg, true); err != nil {
+	if err := template.Compile(ctx, spg, updateMetadata); err != nil {
 		return err
 	}
 
 	flowStep.Name = &spg.Name
 	flowStep.Policy = new("shared-policy-group-policy")
 
-	if k8s.IsAutomationAPIManaged(spg) {
+	if k8s.IsAutomationAPIManaged(spg) || spg.GetID() == "" {
 		flowStep.Configuration = utils.ToGenericStringMap(map[string]interface{}{
 			"hrid": refs.NewNamespacedNameFromObject(spg).HRID(),
 		})

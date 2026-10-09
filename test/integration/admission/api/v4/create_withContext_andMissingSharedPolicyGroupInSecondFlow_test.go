@@ -18,14 +18,14 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	admissionv4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -33,46 +33,47 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.AdmissionCtrl{}
 
-	It("should return warning on API creation with unknown member", func() {
+	It("should return error on api creation with a missing Shared Policy Group in a second flow", func() {
 		fixtures := fixture.
 			Builder().
-			WithAPIv4(constants.ApiV4).
-			WithContext(constants.ContextWithCredentialsFile).
-			Build().
-			Apply()
+			WithAPIv4(constants.ApiV4WithContextFile).
+			Build()
 
-		newAPI := fixtures.APIv4.DeepCopy()
-
-		By("adding an unknown member to the API")
-		unknownMemberName := random.GetName()
-		newAPI.Spec.Members = []*base.Member{
-			base.NewGraviteeMember(unknownMemberName, "REVIEWER"),
+		fixtures.APIv4.Spec.Flows = []*v4.Flow{
+			{
+				Enabled: true,
+				Request: []*v4.FlowStep{
+					{
+						FlowStep: base.FlowStep{Enabled: true, Policy: new("transform-headers")},
+					},
+				},
+			},
+			{
+				Enabled: true,
+				Request: []*v4.FlowStep{
+					{
+						SharedPolicyGroup: &refs.NamespacedName{
+							Name: "missing-shared-policy-group",
+						},
+					},
+				},
+			},
 		}
 
-		By("preparing API for import")
-		err := apidefinition.PrepareV4SpecForAutomation(ctx, newAPI, false)
-		Expect(err).ToNot(HaveOccurred())
+		By("checking that API does not pass validation")
 
-		By("checking that API validation returns warnings")
-
-		Eventually(func() error {
-			warnings, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, newAPI)
-			if err != nil {
-				return err
-			}
-			if err = assert.SliceOfSize("warnings", warnings, 1); err != nil {
-				return err
-			}
+		Consistently(func() error {
+			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.APIv4)
 			return assert.Equals(
-				"warning",
-				errors.NewWarningf(
-					"member [%s] of source [gravitee] could not be found in organization [DEFAULT]",
-					unknownMemberName,
-				).Error(),
-				warnings[0],
+				"error",
+				errors.NewSeveref(
+					"unable to get Shared Policy Group [missing-shared-policy-group] in namespace [%s]",
+					fixtures.APIv4.Namespace,
+				),
+				err,
 			)
-		}, constants.EventualTimeout, interval).Should(Succeed())
+		}, constants.ConsistentTimeout, interval).Should(Succeed())
 	})
 })

@@ -18,14 +18,12 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	admissionv4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -33,46 +31,37 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.AdmissionCtrl{}
 
-	It("should return warning on API creation with unknown member", func() {
+	It("should pass validation of an API referencing a Shared Policy Group", func() {
+		// applied first so that the API carries the CRD defaults the webhook receives
 		fixtures := fixture.
 			Builder().
-			WithAPIv4(constants.ApiV4).
 			WithContext(constants.ContextWithCredentialsFile).
+			WithSharedPolicyGroups(constants.SharedPolicyGroupsFile).
+			WithAPIv4(constants.ApiV4WithContextFile).
 			Build().
 			Apply()
 
-		newAPI := fixtures.APIv4.DeepCopy()
-
-		By("adding an unknown member to the API")
-		unknownMemberName := random.GetName()
-		newAPI.Spec.Members = []*base.Member{
-			base.NewGraviteeMember(unknownMemberName, "REVIEWER"),
+		fixtures.APIv4.Spec.Flows = []*v4.Flow{
+			{
+				Enabled: true,
+				Request: []*v4.FlowStep{
+					{
+						FlowStep: base.FlowStep{Enabled: true},
+						SharedPolicyGroup: &refs.NamespacedName{
+							Name: fixtures.SharedPolicyGroup.Name,
+						},
+					},
+				},
+			},
 		}
 
-		By("preparing API for import")
-		err := apidefinition.PrepareV4SpecForAutomation(ctx, newAPI, false)
-		Expect(err).ToNot(HaveOccurred())
-
-		By("checking that API validation returns warnings")
+		By("checking that API passes validation, including the APIM dry-run")
 
 		Eventually(func() error {
-			warnings, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, newAPI)
-			if err != nil {
-				return err
-			}
-			if err = assert.SliceOfSize("warnings", warnings, 1); err != nil {
-				return err
-			}
-			return assert.Equals(
-				"warning",
-				errors.NewWarningf(
-					"member [%s] of source [gravitee] could not be found in organization [DEFAULT]",
-					unknownMemberName,
-				).Error(),
-				warnings[0],
-			)
+			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.APIv4)
+			return err
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 })
