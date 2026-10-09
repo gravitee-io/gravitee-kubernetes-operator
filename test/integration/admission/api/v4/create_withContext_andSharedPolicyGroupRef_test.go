@@ -34,27 +34,23 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 	admissionCtrl := admissionv4.AdmissionCtrl{}
 
 	It("should pass validation of an API referencing a Shared Policy Group", func() {
-		fixtures1 := fixture.
+		// applied first so that the API carries the CRD defaults the webhook receives
+		fixtures := fixture.
 			Builder().
 			WithContext(constants.ContextWithCredentialsFile).
 			WithSharedPolicyGroups(constants.SharedPolicyGroupsFile).
+			WithAPIv4(constants.ApiV4WithContextFile).
 			Build().
 			Apply()
 
-		fixtures2 := fixture.
-			Builder().
-			WithAPIv4(constants.ApiV4WithContextFile).
-			Build()
-
-		fixtures2.APIv4.Spec.Context = fixtures1.Context.GetNamespacedName()
-		fixtures2.APIv4.Spec.Flows = []*v4.Flow{
+		fixtures.APIv4.Spec.Flows = []*v4.Flow{
 			{
 				Enabled: true,
 				Request: []*v4.FlowStep{
 					{
 						FlowStep: base.FlowStep{Enabled: true},
 						SharedPolicyGroup: &refs.NamespacedName{
-							Name: fixtures1.SharedPolicyGroup.Name,
+							Name: fixtures.SharedPolicyGroup.Name,
 						},
 					},
 				},
@@ -64,7 +60,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		By("checking that API passes validation, including the APIM dry-run")
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, fixtures2.APIv4)
+			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.APIv4)
 			return err
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
