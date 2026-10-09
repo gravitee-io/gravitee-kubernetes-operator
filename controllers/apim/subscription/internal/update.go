@@ -44,7 +44,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		return err
 	}
 
-	apim, err := apim.FromContextRef(ctx, api.ContextRef(), ns)
+	apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
 	if err != nil {
 		return err
 	}
