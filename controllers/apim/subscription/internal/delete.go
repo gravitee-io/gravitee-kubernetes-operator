@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -54,12 +55,16 @@ func Delete(
 
 	api.PopulateIDs(apim.Context)
 
+<<<<<<< HEAD
 	err = apim.Subscription.Delete(&model.Subscription{
 		ApiID: api.GetID(),
 		ID:    subscription.Status.ID,
 	})
 
 	if err != nil {
+=======
+	if err := errors.IgnoreNotFound(apim.Subscription.Delete(api, subscription)); err != nil {
+>>>>>>> 6c5d58b (fix(subscription): release the finalizer when APIM answers 404 on delete)
 		return err
 	}
 
