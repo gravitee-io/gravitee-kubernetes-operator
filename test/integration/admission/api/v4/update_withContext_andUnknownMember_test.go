@@ -52,7 +52,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		}
 
 		By("preparing API for import")
-		err := apidefinition.PrepareV4SpecForAutomation(ctx, newAPI)
+		err := apidefinition.PrepareV4SpecForAutomation(ctx, newAPI, false)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("checking that API validation returns warnings")

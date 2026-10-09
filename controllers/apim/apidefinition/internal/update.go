@@ -45,7 +45,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	spec := &apiDefinition.Spec
 	spec.EnsureDefinitionContext()
 
-	if err := apidefinition.ResolveResources(ctx, spec.Resources); err != nil {
+	if err := apidefinition.ResolveResources(ctx, spec.Resources, true); err != nil {
 		return err
 	}
 
@@ -104,7 +104,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 
 	apidefinition.LogUnsyncedGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs())
 
-	if err := apidefinition.PrepareV4SpecForAutomation(ctx, apiDefinition); err != nil {
+	if err := apidefinition.PrepareV4SpecForAutomation(ctx, apiDefinition, true); err != nil {
 		log.Error(ctx, err, "Unable to prepare API spec for automation", log.KeyValues(apiDefinition)...)
 		return err
 	}

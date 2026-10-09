@@ -43,7 +43,7 @@ func mergeDriftValidation(
 }
 
 func resolveApiV4Refs(ctx context.Context, api *v1alpha1.ApiV4Definition) error {
-	if err := apidefinition.PrepareV4SpecForAutomation(ctx, api); err != nil {
+	if err := apidefinition.PrepareV4SpecForAutomation(ctx, api, false); err != nil {
 		return err
 	}
 	var mgmtContext core.ContextModel

@@ -25,13 +25,13 @@ import (
 )
 
 // ResolveResources inlines ApiResource references into the API spec.
-func ResolveResources(ctx context.Context, resources []*base.ResourceOrRef) error {
+func ResolveResources(ctx context.Context, resources []*base.ResourceOrRef, updateMetadata bool) error {
 	if resources == nil {
 		return nil
 	}
 
 	for _, resource := range resources {
-		if err := resolveIfRef(ctx, resource); err != nil {
+		if err := resolveIfRef(ctx, resource, updateMetadata); err != nil {
 			return err
 		}
 	}
@@ -39,7 +39,7 @@ func ResolveResources(ctx context.Context, resources []*base.ResourceOrRef) erro
 	return nil
 }
 
-func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error {
+func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef, updateMetadata bool) error {
 	if !resourceOrRef.IsRef() {
 		return nil
 	}
@@ -51,7 +51,7 @@ func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error 
 		return gerrors.NewResolveRefError(err)
 	}
 
-	if err := template.Compile(ctx, resource, true); err != nil {
+	if err := template.Compile(ctx, resource, updateMetadata); err != nil {
 		return err
 	}
 

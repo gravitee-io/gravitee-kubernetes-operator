@@ -124,7 +124,7 @@ var _ = Describe("Validate drift for PROXY APIs", labels.WithContext, func() {
 
 		By("changing the remote API description")
 		newAPI := fixtures.APIv4.DeepCopy()
-		Expect(apidefinition.PrepareV4SpecForAutomation(ctx, newAPI)).To(Succeed())
+		Expect(apidefinition.PrepareV4SpecForAutomation(ctx, newAPI, false)).To(Succeed())
 
 		validateDescriptionDrift(ctx, admissionCtrl, fixtures.APIv4, newAPI, fixtures.Context)
 	})
