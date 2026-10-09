@@ -24,15 +24,15 @@ import (
 
 // PrepareV4SpecForAutomation resolves references and normalizes the spec the same
 // way as before syncing to the APIM Automation API.
-func PrepareV4SpecForAutomation(ctx context.Context, api *v1alpha1.ApiV4Definition) error {
+func PrepareV4SpecForAutomation(ctx context.Context, api *v1alpha1.ApiV4Definition, updateMetadata bool) error {
 	nsCtx := WithAPINamespace(ctx, api.Namespace)
 	spec := &api.Spec
 
-	if err := ResolveResources(nsCtx, spec.Resources); err != nil {
+	if err := ResolveResources(nsCtx, spec.Resources, updateMetadata); err != nil {
 		return err
 	}
 
-	if err := ResolveSharedPolicyGroups(nsCtx, spec); err != nil {
+	if err := ResolveSharedPolicyGroups(nsCtx, spec, updateMetadata); err != nil {
 		return err
 	}
 
