@@ -65,6 +65,7 @@ const (
 	AMSecurityContextField        IndexField = "am-sec-domain-context"
 	AMIdentityProviderDomainField IndexField = "am-idp-domain"
 	AMCertificateDomainField      IndexField = "am-cert-domain"
+	AMReporterDomainField         IndexField = "am-reporter-domain"
 
 	AMSecurityDomainFallbackCertificateField IndexField = "am-domain-fallback-cert"
 )
@@ -142,6 +143,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexAMIdentityProviderDomain))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMCertificate{}, AMCertificateDomainField,
 		indexAMCertificateDomain))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMReporter{}, AMReporterDomainField,
+		indexAMReporterDomain))
 
 	return errors.NewAggregate(errs)
 }
@@ -484,6 +487,13 @@ func indexAMIdentityProviderDomain(idp *v1alpha1.AMIdentityProvider, fields *[]s
 // certificate's own namespace (a cross-namespace domainRef is rejected).
 func indexAMCertificateDomain(cert *v1alpha1.AMCertificate, fields *[]string) {
 	domain := refs.NewNamespacedName(cert.GetNamespace(), cert.Spec.DomainRef.Name)
+	*fields = append(*fields, domain.String())
+}
+
+// indexAMReporterDomain indexes a reporter under its domain, always looked up in the
+// reporter's own namespace (a cross-namespace domainRef is rejected).
+func indexAMReporterDomain(reporter *v1alpha1.AMReporter, fields *[]string) {
+	domain := refs.NewNamespacedName(reporter.GetNamespace(), reporter.Spec.DomainRef.Name)
 	*fields = append(*fields, domain.String())
 }
 

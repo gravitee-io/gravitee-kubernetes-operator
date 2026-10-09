@@ -29,6 +29,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
 	amcertificate "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/certificate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/identityprovider"
+	amreporter "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/reporter"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/securitydomain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
@@ -49,6 +50,7 @@ import (
 	amcertAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amcertificate"
 	amctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amctx"
 	amidpAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amidentityprovider"
+	amrepAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amreporter"
 	amsdAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amsecuritydomain"
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
@@ -527,6 +529,17 @@ func registerAMControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for AM certificates")
 		os.Exit(1)
 	}
+
+	if err := (&amreporter.Reconciler{
+		Client:    k8s.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("amreporters-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AMReporterList{}),
+		Lifecycle: amreporter.NewLifecycle(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for AM reporters")
+		os.Exit(1)
+	}
 }
 
 func applyCRDs() error {
@@ -673,6 +686,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (amcertAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (amrepAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	if err := (subAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
