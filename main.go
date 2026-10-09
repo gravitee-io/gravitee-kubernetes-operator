@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/identityprovider"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/securitydomain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
@@ -45,6 +46,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/kafkaroute"
 
 	amctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amctx"
+	amidpAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amidentityprovider"
 	amsdAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amsecuritydomain"
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
@@ -501,6 +503,17 @@ func registerAMControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for AM security domains")
 		os.Exit(1)
 	}
+
+	if err := (&identityprovider.Reconciler{
+		Client:    k8s.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("amidentityproviders-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AMIdentityProviderList{}),
+		Lifecycle: identityprovider.NewLifecycle(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for AM identity providers")
+		os.Exit(1)
+	}
 }
 
 func applyCRDs() error {
@@ -641,6 +654,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (amsdAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (amidpAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	if err := (subAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {

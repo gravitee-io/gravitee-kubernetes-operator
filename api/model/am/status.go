@@ -41,3 +41,19 @@ type Status struct {
 	// +kubebuilder:default={}
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
+
+type DomainSubResourceStatus struct {
+	Status `json:",inline"`
+	// +kubebuilder:validation:Optional
+	DomainKey string `json:"domainKey"`
+}
+
+type IdentityProviderStatus struct {
+	DomainSubResourceStatus `json:",inline"`
+	// The name of the identity provider in AM. For the system identity provider, the one AM builds.
+	// +kubebuilder:validation:Optional
+	Name string `json:"name,omitempty"`
+	// The plugin type of the identity provider in AM. For the system identity provider, the one AM builds.
+	// +kubebuilder:validation:Optional
+	Type string `json:"type,omitempty"`
+}

@@ -12,6 +12,7 @@
 - [gravitee.io/v1alpha1/domain](#graviteeiov1alpha1domain)
 - [gravitee.io/v1alpha1/gateway](#graviteeiov1alpha1gateway)
 - [gravitee.io/v1alpha1/group](#graviteeiov1alpha1group)
+- [gravitee.io/v1alpha1/identityprovider](#graviteeiov1alpha1identityprovider)
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
 - [gravitee.io/v1alpha1/management](#graviteeiov1alpha1management)
 - [gravitee.io/v1alpha1/mcpproxy](#graviteeiov1alpha1mcpproxy)
@@ -36,6 +37,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 
 ### Resource Types
 - [AMContext](#amcontext)
+- [AMIdentityProvider](#amidentityprovider)
 - [AMSecurityDomain](#amsecuritydomain)
 - [ApiDefinition](#apidefinition)
 - [ApiResource](#apiresource)
@@ -105,6 +107,71 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the context.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+
+
+#### AMIdentityProvider
+
+
+
+
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AMIdentityProvider` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AMIdentityProviderSpec](#amidentityproviderspec)_ |  |  |  |
+| `status` _[AMIdentityProviderStatus](#amidentityproviderstatus)_ |  |  |  |
+
+
+#### AMIdentityProviderSpec
+
+
+
+AMIdentityProviderSpec defines the desired state of an AM identity provider.
+
+
+
+_Appears in:_
+- [AMIdentityProvider](#amidentityprovider)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. |  | Optional: \{\} <br /> |
+| `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
+| `domainWhitelist` _string array_ | DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected. |  | Optional: \{\} <br /> |
+| `groupMapper` _object (keys:string, values:string array)_ | GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
+| `mappers` _object (keys:string, values:string)_ | Mappers Attribute mappers: maps provider claims to AM user profile attributes. |  | Optional: \{\} <br /> |
+| `name` _string_ | Name Human-readable name of the identity provider. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
+| `roleMapper` _object (keys:string, values:string array)_ | RoleMapper Role mapper: assigns AM roles based on provider attribute values. Each entry maps a role to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
+| `system` _boolean_ | System Whether this is the domain's system identity provider. Immutable after creation. When true, only key is required; the identity provider is built from the domains.identities.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
+| `type` _string_ | Type Identity provider plugin type identifier. Immutable after creation. |  | Optional: \{\} <br /> |
+
+
+#### AMIdentityProviderStatus
+
+
+
+AMIdentityProviderStatus defines the observed state of an AM identity provider.
+
+
+
+_Appears in:_
+- [AMIdentityProvider](#amidentityprovider)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
 
 
 #### AMSecurityDomain
@@ -1376,6 +1443,49 @@ _Appears in:_
 | `auth` _[Auth](#auth)_ | Auth is bearer-token only: an inline bearerToken or a secretRef holding key bearerToken. |  |  |
 
 
+#### DomainSubResourceStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [AMIdentityProviderStatus](#amidentityproviderstatus)
+- [IdentityProviderStatus](#identityproviderstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+
+
+#### IdentityProviderStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [AMIdentityProviderStatus](#amidentityproviderstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `name` _string_ | The name of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
+| `type` _string_ | The plugin type of the identity provider in AM. For the system identity provider, the one AM builds. |  | Optional: \{\} <br /> |
+
+
 #### Status
 
 
@@ -1385,7 +1495,10 @@ _Appears in:_
 
 
 _Appears in:_
+- [AMIdentityProviderStatus](#amidentityproviderstatus)
 - [AMSecurityDomainStatus](#amsecuritydomainstatus)
+- [DomainSubResourceStatus](#domainsubresourcestatus)
+- [IdentityProviderStatus](#identityproviderstatus)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3902,6 +4015,42 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/identityprovider
+
+Package identityprovider provides primitives to interact with the openapi HTTP API.
+
+Code generated by github.com/oapi-codegen/oapi-codegen/v2 version v2.8.0 DO NOT EDIT.
+
+
+
+
+
+
+#### IdentityProvider
+
+
+
+IdentityProvider An identity provider managed under a domain by the Automation API. The key field is the stable, immutable identity used for idempotent create-or-update.
+
+
+
+_Appears in:_
+- [AMIdentityProviderSpec](#amidentityproviderspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration Plugin-specific configuration as a JSON-encoded string. Its shape is defined by the selected identity provider type. |  | Optional: \{\} <br /> |
+| `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
+| `domainWhitelist` _string array_ | DomainWhitelist Email domains allowed to authenticate through this identity provider. When set, users whose email domain is not listed are rejected. |  | Optional: \{\} <br /> |
+| `groupMapper` _object (keys:string, values:string array)_ | GroupMapper Group mapper: assigns AM groups based on provider attribute values. Each entry maps a group to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
+| `mappers` _object (keys:string, values:string)_ | Mappers Attribute mappers: maps provider claims to AM user profile attributes. |  | Optional: \{\} <br /> |
+| `name` _string_ | Name Human-readable name of the identity provider. |  | MaxLength: 255 <br />MinLength: 1 <br />Optional: \{\} <br /> |
+| `roleMapper` _object (keys:string, values:string array)_ | RoleMapper Role mapper: assigns AM roles based on provider attribute values. Each entry maps a role to the user attribute expressions that grant it. |  | Optional: \{\} <br /> |
+| `system` _boolean_ | System Whether this is the domain's system identity provider. Immutable after creation. When true, only key is required; the identity provider is built from the domains.identities.default.* system settings and the name, type, and configuration fields are ignored.<br />Defaults to false. | false | Optional: \{\} <br /> |
+| `type` _string_ | Type Identity provider plugin type identifier. Immutable after creation. |  | Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/kafka
 
 
@@ -5309,6 +5458,7 @@ _Appears in:_
 
 
 _Appears in:_
+- [AMIdentityProviderSpec](#amidentityproviderspec)
 - [AMSecurityDomainSpec](#amsecuritydomainspec)
 - [ApiBase](#apibase)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
@@ -5325,6 +5475,7 @@ _Appears in:_
 - [DocumentationSpec](#documentationspec)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
+- [IdentityProvider](#identityprovider)
 - [McpProxySpec](#mcpproxyspec)
 - [PortalLinkSpec](#portallinkspec)
 - [PortalListingSpec](#portallistingspec)
@@ -5600,6 +5751,7 @@ _Appears in:_
 
 
 _Appears in:_
+- [AMIdentityProviderSpec](#amidentityproviderspec)
 - [ConsumerConfiguration](#consumerconfiguration)
 - [DynamicPropertyService](#dynamicpropertyservice)
 - [Endpoint](#endpoint)
@@ -5612,6 +5764,7 @@ _Appears in:_
 - [FlowStep](#flowstep)
 - [GenericListener](#genericlistener)
 - [GraviteeConfig](#graviteeconfig)
+- [IdentityProvider](#identityprovider)
 - [PageSource](#pagesource)
 - [PlanSecurity](#plansecurity)
 - [Plugin](#plugin)
