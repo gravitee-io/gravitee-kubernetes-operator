@@ -16,11 +16,13 @@ package subscription
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"slices"
 	"strings"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -137,7 +139,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.Add(ValidateContextRefs(api, app))
+	errs.Add(ValidateContextRefs(ctx, api, app))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -258,7 +260,11 @@ func validateApiKind(sub core.SubscriptionObject) *errors.AdmissionError {
 	return nil
 }
 
-func ValidateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObject) *errors.AdmissionError {
+func ValidateContextRefs(
+	ctx context.Context,
+	api core.ApiDefinitionObject,
+	app core.ApplicationObject,
+) *errors.AdmissionError {
 	if !api.HasContext() {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because it does not reference a management context",
@@ -273,23 +279,63 @@ func ValidateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObjec
 		)
 	}
 
-	if !sameContextRef(api.ContextRef(), app.ContextRef()) {
+	apiCtx, err := dynamic.ResolveContext(ctx, api.ContextRef(), api.GetNamespace())
+	if err != nil {
 		return errors.NewSeveref(
-			"management contexts must match between application [%s] and API [%s], got [%v] and [%v]",
-			app.GetRef(),
-			api.GetRef(),
-			app.ContextRef(),
-			api.ContextRef(),
+			"unable to resolve management context [%s] of API [%s]",
+			api.ContextRef(), api.GetRef(),
+		)
+	}
+
+	appCtx, err := dynamic.ResolveContext(ctx, app.ContextRef(), app.GetNamespace())
+	if err != nil {
+		return errors.NewSeveref(
+			"unable to resolve management context [%s] of application [%s]",
+			app.ContextRef(), app.GetRef(),
+		)
+	}
+
+	same, err := SameTarget(apiCtx, appCtx)
+	if err != nil {
+		return errors.NewSevere(err.Error())
+	}
+
+	if !same {
+		return errors.NewSeveref(
+			"management contexts of application [%s] and API [%s] must target the same environment, "+
+				"got [%s] (%s) and [%s] (%s)",
+			app.GetRef(), api.GetRef(),
+			appCtx.GetRef(), envTargetOrEmpty(appCtx),
+			apiCtx.GetRef(), envTargetOrEmpty(apiCtx),
 		)
 	}
 
 	return nil
 }
 
-// sameContextRef compares two management context references. Both are expected to be
-// non nil, which callers guarantee by checking HasContext beforehand.
-func sameContextRef(left core.ObjectRef, right core.ObjectRef) bool {
-	return left.GetName() == right.GetName() && left.GetNamespace() == right.GetNamespace()
+// SameTarget reports whether two management contexts address the same APIM environment.
+// Distinct contexts may do so, e.g. one context per team with its own credentials.
+func SameTarget(left core.ContextObject, right core.ContextObject) (bool, error) {
+	if left.GetNamespace() == right.GetNamespace() && left.GetName() == right.GetName() {
+		return true, nil
+	}
+
+	leftTarget, err := apim.EnvTarget(left)
+	if err != nil {
+		return false, fmt.Errorf("invalid base URL in management context [%s]: %w", left.GetRef(), err)
+	}
+
+	rightTarget, err := apim.EnvTarget(right)
+	if err != nil {
+		return false, fmt.Errorf("invalid base URL in management context [%s]: %w", right.GetRef(), err)
+	}
+
+	return leftTarget == rightTarget, nil
+}
+
+func envTargetOrEmpty(context core.ContextObject) string {
+	target, _ := apim.EnvTarget(context)
+	return target
 }
 
 func validateEndingAt(endingAt *string) *errors.AdmissionError {

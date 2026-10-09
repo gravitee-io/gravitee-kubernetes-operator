@@ -84,6 +84,16 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 	}, nil
 }
 
+// EnvTarget returns the Management API environment URL a context points at.
+// Two contexts with the same target address the same APIM environment.
+func EnvTarget(context core.ContextModel) (string, error) {
+	urls, err := client.NewURLs(context.GetURL(), getBasePath(context), context.GetOrgID(), context.GetEnvID())
+	if err != nil {
+		return "", err
+	}
+	return urls.EnvV1.String(), nil
+}
+
 func getBasePath(context core.ContextModel) string {
 	if context.GetPath() != nil {
 		return *context.GetPath()

@@ -47,7 +47,7 @@ func Delete(
 		return err
 	}
 
-	apim, err := apim.FromContextRef(ctx, api.ContextRef(), ns)
+	apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
 	if err != nil {
 		return err
 	}
