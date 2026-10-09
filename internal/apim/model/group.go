@@ -33,7 +33,7 @@ type GroupDTO struct {
 	NotifyMembers bool     `json:"notifyMembers" drift:"ignore"` // send empty returns true, so need to ignore
 	Members       []Member `json:"members" drift:"ignore-only:crd"`
 	// Absent from the CRD means "not managed": any remote default is accepted.
-	DefaultMemberRoles map[group.RoleScope]string `json:"defaultMemberRoles,omitempty" drift:"ignore-remote-default"`
+	DefaultMemberRoles *group.DefaultMemberRoles `json:"defaultMemberRoles,omitempty" drift:"ignore-remote-default"`
 }
 
 type Member struct {

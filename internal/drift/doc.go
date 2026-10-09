@@ -84,8 +84,8 @@
 //   - ignore-remote-default (string): ignores a difference when the CRD value is unset;
 //     with no arguments any remote value is accepted, with arguments only a listed
 //     remote value (a server default) is.
-//   - ignore-remote-default (map): ignores a difference when the CRD map is nil or empty;
-//     a declared map is compared as a whole. Arguments are not supported.
+//   - ignore-remote-default (struct): ignores a difference when the CRD leaves the object nil;
+//     a declared object, empty included, is compared field by field. Arguments are not supported.
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
 //   - ignore-only (slice): filters items present only on the side given by the tag argument (remote or crd).
 //     With strip-ns, remaining keys are compared as a set after stripping the namespace prefix.

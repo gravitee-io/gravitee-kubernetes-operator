@@ -27,7 +27,7 @@ spec:
   name: "developers"
   notifyMembers: false
   defaultMemberRoles:
-    API: USER
-    APPLICATION: USER
-    API_PRODUCT: USER
+    api: USER
+    application: USER
+    apiProduct: USER
   members: []
