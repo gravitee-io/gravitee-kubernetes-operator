@@ -45,6 +45,8 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		// remove the first group ref as we don't want this one
 		fixtures.Notification.Spec.Console.GroupRefs = fixtures.Notification.Spec.Console.GroupRefs[1:]
+		// the dry-run sends console notification groups, and APIM warns about a group it does not know
+		fixtures.Notification.Spec.Console.Groups = nil
 
 		fixtures.Apply()
 
