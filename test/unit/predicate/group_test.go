@@ -58,6 +58,12 @@ var _ = Describe("GroupSyncedPredicate", func() {
 		Expect(p.Update(event.UpdateEvent{ObjectOld: oldObj, ObjectNew: newObj})).To(BeTrue())
 	})
 
+	It("passes the delete of a group, fired once it is gone from APIM", func() {
+		deleted := synced(groupNamed("developers"))
+		deleted.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+		Expect(p.Delete(event.DeleteEvent{Object: deleted})).To(BeTrue())
+	})
+
 	It("passes the first sync, which adds last-spec-hash and leaves the spec unchanged", func() {
 		created := groupNamed("developers")
 		Expect(p.Update(event.UpdateEvent{ObjectOld: created, ObjectNew: synced(created)})).To(BeTrue())
