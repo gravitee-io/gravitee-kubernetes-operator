@@ -24,6 +24,7 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,7 +42,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs = validateSharedPolicyGroups(ctx, api)
+	errs.MergeWith(validateSharedPolicyGroups(ctx, api))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -146,7 +147,16 @@ func validateNativeKafkaPlanPorts(api *v4.Api) *errors.AdmissionErrors {
 func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
+	cp, ok := api.DeepCopyObject().(*v1alpha1.ApiV4Definition)
+	if !ok {
+		errs.AddSevere("unable to call dry run import because api is not a v4 API")
+		return errs
+	}
+
+	if err := apidefinition.ResolveV4Refs(ctx, cp, false); err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
 
 	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
@@ -156,11 +166,7 @@ func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 
 	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
 	cp.SetDefinitionContext(v4.NewDefaultKubernetesContext().MergeWith(cp.GetDefinitionContext()))
-	impl, ok := cp.(*v1alpha1.ApiV4Definition)
-	if !ok {
-		errs.AddSevere("unable to call dry run import because api is not a v4 API")
-	}
-	status, err := apimClient.APIs.DryRunImportV4(impl)
+	status, err := apimClient.APIs.DryRunImportV4(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

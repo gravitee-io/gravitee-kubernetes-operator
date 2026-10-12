@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package apidefinition
 
 import (
 	"context"
+	"fmt"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,8 +29,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
 
-func resolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4DefinitionSpec) error {
-	err := resolveFLowSharedPolicyGroupsReferences(ctx, spec.Flows)
+// ResolveSharedPolicyGroups inlines SharedPolicyGroup references into flow steps.
+func ResolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4DefinitionSpec, updateMetadata bool) error {
+	err := resolveFLowSharedPolicyGroupsReferences(ctx, spec.Flows, updateMetadata)
 	if err != nil {
 		return err
 	}
@@ -38,7 +41,7 @@ func resolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4Definiti
 	}
 
 	for _, plan := range *spec.Plans {
-		err := resolveFLowSharedPolicyGroupsReferences(ctx, plan.Flows)
+		err := resolveFLowSharedPolicyGroupsReferences(ctx, plan.Flows, updateMetadata)
 		if err != nil {
 			return err
 		}
@@ -47,46 +50,17 @@ func resolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4Definiti
 	return nil
 }
 
-func resolveFLowSharedPolicyGroupsReferences(ctx context.Context, flows []*v4.Flow) error {
+func resolveFLowSharedPolicyGroupsReferences(ctx context.Context, flows []*v4.Flow, updateMetadata bool) error {
 	if len(flows) == 0 {
 		return nil
 	}
 
 	for _, flow := range flows {
-		for _, flowStep := range flow.Request {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Response {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Connect {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Interact {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Publish {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Subscribe {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep)
-			if err != nil {
-				return err
+		for _, steps := range flow.PhaseSteps() {
+			for _, flowStep := range steps {
+				if err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -94,7 +68,7 @@ func resolveFLowSharedPolicyGroupsReferences(ctx context.Context, flows []*v4.Fl
 	return nil
 }
 
-func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep) error {
+func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep, updateMetadata bool) error {
 	if flowStep.SharedPolicyGroup == nil {
 		return nil
 	}
@@ -111,16 +85,23 @@ func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep) e
 		return gerrors.NewResolveRefError(err)
 	}
 
-	if err := template.Compile(ctx, spg, true); err != nil {
-		return err
+	if err := template.Compile(ctx, spg, updateMetadata); err != nil {
+		return fmt.Errorf("unable to compile Shared Policy Group [%s/%s]: %w", spg.Namespace, spg.Name, err)
 	}
 
 	flowStep.Name = &spg.Name
 	flowStep.Policy = utils.ToReference("shared-policy-group-policy")
-	flowStep.Configuration = utils.ToGenericStringMap(map[string]interface{}{
-		"sharedPolicyGroupId": spg.Status.CrossID,
-		"hrid":                spg.Spec.HRID,
-	})
+
+	if spg.GetID() == "" {
+		flowStep.Configuration = utils.ToGenericStringMap(map[string]interface{}{
+			"hrid": refs.NewNamespacedNameFromObject(spg).HRID(),
+		})
+	} else {
+		flowStep.Configuration = utils.ToGenericStringMap(map[string]interface{}{
+			"sharedPolicyGroupId": spg.Status.CrossID,
+			"hrid":                spg.Spec.HRID,
+		})
+	}
 
 	return nil
 }
