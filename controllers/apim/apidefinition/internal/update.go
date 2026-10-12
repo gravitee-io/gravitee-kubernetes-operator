@@ -107,8 +107,15 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 
 	spec := &apiDefinition.Spec
 
+<<<<<<< HEAD
 	if err := resolveResources(ctx, spec.Resources); err != nil {
 		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
+=======
+	apidefinition.LogUnsyncedGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs())
+
+	if err := apidefinition.PrepareV4SpecForAutomation(ctx, apiDefinition); err != nil {
+		log.Error(ctx, err, "Unable to prepare API spec for automation", log.KeyValues(apiDefinition)...)
+>>>>>>> c8dd00b (fix(apiv4): re-run API on group create and deletion, log unsynced groups once)
 		return err
 	}
 
