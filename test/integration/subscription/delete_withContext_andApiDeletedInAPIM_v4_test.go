@@ -60,7 +60,7 @@ var _ = Describe("Subscription deletion with v4 API already deleted in APIM", la
 		By("deleting the API in APIM, behind the operator's back")
 
 		Expect(manager.GetLatest(ctx, fixtures.APIv4)).To(Succeed())
-		Expect(apim.NewClient(ctx).APIs.DeleteV4(fixtures.APIv4)).To(Succeed())
+		Expect(apim.NewClient(ctx).APIs.DeleteV4(fixtures.APIv4.Status.ID)).To(Succeed())
 
 		By("deleting the subscription, expecting it to be gone")
 
