@@ -47,21 +47,9 @@ func validateFlowSharedPolicyGroups(ctx context.Context, flows []*v4.Flow,
 	errs := errors.NewAdmissionErrors()
 
 	for _, flow := range flows {
-		phases := []struct {
-			phase sharedpolicygroups.FlowPhase
-			steps []*v4.FlowStep
-		}{
-			{"REQUEST", flow.Request},
-			{"RESPONSE", flow.Response},
-			{"CONNECT", flow.Connect},
-			{"INTERACT", flow.Interact},
-			{"PUBLISH", flow.Publish},
-			{"SUBSCRIBE", flow.Subscribe},
-		}
-
-		for _, p := range phases {
-			for _, flowStep := range p.steps {
-				errs.Add(validateSharedPolicyGroup(ctx, flowStep, parentNS, p.phase))
+		for phase, steps := range flow.PhaseSteps() {
+			for _, flowStep := range steps {
+				errs.Add(validateSharedPolicyGroup(ctx, flowStep, parentNS, sharedpolicygroups.FlowPhase(phase)))
 			}
 		}
 	}

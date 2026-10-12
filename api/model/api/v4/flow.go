@@ -15,6 +15,8 @@
 package v4
 
 import (
+	"iter"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
@@ -77,6 +79,15 @@ func NewFlow(name string) *Flow {
 		Subscribe: []*FlowStep{},
 		Publish:   []*FlowStep{},
 		Tags:      []string{},
+	}
+}
+
+// PhaseSteps yields the steps of every flow phase, keyed by the phase name.
+func (fl *Flow) PhaseSteps() iter.Seq2[string, []*FlowStep] {
+	return func(yield func(string, []*FlowStep) bool) {
+		_ = yield("REQUEST", fl.Request) && yield("RESPONSE", fl.Response) &&
+			yield("CONNECT", fl.Connect) && yield("INTERACT", fl.Interact) &&
+			yield("PUBLISH", fl.Publish) && yield("SUBSCRIBE", fl.Subscribe)
 	}
 }
 
