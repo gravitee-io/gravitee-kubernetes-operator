@@ -24,8 +24,9 @@ import (
 // GroupSyncedPredicate passes the Group events an API referencing the group needs. On top of
 // LastSpecHashPredicate's create (a group not synced yet, so the API resolves the ref), it passes
 // the update that records a successful APIM import (last-spec-hash annotation changed), which
-// leaves the spec unchanged and is dropped by LastSpecHashPredicate, and the updates of a group
-// being deleted.
+// leaves the spec unchanged and is dropped by LastSpecHashPredicate, the updates of a group
+// being deleted, and LastSpecHashPredicate's delete, which fires once the group is gone from APIM
+// so the API drops its id.
 type GroupSyncedPredicate struct {
 	predicate.Funcs
 }
@@ -44,8 +45,8 @@ func (GroupSyncedPredicate) Update(e event.UpdateEvent) bool {
 		oldGroup.Annotations[core.LastSpecHashAnnotation] != newGroup.Annotations[core.LastSpecHashAnnotation]
 }
 
-func (GroupSyncedPredicate) Delete(event.DeleteEvent) bool {
-	return false
+func (GroupSyncedPredicate) Delete(e event.DeleteEvent) bool {
+	return LastSpecHashPredicate{}.Delete(e)
 }
 
 func (GroupSyncedPredicate) Generic(event.GenericEvent) bool {
