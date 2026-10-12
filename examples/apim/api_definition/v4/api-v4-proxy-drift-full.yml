@@ -147,7 +147,6 @@ spec:
               limit: 10000
               periodTimeUnit: MINUTES
               key: ""
-      response:
         - name: SPG
           description: SPG
           enabled: true
