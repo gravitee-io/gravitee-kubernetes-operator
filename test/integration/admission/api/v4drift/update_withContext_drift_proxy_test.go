@@ -97,7 +97,7 @@ var _ = Describe("Validate drift for PROXY APIs", labels.WithContext, func() {
 			Build()
 
 		fixtures.APIv4.Spec.Resources[0].Ref.Name = fixtures.Resource.Name
-		fixtures.APIv4.Spec.Flows[0].Response[0].SharedPolicyGroup.Name = fixtures.SharedPolicyGroup.Name
+		fixtures.APIv4.Spec.Flows[0].Request[1].SharedPolicyGroup.Name = fixtures.SharedPolicyGroup.Name
 		fixtures.Apply()
 
 		By("changing the API description")
@@ -119,7 +119,7 @@ var _ = Describe("Validate drift for PROXY APIs", labels.WithContext, func() {
 			Build()
 
 		fixtures.APIv4.Spec.Resources[0].Ref.Name = fixtures.Resource.Name
-		fixtures.APIv4.Spec.Flows[0].Response[0].SharedPolicyGroup.Name = fixtures.SharedPolicyGroup.Name
+		fixtures.APIv4.Spec.Flows[0].Request[1].SharedPolicyGroup.Name = fixtures.SharedPolicyGroup.Name
 		fixtures.Apply()
 
 		By("changing the remote API description")
