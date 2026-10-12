@@ -14,6 +14,8 @@
 package predicate_test
 
 import (
+	"time"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -41,8 +43,19 @@ func synced(obj *v1alpha1.Group) *v1alpha1.Group {
 var _ = Describe("GroupSyncedPredicate", func() {
 	p := predicate.GroupSyncedPredicate{}
 
-	It("skips a create, the group is not in APIM yet", func() {
-		Expect(p.Create(event.CreateEvent{Object: groupNamed("developers")})).To(BeFalse())
+	It("passes the create of a group not synced yet", func() {
+		Expect(p.Create(event.CreateEvent{Object: groupNamed("developers")})).To(BeTrue())
+	})
+
+	It("skips the create of a synced group, replayed when the operator starts", func() {
+		Expect(p.Create(event.CreateEvent{Object: synced(groupNamed("developers"))})).To(BeFalse())
+	})
+
+	It("passes the update of a group being deleted", func() {
+		oldObj := synced(groupNamed("developers"))
+		newObj := oldObj.DeepCopy()
+		newObj.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+		Expect(p.Update(event.UpdateEvent{ObjectOld: oldObj, ObjectNew: newObj})).To(BeTrue())
 	})
 
 	It("passes the first sync, which adds last-spec-hash and leaves the spec unchanged", func() {
@@ -71,8 +84,8 @@ var _ = Describe("GroupSyncedPredicate", func() {
 	})
 
 	It("skips objects that are not groups", func() {
-		oldObj := catalogMcpServer("http://mcp")
-		newObj := catalogMcpServer("http://mcp")
+		oldObj := &v1alpha1.ApiResource{}
+		newObj := &v1alpha1.ApiResource{}
 		newObj.Annotations = map[string]string{core.LastSpecHashAnnotation: "hash"}
 		Expect(p.Update(event.UpdateEvent{ObjectOld: oldObj, ObjectNew: newObj})).To(BeFalse())
 	})

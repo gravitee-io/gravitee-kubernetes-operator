@@ -21,16 +21,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-// GroupSyncedPredicate passes the Group events an API referencing the group needs: the update
-// that records a successful APIM import (last-spec-hash annotation changed). That update leaves
-// the spec unchanged, so LastSpecHashPredicate drops it. A create is dropped: the group is not in
-// APIM yet, and the cache replays every group as a create when the operator starts.
+// GroupSyncedPredicate passes the Group events an API referencing the group needs. On top of
+// LastSpecHashPredicate's create (a group not synced yet, so the API resolves the ref), it passes
+// the update that records a successful APIM import (last-spec-hash annotation changed), which
+// leaves the spec unchanged and is dropped by LastSpecHashPredicate, and the updates of a group
+// being deleted.
 type GroupSyncedPredicate struct {
 	predicate.Funcs
 }
 
-func (GroupSyncedPredicate) Create(event.CreateEvent) bool {
-	return false
+func (GroupSyncedPredicate) Create(e event.CreateEvent) bool {
+	return LastSpecHashPredicate{}.Create(e)
 }
 
 func (GroupSyncedPredicate) Update(e event.UpdateEvent) bool {
@@ -39,7 +40,8 @@ func (GroupSyncedPredicate) Update(e event.UpdateEvent) bool {
 	if !oldOK || !newOK {
 		return false
 	}
-	return oldGroup.Annotations[core.LastSpecHashAnnotation] != newGroup.Annotations[core.LastSpecHashAnnotation]
+	return newGroup.GetDeletionTimestamp() != nil ||
+		oldGroup.Annotations[core.LastSpecHashAnnotation] != newGroup.Annotations[core.LastSpecHashAnnotation]
 }
 
 func (GroupSyncedPredicate) Delete(event.DeleteEvent) bool {

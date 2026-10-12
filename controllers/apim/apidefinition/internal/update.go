@@ -102,6 +102,8 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
 	spec := &apiDefinition.Spec
 
+	apidefinition.LogUnsyncedGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs())
+
 	if err := apidefinition.PrepareV4SpecForAutomation(ctx, apiDefinition); err != nil {
 		log.Error(ctx, err, "Unable to prepare API spec for automation", log.KeyValues(apiDefinition)...)
 		return err

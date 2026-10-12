@@ -52,13 +52,26 @@ func ResolveGroupRefs(ctx context.Context, referer core.ConditionAwareObject, re
 			)
 			continue
 		}
-		if group.Annotations[core.LastSpecHashAnnotation] != hash.Calculate(&group.Spec) {
-			log.Info(ctx, "Group referenced by the API is not synced to APIM yet, APIM may drop it",
-				"group", nsn.String())
-		}
 		if !slices.Contains(groups, group.Spec.Name) {
 			groups = append(groups, group.Spec.Name)
 		}
 	}
 	return groups, nil
+}
+
+// LogUnsyncedGroupRefs logs the referenced groups whose current spec is not in APIM yet: APIM drops
+// them from the API until they sync. Called from the reconcile only, so the admission webhook stays
+// quiet, and on the API groupRefs only, which APIM requires to include the console notification groups.
+func LogUnsyncedGroupRefs(ctx context.Context, referer client.Object, refs []core.ObjectRef) {
+	for _, ref := range refs {
+		group := new(v1alpha1.Group)
+		nsn := getNamespacedName(ref, referer.GetNamespace())
+		if err := k8s.GetClient().Get(ctx, nsn, group); err != nil {
+			continue
+		}
+		if group.Annotations[core.LastSpecHashAnnotation] != hash.Calculate(&group.Spec) {
+			log.Info(ctx, "Group referenced by the API is not synced to APIM yet, APIM may drop it",
+				"group", nsn.String())
+		}
+	}
 }
