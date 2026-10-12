@@ -25,13 +25,10 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
-
-type apiNamespaceKey string
-
-const nsKey = apiNamespaceKey("api-namespace")
 
 func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 	switch t := apiDefinition.(type) {
@@ -48,7 +45,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	spec := &apiDefinition.Spec
 	spec.EnsureDefinitionContext()
 
-	if err := resolveResources(ctx, spec.Resources); err != nil {
+	if err := apidefinition.ResolveResources(ctx, spec.Resources, true); err != nil {
 		return err
 	}
 
@@ -103,18 +100,11 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 }
 
 func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
-	nsCtx := context.WithValue(ctx, nsKey, apiDefinition.Namespace)
-
 	spec := &apiDefinition.Spec
 
 	LogUnsyncedGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs())
 
-	if err := resolveResources(ctx, spec.Resources); err != nil {
-		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
-		return err
-	}
-
-	if err := resolveSharedPolicyGroups(nsCtx, spec); err != nil {
+	if err := apidefinition.ResolveV4Refs(ctx, apiDefinition, true); err != nil {
 		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
 		return err
 	}
