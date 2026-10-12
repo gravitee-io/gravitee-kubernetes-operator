@@ -21,7 +21,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -84,10 +83,10 @@ var _ = Describe("Create", labels.WithContext, func() {
 		apim := apim.NewClient(ctx)
 		apiHRID := refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID()
 		groupInAPIM := BeElementOf(
-			model.APIGroup(refs.NewNamespacedNameFromObject(apiGroup).HRID()),
-			model.APIGroup(apiGroup.Spec.Name),
+			refs.NewNamespacedNameFromObject(apiGroup).HRID(),
+			apiGroup.Spec.Name,
 		)
-		groupsOfAPIInAPIM := func() ([]model.APIGroup, error) {
+		groupsOfAPIInAPIM := func() ([]string, error) {
 			api, err := apim.APIs.GetV4ByHRID(apiHRID)
 			if err != nil {
 				return nil, err
