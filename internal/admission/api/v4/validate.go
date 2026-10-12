@@ -37,7 +37,7 @@ func validateCreate(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.
 		return errs
 	}
 
-	errs = validateSharedPolicyGroups(ctx, api)
+	errs.MergeWith(validateSharedPolicyGroups(ctx, api))
 	if errs.IsSevere() {
 		return errs
 	}

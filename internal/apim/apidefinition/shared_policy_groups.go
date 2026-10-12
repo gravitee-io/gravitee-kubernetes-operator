@@ -16,6 +16,7 @@ package apidefinition
 
 import (
 	"context"
+	"fmt"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -55,40 +56,11 @@ func resolveFLowSharedPolicyGroupsReferences(ctx context.Context, flows []*v4.Fl
 	}
 
 	for _, flow := range flows {
-		for _, flowStep := range flow.Request {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Response {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Connect {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Interact {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Publish {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
-			if err != nil {
-				return err
-			}
-		}
-		for _, flowStep := range flow.Subscribe {
-			err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata)
-			if err != nil {
-				return err
+		for _, steps := range flow.PhaseSteps() {
+			for _, flowStep := range steps {
+				if err := resolveIfSharedPolicyGroupRef(ctx, flowStep, updateMetadata); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -114,7 +86,7 @@ func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep, u
 	}
 
 	if err := template.Compile(ctx, spg, updateMetadata); err != nil {
-		return err
+		return fmt.Errorf("unable to compile Shared Policy Group [%s/%s]: %w", spg.Namespace, spg.Name, err)
 	}
 
 	flowStep.Name = &spg.Name
