@@ -84,14 +84,14 @@ func fetchRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (mod
 		if err != nil {
 			return model.APIV4DTO{}, err
 		}
-		return remote.WithResolvedVisibility().WithoutOverrideAccess(), nil
+		return remote.Canonicalize().WithResolvedVisibility().WithoutOverrideAccess(), nil
 	}
 	hrid := apiHRID(api)
 	remote, err := apimClient.APIs.GetV4ByHRID(hrid)
 	if err != nil {
 		return model.APIV4DTO{}, err
 	}
-	return remote.WithResolvedVisibility().WithoutOverrideAccess(), nil
+	return remote.Canonicalize().WithResolvedVisibility().WithoutOverrideAccess(), nil
 }
 
 func apiHRID(api *v1alpha1.ApiV4Definition) string {

@@ -27,14 +27,20 @@ var driftFixtures embed.FS
 func loadFixture[T any](name string) T {
 	GinkgoHelper()
 
-	var value T
-
 	data, err := driftFixtures.ReadFile("testdata/" + name)
 	if err != nil {
 		Fail(err.Error())
 	}
 
-	if err := json.Unmarshal(data, &value); err != nil {
+	return parseJSON[T](string(data))
+}
+
+func parseJSON[T any](data string) T {
+	GinkgoHelper()
+
+	var value T
+
+	if err := json.Unmarshal([]byte(data), &value); err != nil {
 		Fail(err.Error())
 	}
 
