@@ -55,16 +55,12 @@ func Delete(
 
 	api.PopulateIDs(apim.Context)
 
-<<<<<<< HEAD
-	err = apim.Subscription.Delete(&model.Subscription{
+	err = errors.IgnoreNotFound(apim.Subscription.Delete(&model.Subscription{
 		ApiID: api.GetID(),
 		ID:    subscription.Status.ID,
-	})
+	}))
 
 	if err != nil {
-=======
-	if err := errors.IgnoreNotFound(apim.Subscription.Delete(api, subscription)); err != nil {
->>>>>>> 6c5d58b (fix(subscription): release the finalizer when APIM answers 404 on delete)
 		return err
 	}
 
