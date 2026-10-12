@@ -78,7 +78,7 @@ func (r *V4Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&v1alpha1.Notification{}, r.Watcher.WatchNotifications(search.ApiV4NotificationRefsField), lastSpecHash).
 		Watches(
 			&v1alpha1.Group{},
-			r.Watcher.WatchGroups(search.ApiV4GroupField),
+			r.Watcher.WatchGroupsAndDeletes(search.ApiV4GroupField),
 			builder.WithPredicates(predicate.GroupSyncedPredicate{}),
 		)
 
