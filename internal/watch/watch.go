@@ -49,6 +49,7 @@ type Interface interface {
 	WatchSharedPolicyGroups(index search.IndexField) *handler.Funcs
 	WatchNotifications(index search.IndexField) *handler.Funcs
 	WatchGroups(index search.IndexField) *handler.Funcs
+	WatchGroupsAndDeletes(index search.IndexField) *handler.Funcs
 	WatchPortals(index search.IndexField) *handler.Funcs
 	WatchApis(index search.IndexField) *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
@@ -56,6 +57,7 @@ type Interface interface {
 
 type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
 type CreateFunc = func(context.Context, event.CreateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
+type DeleteFunc = func(context.Context, event.DeleteEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
 
 var NoopCreateFunc = func(context.Context, event.CreateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	// no op
@@ -161,14 +163,21 @@ func (w *Type) WatchNotifications(index search.IndexField) *handler.Funcs {
 	}
 }
 
-// WatchGroups enqueues the APIs that reference a Group when an event on the group passes the
-// controller's predicates. Which events re-run an API is up to those predicates: the v4 API
-// controller passes the update that syncs the group to APIM (GroupSyncedPredicate).
+// WatchGroups enqueues the APIs that reference a Group when the group is created or updated.
 func (w *Type) WatchGroups(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),
 	}
+}
+
+// WatchGroupsAndDeletes is WatchGroups plus the delete event, which fires once the group is gone
+// from APIM, so the API is sent again without it. Which events re-run an API is up to the
+// controller's predicates (GroupSyncedPredicate for v4 APIs).
+func (w *Type) WatchGroupsAndDeletes(index search.IndexField) *handler.Funcs {
+	funcs := w.WatchGroups(index)
+	funcs.DeleteFunc = w.DeleteFromLookup(index)
+	return funcs
 }
 
 // WatchPortals can be used to trigger a reconciliation when a Portal is created or
@@ -215,6 +224,17 @@ func (w *Type) UpdateFromLookup(field search.IndexField) UpdateFunc {
 // For example, when an API is created before the management context it references.
 func (w *Type) CreateFromLookup(field search.IndexField) CreateFunc {
 	return func(_ context.Context, e event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+		ref := refs.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
+		w.queueByFieldReferencing(field, ref, q)
+	}
+}
+
+// DeleteFromLookup creates a function that will trigger an update on all resources that are
+// referencing the deleted object.
+// The lookupField is the field that is used to lookup the resources.
+// Note that this field *must* have been registered as a cache index in our main func (see main.go).
+func (w *Type) DeleteFromLookup(field search.IndexField) DeleteFunc {
+	return func(_ context.Context, e event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		ref := refs.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
 		w.queueByFieldReferencing(field, ref, q)
 	}
