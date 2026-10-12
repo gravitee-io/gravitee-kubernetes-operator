@@ -200,6 +200,42 @@ var _ = Describe("API v4 Drift detection", func() {
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
 
+	DescribeTable("listener path overrideAccess is ignored",
+		func(crdPaths, remotePaths string) {
+			crd := apiV4WithListenerPaths(crdPaths).WithoutOverrideAccess()
+			remote := apiV4WithListenerPaths(remotePaths).WithoutOverrideAccess()
+			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+		},
+		Entry("unset against false",
+			`[{"path": "/a"}]`,
+			`[{"path": "/a", "overrideAccess": false}]`,
+		),
+		Entry("unset against the true a multi-tenant APIM forces on the first path",
+			`[{"path": "/a"}, {"path": "/b"}]`,
+			`[{"path": "/a", "overrideAccess": true}, {"path": "/b", "overrideAccess": false}]`,
+		),
+		Entry("unset against true on a path other than the first",
+			`[{"path": "/a"}, {"path": "/b"}]`,
+			`[{"path": "/a", "overrideAccess": false}, {"path": "/b", "overrideAccess": true}]`,
+		),
+		Entry("false against true",
+			`[{"path": "/a", "overrideAccess": false}]`,
+			`[{"path": "/a", "overrideAccess": true}]`,
+		),
+		Entry("true against false",
+			`[{"path": "/a", "overrideAccess": true}]`,
+			`[{"path": "/a", "overrideAccess": false}]`,
+		),
+	)
+
+	It("still detects drift on the other keys of a listener path", func() {
+		crd := apiV4WithListenerPaths(`[{"path": "/a", "overrideAccess": true}]`).WithoutOverrideAccess()
+		remote := apiV4WithListenerPaths(`[{"path": "/b", "overrideAccess": true}]`).WithoutOverrideAccess()
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`path: "/a" != "/b"`))
+	})
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(completeAPIV4DTO(), completeAPIV4DTO())
@@ -211,6 +247,13 @@ func completeAPIV4Spec() *v4.Api {
 	GinkgoHelper()
 	fixture := loadFixture[v4.Api]("api_v4_spec.json")
 	return &fixture
+}
+
+func apiV4WithListenerPaths(paths string) model.APIV4DTO {
+	GinkgoHelper()
+	var dto model.APIV4DTO
+	Expect(json.Unmarshal([]byte(`{"listeners": [{"type": "HTTP", "paths": `+paths+`}]}`), &dto)).To(Succeed())
+	return dto
 }
 
 func completeAPIV4DTO() model.APIV4DTO {
