@@ -30,7 +30,7 @@ func ToAPIV4DTO(api *v4.Api) APIV4DTO {
 	dto.Plans = mapAPIV4Plans(api.Plans)
 	dto.Pages = mapAPIV4Pages(api.Pages)
 
-	return dto
+	return dto.Canonicalize()
 }
 
 func mapAPIV4Plans(plans *map[string]*v4.Plan) []*APIV4PlanDTO {
@@ -50,9 +50,7 @@ func mapAPIV4Plans(plans *map[string]*v4.Plan) []*APIV4PlanDTO {
 		result = append(result, mapped)
 	}
 
-	return slices.SortedFunc(slices.Values(result), func(a, b *APIV4PlanDTO) int {
-		return cmp.Compare(a.HRID, b.HRID)
-	})
+	return result
 }
 
 func mapAPIV4Pages(pages *map[string]*v4.Page) []*APIV4PageDTO {
@@ -71,7 +69,18 @@ func mapAPIV4Pages(pages *map[string]*v4.Page) []*APIV4PageDTO {
 		}
 		result = append(result, mapped)
 	}
-	return slices.SortedFunc(slices.Values(result), func(a, b *APIV4PageDTO) int {
+	return result
+}
+
+// Canonicalize returns a copy with plans and pages sorted by HRID, so that a mapped CRD and a
+// remote state compare item by item. The CRD declares them as maps, so their position is not
+// desired state, while APIM returns them in the order of its last write.
+func (dto APIV4DTO) Canonicalize() APIV4DTO {
+	dto.Plans = slices.SortedStableFunc(slices.Values(dto.Plans), func(a, b *APIV4PlanDTO) int {
 		return cmp.Compare(a.HRID, b.HRID)
 	})
+	dto.Pages = slices.SortedStableFunc(slices.Values(dto.Pages), func(a, b *APIV4PageDTO) int {
+		return cmp.Compare(a.HRID, b.HRID)
+	})
+	return dto
 }

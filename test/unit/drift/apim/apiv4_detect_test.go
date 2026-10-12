@@ -16,6 +16,7 @@ package apim
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -236,6 +237,59 @@ var _ = Describe("API v4 Drift detection", func() {
 		Expect(result.String()).To(ContainSubstring(`path: "/a" != "/b"`))
 	})
 
+	DescribeTable("plans and pages are compared by HRID",
+		func(crd, remote string) {
+			crdDTO := model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
+			remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
+			expectNoDrift(drift.DetectWithNamespace(crdDTO, remoteDTO, ""))
+		},
+		Entry("plans returned out of HRID order",
+			`{"name": "api", "plans": {"JWTPlan": `+apiV4JWTPlan+`, "OAuth2Plan": `+apiV4OAuth2Plan+`}}`,
+			`{"name": "api", "plans": [`+apiV4OAuth2Plan+`, `+apiV4JWTPlan+`]}`,
+		),
+		Entry("pages returned out of HRID order",
+			`{"name": "api", "pages": {"a-page": `+apiV4PageA+`, "b-page": `+apiV4PageB+`}}`,
+			`{"name": "api", "pages": [`+apiV4PageB+`, `+apiV4PageA+`]}`,
+		),
+	)
+
+	It("still detects a change on a plan returned out of order", func() {
+		crd := model.ToAPIV4DTO(parseJSON[*v4.Api](
+			`{"name": "api", "plans": {"JWTPlan": ` + apiV4JWTPlan + `, "OAuth2Plan": ` + apiV4OAuth2Plan + `}}`,
+		))
+		renamed := strings.Replace(apiV4OAuth2Plan, `"OAuth2 plan"`, `"OAuth2 plan v2"`, 1)
+		remote := parseJSON[model.APIV4DTO](
+			`{"name": "api", "plans": [` + renamed + `, ` + apiV4JWTPlan + `]}`,
+		).Canonicalize()
+
+		result := drift.DetectWithNamespace(crd, remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring(`plans[1]`))
+		Expect(result.String()).To(ContainSubstring(`name: "OAuth2 plan" != "OAuth2 plan v2"`))
+		Expect(result.String()).NotTo(ContainSubstring(`plans[0]`))
+	})
+
+	DescribeTable("still detects drift on plans and pages returned out of order",
+		func(crd, remote string) {
+			crdDTO := model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
+			remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
+			result := drift.DetectWithNamespace(crdDTO, remoteDTO, "")
+			Expect(result.DriftDetected()).To(BeTrue())
+		},
+		Entry("page content changed",
+			`{"name": "api", "pages": {"a-page": `+apiV4PageA+`, "b-page": `+apiV4PageB+`}}`,
+			`{"name": "api", "pages": [`+apiV4PageB+`, `+strings.Replace(apiV4PageA, `"content": "a"`, `"content": "a2"`, 1)+`]}`,
+		),
+		Entry("plan added in APIM",
+			`{"name": "api", "plans": {"JWTPlan": `+apiV4JWTPlan+`, "OAuth2Plan": `+apiV4OAuth2Plan+`}}`,
+			`{"name": "api", "plans": [`+apiV4OAuth2Plan+`, `+apiV4KeylessPlan+`, `+apiV4JWTPlan+`]}`,
+		),
+		Entry("plan removed in APIM",
+			`{"name": "api", "plans": {"JWTPlan": `+apiV4JWTPlan+`, "OAuth2Plan": `+apiV4OAuth2Plan+`}}`,
+			`{"name": "api", "plans": [`+apiV4OAuth2Plan+`]}`,
+		),
+	)
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(completeAPIV4DTO(), completeAPIV4DTO())
@@ -251,12 +305,18 @@ func completeAPIV4Spec() *v4.Api {
 
 func apiV4WithListenerPaths(paths string) model.APIV4DTO {
 	GinkgoHelper()
-	var dto model.APIV4DTO
-	Expect(json.Unmarshal([]byte(`{"listeners": [{"type": "HTTP", "paths": `+paths+`}]}`), &dto)).To(Succeed())
-	return dto
+	return parseJSON[model.APIV4DTO](`{"listeners": [{"type": "HTTP", "paths": ` + paths + `}]}`)
 }
 
 func completeAPIV4DTO() model.APIV4DTO {
 	GinkgoHelper()
 	return loadFixture[model.APIV4DTO]("api_v4_dto.json")
 }
+
+const (
+	apiV4JWTPlan     = `{"hrid": "JWTPlan", "name": "JWT plan", "status": "PUBLISHED", "security": {"type": "JWT"}}`
+	apiV4OAuth2Plan  = `{"hrid": "OAuth2Plan", "name": "OAuth2 plan", "status": "PUBLISHED", "security": {"type": "OAUTH2"}}`
+	apiV4KeylessPlan = `{"hrid": "KeylessPlan", "name": "Keyless plan", "status": "PUBLISHED", "security": {"type": "KEY_LESS"}}`
+	apiV4PageA       = `{"hrid": "a-page", "name": "A", "type": "MARKDOWN", "content": "a"}`
+	apiV4PageB       = `{"hrid": "b-page", "name": "B", "type": "MARKDOWN", "content": "b"}`
+)
