@@ -46,6 +46,10 @@ func ResolveConsoleNotificationRefs(ctx context.Context, api core.ApiDefinitionO
 		// validation webhook takes care of checking that beforehand
 		if notif.Spec.EventType == notification.EventTypeAPI &&
 			notif.Spec.Target == notification.TargetConsole {
+			if len(notif.Spec.Console.APIEvents) == 0 {
+				api.SetConsoleNotification(nil)
+				break
+			}
 			settings, err := mapNotificationSettings(ctx, api, notif)
 			if err != nil {
 				return err
