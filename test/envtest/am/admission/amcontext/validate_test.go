@@ -56,6 +56,10 @@ var _ = Describe("Validate AMContext", func() {
 		DeferCleanup(func() {
 			Expect(client.IgnoreNotFound(manager.Client().Delete(ctx, secret))).To(Succeed())
 		})
+		// Admission resolves secrets through the manager cache, which lags behind the create.
+		Eventually(func() error {
+			return manager.Client().Get(ctx, client.ObjectKeyFromObject(secret), &coreV1.Secret{})
+		}).Should(Succeed())
 		return secret.Name
 	}
 
