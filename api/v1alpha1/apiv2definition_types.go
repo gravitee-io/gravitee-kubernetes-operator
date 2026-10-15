@@ -364,10 +364,6 @@ func (s *ApiDefinitionStatus) RemoveSubscription() {
 	}
 }
 
-func (s *ApiDefinitionStatus) GetSubscriptionCount() uint {
-	return s.SubscriptionCount
-}
-
 // ApiDefinitionList contains a list of ApiDefinition.
 // +kubebuilder:object:root=true
 type ApiDefinitionList struct {

@@ -393,11 +393,6 @@ func (s *ApiV4DefinitionStatus) AddSubscription() {
 	s.SubscriptionCount++
 }
 
-// GetSubscriptionCount implements core.SubscribableStatus.
-func (s *ApiV4DefinitionStatus) GetSubscriptionCount() uint {
-	return s.SubscriptionCount
-}
-
 // RemoveSubscription implements core.SubscribableStatus.
 func (s *ApiV4DefinitionStatus) RemoveSubscription() {
 	if s.SubscriptionCount > 0 {
