@@ -142,7 +142,6 @@ type Status interface {
 
 type SubscribableStatus interface {
 	Status
-	GetSubscriptionCount() uint
 	AddSubscription()
 	RemoveSubscription()
 }

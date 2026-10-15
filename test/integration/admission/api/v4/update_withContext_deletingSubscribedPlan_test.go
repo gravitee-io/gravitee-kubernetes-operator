@@ -16,6 +16,7 @@ package v4
 
 import (
 	"context"
+	"fmt"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
@@ -50,34 +51,57 @@ var _ = Describe("Validate delete", labels.WithContext, func() {
 
 	fixtures.Apply()
 
-	It("should fail with subscription", func() {
+	validatePlanRemoval := func() error {
+		newApi := fixtures.APIv4.DeepCopy()
+		newPlans := *newApi.Spec.Plans
+		delete(newPlans, fixtures.Subscription.Spec.Plan)
+		newPlans["KEY_LESS"] = &v4.Plan{
+			Name: "KEY_LESS",
+			Security: &v4.PlanSecurity{
+				Type: "KEY_LESS",
+			},
+		}
 
+		_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, newApi)
+		return assert.Equals(
+			"error",
+			errors.NewSeveref(
+				"Plan [%s] could not be found in API [%s] "+
+					"but there is a subscription referencing it. "+
+					"You can review the depending subscriptions using the following command: "+
+					"kubectl get subscriptions.gravitee.io -A "+
+					"-o jsonpath='{.items[?(@.spec.api.name==\"%s\")].metadata.name}'",
+				fixtures.Subscription.Spec.Plan, newApi.GetRef(), newApi.GetName(),
+			),
+			err,
+		)
+	}
+
+	It("should fail with subscription", func() {
 		Eventually(func() error {
 			Expect(manager.GetLatest(ctx, fixtures.APIv4)).ToNot(HaveOccurred())
-
-			newApi := fixtures.APIv4.DeepCopy()
-			newPlans := *newApi.Spec.Plans
-			delete(newPlans, fixtures.Subscription.Spec.Plan)
-			newPlans["KEY_LESS"] = &v4.Plan{
-				Name: "KEY_LESS",
-				Security: &v4.PlanSecurity{
-					Type: "KEY_LESS",
-				},
-			}
-
-			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, newApi)
-			return assert.Equals(
-				"error",
-				errors.NewSeveref(
-					"Plan [%s] could not be found in API [%s] "+
-						"but there is a subscription referencing it. "+
-						"You can review the depending subscriptions using the following command: "+
-						"kubectl get subscriptions.gravitee.io -A "+
-						"-o jsonpath='{.items[?(@.spec.api.name==\"%s\")].metadata.name}'",
-					fixtures.Subscription.Spec.Plan, newApi.GetRef(), newApi.GetName(),
-				),
-				err,
-			)
+			return validatePlanRemoval()
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+	})
+
+	It("should fail with subscription when the subscription counter is lost", func() {
+		By("setting the counter to 0, as a write conflict on subscription creation does")
+
+		Eventually(func() error {
+			if err := manager.GetLatest(ctx, fixtures.APIv4); err != nil {
+				return err
+			}
+			if fixtures.APIv4.Status.SubscriptionCount == 0 {
+				return nil
+			}
+			fixtures.APIv4.Status.SubscriptionCount = 0
+			if err := manager.Client().Status().Update(ctx, fixtures.APIv4); err != nil {
+				return err
+			}
+			return fmt.Errorf("subscription counter not seen at 0 yet")
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+
+		// validated against the object seen at 0: a reconcile may write the stale counter back
+		Expect(validatePlanRemoval()).To(Succeed())
 	})
 })

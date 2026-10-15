@@ -306,15 +306,20 @@ func fetchAPI(ctx context.Context, sub *v1alpha1.Subscription) core.ApiDefinitio
 	}
 }
 
-func validateDelete(_ context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
+func validateDelete(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	errs.Add(validateSubscriptionCount(app))
+	errs.Add(validateNoSubscription(ctx, app))
 	return errs
 }
 
-func validateSubscriptionCount(app *v1alpha1.Application) *errors.AdmissionError {
-	sc := app.Status.GetSubscriptionCount()
-	if sc > 0 {
+// The Subscriptions themselves are the source of truth: the subscription counter in the
+// application status can be lost on a write conflict, and is not restored with the object.
+func validateNoSubscription(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionError {
+	subs, err := search.FindSubscriptionsReferencing(ctx, search.AppSubsField, app)
+	if err != nil {
+		return errors.NewSevere(err.Error())
+	}
+	if sc := len(subs.Items); sc > 0 {
 		return errors.NewSeveref(
 			"cannot delete [%s] because it is referenced in %d subscriptions. "+
 				"Subscriptions must be deleted before the application. "+
