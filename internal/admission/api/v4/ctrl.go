@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -51,7 +52,7 @@ func (a AdmissionCtrl) ValidateDelete(
 	ctx context.Context,
 	obj *v1alpha1.ApiV4Definition,
 ) (admission.Warnings, error) {
-	return base.ValidateDelete(ctx, obj).Map()
+	return base.ValidateDelete(ctx, obj, search.ApiV4SubsField).Map()
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
