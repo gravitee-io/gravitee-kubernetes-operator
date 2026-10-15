@@ -90,23 +90,12 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	subscription.Status.EndingAt = status.EndingAt
 	subscription.Status.ID = status.ID
 
-	// Avoid increasing counter on updates
-	// Counters are used to prevent deletions
-	// When subscription is used by an application or an API
+	// Counted once, on creation
 	if creating {
-		appStatus, _ := app.GetStatus().(core.SubscribableStatus)
-		apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
-
-		appStatus.AddSubscription()
-		apiStatus.AddSubscription()
-
-		if err := k8s.GetClient().Status().Update(ctx, app); err != nil {
+		if err := updateSubscriptionCount(ctx, app, core.SubscribableStatus.AddSubscription); err != nil {
 			return err
 		}
-
-		if err := k8s.GetClient().Status().Update(ctx, api); err != nil {
-			return err
-		}
+		return updateSubscriptionCount(ctx, api, core.SubscribableStatus.AddSubscription)
 	}
 
 	return nil

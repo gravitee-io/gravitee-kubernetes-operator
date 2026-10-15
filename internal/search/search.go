@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -34,4 +35,15 @@ func FindByFieldReferencing(
 	}
 
 	return k8s.GetClient().List(ctx, result, filter)
+}
+
+// FindSubscriptionsReferencing lists the Subscriptions that reference obj through the given index field.
+func FindSubscriptionsReferencing(
+	ctx context.Context,
+	field IndexField,
+	obj client.Object,
+) (*v1alpha1.SubscriptionList, error) {
+	subs := &v1alpha1.SubscriptionList{}
+	err := FindByFieldReferencing(ctx, field, *refs.NewNamespacedNameFromObject(obj), subs)
+	return subs, err
 }

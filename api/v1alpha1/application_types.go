@@ -57,11 +57,6 @@ func (s *ApplicationStatus) RemoveSubscription() {
 	}
 }
 
-// GetSubscriptionCount implements core.SubscribableStatus.
-func (s *ApplicationStatus) GetSubscriptionCount() uint {
-	return s.SubscriptionCount
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
