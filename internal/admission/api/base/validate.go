@@ -20,9 +20,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -54,23 +51,35 @@ func ValidateUpdate(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 	return ValidateCreate(ctx, api)
 }
 
-func ValidateDelete(_ context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
+func ValidateDelete(
+	ctx context.Context,
+	api core.ApiDefinitionObject,
+	searchIndexField search.IndexField,
+) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	errs.Add(validateSubscriptionCount(api))
+	errs.Add(validateNoSubscription(ctx, api, searchIndexField))
 	return errs
 }
 
-func validateSubscriptionCount(api core.ApiDefinitionObject) *errors.AdmissionError {
-	st, _ := api.GetStatus().(core.SubscribableStatus)
-	sc := st.GetSubscriptionCount()
-	if sc > 0 {
+// The Subscriptions themselves are the source of truth: the subscription counter in the API
+// status can be lost on a write conflict, and is not restored with the object.
+func validateNoSubscription(
+	ctx context.Context,
+	api core.ApiDefinitionObject,
+	searchIndexField search.IndexField,
+) *errors.AdmissionError {
+	subs, err := search.FindSubscriptionsReferencing(ctx, searchIndexField, api)
+	if err != nil {
+		return errors.NewSevere(err.Error())
+	}
+	if len(subs.Items) > 0 {
 		return errors.NewSeveref(
 			"cannot delete [%s] because it is referenced in %d subscriptions. "+
 				"Subscriptions must be deleted before the API definition. "+
 				"You can review the subscriptions using the following command: "+
 				"kubectl get subscriptions.gravitee.io -A "+
 				"-o jsonpath='{.items[?(@.spec.api.name==\"%s\")].metadata.name}'",
-			api.GetRef(), sc, api.GetName(),
+			api.GetRef(), len(subs.Items), api.GetName(),
 		)
 	}
 	return nil
@@ -82,21 +91,8 @@ func ValidateSubscribedPlans(
 	newApi core.ApiDefinitionObject,
 	searchIndexField search.IndexField,
 ) *errors.AdmissionError {
-	st, _ := oldApi.GetStatus().(core.SubscribableStatus)
-	if st.GetSubscriptionCount() == 0 {
-		return nil
-	}
-
-	subs := &v1alpha1.SubscriptionList{}
-	if err := search.FindByFieldReferencing(
-		ctx,
-		searchIndexField,
-		refs.NamespacedName{
-			Name:      oldApi.GetName(),
-			Namespace: oldApi.GetNamespace(),
-		},
-		subs,
-	); err != nil {
+	subs, err := search.FindSubscriptionsReferencing(ctx, searchIndexField, oldApi)
+	if err != nil {
 		return errors.NewSevere(err.Error())
 	}
 
