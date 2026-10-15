@@ -23,6 +23,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -37,40 +39,48 @@ func Delete(
 	ns := subscription.Namespace
 	spec := subscription.Spec
 
+	// Both references are resolved before anything is written, so a resolution error
+	// cannot leave a counter decremented and decrement it again on the next attempt.
 	api, err := dynamic.ResolveAPI(ctx, &spec.API, ns)
-	if err != nil {
+	apiGone := apierrors.IsNotFound(err)
+	if err != nil && !apiGone {
 		return err
 	}
 
+	// A deleted application closed its subscriptions in APIM: only its counter is left behind.
 	app, err := dynamic.ResolveApplication(ctx, &spec.App, ns)
-	if err != nil {
+	appGone := apierrors.IsNotFound(err)
+	if err != nil && !appGone {
 		return err
 	}
 
-	apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
-	if err != nil {
-		return err
+	if apiGone {
+		// The API carries the management context needed to reach APIM, and deleting it
+		// in APIM removed its subscriptions: there is nothing left to delete. Only an API
+		// whose finalizer was removed by hand leaves the API and its subscriptions in APIM.
+		log.Info(ctx,
+			"API not found, releasing the subscription. If the API finalizer was removed by hand, "+
+				"the API and its subscriptions remain in APIM",
+			"api", spec.API.String(), "severity", "warning")
+	} else {
+		apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+		if err != nil {
+			return err
+		}
+
+		api.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(api))
+
+		if err := errors.IgnoreNotFound(apim.Subscription.Delete(api, subscription)); err != nil {
+			return err
+		}
+
+		if err := updateSubscriptionCount(ctx, api, core.SubscribableStatus.RemoveSubscription); err != nil {
+			return err
+		}
 	}
 
-	api.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(api))
-
-	if err := errors.IgnoreNotFound(apim.Subscription.Delete(api, subscription)); err != nil {
-		return err
+	if appGone {
+		return nil
 	}
-
-	apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
-	appStatus, _ := app.GetStatus().(core.SubscribableStatus)
-
-	apiStatus.RemoveSubscription()
-	appStatus.RemoveSubscription()
-
-	if err := k8s.GetClient().Status().Update(ctx, api); err != nil {
-		return err
-	}
-
-	if err := k8s.GetClient().Status().Update(ctx, app); err != nil {
-		return err
-	}
-
-	return nil
+	return updateSubscriptionCount(ctx, app, core.SubscribableStatus.RemoveSubscription)
 }

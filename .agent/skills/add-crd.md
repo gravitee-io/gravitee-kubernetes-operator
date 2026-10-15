@@ -78,10 +78,11 @@ nothing.
 
 ## 8. Tests
 
-Unit tests in `test/unit/<area>/` for the pure logic, envtest suites in `test/envtest/<area>/` for
-flows that only need an API server and an in-process mock (AM today). Do not add anything to
-`test/integration/`, and do not write e2e tests: behaviour needing a cluster or a live APIM belongs to
-the epic's critical user journey in `gravitee-platform-e2e`, written by a separate agent from the PRD.
+Unit tests in `test/unit/<area>/` for the pure logic. For AM resources, envtest suites in
+`test/envtest/<area>/` against the in-process AM mock. For APIM resources, integration tests in
+`test/integration/<area>/` against kind and APIM: there is no APIM mock. Do not write e2e tests:
+platform behaviour end to end belongs to the epic's critical user journey in `gravitee-platform-e2e`,
+written by a separate agent from the PRD.
 What that agent needs from you is an example manifest under `examples/` and a regenerated
 `docs/api/reference.md`.
 

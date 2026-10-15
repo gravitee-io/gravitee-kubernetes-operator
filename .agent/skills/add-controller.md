@@ -447,14 +447,15 @@ MyResourceFinalizer = "finalizers.gravitee.io/myresources"
 
 ## 9. Tests
 
-**Unit and envtest suites only in this repo.** Put unit tests in `test/unit/<area>/` (Ginkgo v2) and
+**Unit tests, plus envtest (AM) or integration (APIM) in this repo.** Put unit tests in `test/unit/<area>/` (Ginkgo v2) and
 cover the parts that are pure logic — the `To*DTO` mapping, drift tags (`test/unit/drift/apim/`), any
-predicate or helper you added. Never place `_test.go` under `controllers/**/internal`. Reconcile
-flows that only need an API server and an in-process mock (AM today) go in `test/envtest/<area>/`,
-run with `make envtest`.
+predicate or helper you added. Never place `_test.go` under `controllers/**/internal`. AM reconcile
+flows go in `test/envtest/<area>/` against the in-process AM mock, run with `make envtest`. APIM
+reconcile flows go in `test/integration/<area>/` against kind and APIM, run with `make it`: there is
+no APIM mock.
 
-**Do not write e2e tests, and do not add anything to `test/integration/`.** Reconciliation,
-`.status`, conditions, finalizer-driven deletion, templating and watch-triggered re-reconciles are
+**Do not write e2e tests.** Platform behaviour end to end (reconciliation,
+`.status`, conditions, finalizer-driven deletion, templating and watch-triggered re-reconciles) is
 exercised by the epic's critical user journey in `gravitee-platform-e2e`, written by a separate
 agent from the PRD without this code. Leave that agent a current example under `examples/apim/`
 and a note in the plan on anything the platform cannot exercise yet.

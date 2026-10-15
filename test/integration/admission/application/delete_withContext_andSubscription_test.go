@@ -16,6 +16,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -49,23 +50,44 @@ var _ = Describe("Validate delete", labels.WithContext, func() {
 
 	fixtures.Apply()
 
+	referencedError := func() error {
+		return errors.NewSeveref(
+			"cannot delete [%s] because it is referenced in 1 subscriptions. "+
+				"Subscriptions must be deleted before the application. "+
+				"You can review the subscriptions using the following command: "+
+				"kubectl get subscriptions.gravitee.io -A "+
+				"-o jsonpath='{.items[?(@.spec.application.name==\"%s\")].metadata.name}'",
+			fixtures.Application.GetRef(), fixtures.Application.Name,
+		)
+	}
+
 	It("should fail with subscription", func() {
 
 		Eventually(func() error {
 			Expect(manager.GetLatest(ctx, fixtures.Application)).ToNot(HaveOccurred())
 			_, err := admissionCtrl.ValidateDelete(ctx, fixtures.Application)
-			return assert.Equals(
-				"error",
-				errors.NewSeveref(
-					"cannot delete [%s] because it is referenced in 1 subscriptions. "+
-						"Subscriptions must be deleted before the application. "+
-						"You can review the subscriptions using the following command: "+
-						"kubectl get subscriptions.gravitee.io -A "+
-						"-o jsonpath='{.items[?(@.spec.application.name==\"%s\")].metadata.name}'",
-					fixtures.Application.GetRef(), fixtures.Application.Name,
-				),
-				err,
-			)
+			return assert.Equals("error", referencedError(), err)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+	})
+
+	It("should fail with subscription when the subscription counter is lost", func() {
+		By("setting the counter to 0, as a write conflict on subscription creation does")
+
+		Eventually(func() error {
+			if err := manager.GetLatest(ctx, fixtures.Application); err != nil {
+				return err
+			}
+			if fixtures.Application.Status.SubscriptionCount == 0 {
+				return nil
+			}
+			fixtures.Application.Status.SubscriptionCount = 0
+			if err := manager.Client().Status().Update(ctx, fixtures.Application); err != nil {
+				return err
+			}
+			return fmt.Errorf("subscription counter not seen at 0 yet")
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+
+		_, err := admissionCtrl.ValidateDelete(ctx, fixtures.Application)
+		Expect(assert.Equals("error", referencedError(), err)).To(Succeed())
 	})
 })

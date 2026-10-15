@@ -29,7 +29,7 @@ npx --yes -p @commitlint/cli -p @commitlint/config-conventional \
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
 make it                        # Run integration tests (Ginkgo, requires cluster) — test/integration/...
-make envtest                   # Run envtest suites (Ginkgo, no cluster: kube-apiserver + etcd) — test/envtest/...
+make envtest                   # Run envtest suites (Ginkgo, no cluster: kube-apiserver + etcd, AM only) — test/envtest/...
 
 # Run a single unit test suite
 go tool ginkgo test/unit/apim/...
@@ -215,18 +215,19 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 
 ## Testing
 
-**A story ships unit and envtest suites here. It does not add integration tests, and it does not write e2e tests.**
+**A story ships unit tests, plus envtest suites for AM or integration tests for APIM. It does not write e2e tests.**
 
 | Layer | Where | What belongs there |
 |-------|-------|--------------------|
 | Unit | `test/unit/<area>/` in this repo | Pure logic: DTO mapping, drift tags, validation predicates, templating, helpers. Ginkgo v2; dot-imports for `ginkgo/v2` and `gomega` are allowed |
-| Envtest | `test/envtest/<area>/` in this repo | Controllers and admission against a real kube-apiserver + etcd with in-process mocks (AM today). No cluster needed; run with `make envtest` |
+| Envtest (AM only) | `test/envtest/<area>/` in this repo | AM controllers and admission against a real kube-apiserver + etcd with the in-process AM mock. No cluster needed; run with `make envtest`. There is no APIM mock: APIM suites do not go here |
+| Integration (APIM) | `test/integration/<area>/` in this repo | APIM controllers and admission against a kind cluster running APIM (`make start-cluster`), run with `make it`. Reconciliation, admission checks that need the manager cache or APIM, finalizer-driven deletion |
 | Critical user journey | [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e) | Platform behaviour end to end (reconciliation, `.status`, admission rejection, drift, deletion). One journey per **epic**, one body run through every provisioner (UI, GKO, TF), written from the PRD by a separate agent with no knowledge of this code |
 | Helm | `helm/gko/tests/` | helm-unittest YAML tests |
 
 The e2e strategy is agreed in Confluence (DE space, "202609 - AGREED - E2E strategy: Quality Platform, user journeys and RAG dashboard", page 501415937): an epic yields a critical user journey, the journey becomes an Xray Test tagged with components and features, and escaped bugs link back to it. Implementing a story therefore never adds, plans or syncs work in the e2e repo, and a story plan never lists that repo. What a story owes the journey author is current example manifests under `examples/`, an up-to-date `docs/api/reference.md`, and a note on anything the platform cannot exercise yet.
 
-`test/integration/` still exists and still runs in CI. Keep it green, but do not extend it.
+`test/integration/` runs in CI against kind and APIM; extend it for APIM behaviour. Locally, when GKO already runs in the cluster, its operator and webhooks would act on the test resources: back up and delete the `gko-*-webhook-configurations`, scale `gko-controller-manager` to 0, run one `ginkgo` at a time, then restore both. Fixtures are applied while the suite tree is built, skipped specs included, so even a focused run leaves resources in the cluster and in APIM.
 
 ## Code Generation
 
