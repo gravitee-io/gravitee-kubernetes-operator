@@ -14,7 +14,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/speakeasy-api/openapi v1.24.0
 	github.com/zeebo/xxh3 v1.0.2
-	golang.org/x/exp v0.0.0-20261011100332-faecfb24eb49
+	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.36.4
 	k8s.io/client-go v0.36.4

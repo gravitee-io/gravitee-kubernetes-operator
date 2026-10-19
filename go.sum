@@ -170,12 +170,6 @@ github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 h1:JeSE6pjso5T
 github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674/go.mod h1:r4w70xmWCQKmi1ONH4KIaBptdivuRPyosB9RmPlGEwA=
 github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.3.0 h1:rGvjoq8eSyfKUZwujvlnMovbM3j+5FtNNXezHOWduNs=
 github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.3.0/go.mod h1:TaMGqMQNztm8TEWjmyYrCFtyhn0wwB7q15dskiybOa4=
-github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.1 h1:i4AgQ8rL4fAHbS4EoMAsTFpm7R0y79wjXktsegCq6ZQ=
-github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.1/go.mod h1:Fks8U7j5iwpf7k/lWgKcE0uV3ueYg6O3L23heEfFgLU=
-github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.2 h1:Mpq/calZhOjEU5gC3ObP7F/I6hDCF/A64lEF0HazdP0=
-github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.2/go.mod h1:Fks8U7j5iwpf7k/lWgKcE0uV3ueYg6O3L23heEfFgLU=
-github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.3 h1:zXQDfvtC6rwhZBtoreWHuPozDEU1IdsYHF9INgIZyoM=
-github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.3/go.mod h1:Fks8U7j5iwpf7k/lWgKcE0uV3ueYg6O3L23heEfFgLU=
 github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.4 h1:yp8ns60poPoQK+Ksl0fr7f+mAwwt6MWDd2WWTM0SPDA=
 github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.3.4/go.mod h1:Fks8U7j5iwpf7k/lWgKcE0uV3ueYg6O3L23heEfFgLU=
 github.com/gravitee-io/gravitee-automation-sdk/common v1.2.0 h1:nnKrGdWh69u+wI3n9E8plI8pL2Pgol9xtHUGDnpUkxw=
@@ -377,8 +371,8 @@ golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8U
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.58.0 h1:COkYLr4k7nDI4r6QtMML2AfzeIswWHAJthLS6K/M/54=
 golang.org/x/crypto v0.58.0/go.mod h1:Xh+kl5A+M0gMiWDytH2Hhr5Z7WbNCpv/eB/EFgfSk+w=
-golang.org/x/exp v0.0.0-20261011100332-faecfb24eb49 h1:pQo5TwmxKJvI8k39uYS2Gqkk8OXWxX/TMSis2Twp1AQ=
-golang.org/x/exp v0.0.0-20261011100332-faecfb24eb49/go.mod h1:DBoxwWhjaW8DJJw/YeM4zpeOKMC1FMXSblsYy+1mFSw=
+golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e h1:HgI6W1OolKK6tcV74is+rl9SMT0njsHlp0TbQiGXI/A=
+golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e/go.mod h1:DBoxwWhjaW8DJJw/YeM4zpeOKMC1FMXSblsYy+1mFSw=
 golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678 h1:1P7xPZEwZMoBoz0Yze5Nx2/4pxj6nw9ZqHWXqP0iRgQ=
 golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678/go.mod h1:AbB0pIl9nAr9wVwH+Z2ZpaocVmF5I4GyWCDIsVjR0bk=
 golang.org/x/mod v0.3.0/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
