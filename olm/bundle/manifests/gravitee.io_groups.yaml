@@ -16,8 +16,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.18.0
-    gravitee.io/operator.version: 4.11.0-rc
+    controller-gen.kubebuilder.io/version: v0.20.0
+    gravitee.io/operator.version: 4.13.0
   name: groups.gravitee.io
 spec:
   group: gravitee.io
@@ -25,6 +25,8 @@ spec:
     kind: Group
     listKind: GroupList
     plural: groups
+    shortNames:
+      - graviteegroups
     singular: group
   scope: Namespaced
   versions:
@@ -60,6 +62,25 @@ spec:
                   required:
                     - name
                   type: object
+                defaultMemberRoles:
+                  description: >-
+                    Default role, per scope, given to a member who joins the
+                    group, including members
+
+                    mapped from an...
+                  properties:
+                    api:
+                      description: Role on the APIs the group gives access to
+                      type: string
+                    apiProduct:
+                      description: Role on the API products the group gives access to
+                      type: string
+                    application:
+                      description: Role on the applications the group gives access to
+                      type: string
+                  type: object
+                hrid:
+                  type: string
                 id:
                   type: string
                 members:
