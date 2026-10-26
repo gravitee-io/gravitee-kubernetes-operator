@@ -15,12 +15,12 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: gko.v4.13.0
+  name: gko.v4.13.1
   namespace: placeholder
   annotations:
     capabilities: Full Lifecycle
     categories: Integration & Delivery, Networking
-    containerImage: docker.io/graviteeio/kubernetes-operator:4.13.0
+    containerImage: docker.io/graviteeio/kubernetes-operator:4.13.1
     repository: https://github.com/gravitee-io/gravitee-kubernetes-operator
     support: Gravitee.io
     description: Manage Gravitee.io API Management resources natively in Kubernetes
@@ -433,7 +433,7 @@ spec:
 
     - A running Gravitee API Management instance (for synced resources)
   maturity: alpha
-  version: 4.13.0
+  version: 4.13.1
   minKubeVersion: 1.18.0
   keywords:
     - api
@@ -483,7 +483,7 @@ spec:
             template:
               metadata:
                 annotations:
-                  checksum/config: 1a60c8f2c036c9e7fdd20a93b1a0fd062b4d70ee1cba46a47543d797652561a6
+                  checksum/config: 598874b046bf8b9d74c731b9a4b71c21130e7b53982d2da5a1209bf8cd73bc07
                 labels:
                   control-plane: controller-manager
               spec:
@@ -493,7 +493,7 @@ spec:
                   - args: []
                     command:
                       - /manager
-                    image: docker.io/graviteeio/kubernetes-operator:4.13.0
+                    image: docker.io/graviteeio/kubernetes-operator:4.13.1
                     imagePullPolicy: IfNotPresent
                     livenessProbe:
                       httpGet:
