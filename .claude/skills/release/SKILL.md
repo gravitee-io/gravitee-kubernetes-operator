@@ -1,6 +1,6 @@
 ---
 name: release
-description: Release exactly one GKO version end-to-end - Jira Done/no-open-PR gate, GitHub Trigger Release (dry-run off, latest only if asked), wait until the GitHub tag and gravitee-platform-docs changelog PR exist (CircleCI canceled after those steps is still success), mark the Jira version released, and create the next patch with no dates. On success tell the user only that it worked plus the docs PR URL. Use when asked to release one GKO version, trigger a GKO release, run Trigger Release, or close a GKO Jira version after CI. Do not chain multiple versions.
+description: Release exactly one GKO version end-to-end - Jira Done/no-open-PR gate, GitHub Trigger Release (dry-run off, latest only if asked), wait until the GitHub tag and gravitee-platform-docs changelog PR exist (patch versions only, a new minor x.y.0 gets none; CircleCI canceled after those steps is still success), mark the Jira version released, and create the next patch with no dates. On success tell the user only that it worked plus the docs PR URL. Use when asked to release one GKO version, trigger a GKO release, run Trigger Release, or close a GKO Jira version after CI. Do not chain multiple versions.
 user-invocable: true
 ---
 

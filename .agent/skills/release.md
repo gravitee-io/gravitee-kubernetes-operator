@@ -27,10 +27,12 @@ Do **not** dispatch GitHub or mutate Jira until the gate in step 1 passes.
 4. If the Jira gate fails, **stop**. Do not dispatch.
 5. Success is **artifacts**, not CircleCI job status:
    - GitHub release tag `<version>` exists
-   - docs PR `[GKO] Changelog for version <version>` exists (open or merged)
+   - docs PR `[GKO] Changelog for version <version>` exists (open or merged), for patch
+     versions only. A new minor (`x.y.0`) or a pre-release gets no docs PR:
+     `hack/scripts/submit-changelog.mjs` skips it and logs `No changelog to generate`.
 6. CircleCI `Release` may end `canceled` after those steps (later steps such as OLM).
-   Treat `canceled` as success when both artifacts exist. Treat it as failure only when
-   they do not.
+   Treat `canceled` as success when the expected artifacts exist. Treat it as failure only
+   when they do not.
 7. Mark Jira as **released** (the Released checkbox). Do **not** generate Jira release notes.
 8. Next Jira version: patch + 1, **no dates**, not released. Do this even if CircleCI
    ended `canceled`, as long as artifacts exist.
@@ -141,6 +143,10 @@ and check artifacts once more before failing.
 
 ### 5. Docs PR
 
+Skip this step for a new minor (`x.y.0`) or a pre-release: no docs PR is created. Confirm
+instead that the CircleCI step `Submit Release Changelog for <version>` logged
+`No changelog to generate`, then go to step 6.
+
 Expected title: `[GKO] Changelog for version <version>`.
 Expected branch: `release-gko-<version>`.
 
@@ -175,6 +181,8 @@ record the existing id.
 Released <version>
 Docs PR: <url>
 ```
+
+For a new minor or a pre-release, `Docs PR: none (new minor)` (or `(pre-release)`).
 
 Nothing else.
 
