@@ -111,6 +111,33 @@ func AssertNoAMCertificateRef(ctx context.Context, cert *v1alpha1.AMCertificate)
 			cert.GetName(), len(live), cert.GetNamespace(), key,
 		)
 	}
+	return assertNoAMApplications(ctx, AMApplicationCertificateKeyField, cert)
+}
+
+// AssertNoAMIdentityProviderRef rejects the delete of an identity provider that an AM application uses, by key
+// or by identityRef.
+func AssertNoAMIdentityProviderRef(ctx context.Context, idp *v1alpha1.AMIdentityProvider) error {
+	return assertNoAMApplications(ctx, AMApplicationIdentityProviderKeyField, idp)
+}
+
+// assertNoAMApplications rejects the delete of a domain sub-resource that live AM applications use: they are
+// indexed under its AM key, its namespace-name HRID, in its namespace.
+func assertNoAMApplications(ctx context.Context, field IndexField, obj core.Object) error {
+	key := refs.NewNamespacedNameFromObject(obj).HRID()
+	apps := &v1alpha1.AMApplicationList{}
+	if err := FindByFieldReferencing(ctx, field, refs.NewNamespacedName(obj.GetNamespace(), key), apps); err != nil {
+		return err
+	}
+	live := slices.DeleteFunc(apps.Items, func(app v1alpha1.AMApplication) bool {
+		return app.IsBeingDeleted()
+	})
+	if len(live) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d AM applications use it. "+reviewMessage+
+				"kubectl get amapplications.gravitee.io -n %s",
+			obj.GetName(), len(live), obj.GetNamespace(),
+		)
+	}
 	return nil
 }
 

@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
+	amapplication "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/application"
 	amcertificate "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/certificate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/identityprovider"
 	amreporter "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/reporter"
@@ -538,6 +539,17 @@ func registerAMControllers(mgr manager.Manager) {
 		Lifecycle: amreporter.NewLifecycle(),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for AM reporters")
+		os.Exit(1)
+	}
+
+	if err := (&amapplication.Reconciler{
+		Client:    k8s.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("amapplications-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AMApplicationList{}),
+		Lifecycle: amapplication.NewLifecycle(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for AM applications")
 		os.Exit(1)
 	}
 }

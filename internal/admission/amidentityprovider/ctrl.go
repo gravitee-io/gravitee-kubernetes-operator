@@ -41,6 +41,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			ToDTO:         internal.ToIdentityProviderDTOForDrift,
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
+			DeleteGuard:   internal.DeleteGuard,
 		}),
 	}
 }

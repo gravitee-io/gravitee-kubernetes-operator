@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
 // PreCheck validates the certificate
@@ -92,6 +93,11 @@ func GetRemote(ctx context.Context, client *am.Client, dto Certificate) (Certifi
 		return Certificate{}, am.UnexpectedResponse(resp.HTTPResponse)
 	}
 	return Certificate{Certificate: *resp.JSON200, DomainKey: dto.DomainKey}, nil
+}
+
+// DeleteGuard rejects the delete of a certificate that an AM security domain or an AM application still uses.
+func DeleteGuard(ctx context.Context, obj *v1alpha1.AMCertificate) error {
+	return search.AssertNoAMCertificateRef(ctx, obj)
 }
 
 // ToCertificateDTOForDrift wraps ToCertificateDTO and blanks "name", "configuration" and "type" for system certificates

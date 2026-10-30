@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
 // PreCheck validates the identity provider
@@ -93,6 +94,11 @@ func GetRemote(ctx context.Context, client *am.Client, dto IdentityProvider) (Id
 		return IdentityProvider{}, am.UnexpectedResponse(resp.HTTPResponse)
 	}
 	return IdentityProvider{IdentityProvider: *resp.JSON200, DomainKey: dto.DomainKey}, nil
+}
+
+// DeleteGuard rejects the delete of an identity provider that an AM application still uses.
+func DeleteGuard(ctx context.Context, obj *v1alpha1.AMIdentityProvider) error {
+	return search.AssertNoAMIdentityProviderRef(ctx, obj)
 }
 
 // ToIdentityProviderDTOForDrift wraps ToIdentityProviderDTO and blanks "name", "configuration" and "type" for the

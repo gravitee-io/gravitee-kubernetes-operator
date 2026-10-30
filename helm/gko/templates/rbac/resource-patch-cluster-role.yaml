@@ -53,6 +53,7 @@ rules:
       - amidentityproviders.gravitee.io
       - amcertificates.gravitee.io
       - amreporters.gravitee.io
+      - amapplications.gravitee.io
       - managementcontexts.gravitee.io
       - apidefinitions.gravitee.io
       - apiv4definitions.gravitee.io

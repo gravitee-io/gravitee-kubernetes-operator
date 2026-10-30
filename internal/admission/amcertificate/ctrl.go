@@ -21,7 +21,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	internal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/certificate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -42,7 +41,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			ToDTO:         internal.ToCertificateDTOForDrift,
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
-			DeleteGuard:   search.AssertNoAMCertificateRef,
+			DeleteGuard:   internal.DeleteGuard,
 		}),
 	}
 }

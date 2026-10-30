@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/amcontext"
+	amapplication "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/application"
 	amcertificate "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/certificate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/identityprovider"
 	amreporter "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/am/reporter"
@@ -337,6 +338,14 @@ func start() {
 		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("amreporter-controller"),
 		Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.AMReporterList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&amapplication.Reconciler{
+		Client:    mgr.GetClient(),
+		Lifecycle: amapplication.NewLifecycle(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("amapplication-controller"),
+		Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.AMApplicationList{}),
 	}).SetupWithManager(mgr))
 
 	mgrCtx, mgrCancel := context.WithCancel(ctrl.SetupSignalHandler())

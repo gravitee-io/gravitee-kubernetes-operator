@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -66,6 +67,12 @@ const (
 	AMIdentityProviderDomainField IndexField = "am-idp-domain"
 	AMCertificateDomainField      IndexField = "am-cert-domain"
 	AMReporterDomainField         IndexField = "am-reporter-domain"
+	AMApplicationDomainField      IndexField = "am-application-domain"
+
+	AMApplicationCertificateRefField      IndexField = "am-application-cert-ref"
+	AMApplicationIdentityProviderRefField IndexField = "am-application-idp-ref"
+	AMApplicationCertificateKeyField      IndexField = "am-application-cert-key"
+	AMApplicationIdentityProviderKeyField IndexField = "am-application-idp-key"
 
 	AMSecurityDomainFallbackCertificateField IndexField = "am-domain-fallback-cert"
 )
@@ -145,6 +152,16 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexAMCertificateDomain))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMReporter{}, AMReporterDomainField,
 		indexAMReporterDomain))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMApplication{}, AMApplicationDomainField,
+		indexAMApplicationDomain))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMApplication{}, AMApplicationCertificateRefField,
+		indexAMApplicationCertificateRef))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMApplication{}, AMApplicationIdentityProviderRefField,
+		indexAMApplicationIdentityProviderRefs))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMApplication{}, AMApplicationCertificateKeyField,
+		indexAMApplicationCertificateKey))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMApplication{}, AMApplicationIdentityProviderKeyField,
+		indexAMApplicationIdentityProviderKeys))
 
 	return errors.NewAggregate(errs)
 }
@@ -495,6 +512,51 @@ func indexAMCertificateDomain(cert *v1alpha1.AMCertificate, fields *[]string) {
 func indexAMReporterDomain(reporter *v1alpha1.AMReporter, fields *[]string) {
 	domain := refs.NewNamespacedName(reporter.GetNamespace(), reporter.Spec.DomainRef.Name)
 	*fields = append(*fields, domain.String())
+}
+
+// indexAMApplicationDomain indexes an application under its domain, always looked up in the
+// application's own namespace (a cross-namespace domainRef is rejected).
+func indexAMApplicationDomain(app *v1alpha1.AMApplication, fields *[]string) {
+	domain := refs.NewNamespacedName(app.GetNamespace(), app.Spec.DomainRef.Name)
+	*fields = append(*fields, domain.String())
+}
+
+// indexAMApplicationCertificateRef indexes an application under the AMCertificate of its certificateRef, in the
+// application's namespace (a cross-namespace ref is rejected).
+func indexAMApplicationCertificateRef(app *v1alpha1.AMApplication, fields *[]string) {
+	if ref := app.Spec.CertificateRef; ref != nil {
+		cert := refs.NewNamespacedName(app.GetNamespace(), ref.Name)
+		*fields = append(*fields, cert.String())
+	}
+}
+
+// indexAMApplicationIdentityProviderRefs indexes an application under the AMIdentityProvider of each identityRef,
+// in the application's namespace (a cross-namespace ref is rejected).
+func indexAMApplicationIdentityProviderRefs(app *v1alpha1.AMApplication, fields *[]string) {
+	for _, idp := range app.Spec.IdentityProviders {
+		if ref := idp.IdentityRef; ref != nil {
+			provider := refs.NewNamespacedName(app.GetNamespace(), ref.Name)
+			*fields = append(*fields, provider.String())
+		}
+	}
+}
+
+// indexAMApplicationCertificateKey indexes an application under the AM key of its certificate, given as a key or
+// as a ref, in the application's namespace, where a certificate's key is its namespace-name HRID.
+func indexAMApplicationCertificateKey(app *v1alpha1.AMApplication, fields *[]string) {
+	if key := application.CertificateKey(app); key != "" {
+		cert := refs.NewNamespacedName(app.GetNamespace(), key)
+		*fields = append(*fields, cert.String())
+	}
+}
+
+// indexAMApplicationIdentityProviderKeys indexes an application under the AM key of each of its identity
+// providers, given as a key or as a ref, in the application's namespace.
+func indexAMApplicationIdentityProviderKeys(app *v1alpha1.AMApplication, fields *[]string) {
+	for _, key := range application.IdentityKeys(app) {
+		provider := refs.NewNamespacedName(app.GetNamespace(), key)
+		*fields = append(*fields, provider.String())
+	}
 }
 
 func indexAMSecurityDomainContext(asd *v1alpha1.AMSecurityDomain, fields *[]string) {
