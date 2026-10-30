@@ -27,7 +27,7 @@ type AccountSettings struct {
 	// Defaults to false.
 	CompleteRegistrationWhenResetPassword *bool `json:"completeRegistrationWhenResetPassword,omitempty"`
 
-	// DefaultIdentityProviderForRegistration Key of an identity provider managed under this domain, used as the default for user registration. The reference is not checked against existing identity providers: it can name one created after the domain or since deleted, and resolves whenever an identity provider with that key exists.
+	// DefaultIdentityProviderForRegistration Default identity provider for user registration: the key of an identity provider of the domain, or id:<uuid> when the reference was not set by the Automation API. The reference is not checked against existing identity providers: it can name one created after the domain or since deleted, and resolves whenever that identity provider exists.
 	// +kubebuilder:validation:Optional
 	DefaultIdentityProviderForRegistration *string `json:"defaultIdentityProviderForRegistration,omitempty"`
 
@@ -155,7 +155,7 @@ type AutomationCertificateSettings = CertificateSettings
 
 // CertificateSettings Domain-level certificate settings.
 type CertificateSettings struct {
-	// FallbackCertificate Key of a certificate managed under this domain, used as the fallback certificate when a client does not specify one. The reference is not checked against existing certificates: it can name one created after the domain or since deleted, and resolves whenever a certificate with that key exists.
+	// FallbackCertificate Fallback certificate used when a client does not specify one: the key of a certificate of the domain, or id:<uuid> when the reference was not set by the Automation API. The reference is not checked against existing certificates: it can name one created after the domain or since deleted, and resolves whenever that certificate exists.
 	// +kubebuilder:validation:Optional
 	FallbackCertificate *string `json:"fallbackCertificate,omitempty"`
 }
@@ -353,7 +353,7 @@ type AutomationSamlSettings = SamlSettings
 
 // SamlSettings Settings for the domain acting as a SAML 2.0 identity provider (IdP).
 type SamlSettings struct {
-	// Certificate Key of a certificate managed under this domain, used to sign SAML responses. The reference is not checked against existing certificates: it can name one created after the domain or since deleted, and resolves whenever a certificate with that key exists.
+	// Certificate Certificate signing SAML responses: the key of a certificate of the domain, or id:<uuid> when the reference was not set by the Automation API. The reference is not checked against existing certificates: it can name one created after the domain or since deleted, and resolves whenever that certificate exists.
 	// +kubebuilder:validation:Optional
 	Certificate *string `json:"certificate,omitempty"`
 
