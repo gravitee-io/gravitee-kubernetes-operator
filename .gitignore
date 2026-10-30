@@ -54,7 +54,7 @@ test/conformance/.*/standard-.*-default-report.yaml
 
 CLAUDE.md
 prompts
-plans
+docs/plans
 /.claude/settings.local.json
 /package-lock.json
 
