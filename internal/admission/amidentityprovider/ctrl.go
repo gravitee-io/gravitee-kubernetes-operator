@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/am"
 	internal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/identityprovider"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -41,6 +42,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			ToDTO:         internal.ToIdentityProviderDTOForDrift,
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
+			DeleteGuard:   search.AssertNoAMIdentityProviderRef,
 		}),
 	}
 }
