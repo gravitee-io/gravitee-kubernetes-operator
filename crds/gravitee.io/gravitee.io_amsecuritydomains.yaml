@@ -80,8 +80,8 @@ spec:
                         also completes a pending...
                       type: boolean
                     defaultIdentityProviderForRegistration:
-                      description: DefaultIdentityProviderForRegistration Key of an identity provider
-                        managed under this domain, used...
+                      description: "DefaultIdentityProviderForRegistration Default identity provider
+                        for user registration: the key of..."
                       type: string
                     deletePasswordlessDevicesAfterResetPassword:
                       description: DeletePasswordlessDevicesAfterResetPassword Whether passwordless
@@ -198,8 +198,8 @@ spec:
                   description: CertificateSettings Domain-level certificate settings.
                   properties:
                     fallbackCertificate:
-                      description: FallbackCertificate Key of a certificate managed under this domain,
-                        used as the fallback...
+                      description: "FallbackCertificate Fallback certificate used when a client does
+                        not specify one: the key of a..."
                       type: string
                   type: object
                 contextRef:
@@ -653,8 +653,8 @@ spec:
                     (IdP).
                   properties:
                     certificate:
-                      description: Certificate Key of a certificate managed under this domain, used to
-                        sign SAML responses.
+                      description: "Certificate Certificate signing SAML responses: the key of a
+                        certificate of the domain, or..."
                       type: string
                     enabled:
                       description: >-
