@@ -1,0 +1,1229 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.0
+    gravitee.io/operator.version: 4.14.0-rc
+  name: amapplications.gravitee.io
+spec:
+  group: gravitee.io
+  names:
+    kind: AMApplication
+    listKind: AMApplicationList
+    plural: amapplications
+    shortNames:
+      - graviteeamapplications
+    singular: amapplication
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - jsonPath: .spec.name
+          name: Name
+          type: string
+        - jsonPath: .spec.type
+          name: Type
+          type: string
+        - jsonPath: .status.clientId
+          name: Client ID
+          type: string
+        - jsonPath: .spec.domainRef.name
+          name: Domain
+          type: string
+        - jsonPath: .spec.enabled
+          name: Enabled
+          type: boolean
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: AMApplication is an AM application (OAuth 2.0 / OIDC client) of a
+            security domain.
+          properties:
+            apiVersion:
+              description: APIVersion defines the versioned schema of this representation of
+                an object.
+              type: string
+            kind:
+              description: Kind is a string value representing the REST resource this object
+                represents.
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: AMApplicationSpec defines the desired state of an AM application.
+              properties:
+                certificate:
+                  description: Certificate AM key of a certificate of the domain, or id:<uuid>.
+                  type: string
+                certificateRef:
+                  description: CertificateRef AMCertificate of the application's namespace and
+                    domain, sent to AM as its key.
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - name
+                  type: object
+                  x-kubernetes-validations:
+                    - message: certificateRef.name must not be empty
+                      rule: size(self.name) > 0
+                clientId:
+                  description: ClientId OAuth 2.0 client identifier. Generated when omitted on
+                    creation.
+                  type: string
+                description:
+                  description: Description Description of the application.
+                  type: string
+                domainRef:
+                  description: DomainRef Domain CRD reference
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - name
+                  type: object
+                  x-kubernetes-validations:
+                    - message: domainRef is immutable
+                      rule: self == oldSelf
+                    - message: domainRef.name must not be empty
+                      rule: size(self.name) > 0
+                enabled:
+                  default: true
+                  description: >-
+                    Enabled Whether the application is enabled. Disabling it
+                    revokes its tokens.
+
+                    Defaults to true.
+                  type: boolean
+                identityProviders:
+                  description: IdentityProviders Identity providers users can authenticate with on
+                    this application.
+                  items:
+                    description: ApplicationIdentityProvider An identity provider users can
+                      authenticate with on this application.
+                    properties:
+                      identity:
+                        description: Identity AM key of an identity provider of the domain, or
+                          id:<uuid>.
+                        type: string
+                      identityRef:
+                        description: IdentityRef AMIdentityProvider of the application's namespace and
+                          domain, sent to AM as its key.
+                        properties:
+                          kind:
+                            type: string
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                        required:
+                          - name
+                        type: object
+                        x-kubernetes-validations:
+                          - message: identityRef.name must not be empty
+                            rule: size(self.name) > 0
+                      priority:
+                        description: "Priority Evaluation order among the application's identity
+                          providers: lowest first; negative values..."
+                        format: int32
+                        type: integer
+                      selectionRule:
+                        description: SelectionRule Expression Language rule selecting this identity
+                          provider for the current request.
+                        type: string
+                    type: object
+                    x-kubernetes-validations:
+                      - message: exactly one of identity or identityRef must be set
+                        rule: has(self.identity) != has(self.identityRef)
+                  type: array
+                kind:
+                  description: Kind Agent persona. Required when type is agent, rejected
+                    otherwise.
+                  enum:
+                    - USER_EMBEDDED
+                    - HOSTED_DELEGATED
+                    - AUTONOMOUS
+                  type: string
+                metadata:
+                  description: Metadata Free-form metadata of the application.
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                name:
+                  description: Name Human-readable name of the application. Also used as the OAuth
+                    2.0 client name.
+                  maxLength: 255
+                  minLength: 1
+                  type: string
+                settings:
+                  description: Settings Settings of the application.
+                  properties:
+                    account:
+                      description: "Account User account settings for the domain: brute-force
+                        protection, registration, password reset,..."
+                      properties:
+                        accountBlockedDuration:
+                          description: AccountBlockedDuration Duration, in seconds, for which the account
+                            remains blocked after too many...
+                          format: int32
+                          type: integer
+                        autoLoginAfterRegistration:
+                          description: AutoLoginAfterRegistration Whether the user is automatically logged
+                            in after completing...
+                          type: boolean
+                        autoLoginAfterResetPassword:
+                          description: AutoLoginAfterResetPassword Whether the user is automatically
+                            logged in after a password reset.
+                          type: boolean
+                        completeRegistrationWhenResetPassword:
+                          description: CompleteRegistrationWhenResetPassword Whether resetting a password
+                            also completes a pending...
+                          type: boolean
+                        defaultIdentityProviderForRegistration:
+                          description: "DefaultIdentityProviderForRegistration Default identity provider
+                            for user registration: the key of..."
+                          type: string
+                        deletePasswordlessDevicesAfterResetPassword:
+                          description: DeletePasswordlessDevicesAfterResetPassword Whether passwordless
+                            (WebAuthn) devices are deleted...
+                          type: boolean
+                        dynamicUserRegistration:
+                          description: DynamicUserRegistration Whether dynamic (self-service) user
+                            registration is enabled.
+                          type: boolean
+                        inherited:
+                          description: Inherited Whether account settings are inherited from the parent
+                            (domain).
+                          type: boolean
+                        loginAttemptsDetectionEnabled:
+                          description: LoginAttemptsDetectionEnabled Whether brute-force authentication
+                            attempts are detected and blocked.
+                          type: boolean
+                        loginAttemptsResetTime:
+                          description: LoginAttemptsResetTime Time, in seconds, after which the login
+                            attempt counter is reset when the...
+                          format: int32
+                          type: integer
+                        maxLoginAttempts:
+                          description: MaxLoginAttempts Maximum number of failed login attempts before the
+                            account is blocked.
+                          format: int32
+                          type: integer
+                        mfaChallengeAttemptsDetectionEnabled:
+                          description: MfaChallengeAttemptsDetectionEnabled Whether failed MFA challenge
+                            attempts are detected and blocked.
+                          type: boolean
+                        mfaChallengeAttemptsResetTime:
+                          description: MfaChallengeAttemptsResetTime Time, in seconds, after which the MFA
+                            challenge attempt counter is...
+                          format: int32
+                          type: integer
+                        mfaChallengeMaxAttempts:
+                          description: MfaChallengeMaxAttempts Maximum number of failed MFA challenge
+                            attempts before the user is blocked.
+                          format: int32
+                          type: integer
+                        mfaChallengeSendVerifyAlertEmail:
+                          description: MfaChallengeSendVerifyAlertEmail Whether to send an alert email
+                            after too many failed MFA challenge...
+                          type: boolean
+                        redirectUriAfterRegistration:
+                          description: RedirectUriAfterRegistration URL the user is redirected to after
+                            registration.
+                          type: string
+                        redirectUriAfterResetPassword:
+                          description: RedirectUriAfterResetPassword URL the user is redirected to after a
+                            password reset.
+                          type: string
+                        rememberMe:
+                          description: >-
+                            RememberMe Whether users can remain logged in for a
+                            fixed duration (remember-me).
+
+                            Defaults to false.
+                          type: boolean
+                        rememberMeDuration:
+                          description: RememberMeDuration Duration, in seconds, for which a remembered
+                            session stays valid.
+                          format: int32
+                          type: integer
+                        resetPasswordConfirmIdentity:
+                          description: ResetPasswordConfirmIdentity Whether the user must confirm their
+                            identity before resetting a...
+                          type: boolean
+                        resetPasswordCustomForm:
+                          description: ResetPasswordCustomForm Whether a custom form is used for the
+                            password-reset step.
+                          type: boolean
+                        resetPasswordCustomFormFields:
+                          description: ResetPasswordCustomFormFields Custom fields rendered on the
+                            password-reset form.
+                          items:
+                            description: FormField A single field shown on a user-facing form, such as
+                              registration.
+                            properties:
+                              key:
+                                description: Key Identifier of the field, mapped to a user attribute.
+                                type: string
+                              label:
+                                description: Label Label displayed for the field.
+                                type: string
+                              type:
+                                description: Type Input type of the field.
+                                type: string
+                            type: object
+                          type: array
+                        resetPasswordInvalidateTokens:
+                          description: ResetPasswordInvalidateTokens Whether existing tokens are
+                            invalidated when the password is reset.
+                          type: boolean
+                        sendRecoverAccountEmail:
+                          description: >-
+                            SendRecoverAccountEmail Whether to send an
+                            account-recovery email.
+
+                            Defaults to false.
+                          type: boolean
+                        sendVerifyRegistrationAccountEmail:
+                          description: SendVerifyRegistrationAccountEmail Whether to send a
+                            registration-verification email.
+                          type: boolean
+                      type: object
+                    advanced:
+                      description: Advanced Advanced application settings.
+                      properties:
+                        flowsInherited:
+                          description: FlowsInherited Whether the domain flows are executed for this
+                            application in addition to its own...
+                          type: boolean
+                        skipConsent:
+                          description: "SkipConsent Whether the user consent page is skipped: requested
+                            scopes are granted without asking..."
+                          type: boolean
+                      type: object
+                    cookieSettings:
+                      description: CookieSettings Session cookie settings of the application.
+                      properties:
+                        inherited:
+                          description: Inherited Whether the cookie settings are inherited from the
+                            domain.
+                          type: boolean
+                        session:
+                          description: Session Session cookie settings.
+                          properties:
+                            persistent:
+                              description: Persistent Whether the session cookie is persistent (kept after the
+                                browser is closed) rather than...
+                              type: boolean
+                          type: object
+                      type: object
+                    login:
+                      description: Login Configuration of the domain's login flow and the features
+                        offered on the sign-in page.
+                      properties:
+                        certificateBasedAuthEnabled:
+                          description: >-
+                            CertificateBasedAuthEnabled Whether
+                            certificate-based authentication is offered.
+
+                            Defaults to false.
+                          type: boolean
+                        certificateBasedAuthUrl:
+                          description: CertificateBasedAuthUrl URL used for certificate-based
+                            authentication.
+                          type: string
+                        forgotPasswordEnabled:
+                          description: ForgotPasswordEnabled Whether users can initiate a forgot-password
+                            flow from the login page.
+                          type: boolean
+                        hideForm:
+                          description: HideForm Whether the login form is hidden (for example when only
+                            social or identifier-first login...
+                          type: boolean
+                        identifierFirstEnabled:
+                          description: IdentifierFirstEnabled Whether identifier-first login is enabled,
+                            prompting for the username before...
+                          type: boolean
+                        inherited:
+                          description: Inherited Whether these login settings are inherited from a parent
+                            scope rather than defined here.
+                          type: boolean
+                        magicLinkAuthEnabled:
+                          description: >-
+                            MagicLinkAuthEnabled Whether magic-link
+                            authentication is offered.
+
+                            Defaults to false.
+                          type: boolean
+                        passwordlessDeviceNamingEnabled:
+                          description: PasswordlessDeviceNamingEnabled Whether users can name their
+                            passwordless devices.
+                          type: boolean
+                        passwordlessEnabled:
+                          description: >-
+                            PasswordlessEnabled Whether passwordless (WebAuthn)
+                            authentication is offered.
+
+                            Defaults to false.
+                          type: boolean
+                        passwordlessEnforcePasswordEnabled:
+                          description: PasswordlessEnforcePasswordEnabled Whether a password is still
+                            required alongside passwordless...
+                          type: boolean
+                        passwordlessEnforcePasswordMaxAge:
+                          description: PasswordlessEnforcePasswordMaxAge Period, in seconds, after which
+                            the user's credentials must be...
+                          format: int32
+                          type: integer
+                        passwordlessRememberDeviceEnabled:
+                          description: PasswordlessRememberDeviceEnabled Whether a passwordless device can
+                            be remembered to skip future...
+                          type: boolean
+                        registerEnabled:
+                          description: >-
+                            RegisterEnabled Whether users can self-register from
+                            the login page.
+
+                            Defaults to false.
+                          type: boolean
+                        rememberMeEnabled:
+                          description: >-
+                            RememberMeEnabled Whether the login page offers a
+                            remember-me option.
+
+                            Defaults to false.
+                          type: boolean
+                        resetPasswordOnExpiration:
+                          description: ResetPasswordOnExpiration Whether the user is forced to reset their
+                            password once it expires.
+                          type: boolean
+                      type: object
+                    mfa:
+                      description: Mfa Multi-factor authentication settings of the application.
+                      properties:
+                        adaptiveAuthenticationRule:
+                          description: "AdaptiveAuthenticationRule Deprecated: use
+                            challenge.challengeRule."
+                          type: string
+                        challenge:
+                          description: Challenge When users are challenged for a second factor.
+                          properties:
+                            active:
+                              description: >-
+                                Active Whether users are challenged for a second
+                                factor.
+
+                                Defaults to false.
+                              type: boolean
+                            challengeRule:
+                              description: "ChallengeRule Expression Language rule of a conditional challenge:
+                                when it evaluates to true, the..."
+                              type: string
+                            type:
+                              description: "Type required: always challenge. conditional: challenge unless
+                                challengeRule evaluates to true."
+                              enum:
+                                - required
+                                - conditional
+                                - risk_based
+                              type: string
+                          type: object
+                        enroll:
+                          description: Enroll When users are asked to enroll a factor.
+                          properties:
+                            active:
+                              description: >-
+                                Active Whether users are asked to enroll a
+                                factor.
+
+                                Defaults to false.
+                              type: boolean
+                            enrollmentRule:
+                              description: "EnrollmentRule Expression Language rule of a conditional
+                                enrollment: when it evaluates to true, the..."
+                              type: string
+                            enrollmentSkipActive:
+                              description: >-
+                                EnrollmentSkipActive Whether users can skip the
+                                enrollment.
+
+                                Defaults to false.
+                              type: boolean
+                            enrollmentSkipRule:
+                              description: "EnrollmentSkipRule Expression Language rule: when it evaluates to
+                                true, users can skip the..."
+                              type: string
+                            forceEnrollment:
+                              description: ForceEnrollment Whether users must enroll a factor.
+                              type: boolean
+                            skipTimeSeconds:
+                              description: SkipTimeSeconds Duration, in seconds, during which a skipped
+                                enrollment is not asked again.
+                              format: int64
+                              type: integer
+                            type:
+                              description: "Type optional: users can skip the enrollment. required: users must
+                                enroll."
+                              enum:
+                                - optional
+                                - required
+                                - conditional
+                              type: string
+                          type: object
+                        enrollment:
+                          description: "Enrollment Deprecated: use enroll. Legacy enrollment settings."
+                          properties:
+                            forceEnrollment:
+                              description: ForceEnrollment Whether users must enroll a factor.
+                              type: boolean
+                            skipTimeSeconds:
+                              description: SkipTimeSeconds Duration, in seconds, during which users can skip
+                                the enrollment.
+                              format: int64
+                              type: integer
+                          type: object
+                        factor:
+                          description: Factor Factors offered to the users of the application.
+                          properties:
+                            applicationFactors:
+                              description: ApplicationFactors Factors available to the application.
+                              items:
+                                description: ApplicationFactorSettings A factor available to the application.
+                                properties:
+                                  id:
+                                    description: Id The factor, as id:<uuid> (factors have no Automation API
+                                      endpoint).
+                                    type: string
+                                  selectionRule:
+                                    description: SelectionRule Expression Language rule selecting this factor.
+                                    type: string
+                                required:
+                                  - id
+                                type: object
+                              type: array
+                            defaultFactorId:
+                              description: DefaultFactorId Factor proposed first, as id:<uuid> (factors have
+                                no Automation API endpoint).
+                              type: string
+                          type: object
+                        loginRule:
+                          description: LoginRule Legacy MFA login rule, kept for round-trip fidelity.
+                          type: string
+                        rememberDevice:
+                          description: "RememberDevice Remember device: skips the MFA challenge on a
+                            device already used to authenticate."
+                          properties:
+                            active:
+                              description: |-
+                                Active Whether remember device is enabled.
+                                Defaults to false.
+                              type: boolean
+                            deviceIdentifierId:
+                              description: DeviceIdentifierId Device identifier used to recognize devices, as
+                                id:<uuid> (device identifiers...
+                              type: string
+                            expirationTimeSeconds:
+                              description: ExpirationTimeSeconds Duration, in seconds, for which a device is
+                                remembered.
+                              format: int64
+                              type: integer
+                            skipRememberDevice:
+                              description: "SkipRememberDevice Only used with a conditional MFA challenge:
+                                when true, remember device is not..."
+                              type: boolean
+                          type: object
+                        stepUpAuthentication:
+                          description: "StepUpAuthentication Step-up authentication: asks for MFA again
+                            during a session when its rule..."
+                          properties:
+                            active:
+                              description: >-
+                                Active Whether step-up authentication is
+                                enabled.
+
+                                Defaults to false.
+                              type: boolean
+                            stepUpAuthenticationRule:
+                              description: "StepUpAuthenticationRule Expression Language rule: when it
+                                evaluates to true, the user is..."
+                              type: string
+                          type: object
+                        stepUpAuthenticationRule:
+                          description: "StepUpAuthenticationRule Deprecated: use stepUpAuthentication."
+                          type: string
+                      type: object
+                    oauth:
+                      description: Oauth OAuth 2.0 and OpenID Connect settings of the application.
+                      properties:
+                        accessTokenValiditySeconds:
+                          description: AccessTokenValiditySeconds Access token validity, in seconds.
+                            Computed (7200) when omitted.
+                          format: int32
+                          type: integer
+                        authorizationEncryptedResponseAlg:
+                          description: AuthorizationEncryptedResponseAlg JWE alg algorithm encrypting the
+                            authorization responses (JARM).
+                          type: string
+                        authorizationEncryptedResponseEnc:
+                          description: AuthorizationEncryptedResponseEnc JWE enc algorithm encrypting the
+                            authorization responses (JARM).
+                          type: string
+                        authorizationSignedResponseAlg:
+                          description: AuthorizationSignedResponseAlg JWS algorithm signing the
+                            authorization responses (JARM).
+                          type: string
+                        clientUri:
+                          description: ClientUri URL of the application home page.
+                          type: string
+                        contacts:
+                          description: Contacts Email addresses of the people responsible for the
+                            application.
+                          items:
+                            type: string
+                          type: array
+                        crossAppAccessSettings:
+                          description: CrossAppAccessSettings Resource servers this application may
+                            request an ID-JAG for.
+                          properties:
+                            enabled:
+                              description: >-
+                                Enabled Whether this application participates in
+                                Cross App Access.
+
+                                Defaults to false.
+                              type: boolean
+                            resourceServers:
+                              description: ResourceServers Resource servers this application may reach, one
+                                entry per resource server.
+                              items:
+                                description: CrossAppAccessResourceServer A resource server this application may
+                                  request an ID-JAG for.
+                                properties:
+                                  clientId:
+                                    description: ClientId Identifier this application is registered with at the
+                                      resource authorization server.
+                                    maxLength: 512
+                                    type: string
+                                  resourceServerId:
+                                    description: ResourceServerId Resource server of the trusted domain, as
+                                      id:<uuid> (a key is rejected with 400).
+                                    type: string
+                                  trustDomainId:
+                                    description: TrustDomainId Trusted domain the resource server belongs to, as
+                                      id:<uuid> (a key is rejected with...
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                        defaultACRvalues:
+                          description: DefaultACRvalues Default requested Authentication Context Class
+                            Reference values.
+                          items:
+                            type: string
+                          type: array
+                        defaultMaxAge:
+                          description: DefaultMaxAge Default maximum authentication age, in seconds.
+                          format: int32
+                          type: integer
+                        disableRefreshTokenRotation:
+                          description: DisableRefreshTokenRotation Whether a refresh token stays valid
+                            when used, instead of being...
+                          type: boolean
+                        dpopBoundAccessTokens:
+                          description: DpopBoundAccessTokens Whether access tokens must be bound to a DPoP
+                            proof (RFC 9449).
+                          type: boolean
+                        enhanceScopesWithUserPermissions:
+                          description: EnhanceScopesWithUserPermissions Whether the permissions of the
+                            user roles are added to the scopes...
+                          type: boolean
+                        forcePKCE:
+                          description: ForcePKCE Whether the authorization code flow requires PKCE.
+                          type: boolean
+                        forceS256CodeChallengeMethod:
+                          description: ForceS256CodeChallengeMethod Whether PKCE requires the S256 code
+                            challenge method.
+                          type: boolean
+                        grantTypes:
+                          description: GrantTypes OAuth 2.0 grant types the application may use.
+                          items:
+                            type: string
+                          type: array
+                        idJagValiditySeconds:
+                          description: IdJagValiditySeconds Validity, in seconds, of the identity
+                            assertion authorization grants (ID-JAG)...
+                          format: int32
+                          type: integer
+                        idTokenEncryptedResponseAlg:
+                          description: IdTokenEncryptedResponseAlg JWE alg algorithm encrypting the ID
+                            tokens issued to the application.
+                          type: string
+                        idTokenEncryptedResponseEnc:
+                          description: IdTokenEncryptedResponseEnc JWE enc algorithm encrypting the ID
+                            tokens issued to the application.
+                          type: string
+                        idTokenSignedResponseAlg:
+                          description: IdTokenSignedResponseAlg JWS algorithm signing the ID tokens issued
+                            to the application.
+                          type: string
+                        idTokenValiditySeconds:
+                          description: IdTokenValiditySeconds ID token validity, in seconds. Computed
+                            (14400) when omitted.
+                          format: int32
+                          type: integer
+                        initiateLoginUri:
+                          description: InitiateLoginUri URI, using the https scheme, a third party can use
+                            to initiate a login by the...
+                          type: string
+                        jwks:
+                          description: "Jwks JSON Web Key Set of the application passed by value (RFC 7517
+                            section 5): an object with a..."
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        jwksUri:
+                          description: JwksUri URL of the application JSON Web Key Set, holding the keys
+                            used to verify its signatures.
+                          type: string
+                        lightweightJwtSettings:
+                          description: LightweightJwtSettings Restricts the JWT access token and the ID
+                            token returned to the client to...
+                          properties:
+                            allowedAccessTokenClaims:
+                              description: AllowedAccessTokenClaims Claim names kept in the access and refresh
+                                tokens in addition to the...
+                              items:
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: set
+                            allowedIdTokenClaims:
+                              description: AllowedIdTokenClaims Claim names kept in the ID token in addition
+                                to the reserved claims.
+                              items:
+                                type: string
+                              type: array
+                              x-kubernetes-list-type: set
+                            enabled:
+                              description: |-
+                                Enabled Whether Lightweight JWT is enabled.
+                                Defaults to false.
+                              type: boolean
+                          type: object
+                        logoUri:
+                          description: LogoUri URL of the application logo, displayed to users.
+                          type: string
+                        optInScopeSelection:
+                          description: OptInScopeSelection When true, users must explicitly select each
+                            scope on the consent page; when...
+                          type: boolean
+                        policyUri:
+                          description: PolicyUri URL of the application policy on the use of profile data.
+                          type: string
+                        postLogoutRedirectUris:
+                          description: PostLogoutRedirectUris URLs the user may be redirected to after
+                            logout (post_logout_redirect_uri).
+                          items:
+                            type: string
+                          type: array
+                        redirectUris:
+                          description: RedirectUris Redirection URIs. The redirect_uri of an authorization
+                            request must match one of them.
+                          items:
+                            type: string
+                          type: array
+                        refreshTokenValiditySeconds:
+                          description: RefreshTokenValiditySeconds Refresh token validity, in seconds.
+                            Computed (14400) when omitted.
+                          format: int32
+                          type: integer
+                        requestObjectEncryptionAlg:
+                          description: RequestObjectEncryptionAlg JWE alg algorithm the application may
+                            encrypt its request objects with.
+                          type: string
+                        requestObjectEncryptionEnc:
+                          description: RequestObjectEncryptionEnc JWE enc algorithm the application may
+                            encrypt its request objects with.
+                          type: string
+                        requestObjectSigningAlg:
+                          description: RequestObjectSigningAlg JWS algorithm the application signs its
+                            request objects with.
+                          type: string
+                        requestUris:
+                          description: RequestUris request_uri values pre-registered by the application.
+                          items:
+                            type: string
+                          type: array
+                        requireAuthTime:
+                          description: >-
+                            RequireAuthTime Whether the auth_time claim is
+                            required in the ID token.
+
+                            Defaults to false.
+                          type: boolean
+                        responseTypes:
+                          description: ResponseTypes OAuth 2.0 / OIDC response types the application may
+                            use.
+                          items:
+                            type: string
+                          type: array
+                        scopeSettings:
+                          description: ScopeSettings Scopes the application can request.
+                          items:
+                            description: ScopeSettings A scope the application can request, with its
+                              settings.
+                            properties:
+                              defaultScope:
+                                description: DefaultScope Whether the scope is granted when the authorization
+                                  request carries no scope parameter.
+                                type: boolean
+                              requiredScope:
+                                description: >-
+                                  RequiredScope Whether the user cannot deselect
+                                  this scope on the consent page.
+
+                                  Defaults to false.
+                                type: boolean
+                              scope:
+                                description: Scope Key of a scope of the domain.
+                                type: string
+                              scopeApproval:
+                                description: ScopeApproval Duration, in seconds, of the user consent to this
+                                  scope.
+                                format: int32
+                                type: integer
+                            required:
+                              - scope
+                            type: object
+                          type: array
+                        sectorIdentifierUri:
+                          description: SectorIdentifierUri URL, using the https scheme, used to compute
+                            pairwise subject identifiers.
+                          type: string
+                        silentReAuthentication:
+                          description: SilentReAuthentication Whether the id_token_hint parameter can be
+                            used to re-authenticate the user...
+                          type: boolean
+                        singleSignOut:
+                          description: SingleSignOut Whether logout also calls the end_session_endpoint of
+                            the external OIDC provider the...
+                          type: boolean
+                        subjectType:
+                          description: "SubjectType Subject identifier type of the responses: public or
+                            pairwise."
+                          type: string
+                        tlsClientAuthSanDns:
+                          description: TlsClientAuthSanDns Expected dNSName subject alternative name of
+                            the client certificate, for the...
+                          type: string
+                        tlsClientAuthSanEmail:
+                          description: TlsClientAuthSanEmail Expected rfc822Name subject alternative name
+                            of the client certificate, for...
+                          type: string
+                        tlsClientAuthSanIp:
+                          description: TlsClientAuthSanIp Expected iPAddress subject alternative name of
+                            the client certificate, for the...
+                          type: string
+                        tlsClientAuthSanUri:
+                          description: TlsClientAuthSanUri Expected uniformResourceIdentifier subject
+                            alternative name of the client...
+                          type: string
+                        tlsClientAuthSubjectDn:
+                          description: TlsClientAuthSubjectDn Expected subject distinguished name of the
+                            client certificate, for the...
+                          type: string
+                        tlsClientCertificateBoundAccessTokens:
+                          description: TlsClientCertificateBoundAccessTokens Whether access tokens are
+                            bound to the client certificate...
+                          type: boolean
+                        tokenCustomClaims:
+                          description: TokenCustomClaims Custom claims added to the issued tokens.
+                          items:
+                            description: TokenClaim A custom claim added to the tokens issued to the
+                              application.
+                            properties:
+                              claimName:
+                                description: ClaimName Name of the claim.
+                                type: string
+                              claimValue:
+                                description: "ClaimValue Value of the claim: a literal or an Expression Language
+                                  expression."
+                                type: string
+                              tokenType:
+                                description: TokenType Token the claim is added to.
+                                enum:
+                                  - access_token
+                                  - refresh_token
+                                  - id_token
+                                  - id_jag
+                                type: string
+                            required:
+                              - claimName
+                              - claimValue
+                              - tokenType
+                            type: object
+                          type: array
+                        tokenEndpointAuthMethod:
+                          description: "TokenEndpointAuthMethod Client authentication method at the token
+                            endpoint: client_secret_basic,..."
+                          type: string
+                        tokenEndpointAuthSigningAlg:
+                          description: TokenEndpointAuthSigningAlg JWS algorithm the application signs its
+                            authentication JWT with, for...
+                          type: string
+                        tokenExchangeOAuthSettings:
+                          description: TokenExchangeOAuthSettings OAuth-specific token-exchange behavior,
+                            such as how scopes are handled,...
+                          properties:
+                            inherited:
+                              description: Inherited Whether these settings are inherited from the domain
+                                defaults rather than defined here.
+                              type: boolean
+                            scopeHandling:
+                              description: ScopeHandling How scopes are handled when issuing the exchanged
+                                token.
+                              enum:
+                                - downscoping
+                                - permissive
+                              type: string
+                          type: object
+                        tosUri:
+                          description: TosUri URL of the application terms of service.
+                          type: string
+                        userinfoCustomClaims:
+                          description: UserinfoCustomClaims Custom claims added to the UserInfo responses.
+                          items:
+                            description: UserInfoClaim A custom claim added to the UserInfo responses of the
+                              application.
+                            properties:
+                              claimName:
+                                description: ClaimName Name of the claim.
+                                type: string
+                              claimValue:
+                                description: "ClaimValue Value of the claim: a literal or an Expression Language
+                                  expression."
+                                type: string
+                            required:
+                              - claimName
+                              - claimValue
+                            type: object
+                          type: array
+                        userinfoEncryptedResponseAlg:
+                          description: UserinfoEncryptedResponseAlg JWE alg algorithm encrypting the
+                            UserInfo responses.
+                          type: string
+                        userinfoEncryptedResponseEnc:
+                          description: UserinfoEncryptedResponseEnc JWE enc algorithm encrypting the
+                            UserInfo responses.
+                          type: string
+                        userinfoSignedResponseAlg:
+                          description: UserinfoSignedResponseAlg JWS algorithm signing the UserInfo
+                            responses.
+                          type: string
+                      type: object
+                    riskAssessment:
+                      description: RiskAssessment Risk assessment of the authentication attempts, used
+                        by risk-based MFA.
+                      properties:
+                        deviceAssessment:
+                          description: DeviceAssessment Settings of one risk assessment.
+                          properties:
+                            enabled:
+                              description: |-
+                                Enabled Whether this assessment is enabled.
+                                Defaults to false.
+                              type: boolean
+                            thresholds:
+                              description: "Thresholds Score threshold of each risk level: an assessment
+                                scoring at or above a threshold..."
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                        enabled:
+                          description: |-
+                            Enabled Whether risk assessment is enabled.
+                            Defaults to false.
+                          type: boolean
+                        geoVelocityAssessment:
+                          description: GeoVelocityAssessment Settings of one risk assessment.
+                          properties:
+                            enabled:
+                              description: |-
+                                Enabled Whether this assessment is enabled.
+                                Defaults to false.
+                              type: boolean
+                            thresholds:
+                              description: "Thresholds Score threshold of each risk level: an assessment
+                                scoring at or above a threshold..."
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                        ipReputationAssessment:
+                          description: IpReputationAssessment Settings of one risk assessment.
+                          properties:
+                            enabled:
+                              description: |-
+                                Enabled Whether this assessment is enabled.
+                                Defaults to false.
+                              type: boolean
+                            thresholds:
+                              description: "Thresholds Score threshold of each risk level: an assessment
+                                scoring at or above a threshold..."
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                          type: object
+                      type: object
+                    saml:
+                      description: Saml Settings of the application acting as a SAML 2.0 service
+                        provider (SP).
+                      properties:
+                        assertionAttributes:
+                          description: AssertionAttributes Custom attributes of the SAML assertion.
+                          items:
+                            description: SamlAssertionAttribute A custom attribute of the SAML assertion.
+                            properties:
+                              name:
+                                description: Name Name of the SAML attribute.
+                                type: string
+                              value:
+                                description: Value Expression Language expression resolved to the attribute
+                                  value.
+                                type: string
+                            required:
+                              - name
+                              - value
+                            type: object
+                          type: array
+                        assertionValiditySeconds:
+                          description: AssertionValiditySeconds Validity, in seconds, of the issued
+                            assertion.
+                          format: int32
+                          type: integer
+                        attributeConsumeServiceUrl:
+                          description: AttributeConsumeServiceUrl SP endpoint the IdP sends SAML responses
+                            to (Assertion Consumer Service...
+                          type: string
+                        audiences:
+                          description: Audiences Audience URIs added to the SP entity ID in the
+                            AudienceRestriction.
+                          items:
+                            type: string
+                          type: array
+                        certificate:
+                          description: Certificate The SP's PEM-encoded public key certificate, used by
+                            the IdP to verify SAML requests...
+                          type: string
+                        dataEncryptionAlgorithm:
+                          description: DataEncryptionAlgorithm Data encryption algorithm URI of encrypted
+                            assertions (XML Encryption...
+                          type: string
+                        entityId:
+                          description: EntityId URL or URN that uniquely identifies the SP (the SAML
+                            entity ID).
+                          type: string
+                        includeAssertionConditions:
+                          description: IncludeAssertionConditions Whether assertions carry Conditions
+                            (validity time bounds and audience...
+                          type: boolean
+                        keyTransportEncryptionAlgorithm:
+                          description: KeyTransportEncryptionAlgorithm Key transport algorithm URI of
+                            encrypted assertions (XML Encryption...
+                          type: string
+                        nameIdMapping:
+                          description: NameIdMapping Expression Language expression producing the NameID
+                            of the SAML response.
+                          type: string
+                        notBeforeTimeSkewSeconds:
+                          description: NotBeforeTimeSkewSeconds Clock skew, in seconds, subtracted from
+                            NotBefore.
+                          format: int32
+                          type: integer
+                        notOnOrAfterTimeSkewSeconds:
+                          description: NotOnOrAfterTimeSkewSeconds Clock skew, in seconds, added to
+                            NotOnOrAfter.
+                          format: int32
+                          type: integer
+                        responseBinding:
+                          description: ResponseBinding Binding used to send SAML responses to the SP.
+                          type: string
+                        singleLogoutServiceUrl:
+                          description: SingleLogoutServiceUrl SP endpoint the IdP redirects to after a
+                            single logout.
+                          type: string
+                        wantAssertionsEncrypted:
+                          description: >-
+                            WantAssertionsEncrypted Whether the SP requires
+                            encrypted SAML assertions.
+
+                            Defaults to false.
+                          type: boolean
+                        wantAssertionsSigned:
+                          description: >-
+                            WantAssertionsSigned Whether the SP requires signed
+                            SAML assertions.
+
+                            Defaults to false.
+                          type: boolean
+                        wantResponseSigned:
+                          description: >-
+                            WantResponseSigned Whether the SP requires signed
+                            SAML responses.
+
+                            Defaults to true.
+                          type: boolean
+                      type: object
+                    secretExpirationSettings:
+                      description: SecretExpirationSettings Controls whether client secrets in the
+                        domain expire and after how long.
+                      properties:
+                        enabled:
+                          description: Enabled Whether client-secret expiration is enabled.
+                          type: boolean
+                        expiryTimeSeconds:
+                          description: ExpiryTimeSeconds Lifetime, in seconds, of a client secret before
+                            it expires.
+                          format: int64
+                          type: integer
+                      type: object
+                    workloadIdentitySettings:
+                      description: WorkloadIdentitySettings SPIFFE workload identity the application
+                        authenticates with (JWT-SVID...
+                      properties:
+                        subject:
+                          description: Subject SPIFFE ID expected in the SVID sub claim, interpreted per
+                            subjectMatchMode.
+                          type: string
+                        subjectMatchMode:
+                          description: SubjectMatchMode How subject is matched against the SVID sub claim.
+                          enum:
+                            - exact
+                            - prefix
+                          type: string
+                        trustDomain:
+                          description: TrustDomain Name of the trusted domain this application
+                            authenticates against.
+                          type: string
+                      type: object
+                  type: object
+                template:
+                  description: Template Whether the application is a registration template for
+                    dynamic client registration rather...
+                  type: boolean
+                type:
+                  description: Type Application type. It drives the computed OAuth 2.0 settings.
+                  enum:
+                    - web
+                    - native
+                    - browser
+                    - service
+                    - resource_server
+                    - agent
+                  type: string
+              required:
+                - domainRef
+                - name
+                - type
+              type: object
+              x-kubernetes-validations:
+                - message: clientId is immutable once set
+                  rule: "!has(oldSelf.clientId) || (has(self.clientId) && self.clientId ==
+                    oldSelf.clientId)"
+                - message: exactly one of certificate or certificateRef must be set
+                  rule: has(self.certificate) != has(self.certificateRef)
+            status:
+              description: AMApplicationStatus defines the observed state of an AM
+                application.
+              properties:
+                clientId:
+                  description: "The OAuth 2.0 client identifier of the application in AM:
+                    spec.clientId, or the one AM generated."
+                  type: string
+                conditions:
+                  default: []
+                  description: Conditions describe the current conditions of the security domain.
+                  items:
+                    description: Condition contains details for one aspect of the current state of
+                      this API Resource.
+                    properties:
+                      lastTransitionTime:
+                        description: lastTransitionTime is the last time the condition transitioned from
+                          one status to another.
+                        format: date-time
+                        type: string
+                      message:
+                        description: message is a human readable message indicating details about the
+                          transition.
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        description: observedGeneration represents the .metadata.generation that the
+                          condition was set based upon.
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        description: reason contains a programmatic identifier indicating the reason for
+                          the condition's last transition.
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        description: status of the condition, one of True, False, Unknown.
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  maxItems: 8
+                  type: array
+                  x-kubernetes-list-map-keys:
+                    - type
+                  x-kubernetes-list-type: map
+                domainKey:
+                  type: string
+                environmentId:
+                  description: The environment Key defined in the AM context.
+                  type: string
+                key:
+                  description: The Key of the security domain in the AM instance.
+                  type: string
+                organizationId:
+                  description: The organization Key defined in the AM context.
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

@@ -80,3 +80,10 @@ type ReporterStatus struct {
 	// +kubebuilder:validation:Optional
 	Type string `json:"type,omitempty"`
 }
+
+type ApplicationStatus struct {
+	DomainSubResourceStatus `json:",inline"`
+	// The OAuth 2.0 client identifier of the application in AM: spec.clientId, or the one AM generated.
+	// +kubebuilder:validation:Optional
+	ClientID string `json:"clientId,omitempty"`
+}
