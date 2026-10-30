@@ -9,7 +9,7 @@ Pick one mode per user message. Do not mix.
 
 | Mode | User intent | Agent does | Then |
 |---|---|---|---|
-| Draft | plan / design / explore | write `plans/<slug>.md` | stop |
+| Draft | plan / design / explore | write `docs/plans/<slug>.md` | stop |
 | Challenge | questions a Case / Issue / decision | answer that question | **stop** |
 | Revise | compromise agreed | snapshot `revN`, edit original, sync | stop |
 | Execute | "implement the plan" / "execute" / "go ahead and implement" | follow the plan, do not edit it | — |
@@ -28,15 +28,15 @@ If Challenge vs Execute is unclear: **Challenge**.
 
 ## File names
 
-- Live plan: `plans/<slug>.md` (kebab-case, no `.rev` in the live name).
-- Snapshot before a Revise: `plans/<slug>.revN.md`
+- Live plan: `../../docs/plans/<slug>.md` (kebab-case, no `.rev` in the live name).
+- Snapshot before a Revise: `../../docs/plans/<slug>.revN.md`
 - `N` starts at `0`. Never overwrite a `revN` file.
 - Next `N` = highest existing `rev*` + 1. If none, use `0`.
 
 If more than one repo is in scope, the live file and the new `revN`
-must be byte-identical in each repo's `plans/`.
+must be byte-identical in each repo's `../../docs/plans/`.
 
-`plans/` may be gitignored. Still write there. Do not commit plans
+`../../docs/plans/` may be gitignored. Still write there. Do not commit plans
 unless the user asks.
 
 ## Draft
@@ -45,8 +45,8 @@ unless the user asks.
    never lists `gravitee-platform-e2e`: journeys are epic-level and
    written separately from the story.
 2. Read enough code to make the plan actionable. Do not start the work.
-3. Write `plans/<slug>.md` using the template below.
-4. If two repos: write the same file to both `plans/` directories.
+3. Write `../../docs/plans/<slug>.md` using the template below.
+4. If two repos: write the same file to both `../../docs/plans/` directories.
 5. Show the user the Cases. Stop. Wait.
 
 ### Template
@@ -109,8 +109,8 @@ Same message also says to update the plan? That is Revise, below.
 Triggers: user agrees the new shape ("do that", "update the plan",
 "drop X", "yes, CredentialAuth only").
 
-1. Copy live file → `plans/<slug>.revN.md` (next unused N).
-2. Edit `plans/<slug>.md` to match the agreed shape.
+1. Copy live file → `../../docs/plans/<slug>.revN.md` (next unused N).
+2. Edit `../../docs/plans/<slug>.md` to match the agreed shape.
 3. Sync both files to every repo listed under `Repos:`.
 4. Tell the user: what changed, new rev id, which Cases moved.
 5. Stop. Do not implement unless the same message is Execute.
@@ -126,9 +126,9 @@ Do not edit the plan file.
 
 Two-repo work (any pair listed in `Repos:`):
 
-- After every Draft write and every Revise, both `plans/` copies
+- After every Draft write and every Revise, both `../../docs/plans/` copies
   match.
 - Same `<slug>`, same `revN`.
-- If `plans/` is missing, create it.
+- If `../../docs/plans/` is missing, create it.
 
 One-repo work: no sync.
