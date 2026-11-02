@@ -45,6 +45,24 @@ var _ = Describe("Identity provider drift detection", func() {
     email: "john.doe@example.com" != "jane.doe@example.com"`)
 	})
 
+	It("does not drift on an empty domain whitelist AM returns as absent", func() {
+		crd := identityProviderForDrift()
+		crd.DomainWhitelist = []string{}
+		remote := remoteIdentityProvider()
+		remote.DomainWhitelist = nil
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("detects drift on a domain whitelist emptied in AM", func() {
+		remote := remoteIdentityProvider()
+		remote.DomainWhitelist = nil
+
+		result := drift.DetectWithNamespace(identityProviderForDrift(), remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring("domainWhitelist"))
+	})
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			// system is false on a regular identity provider, a zero value this check rejects.

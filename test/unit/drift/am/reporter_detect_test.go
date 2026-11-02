@@ -43,6 +43,15 @@ var _ = Describe("Reporter drift detection", func() {
   topic: "audit" != "renamed-in-am"`)
 	})
 
+	It("detects drift on an event type added in AM", func() {
+		remote := remoteReporter()
+		remote.AttributeMappingEventTypes = append(remote.AttributeMappingEventTypes, "USER_CREATED")
+
+		result := drift.DetectWithNamespace(reporterForDrift(), remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring("USER_CREATED"))
+	})
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			// system is false on a regular reporter, a zero value this check rejects.

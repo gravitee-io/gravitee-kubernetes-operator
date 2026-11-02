@@ -86,6 +86,10 @@
 //     remote value (a server default) is.
 //   - ignore-remote-default (struct): ignores a difference when the CRD leaves the object nil;
 //     a declared object, empty included, is compared field by field. Arguments are not supported.
+//   - ignore-remote-default (bool): ignores a difference when the CRD leaves the field unset;
+//     a value it sets, false included, is compared. Arguments are not supported.
+//   - ignore-remote-default (slice): ignores a difference when the CRD leaves the list unset or empty;
+//     a declared list is compared item by item. Arguments are not supported.
 //   - ignore-namespace-prefix (string): strips namespace prefix before comparing.
 //   - ignore-only (slice): filters items present only on the side given by the tag argument (remote or crd).
 //     With strip-ns, remaining keys are compared as a set after stripping the namespace prefix.

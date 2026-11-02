@@ -1,0 +1,304 @@
+{
+  "certificate": "default-system-certificate",
+  "clientId": "mobile-banking",
+  "createdAt": "2026-10-05T10:00:00Z",
+  "description": "Customer mobile client",
+  "dryRunErrors": [
+    {
+      "message": "message",
+      "severity": "warning"
+    }
+  ],
+  "enabled": true,
+  "identityProviders": [
+    {
+      "identity": "default-inline-idp",
+      "priority": 1,
+      "selectionRule": "selectionRule"
+    }
+  ],
+  "key": "default-mobile-banking",
+  "kind": "AUTONOMOUS",
+  "metadata": {
+    "owner": "payments-team"
+  },
+  "name": "Mobile Banking",
+  "settings": {
+    "account": {
+      "accountBlockedDuration": 1,
+      "autoLoginAfterRegistration": true,
+      "autoLoginAfterResetPassword": true,
+      "completeRegistrationWhenResetPassword": true,
+      "defaultIdentityProviderForRegistration": "defaultIdentityProviderForRegistration",
+      "deletePasswordlessDevicesAfterResetPassword": true,
+      "dynamicUserRegistration": true,
+      "inherited": true,
+      "loginAttemptsDetectionEnabled": true,
+      "loginAttemptsResetTime": 1,
+      "maxLoginAttempts": 1,
+      "mfaChallengeAttemptsDetectionEnabled": true,
+      "mfaChallengeAttemptsResetTime": 1,
+      "mfaChallengeMaxAttempts": 1,
+      "mfaChallengeSendVerifyAlertEmail": true,
+      "redirectUriAfterRegistration": "redirectUriAfterRegistration",
+      "redirectUriAfterResetPassword": "redirectUriAfterResetPassword",
+      "rememberMe": true,
+      "rememberMeDuration": 1,
+      "resetPasswordConfirmIdentity": true,
+      "resetPasswordCustomForm": true,
+      "resetPasswordCustomFormFields": [
+        {
+          "key": "key",
+          "label": "label",
+          "type": "text"
+        }
+      ],
+      "resetPasswordInvalidateTokens": true,
+      "sendRecoverAccountEmail": true,
+      "sendVerifyRegistrationAccountEmail": true
+    },
+    "advanced": {
+      "flowsInherited": true,
+      "skipConsent": true
+    },
+    "cookieSettings": {
+      "inherited": true,
+      "session": {
+        "persistent": true
+      }
+    },
+    "login": {
+      "certificateBasedAuthEnabled": true,
+      "certificateBasedAuthUrl": "certificateBasedAuthUrl",
+      "forgotPasswordEnabled": true,
+      "hideForm": true,
+      "identifierFirstEnabled": true,
+      "inherited": true,
+      "magicLinkAuthEnabled": true,
+      "passwordlessDeviceNamingEnabled": true,
+      "passwordlessEnabled": true,
+      "passwordlessEnforcePasswordEnabled": true,
+      "passwordlessEnforcePasswordMaxAge": 1,
+      "passwordlessRememberDeviceEnabled": true,
+      "registerEnabled": true,
+      "rememberMeEnabled": true,
+      "resetPasswordOnExpiration": true
+    },
+    "mfa": {
+      "adaptiveAuthenticationRule": "adaptiveAuthenticationRule",
+      "challenge": {
+        "active": true,
+        "challengeRule": "challengeRule",
+        "type": "required"
+      },
+      "enroll": {
+        "active": true,
+        "enrollmentRule": "enrollmentRule",
+        "enrollmentSkipActive": true,
+        "enrollmentSkipRule": "enrollmentSkipRule",
+        "forceEnrollment": true,
+        "skipTimeSeconds": 1,
+        "type": "optional"
+      },
+      "enrollment": {
+        "forceEnrollment": true,
+        "skipTimeSeconds": 1
+      },
+      "factor": {
+        "applicationFactors": [
+          {
+            "id": "id:0b8e4c6a-3f2d-4e1b-9a7c-5d6e8f9a1b2c",
+            "selectionRule": "selectionRule"
+          }
+        ],
+        "defaultFactorId": "id:0b8e4c6a-3f2d-4e1b-9a7c-5d6e8f9a1b2c"
+      },
+      "loginRule": "loginRule",
+      "rememberDevice": {
+        "active": true,
+        "deviceIdentifierId": "deviceIdentifierId",
+        "expirationTimeSeconds": 1,
+        "skipRememberDevice": true
+      },
+      "stepUpAuthentication": {
+        "active": true,
+        "stepUpAuthenticationRule": "stepUpAuthenticationRule"
+      },
+      "stepUpAuthenticationRule": "stepUpAuthenticationRule"
+    },
+    "oauth": {
+      "accessTokenValiditySeconds": 1,
+      "applicationType": "applicationType",
+      "authorizationEncryptedResponseAlg": "authorizationEncryptedResponseAlg",
+      "authorizationEncryptedResponseEnc": "authorizationEncryptedResponseEnc",
+      "authorizationSignedResponseAlg": "authorizationSignedResponseAlg",
+      "clientName": "clientName",
+      "clientType": "clientType",
+      "clientUri": "clientUri",
+      "contacts": [
+        "contacts"
+      ],
+      "crossAppAccessSettings": {
+        "enabled": true,
+        "resourceServers": [
+          {
+            "clientId": "clientId",
+            "resourceServerId": "resourceServerId",
+            "trustDomainId": "trustDomainId"
+          }
+        ]
+      },
+      "defaultACRvalues": [
+        "defaultACRvalues"
+      ],
+      "defaultMaxAge": 1,
+      "disableRefreshTokenRotation": true,
+      "dpopBoundAccessTokens": true,
+      "enhanceScopesWithUserPermissions": true,
+      "forcePKCE": true,
+      "forceS256CodeChallengeMethod": true,
+      "grantTypes": [
+        "grantTypes"
+      ],
+      "idJagValiditySeconds": 1,
+      "idTokenEncryptedResponseAlg": "idTokenEncryptedResponseAlg",
+      "idTokenEncryptedResponseEnc": "idTokenEncryptedResponseEnc",
+      "idTokenSignedResponseAlg": "idTokenSignedResponseAlg",
+      "idTokenValiditySeconds": 1,
+      "initiateLoginUri": "initiateLoginUri",
+      "jwks": {
+        "key": "jwks-value"
+      },
+      "jwksUri": "jwksUri",
+      "lightweightJwtSettings": {
+        "allowedAccessTokenClaims": [
+          "allowedAccessTokenClaims"
+        ],
+        "allowedIdTokenClaims": [
+          "allowedIdTokenClaims"
+        ],
+        "enabled": true
+      },
+      "logoUri": "logoUri",
+      "optInScopeSelection": true,
+      "policyUri": "policyUri",
+      "postLogoutRedirectUris": [
+        "postLogoutRedirectUris"
+      ],
+      "redirectUris": [
+        "redirectUris"
+      ],
+      "refreshTokenValiditySeconds": 1,
+      "requestObjectEncryptionAlg": "requestObjectEncryptionAlg",
+      "requestObjectEncryptionEnc": "requestObjectEncryptionEnc",
+      "requestObjectSigningAlg": "requestObjectSigningAlg",
+      "requestUris": [
+        "requestUris"
+      ],
+      "requireAuthTime": true,
+      "responseTypes": [
+        "responseTypes"
+      ],
+      "scopeSettings": [
+        {
+          "defaultScope": true,
+          "requiredScope": true,
+          "scope": "scope",
+          "scopeApproval": 1
+        }
+      ],
+      "sectorIdentifierUri": "sectorIdentifierUri",
+      "silentReAuthentication": true,
+      "singleSignOut": true,
+      "subjectType": "subjectType",
+      "tlsClientAuthSanDns": "tlsClientAuthSanDns",
+      "tlsClientAuthSanEmail": "tlsClientAuthSanEmail",
+      "tlsClientAuthSanIp": "tlsClientAuthSanIp",
+      "tlsClientAuthSanUri": "tlsClientAuthSanUri",
+      "tlsClientAuthSubjectDn": "tlsClientAuthSubjectDn",
+      "tlsClientCertificateBoundAccessTokens": true,
+      "tokenCustomClaims": [
+        {
+          "claimName": "claimName",
+          "claimValue": "claimValue",
+          "tokenType": "access_token"
+        }
+      ],
+      "tokenEndpointAuthMethod": "tokenEndpointAuthMethod",
+      "tokenEndpointAuthSigningAlg": "tokenEndpointAuthSigningAlg",
+      "tokenExchangeOAuthSettings": {
+        "inherited": true,
+        "scopeHandling": "downscoping"
+      },
+      "tosUri": "tosUri",
+      "userinfoCustomClaims": [
+        {
+          "claimName": "claimName",
+          "claimValue": "claimValue"
+        }
+      ],
+      "userinfoEncryptedResponseAlg": "userinfoEncryptedResponseAlg",
+      "userinfoEncryptedResponseEnc": "userinfoEncryptedResponseEnc",
+      "userinfoSignedResponseAlg": "userinfoSignedResponseAlg"
+    },
+    "riskAssessment": {
+      "deviceAssessment": {
+        "enabled": true,
+        "thresholds": {
+          "key": 0.5
+        }
+      },
+      "enabled": true,
+      "geoVelocityAssessment": {
+        "enabled": true,
+        "thresholds": {
+          "key": 0.5
+        }
+      },
+      "ipReputationAssessment": {
+        "enabled": true,
+        "thresholds": {
+          "key": 0.5
+        }
+      }
+    },
+    "saml": {
+      "assertionAttributes": [
+        {
+          "name": "name",
+          "value": "value"
+        }
+      ],
+      "assertionValiditySeconds": 1,
+      "attributeConsumeServiceUrl": "attributeConsumeServiceUrl",
+      "audiences": [
+        "audiences"
+      ],
+      "certificate": "certificate",
+      "dataEncryptionAlgorithm": "dataEncryptionAlgorithm",
+      "entityId": "entityId",
+      "includeAssertionConditions": true,
+      "keyTransportEncryptionAlgorithm": "keyTransportEncryptionAlgorithm",
+      "nameIdMapping": "nameIdMapping",
+      "notBeforeTimeSkewSeconds": 1,
+      "notOnOrAfterTimeSkewSeconds": 1,
+      "responseBinding": "responseBinding",
+      "singleLogoutServiceUrl": "singleLogoutServiceUrl",
+      "wantAssertionsEncrypted": true,
+      "wantAssertionsSigned": true,
+      "wantResponseSigned": true
+    },
+    "secretExpirationSettings": {
+      "enabled": true,
+      "expiryTimeSeconds": 1
+    },
+    "workloadIdentitySettings": {
+      "subject": "subject",
+      "subjectMatchMode": "exact",
+      "trustDomain": "trustDomain"
+    }
+  },
+  "template": true,
+  "type": "native",
+  "updatedAt": "2026-10-05T10:00:00Z"
+}

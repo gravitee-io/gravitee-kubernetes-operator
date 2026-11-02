@@ -35,12 +35,22 @@ var _ = Describe("Security domain drift detection", func() {
 		expectNoDrift(drift.DetectWithNamespace(crd, remoteSecurityDomain(), ""))
 	})
 
-	It("detects drift on a remote change", func() {
+	It("does not drift on a default allowed algorithm only AM holds", func() {
 		remote := remoteSecurityDomain()
-		remote.CorsSettings.Enabled = new(false)
+		spiffe := remote.Oidc.WorkloadIdentitySettings
+		spiffe.DefaultAllowedAlgorithms = append(spiffe.DefaultAllowedAlgorithms, "ES256")
 
-		expectDrift(drift.DetectWithNamespace(securityDomainForDrift(), remote, ""), `corsSettings:
-  enabled: true != false`)
+		expectNoDrift(drift.DetectWithNamespace(securityDomainForDrift(), remote, ""))
+	})
+
+	It("detects drift on a declared default allowed algorithm AM does not hold", func() {
+		crd := securityDomainForDrift()
+		spiffe := crd.Oidc.WorkloadIdentitySettings
+		spiffe.DefaultAllowedAlgorithms = append(spiffe.DefaultAllowedAlgorithms, "ES256")
+
+		result := drift.DetectWithNamespace(crd, remoteSecurityDomain(), "")
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring("defaultAllowedAlgorithms"))
 	})
 
 	It("detects drift when AM adds a tag", func() {
