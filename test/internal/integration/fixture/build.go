@@ -54,6 +54,7 @@ type Files struct {
 	AMIdentityProvider string
 	AMCertificate      string
 	AMReporter         string
+	AMApplication      string
 }
 
 type FSBuilder struct {
@@ -164,6 +165,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if reporter := decodeIfDefined(f.AMReporter, &v1alpha1.AMReporter{}, amReporterKind); reporter != nil {
 		setupAMReporter(obj, reporter, suffix)
+	}
+
+	if app := decodeIfDefined(f.AMApplication, &v1alpha1.AMApplication{}, amApplicationKind); app != nil {
+		setupAMApplication(obj, app, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -476,6 +481,23 @@ func setupAMReporter(obj *Objects, reporter **v1alpha1.AMReporter, suffix string
 	}
 }
 
+func setupAMApplication(obj *Objects, app **v1alpha1.AMApplication, suffix string) {
+	obj.AMApplication = *app
+	obj.AMApplication.Name += suffix
+	obj.AMApplication.Namespace = constants.Namespace
+	if obj.AMSecurityDomain != nil {
+		obj.AMApplication.Spec.DomainRef = refs.NamespacedName{Name: obj.AMSecurityDomain.Name}
+	}
+	if obj.AMCertificate != nil && obj.AMApplication.Spec.CertificateRef != nil {
+		obj.AMApplication.Spec.CertificateRef = &refs.NamespacedName{Name: obj.AMCertificate.Name}
+	}
+	for i, idp := range obj.AMApplication.Spec.IdentityProviders {
+		if obj.AMIdentityProvider != nil && idp.IdentityRef != nil {
+			obj.AMApplication.Spec.IdentityProviders[i].IdentityRef = &refs.NamespacedName{Name: obj.AMIdentityProvider.Name}
+		}
+	}
+}
+
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
 	obj.SharedPolicyGroup = *sub
 	obj.SharedPolicyGroup.Name += suffix
@@ -640,5 +662,10 @@ func (b *FSBuilder) WithAMCertificate(file string) *FSBuilder {
 
 func (b *FSBuilder) WithAMReporter(file string) *FSBuilder {
 	b.files.AMReporter = file
+	return b
+}
+
+func (b *FSBuilder) WithAMApplication(file string) *FSBuilder {
+	b.files.AMApplication = file
 	return b
 }

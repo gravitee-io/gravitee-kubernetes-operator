@@ -49,6 +49,7 @@ type Objects struct {
 	AMIdentityProvider *v1alpha1.AMIdentityProvider
 	AMCertificate      *v1alpha1.AMCertificate
 	AMReporter         *v1alpha1.AMReporter
+	AMApplication      *v1alpha1.AMApplication
 
 	randomSuffix   string
 	navigationRoot string

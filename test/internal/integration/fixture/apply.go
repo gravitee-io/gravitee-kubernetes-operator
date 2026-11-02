@@ -59,6 +59,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyAMReporter(cli, ctx)
 	}
 
+	if o.AMApplication != nil {
+		o.applyAMApplication(cli, ctx)
+	}
+
 	if o.Context != nil {
 		o.applyContext(cli, ctx)
 	}
@@ -366,6 +370,20 @@ func (o *Objects) applyAMReporter(cli client.Client, ctx context.Context) {
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMReporter.Name)
+}
+
+func (o *Objects) applyAMApplication(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.AMApplication)).ToNot(HaveOccurred())
+	Eventually(func() error {
+		err := manager.GetLatest(ctx, o.AMApplication)
+		if err != nil {
+			return err
+		}
+		if err = assert.AMApplicationAccepted(o.AMApplication); err != nil {
+			return assert.AMApplicationFailed(o.AMApplication)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMApplication.Name)
 }
 
 func (o *Objects) applyAMSecurityDomain(cli client.Client, ctx context.Context) {

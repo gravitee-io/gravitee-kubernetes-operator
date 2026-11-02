@@ -241,6 +241,15 @@ func AMReporterFailed(reporter *v1alpha1.AMReporter) error {
 	return Equals(reconcileCondition, true, reporter.Status.IsFailed())
 }
 
+func AMApplicationAccepted(app *v1alpha1.AMApplication) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(app.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func AMApplicationFailed(app *v1alpha1.AMApplication) error {
+	return Equals(reconcileCondition, true, app.Status.IsFailed())
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }

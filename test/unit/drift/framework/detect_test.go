@@ -1309,7 +1309,6 @@ var _ = Describe("Merge", func() {
 		Expect(merged.DriftDetected()).To(BeFalse())
 	})
 
-
 	DescribeTable("no drift",
 		func(oldCRD, newCRD, remote any) {
 			or := drift.DetectWithNamespace(oldCRD, remote, "")
