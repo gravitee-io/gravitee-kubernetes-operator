@@ -19,9 +19,9 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/am/domain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amsecuritydomain"
 	internal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/securitydomain"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"

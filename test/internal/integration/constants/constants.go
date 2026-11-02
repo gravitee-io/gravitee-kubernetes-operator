@@ -211,9 +211,15 @@ const (
 	AMCertificateInlineFile     = "am/certificate/dev/certificate-pkcs12-inline.yml"
 	AMCertificateSecretFile     = "am/certificate/dev/certificate-pkcs12-secret.yml"
 	AMCertificateKeystoreFile   = "am/certificate/dev/certificate-keystore-secret.yml"
+	AMCertificateSystemFile     = "am/certificate/certificate-system.yml"
 	AMReporterFileFile          = "am/reporter/dev/reporter-file.yml"
 	AMReporterKafkaSecretFile   = "am/reporter/dev/reporter-kafka-secret.yml"
 	AMReporterKafkaPasswordFile = "am/reporter/dev/reporter-kafka-password.yml"
+	AMApplicationMinimalFile    = "am/application/application-minimal.yml"
+	AMApplicationFullFile       = "am/application/application-full.yml"
+	AMApplicationKeysFile       = "am/application/application-keys.yml"
+	AMApplicationClientIDFile   = "am/application/application-client-id.yml"
+	AMApplicationMFAFile        = "am/application/application-mfa.yml"
 
 	// Use cases.
 	SubscribeJWTUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
