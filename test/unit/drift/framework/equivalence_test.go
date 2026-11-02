@@ -310,6 +310,53 @@ var _ = Describe("IgnoreRemoteDefault on structs", func() {
 	)
 })
 
+var _ = Describe("IgnoreRemoteDefault on booleans", func() {
+	type withBool struct {
+		Enabled *bool `json:"enabled,omitempty" drift:"ignore-remote-default"`
+	}
+
+	DescribeTable("no drift",
+		func(crd, remote withBool) { expectNoDrift(drift.DetectWithNamespace(crd, remote, "")) },
+		Entry("unset crd value accepts true", withBool{}, withBool{Enabled: new(true)}),
+		Entry("unset crd value accepts false", withBool{}, withBool{Enabled: new(false)}),
+		Entry("equal declared values", withBool{Enabled: new(false)}, withBool{Enabled: new(false)}),
+	)
+
+	DescribeTable("drift",
+		func(crd, remote withBool) {
+			result := drift.DetectWithNamespace(crd, remote, "")
+			Expect(result.DriftDetected()).To(BeTrue())
+			Expect(result.String()).To(ContainSubstring("enabled"))
+		},
+		Entry("declared false against true", withBool{Enabled: new(false)}, withBool{Enabled: new(true)}),
+		Entry("declared true against a missing remote value", withBool{Enabled: new(true)}, withBool{}),
+	)
+})
+
+var _ = Describe("IgnoreRemoteDefault on lists", func() {
+	type withList struct {
+		Tags []string `json:"tags,omitempty" drift:"ignore-remote-default"`
+	}
+
+	DescribeTable("no drift",
+		func(crd, remote withList) { expectNoDrift(drift.DetectWithNamespace(crd, remote, "")) },
+		Entry("unset crd list accepts any remote list", withList{}, withList{Tags: []string{"a"}}),
+		Entry("empty crd list accepts any remote list", withList{Tags: []string{}}, withList{Tags: []string{"a"}}),
+		Entry("equal declared lists", withList{Tags: []string{"b"}}, withList{Tags: []string{"b"}}),
+	)
+
+	DescribeTable("drift",
+		func(crd, remote withList) {
+			result := drift.DetectWithNamespace(crd, remote, "")
+			Expect(result.DriftDetected()).To(BeTrue())
+			Expect(result.String()).To(ContainSubstring("tags"))
+		},
+		Entry("changed item", withList{Tags: []string{"b"}}, withList{Tags: []string{"a"}}),
+		Entry("remote-only item", withList{Tags: []string{"b"}}, withList{Tags: []string{"b", "c"}}),
+		Entry("missing remote list", withList{Tags: []string{"b"}}, withList{}),
+	)
+})
+
 var _ = Describe("CaseInsensitive drift tags", func() {
 	DescribeTable("should report equivalence", func(a, b any) {
 		e := drift.CaseInsensitive(a, b, drift.DriftContext{})

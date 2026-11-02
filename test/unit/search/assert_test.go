@@ -91,17 +91,19 @@ var _ = Describe("AssertNoAMCertificateRef", func() {
 		d.Spec.CertificateSettings = &amdomain.CertificateSettings{FallbackCertificate: new(fallback)}
 		return d
 	}
-	// cluster registers a fake client indexing domains with the index function InitCache registers.
+	// cluster registers a fake client indexing domains and applications with the index functions InitCache registers.
 	cluster := func(objects ...client.Object) {
 		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
 		Expect(search.InitCache(context.Background(), c)).To(Succeed())
 		scheme := runtime.NewScheme()
 		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
 		field := search.AMSecurityDomainFallbackCertificateField.String()
+		appField := search.AMApplicationCertificateKeyField.String()
 		k8s.RegisterClient(fake.NewClientBuilder().
 			WithScheme(scheme).
 			WithObjects(objects...).
 			WithIndex(&v1alpha1.AMSecurityDomain{}, field, c.indexers[field]).
+			WithIndex(&v1alpha1.AMApplication{}, appField, c.indexers[appField]).
 			Build())
 	}
 
@@ -127,5 +129,29 @@ var _ = Describe("AssertNoAMCertificateRef", func() {
 		cluster(domain("d1", "other", "ns-cert"))
 
 		Expect(search.AssertNoAMCertificateRef(context.Background(), cert)).To(Succeed())
+	})
+
+	Describe("applications", func() {
+		domainCert := &v1alpha1.AMCertificate{ObjectMeta: metav1.ObjectMeta{Name: "cert", Namespace: ns}}
+		domainCert.Spec.DomainRef.Name = "banking"
+		application := func(name, domainName string) *v1alpha1.AMApplication {
+			app := &v1alpha1.AMApplication{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns}}
+			app.Spec.DomainRef.Name = domainName
+			app.Spec.Certificate = new("ns-cert")
+			return app
+		}
+
+		It("fails with the number of applications of its domain that use the certificate", func() {
+			cluster(application("a1", "banking"), application("a2", "banking"))
+
+			Expect(search.AssertNoAMCertificateRef(context.Background(), domainCert)).
+				To(MatchError(ContainSubstring("[cert] cannot be deleted because 2 AM applications use it")))
+		})
+
+		It("ignores an application of another domain naming the same key", func() {
+			cluster(application("a1", "retail"))
+
+			Expect(search.AssertNoAMCertificateRef(context.Background(), domainCert)).To(Succeed())
+		})
 	})
 })

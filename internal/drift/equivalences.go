@@ -39,6 +39,8 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("time", reflect.Struct, TimeStruct)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.String, IgnoreRemoteDefault)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Struct, IgnoreRemoteDefaultStruct)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Bool, IgnoreRemoteDefaultBool)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Slice, IgnoreRemoteDefaultSlice)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
@@ -440,6 +442,25 @@ func IgnoreRemoteDefaultStruct(crd any, remote any, context DriftContext) Equiva
 		return Equivalence{Equivalent: Inequivalent, Skip: true}
 	}
 	return defaultStructEquivalence(crd, remote, context)
+}
+
+// IgnoreRemoteDefaultBool is the boolean form of IgnoreRemoteDefault: a CRD that leaves the field unset accepts
+// whatever the server holds; a value it sets, false included, is compared. Tag arguments are not supported.
+func IgnoreRemoteDefaultBool(crd any, remote any, context DriftContext) Equivalence {
+	if crd == nil {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	return DefaultEquivalence(crd, remote, context)
+}
+
+// IgnoreRemoteDefaultSlice is the list form of IgnoreRemoteDefault: a CRD that leaves the list unset or empty
+// accepts whatever the server holds, items unchecked; a declared list is compared item by item. Tag arguments
+// are not supported.
+func IgnoreRemoteDefaultSlice(crd any, remote any, context DriftContext) Equivalence {
+	if crd == nil || reflect.ValueOf(crd).Len() == 0 {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+	return defaultSliceEquivalence(crd, remote, context)
 }
 
 func Ignore(_ any, r any, c DriftContext) Equivalence {
