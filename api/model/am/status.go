@@ -87,3 +87,13 @@ type ApplicationStatus struct {
 	// +kubebuilder:validation:Optional
 	ClientID string `json:"clientId,omitempty"`
 }
+
+type ClientSecretStatus struct {
+	DomainSubResourceStatus `json:",inline"`
+	// The key of the application in AM that the secret belongs to.
+	// +kubebuilder:validation:Optional
+	ApplicationKey string `json:"applicationKey,omitempty"`
+	// When the secret expires, as reported by AM. Absent when the secret does not expire.
+	// +kubebuilder:validation:Optional
+	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
+}

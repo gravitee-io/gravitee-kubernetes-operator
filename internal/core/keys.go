@@ -87,6 +87,7 @@ const (
 	AMCertificateFinalizer           = "finalizers.gravitee.io/amcertificates"
 	AMReporterFinalizer              = "finalizers.gravitee.io/amreporters"
 	AMApplicationFinalizer           = "finalizers.gravitee.io/amapplications"
+	AMClientSecretFinalizer          = "finalizers.gravitee.io/amclientsecrets"
 
 	GraviteeGatewayClassController = "apim.gravitee.io/gateway"
 
