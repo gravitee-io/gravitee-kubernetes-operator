@@ -51,6 +51,7 @@ import (
 
 	amappAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amapplication"
 	amcertAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amcertificate"
+	amcsAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amclientsecret"
 	amctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amctx"
 	amidpAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amidentityprovider"
 	amrepAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amreporter"
@@ -717,6 +718,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (amappAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (amcsAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	if err := (subAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
