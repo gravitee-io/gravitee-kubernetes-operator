@@ -56,6 +56,7 @@ type Interface interface {
 	WatchCatalogMcpServers(index search.IndexField) *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
 	WatchDomains(index search.IndexField) *handler.Funcs
+	WatchApplications(index search.IndexField) *handler.Funcs
 	WatchCreated(index search.IndexField) *handler.Funcs
 }
 
@@ -232,6 +233,15 @@ func (w *Type) WatchDomains(index search.IndexField) *handler.Funcs {
 	}
 }
 
+// WatchApplications queues the resources indexed under an AM application when it is created, and when AM
+// accepts it (status.key set): until then nothing can be created under it.
+func (w *Type) WatchApplications(index search.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.updateWhenApplicationReady(index),
+	}
+}
+
 // WatchCreated queues the resources indexed under an object when it is created: its existence is all they wait for.
 func (w *Type) WatchCreated(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{CreateFunc: w.CreateFromLookup(index)}
@@ -243,6 +253,17 @@ func (w *Type) updateWhenDomainReady(field search.IndexField) UpdateFunc {
 		oldDomain, okOld := e.ObjectOld.(*v1alpha1.AMSecurityDomain)
 		newDomain, okNew := e.ObjectNew.(*v1alpha1.AMSecurityDomain)
 		if okOld && okNew && oldDomain.Status.Key == "" && newDomain.Status.Key != "" {
+			lookup(ctx, e, q)
+		}
+	}
+}
+
+func (w *Type) updateWhenApplicationReady(field search.IndexField) UpdateFunc {
+	lookup := w.UpdateFromLookup(field)
+	return func(ctx context.Context, e event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+		oldApp, okOld := e.ObjectOld.(*v1alpha1.AMApplication)
+		newApp, okNew := e.ObjectNew.(*v1alpha1.AMApplication)
+		if okOld && okNew && oldApp.Status.Key == "" && newApp.Status.Key != "" {
 			lookup(ctx, e, q)
 		}
 	}
