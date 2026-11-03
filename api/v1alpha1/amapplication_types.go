@@ -89,7 +89,6 @@ func (s *AMApplicationStatus) IsFailed() bool {
 // It has no client secret until an AMClientSecret references it; its effective clientId is in status.clientId.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
 // +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
 // +kubebuilder:printcolumn:name="Client ID",type=string,JSONPath=`.status.clientId`
 // +kubebuilder:printcolumn:name="Domain",type=string,JSONPath=`.spec.domainRef.name`

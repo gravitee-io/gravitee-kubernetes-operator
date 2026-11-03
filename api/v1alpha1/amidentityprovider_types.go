@@ -84,7 +84,6 @@ func (s *AMIdentityProviderStatus) IsFailed() bool {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.status.name`
 // +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.status.type`
 // +kubebuilder:printcolumn:name="Domain",type=string,JSONPath=`.spec.domainRef.name`
 // +kubebuilder:resource:shortName=graviteeamidentityproviders

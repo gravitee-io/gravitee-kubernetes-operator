@@ -38,7 +38,7 @@ var _ = Describe("Update", func() {
 		app := fixtures(constants.AMApplicationMinimalFile).Apply().AMApplication
 		clientID := app.Status.ClientID
 
-		By("renaming the application, changing its type and adding redirect URIs and metadata")
+		By("renaming the application, changing its type, its redirect URIs and adding metadata")
 
 		Expect(manager.GetLatest(ctx, app)).To(Succeed())
 		app.Spec.Name = "Renamed"
