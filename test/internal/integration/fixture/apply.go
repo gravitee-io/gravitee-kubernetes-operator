@@ -63,6 +63,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyAMApplication(cli, ctx)
 	}
 
+	if o.AMClientSecret != nil {
+		o.applyAMClientSecret(cli, ctx)
+	}
+
 	if o.Context != nil {
 		o.applyContext(cli, ctx)
 	}
@@ -384,6 +388,20 @@ func (o *Objects) applyAMApplication(cli client.Client, ctx context.Context) {
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMApplication.Name)
+}
+
+func (o *Objects) applyAMClientSecret(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.AMClientSecret)).ToNot(HaveOccurred())
+	Eventually(func() error {
+		err := manager.GetLatest(ctx, o.AMClientSecret)
+		if err != nil {
+			return err
+		}
+		if err = assert.AMClientSecretAccepted(o.AMClientSecret); err != nil {
+			return assert.AMClientSecretFailed(o.AMClientSecret)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.AMClientSecret.Name)
 }
 
 func (o *Objects) applyAMSecurityDomain(cli client.Client, ctx context.Context) {

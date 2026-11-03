@@ -250,6 +250,15 @@ func AMApplicationFailed(app *v1alpha1.AMApplication) error {
 	return Equals(reconcileCondition, true, app.Status.IsFailed())
 }
 
+func AMClientSecretAccepted(cs *v1alpha1.AMClientSecret) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(cs.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func AMClientSecretFailed(cs *v1alpha1.AMClientSecret) error {
+	return Equals(reconcileCondition, true, cs.Status.IsFailed())
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }
