@@ -73,6 +73,9 @@ const (
 	AMApplicationCertificateKeyField      IndexField = "am-application-cert-key"
 	AMApplicationIdentityProviderKeyField IndexField = "am-application-idp-key"
 
+	AMClientSecretApplicationField IndexField = "am-client-secret-application"
+	AMClientSecretSecretField      IndexField = "am-client-secret-secret"
+
 	AMSecurityDomainFallbackCertificateField IndexField = "am-domain-fallback-cert"
 )
 
@@ -161,6 +164,10 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexAMApplicationCertificateKey))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMApplication{}, AMApplicationIdentityProviderKeyField,
 		indexAMApplicationIdentityProviderKeys))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMClientSecret{}, AMClientSecretApplicationField,
+		indexAMClientSecretApplication))
+	collect(newIndexer(ctx, cache, &v1alpha1.AMClientSecret{}, AMClientSecretSecretField,
+		indexAMClientSecretSecret))
 
 	return errors.NewAggregate(errs)
 }
@@ -574,4 +581,17 @@ func indexAMSecurityDomainFallbackCertificate(asd *v1alpha1.AMSecurityDomain, fi
 	}
 	cert := refs.NewNamespacedName(asd.GetNamespace(), *settings.FallbackCertificate)
 	*fields = append(*fields, cert.String())
+}
+
+// indexAMClientSecretApplication indexes a client secret under its application, always looked up in the
+// client secret's own namespace (a cross-namespace applicationRef is rejected).
+func indexAMClientSecretApplication(secret *v1alpha1.AMClientSecret, fields *[]string) {
+	app := refs.NewNamespacedName(secret.GetNamespace(), secret.Spec.ApplicationRef.Name)
+	*fields = append(*fields, app.String())
+}
+
+// indexAMClientSecretSecret indexes a client secret under the Secret holding its value, in its own namespace.
+func indexAMClientSecretSecret(secret *v1alpha1.AMClientSecret, fields *[]string) {
+	ref := refs.NewNamespacedName(secret.GetNamespace(), secret.Spec.SecretRef.Name)
+	*fields = append(*fields, ref.String())
 }

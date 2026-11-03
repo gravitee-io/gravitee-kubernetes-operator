@@ -54,6 +54,7 @@ rules:
       - amcertificates.gravitee.io
       - amreporters.gravitee.io
       - amapplications.gravitee.io
+      - amclientsecrets.gravitee.io
       - managementcontexts.gravitee.io
       - apidefinitions.gravitee.io
       - apiv4definitions.gravitee.io
