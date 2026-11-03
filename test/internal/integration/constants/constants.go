@@ -220,6 +220,7 @@ const (
 	AMApplicationKeysFile       = "am/application/application-keys.yml"
 	AMApplicationClientIDFile   = "am/application/application-client-id.yml"
 	AMApplicationMFAFile        = "am/application/application-mfa.yml"
+	AMClientSecretFile          = "am/client_secret/dev/client-secret.yml"
 
 	// Use cases.
 	SubscribeJWTUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"

@@ -55,6 +55,7 @@ type Files struct {
 	AMCertificate      string
 	AMReporter         string
 	AMApplication      string
+	AMClientSecret     string
 }
 
 type FSBuilder struct {
@@ -169,6 +170,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if app := decodeIfDefined(f.AMApplication, &v1alpha1.AMApplication{}, amApplicationKind); app != nil {
 		setupAMApplication(obj, app, suffix)
+	}
+
+	if cs := decodeIfDefined(f.AMClientSecret, &v1alpha1.AMClientSecret{}, amClientSecretKind); cs != nil {
+		setupAMClientSecret(obj, cs, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -668,4 +673,21 @@ func (b *FSBuilder) WithAMReporter(file string) *FSBuilder {
 func (b *FSBuilder) WithAMApplication(file string) *FSBuilder {
 	b.files.AMApplication = file
 	return b
+}
+
+func (b *FSBuilder) WithAMClientSecret(file string) *FSBuilder {
+	b.files.AMClientSecret = file
+	return b
+}
+
+// setupAMClientSecret suffixes the client secret and the name of its Secret, which the test creates, and points
+// it to the application under test.
+func setupAMClientSecret(obj *Objects, cs **v1alpha1.AMClientSecret, suffix string) {
+	obj.AMClientSecret = *cs
+	obj.AMClientSecret.Name += suffix
+	obj.AMClientSecret.Namespace = constants.Namespace
+	obj.AMClientSecret.Spec.SecretRef.Name += suffix
+	if obj.AMApplication != nil {
+		obj.AMClientSecret.Spec.ApplicationRef = refs.NamespacedName{Name: obj.AMApplication.Name}
+	}
 }

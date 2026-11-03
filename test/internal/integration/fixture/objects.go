@@ -50,6 +50,7 @@ type Objects struct {
 	AMCertificate      *v1alpha1.AMCertificate
 	AMReporter         *v1alpha1.AMReporter
 	AMApplication      *v1alpha1.AMApplication
+	AMClientSecret     *v1alpha1.AMClientSecret
 
 	randomSuffix   string
 	navigationRoot string
