@@ -30,3 +30,7 @@ spec:
   type: native
   certificateRef:
     name: system-certificate
+  settings:
+    oauth:
+      # AM requires at least one redirect URI for a native application.
+      redirectUris: ["com.example.mobile://callback"]
