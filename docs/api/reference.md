@@ -40,6 +40,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 ### Resource Types
 - [AMApplication](#amapplication)
 - [AMCertificate](#amcertificate)
+- [AMClientSecret](#amclientsecret)
 - [AMContext](#amcontext)
 - [AMIdentityProvider](#amidentityprovider)
 - [AMReporter](#amreporter)
@@ -195,6 +196,66 @@ _Appears in:_
 | `name` _string_ | The name of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
 | `type` _string_ | The plugin type of the certificate in AM. For the system certificate, the one AM builds. |  | Optional: \{\} <br /> |
 | `expiresAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#time-v1-meta)_ | When the certificate expires, as reported by AM. |  | Optional: \{\} <br /> |
+
+
+#### AMClientSecret
+
+
+
+AMClientSecret is a client secret of an AMApplication. The value is read from a Secret entry and never returned.
+A secret is immutable: to rotate it, create a new Secret and AMClientSecret, move the clients,
+then delete the old AMClientSecret.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AMClientSecret` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AMClientSecretSpec](#amclientsecretspec)_ |  |  |  |
+| `status` _[AMClientSecretStatus](#amclientsecretstatus)_ |  |  |  |
+
+
+#### AMClientSecretSpec
+
+
+
+AMClientSecretSpec defines the desired state of an AM client secret.
+
+
+
+_Appears in:_
+- [AMClientSecret](#amclientsecret)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `applicationRef` _[NamespacedName](#namespacedname)_ | The AMApplication the secret belongs to. |  | Required: \{\} <br /> |
+| `secretRef` _[SecretKeyRef](#secretkeyref)_ | The Secret entry holding the value of the client secret. |  | Required: \{\} <br /> |
+
+
+#### AMClientSecretStatus
+
+
+
+AMClientSecretStatus defines the observed state of an AM client secret.
+
+
+
+_Appears in:_
+- [AMClientSecret](#amclientsecret)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `applicationKey` _string_ | The key of the application in AM that the secret belongs to. |  | Optional: \{\} <br /> |
+| `expiresAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#time-v1-meta)_ | When the secret expires, as reported by AM. Absent when the secret does not expire. |  | Optional: \{\} <br /> |
 
 
 #### AMContext
@@ -775,6 +836,8 @@ _Appears in:_
 | `tools` _[Tool](#tool) array_ |  |  | Optional: \{\} <br /> |
 | `prompts` _[Prompt](#prompt) array_ |  |  | Optional: \{\} <br /> |
 | `resources` _[Resource](#resource) array_ |  |  | Optional: \{\} <br /> |
+
+
 
 
 #### Dictionary
@@ -1667,6 +1730,28 @@ _Appears in:_
 | `expiresAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#time-v1-meta)_ | When the certificate expires, as reported by AM. |  | Optional: \{\} <br /> |
 
 
+#### ClientSecretStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [AMClientSecretStatus](#amclientsecretstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ | The Key of the security domain in the AM instance. |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment Key defined in the AM context. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the security domain.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `domainKey` _string_ |  |  | Optional: \{\} <br /> |
+| `applicationKey` _string_ | The key of the application in AM that the secret belongs to. |  | Optional: \{\} <br /> |
+| `expiresAt` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#time-v1-meta)_ | When the secret expires, as reported by AM. Absent when the secret does not expire. |  | Optional: \{\} <br /> |
+
+
 #### Context
 
 
@@ -1698,10 +1783,12 @@ _Appears in:_
 _Appears in:_
 - [AMApplicationStatus](#amapplicationstatus)
 - [AMCertificateStatus](#amcertificatestatus)
+- [AMClientSecretStatus](#amclientsecretstatus)
 - [AMIdentityProviderStatus](#amidentityproviderstatus)
 - [AMReporterStatus](#amreporterstatus)
 - [ApplicationStatus](#applicationstatus)
 - [CertificateStatus](#certificatestatus)
+- [ClientSecretStatus](#clientsecretstatus)
 - [IdentityProviderStatus](#identityproviderstatus)
 - [ReporterStatus](#reporterstatus)
 
@@ -1758,6 +1845,23 @@ _Appears in:_
 | `type` _string_ | The plugin type of the reporter in AM. For the system reporter, the one AM builds. |  | Optional: \{\} <br /> |
 
 
+#### SecretKeyRef
+
+
+
+A key of a Secret in the namespace of the resource.
+
+
+
+_Appears in:_
+- [AMClientSecretSpec](#amclientsecretspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | The name of the Secret. |  | MinLength: 1 <br /> |
+| `key` _string_ | The key of the entry in the Secret. |  | MinLength: 1 <br /> |
+
+
 #### Status
 
 
@@ -1769,11 +1873,13 @@ _Appears in:_
 _Appears in:_
 - [AMApplicationStatus](#amapplicationstatus)
 - [AMCertificateStatus](#amcertificatestatus)
+- [AMClientSecretStatus](#amclientsecretstatus)
 - [AMIdentityProviderStatus](#amidentityproviderstatus)
 - [AMReporterStatus](#amreporterstatus)
 - [AMSecurityDomainStatus](#amsecuritydomainstatus)
 - [ApplicationStatus](#applicationstatus)
 - [CertificateStatus](#certificatestatus)
+- [ClientSecretStatus](#clientsecretstatus)
 - [DomainSubResourceStatus](#domainsubresourcestatus)
 - [IdentityProviderStatus](#identityproviderstatus)
 - [ReporterStatus](#reporterstatus)
@@ -5976,6 +6082,7 @@ _Appears in:_
 _Appears in:_
 - [AMApplicationSpec](#amapplicationspec)
 - [AMCertificateSpec](#amcertificatespec)
+- [AMClientSecretSpec](#amclientsecretspec)
 - [AMIdentityProviderSpec](#amidentityproviderspec)
 - [AMReporterSpec](#amreporterspec)
 - [AMSecurityDomainSpec](#amsecuritydomainspec)
