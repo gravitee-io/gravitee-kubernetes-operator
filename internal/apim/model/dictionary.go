@@ -32,8 +32,9 @@ type ManualSpec struct {
 }
 
 type DynamicSpec struct {
-	Provider *Provider `json:"provider"`
-	Trigger  *Trigger  `json:"trigger"`
+	Provider   *Provider                    `json:"provider"`
+	Trigger    *Trigger                     `json:"trigger"`
+	Encryption *dictionary.EncryptionPolicy `json:"encryption,omitempty" drift:"empty-is-nil"`
 }
 
 type Provider struct {
