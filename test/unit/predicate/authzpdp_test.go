@@ -15,6 +15,8 @@
 package predicate_test
 
 import (
+	"time"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -87,6 +89,24 @@ var _ = Describe("AuthzPdpRoutedPredicate", func() {
 		oldObj := authzPdp("Orders", "orders@eu")
 		newObj := authzPdp("Orders (EU)", "orders@eu")
 		Expect(p.Update(event.UpdateEvent{ObjectOld: oldObj, ObjectNew: newObj})).To(BeFalse())
+	})
+
+	It("passes the update that marks the PDP for deletion", func() {
+		oldObj := authzPdp("Orders", "orders@eu")
+		newObj := authzPdp("Orders", "orders@eu")
+		newObj.Finalizers = []string{core.AuthzPdpFinalizer}
+		newObj.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+		Expect(p.Update(event.UpdateEvent{ObjectOld: oldObj, ObjectNew: newObj})).To(BeTrue())
+	})
+
+	It("drops a later update of a PDP already being deleted", func() {
+		deleting := func() *v1alpha1.AuthzPdp {
+			obj := authzPdp("Orders", "orders@eu")
+			obj.Finalizers = []string{core.AuthzPdpFinalizer}
+			obj.DeletionTimestamp = &metav1.Time{Time: time.Unix(1793800000, 0)}
+			return obj
+		}
+		Expect(p.Update(event.UpdateEvent{ObjectOld: deleting(), ObjectNew: deleting()})).To(BeFalse())
 	})
 
 	It("drops an update of another kind", func() {

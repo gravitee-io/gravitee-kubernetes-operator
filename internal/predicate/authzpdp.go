@@ -22,9 +22,11 @@ import (
 
 // AuthzPdpRoutedPredicate passes the AuthzPdp events a resource targeting the PDP through pdpRef
 // needs. An update that changes status.routingScope is a first sync (or a new scope): it touches
-// the status only, so LastSpecHashPredicate drops it. A delete passes too: the platform removes
-// the deleted scope from every target, and the dependent must report it. A create is dropped: a
+// the status only, so LastSpecHashPredicate drops it. The update that marks the PDP for deletion
+// passes, and so does the delete: the resolver reports a PDP being deleted as pending from that
+// update on, and the platform removes the deleted scope from every target. A create is dropped: a
 // new PDP is not synced yet, and the cache replays every PDP as a create when the operator starts.
+// contextRef is immutable, so the context the resolver compares never changes on an update.
 type AuthzPdpRoutedPredicate struct {
 	predicate.Funcs
 }
@@ -39,7 +41,8 @@ func (AuthzPdpRoutedPredicate) Update(e event.UpdateEvent) bool {
 	if !oldOK || !newOK {
 		return false
 	}
-	return oldPdp.Status.RoutingScope != newPdp.Status.RoutingScope
+	return oldPdp.Status.RoutingScope != newPdp.Status.RoutingScope ||
+		oldPdp.IsBeingDeleted() != newPdp.IsBeingDeleted()
 }
 
 func (AuthzPdpRoutedPredicate) Delete(e event.DeleteEvent) bool {

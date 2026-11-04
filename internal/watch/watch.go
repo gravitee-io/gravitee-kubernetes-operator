@@ -226,7 +226,8 @@ func (w *Type) WatchCatalogMcpServers(index search.IndexField) *handler.Funcs {
 
 // WatchAuthzPdps enqueues the resources that target an AuthzPdp through pdpRef (schemas, entities,
 // policies) when an event on the PDP passes the controller's predicates. Those controllers pass
-// AuthzPdpRoutedPredicate: the update that gives the PDP its routing scope, and its deletion.
+// AuthzPdpRoutedPredicate: the update that gives the PDP its routing scope, the update that marks
+// it for deletion, and the delete.
 func (w *Type) WatchAuthzPdps(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),

@@ -757,7 +757,7 @@ _Appears in:_
 | `tag` _string_ | Sharding tag of the gateways that run the PDP; omit it for an untagged gateway. Immutable. |  | MaxLength: 64 <br />Optional: \{\} <br />Pattern: `^-?[a-z0-9]+(-[a-z0-9]+)*$` <br /> |
 | `strict` _boolean_ | Whether the engine checks policies and entities against its schema. Defaults to false.<br />Shared by every PDP of the targetPdpId: on create it must agree with the registered ones, and<br />a change aligns them all with a warning naming each. Two AuthzPdp resources of one<br />targetPdpId that disagree overwrite each other on every reconcile. |  | Optional: \{\} <br /> |
 | `endpoint` _[Endpoint](#endpoint)_ | The AuthZEN endpoint of the PDP. Omitted, the PDP has none, and an existing one is deleted. |  | Optional: \{\} <br /> |
-| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this PDP gateway is<br />created in. |  |  |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this PDP gateway is<br />created in. Immutable: the operator deletes a PDP through its current context only, so a PDP<br />moved to another one would stay on the first platform with its routing scope and endpoint.<br />The message is static: refs.NamespacedName strings carry no maxLength, so a message naming<br />both values exceeds the API server's CEL cost budget and the CRD is refused. |  |  |
 
 
 #### AuthzPdpStatus

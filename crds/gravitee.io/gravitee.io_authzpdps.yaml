@@ -78,6 +78,9 @@ spec:
                   required:
                     - name
                   type: object
+                  x-kubernetes-validations:
+                    - message: contextRef is immutable; delete and recreate the AuthzPdp
+                      rule: self == oldSelf
                 endpoint:
                   description: The AuthZEN endpoint of the PDP. Omitted, the PDP has none, and an
                     existing one is deleted.
