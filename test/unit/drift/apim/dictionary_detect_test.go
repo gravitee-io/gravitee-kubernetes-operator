@@ -110,6 +110,74 @@ var _ = Describe("Dictionary Drift detection", func() {
 		),
 	)
 
+	Describe("Redaction through the encryptedProperties map", func() {
+		It("names the key and hides the manifest's secret", func() {
+			result := drift.DetectWithNamespace(
+				manualDictionaryWithSecret("my secret API key"),
+				model.DictionaryDTO{
+					Manual: &model.ManualSpec{Properties: map[string]string{"apiKey": "now-plain-in-apim"}},
+				},
+				"",
+			)
+			report := result.String()
+
+			Expect(result.DriftDetected()).To(BeTrue())
+			Expect(report).To(ContainSubstring("apiKey"))
+			Expect(report).NotTo(ContainSubstring("my secret API key"))
+		})
+	})
+
+	Describe("Redaction survives a merge", func() {
+		It("names the key and prints neither value on the admission path", func() {
+			crd := manualDictionaryWithSecret("my secret API key")
+			remote := model.DictionaryDTO{
+				Manual: &model.ManualSpec{Properties: map[string]string{"apiKey": "now-plain-in-apim"}},
+			}
+
+			// Admission compares the old and the new CRD against the remote, then merges.
+			merged := drift.Merge(
+				drift.DetectWithNamespace(crd, remote, ""),
+				drift.DetectWithNamespace(crd, remote, ""),
+			)
+			report := merged.String()
+
+			Expect(merged.DriftDetected()).To(BeTrue())
+			Expect(report).To(ContainSubstring("apiKey"))
+			Expect(report).NotTo(ContainSubstring("my secret API key"))
+			Expect(report).NotTo(ContainSubstring("now-plain-in-apim"))
+		})
+	})
+
+	Describe("A key the manifest never declared", func() {
+		// Scalar map entries absent from the CRD are nil and merge drops them
+		// (remoteOnlyDriftUnchanged); a struct entry is zero-filled instead, so the same addition
+		// under encryptedProperties is reported. Pinned here because the two maps differ.
+		It("is tolerated under properties", func() {
+			merged := mergedDrift(
+				model.DictionaryDTO{Manual: &model.ManualSpec{Properties: map[string]string{"env": "test"}}},
+				model.DictionaryDTO{Manual: &model.ManualSpec{
+					Properties: map[string]string{"env": "test", "addedInConsole": "hello"},
+				}},
+			)
+
+			Expect(merged.DriftDetected()).To(BeFalse())
+		})
+
+		It("is reported under encryptedProperties, without its value", func() {
+			merged := mergedDrift(
+				model.DictionaryDTO{Manual: &model.ManualSpec{Properties: map[string]string{"env": "test"}}},
+				model.DictionaryDTO{Manual: &model.ManualSpec{
+					Properties:          map[string]string{"env": "test"},
+					EncryptedProperties: map[string]dictionary.EncryptableValue{"addedInConsole": {Value: apimMask}},
+				}},
+			)
+
+			Expect(merged.DriftDetected()).To(BeTrue())
+			Expect(merged.String()).To(ContainSubstring("addedInConsole"))
+			Expect(merged.String()).NotTo(ContainSubstring(apimMask))
+		})
+	})
+
 	Describe("CRD mapping", func() {
 		It("carries encrypt-on-fetch into the DTO", func() {
 			dto := model.ToDictionaryDTO(completeDynamicDictionarySpec(), dynamicDictHRID)
@@ -139,6 +207,14 @@ func completeManualDictionaryDTO() model.DictionaryDTO {
 }
 
 const apimMask = "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+
+// mergedDrift runs the comparison the admission path runs: old and new CRD against the remote.
+func mergedDrift(crd, remote model.DictionaryDTO) drift.Result {
+	return drift.Merge(
+		drift.DetectWithNamespace(crd, remote, ""),
+		drift.DetectWithNamespace(crd, remote, ""),
+	)
+}
 
 func manualDictionaryWithSecret(value string) model.DictionaryDTO {
 	return model.DictionaryDTO{
