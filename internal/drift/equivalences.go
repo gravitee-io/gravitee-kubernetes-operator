@@ -28,6 +28,7 @@ const (
 	emptyIsNilName          = "empty-is-nil"
 	ignoreName              = "ignore"
 	ignoreRemoteDefaultName = "ignore-remote-default"
+	apimMaskedName          = "apim-masked"
 )
 
 // InitRegistry initializes the equivalence registry.
@@ -43,6 +44,7 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Slice, IgnoreRemoteDefaultSlice)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
+	RegisterEquivalenceFunc(apimMaskedName, reflect.String, APIMMasked)
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
 	RegisterEquivalenceFunc(ignoreName, reflect.Bool, Ignore)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
@@ -146,6 +148,7 @@ const (
 	ignoreOnlyScheduled = "scheduled"
 	maskedArg           = "masked"
 	maskedData          = "********"
+	apimMaskedData      = "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
 )
 
 // IgnoreOnlyArgs ignores items present only on one side, chosen by ctx.FuncArgs[0]
@@ -537,6 +540,17 @@ func TimeStruct(crd any, remote any, ctx DriftContext) Equivalence {
 		return Equivalence{Equivalent: Equivalent, Skip: true}
 	}
 	return Equivalence{Equivalent: Inequivalent, Skip: true}
+}
+
+// APIMMasked treats the mask APIM returns for an encrypted value as equal to the value the CRD
+// holds. APIM never returns the plaintext or the ciphertext, so the two can only be compared by
+// presence: a mask against a non-empty CRD value means "the key is still encrypted, as declared".
+// An empty CRD value is not equivalent — the manifest would then declare a secret it does not carry.
+func APIMMasked(crd any, remote any, ctx DriftContext) Equivalence {
+	if asString(remote) == apimMaskedData && crd != nil && asString(crd) != "" {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	return DefaultEquivalence(crd, remote, ctx)
 }
 
 // CaseInsensitive checks if the value is equal ignoring the case.
