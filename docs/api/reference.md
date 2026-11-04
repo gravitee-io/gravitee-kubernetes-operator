@@ -4,6 +4,7 @@
 - [gravitee.io/v1alpha1](#graviteeiov1alpha1)
 - [gravitee.io/v1alpha1/am](#graviteeiov1alpha1am)
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
+- [gravitee.io/v1alpha1/authzpdp](#graviteeiov1alpha1authzpdp)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
 - [gravitee.io/v1alpha1/catalogmcpserver](#graviteeiov1alpha1catalogmcpserver)
 - [gravitee.io/v1alpha1/certificate](#graviteeiov1alpha1certificate)
@@ -49,6 +50,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ApiResource](#apiresource)
 - [ApiV4Definition](#apiv4definition)
 - [Application](#application)
+- [AuthzPdp](#authzpdp)
 - [CatalogMcpServer](#catalogmcpserver)
 - [Dictionary](#dictionary)
 - [Documentation](#documentation)
@@ -769,6 +771,77 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### AuthzPdp
+
+
+
+AuthzPdp is a PDP gateway of Gravitee Authorization Management as a Kubernetes resource: the
+engine it runs (targetPdpId), the gateways it runs on (tag) and its AuthZEN endpoint. Its
+status.routingScope is what the pdpRef of a schema, an entity or a policy resolves to.
+
+Deleting an AuthzPdp removes its routing scope from the targets of every schema, entity and
+policy that named it, and a resource whose pdpRef still names it waits on ResolvedRefs=False.
+The platform refuses a delete that would leave a policy or an entity with no target: the
+AuthzPdp then stays in Terminating, its Accepted condition naming the reason, until those are
+retargeted.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AuthzPdp` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AuthzPdpSpec](#authzpdpspec)_ |  |  |  |
+| `status` _[AuthzPdpStatus](#authzpdpstatus)_ |  |  |  |
+
+
+#### AuthzPdpSpec
+
+
+
+AuthzPdpSpec defines the desired state of an AuthzPdp.
+
+
+
+_Appears in:_
+- [AuthzPdp](#authzpdp)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the PDP gateway. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `targetPdpId` _string_ | The PDP engine the gateway runs. Every AuthzPdp of one targetPdpId shares the engine and its<br />strict value. Immutable. |  | MaxLength: 255 <br />Pattern: `^[A-Za-z0-9_.-]+$` <br />Required: \{\} <br /> |
+| `tag` _string_ | Sharding tag of the gateways that run the PDP; omit it for an untagged gateway. Immutable. |  | MaxLength: 64 <br />Optional: \{\} <br />Pattern: `^-?[a-z0-9]+(-[a-z0-9]+)*$` <br /> |
+| `strict` _boolean_ | Whether the engine checks policies and entities against its schema. Defaults to false.<br />Shared by every PDP of the targetPdpId: on create it must agree with the registered ones, and<br />a change aligns them all with a warning naming each. Two AuthzPdp resources of one<br />targetPdpId that disagree overwrite each other on every reconcile. |  | Optional: \{\} <br /> |
+| `endpoint` _[Endpoint](#endpoint)_ | The AuthZEN endpoint of the PDP. Omitted, the PDP has none, and an existing one is deleted. |  | Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this PDP gateway is<br />created in. |  |  |
+
+
+#### AuthzPdpStatus
+
+
+
+AuthzPdpStatus defines the observed state of an AuthzPdp.
+
+
+
+_Appears in:_
+- [AuthzPdp](#authzpdp)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PDP gateway in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this PDP gateway by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `routingScope` _string_ | targetPdpId@tag, or targetPdpId when untagged: what the pdpRef of a schema, an entity or a<br />policy resolves to. Empty until the platform has the PDP gateway. |  | Optional: \{\} <br /> |
+| `wellKnownPath` _string_ | The AuthZEN discovery path of the endpoint. Absent without an endpoint, or when another API<br />already held that path when the endpoint was created. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzPdp.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the PDP gateway has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### CatalogMcpServer
@@ -2805,6 +2878,86 @@ _Appears in:_
 | `subject` _string_ | Subject SPIFFE ID expected in the SVID sub claim, interpreted per subjectMatchMode. |  | Optional: \{\} <br /> |
 | `subjectMatchMode` _string_ | SubjectMatchMode How subject is matched against the SVID sub claim. exact (default) requires equality. prefix is only allowed for hosted_delegated or autonomous agent applications: subject must end with / and the SVID sub is accepted when it starts with subject; the full SVID SPIFFE ID then becomes the per-instance act.sub in minted tokens.<br />Defaults to exact. |  | Enum: [exact prefix] <br />Optional: \{\} <br /> |
 | `trustDomain` _string_ | TrustDomain Name of the trusted domain this application authenticates against. |  | Optional: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/authzpdp
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+
+#### Endpoint
+
+
+
+Endpoint is the AuthZEN endpoint of the PDP: an API listening on path and on the matching
+AuthZEN discovery path.
+
+
+
+_Appears in:_
+- [AuthzPdpSpec](#authzpdpspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `path` _string_ | Context path of the endpoint: unique among the APIs of the environment, outside<br />/.well-known/authzen-configuration, and written the way APIM stores it, without a trailing<br />slash. A changed path replaces the endpoint. |  | MinLength: 1 <br />Required: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [AuthzPdpStatus](#authzpdpstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PDP gateway in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this PDP gateway by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `routingScope` _string_ | targetPdpId@tag, or targetPdpId when untagged: what the pdpRef of a schema, an entity or a<br />policy resolves to. Empty until the platform has the PDP gateway. |  | Optional: \{\} <br /> |
+| `wellKnownPath` _string_ | The AuthZEN discovery path of the endpoint. Absent without an endpoint, or when another API<br />already held that path when the endpoint was created. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzPdp.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the PDP gateway has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of an AuthzPdp resource: a PDP gateway of Authorization
+Management, the engine it runs, the gateways it runs on and its AuthZEN endpoint.
+
+
+
+_Appears in:_
+- [AuthzPdpSpec](#authzpdpspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the PDP gateway. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `targetPdpId` _string_ | The PDP engine the gateway runs. Every AuthzPdp of one targetPdpId shares the engine and its<br />strict value. Immutable. |  | MaxLength: 255 <br />Pattern: `^[A-Za-z0-9_.-]+$` <br />Required: \{\} <br /> |
+| `tag` _string_ | Sharding tag of the gateways that run the PDP; omit it for an untagged gateway. Immutable. |  | MaxLength: 64 <br />Optional: \{\} <br />Pattern: `^-?[a-z0-9]+(-[a-z0-9]+)*$` <br /> |
+| `strict` _boolean_ | Whether the engine checks policies and entities against its schema. Defaults to false.<br />Shared by every PDP of the targetPdpId: on create it must agree with the registered ones, and<br />a change aligns them all with a warning naming each. Two AuthzPdp resources of one<br />targetPdpId that disagree overwrite each other on every reconcile. |  | Optional: \{\} <br /> |
+| `endpoint` _[Endpoint](#endpoint)_ | The AuthZEN endpoint of the PDP. Omitted, the PDP has none, and an existing one is deleted. |  | Optional: \{\} <br /> |
 
 
 
@@ -6694,6 +6847,7 @@ _Appears in:_
 - [ApplicationSpec](#applicationspec)
 - [Auth](#auth)
 - [Auth](#auth)
+- [AuthzPdpSpec](#authzpdpspec)
 - [CatalogMcpServerSpec](#catalogmcpserverspec)
 - [Certificate](#certificate)
 - [Cloud](#cloud)
@@ -6896,6 +7050,7 @@ _Appears in:_
 - [ApiStatus](#apistatus)
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
 - [ApplicationStatus](#applicationstatus)
+- [AuthzPdpStatus](#authzpdpstatus)
 - [AutomationStatus](#automationstatus)
 - [CatalogMcpServerStatus](#catalogmcpserverstatus)
 - [DictionaryStatus](#dictionarystatus)
@@ -6907,6 +7062,7 @@ _Appears in:_
 - [PortalStatus](#portalstatus)
 - [PortalThemeStatus](#portalthemestatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
