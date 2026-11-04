@@ -67,7 +67,7 @@ type EncryptableValue struct {
 	// and sending that mask back keeps the stored value.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
-	Value string `json:"value"`
+	Value string `json:"value" drift:"apim-masked"`
 }
 
 // DynamicSpec defines a dynamic dictionary populated from an external provider on a schedule.
