@@ -162,14 +162,32 @@ spec:
                   description: Manual dictionary specification. Required when type is MANUAL,
                     forbidden when type is DYNAMIC.
                   properties:
+                    encryptedProperties:
+                      additionalProperties:
+                        description: EncryptableValue is the value of a secret dictionary property.
+                        properties:
+                          value:
+                            description: Plaintext value to encrypt on save.
+                            type: string
+                        required:
+                          - value
+                        type: object
+                      description: Secret key/value pairs. Values are sent to APIM as plaintext and
+                        stored encrypted.
+                      type: object
                     properties:
                       additionalProperties:
                         type: string
                       description: Key/value pairs that constitute the dictionary data.
                       type: object
-                  required:
-                    - properties
                   type: object
+                  x-kubernetes-validations:
+                    - message: a manual dictionary must declare properties or encryptedProperties
+                      rule: has(self.properties) || has(self.encryptedProperties)
+                    - message: a key must not appear in both properties and encryptedProperties
+                      rule: "!has(self.properties) || !has(self.encryptedProperties) ||
+                        !self.properties.exists(k, k in
+                        self.encryptedProperties)"
                 name:
                   description: Display name of the dictionary.
                   type: string

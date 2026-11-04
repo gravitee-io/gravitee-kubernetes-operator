@@ -3998,6 +3998,22 @@ _Appears in:_
 | `trigger` _[Trigger](#trigger)_ | Renewal schedule controlling how often the provider is polled. |  | Required: \{\} <br /> |
 
 
+#### EncryptableValue
+
+
+
+EncryptableValue is the value of a secret dictionary property.
+
+
+
+_Appears in:_
+- [ManualSpec](#manualspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `value` _string_ | Plaintext value to encrypt on save. APIM never returns it: a read answers with a mask,<br />and sending that mask back keeps the stored value. |  | Required: \{\} <br /> |
+
+
 #### ManualSpec
 
 
@@ -4012,7 +4028,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `properties` _object (keys:string, values:string)_ | Key/value pairs that constitute the dictionary data. |  | Required: \{\} <br /> |
+| `properties` _object (keys:string, values:string)_ | Key/value pairs that constitute the dictionary data. |  | Optional: \{\} <br /> |
+| `encryptedProperties` _object (keys:string, values:[EncryptableValue](#encryptablevalue))_ | Secret key/value pairs. Values are sent to APIM as plaintext and stored encrypted.<br />A key must not appear in both properties and encryptedProperties. |  | Optional: \{\} <br /> |
 
 
 #### Provider
