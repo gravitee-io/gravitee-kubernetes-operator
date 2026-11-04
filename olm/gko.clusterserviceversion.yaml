@@ -944,3 +944,17 @@ spec:
             description: Latest observed conditions.
             x-descriptors:
               - urn:alm:descriptor:io.kubernetes.conditions
+      # --- AuthzPdp ---
+      - name: authzpdps.gravitee.io
+        version: v1alpha1
+        kind: AuthzPdp
+        displayName: Authz PDP
+        description: >-
+          Declares a PDP gateway of Gravitee Authorization Management and its
+          AuthZEN endpoint.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
