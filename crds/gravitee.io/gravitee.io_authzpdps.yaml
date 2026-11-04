@@ -117,6 +117,7 @@ spec:
                   pattern: ^[A-Za-z0-9_.-]+$
                   type: string
               required:
+                - contextRef
                 - name
                 - targetPdpId
               type: object
