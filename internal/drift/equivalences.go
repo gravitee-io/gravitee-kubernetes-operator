@@ -526,7 +526,7 @@ func TimeStruct(crd any, remote any, ctx DriftContext) Equivalence {
 // presence: a mask against a non-empty CRD value means "the key is still encrypted, as declared".
 // An empty CRD value is not equivalent — the manifest would then declare a secret it does not carry.
 func APIMMasked(crd any, remote any, ctx DriftContext) Equivalence {
-	if asString(remote) == apimMaskedData && crd != nil && asString(crd) != "" {
+	if asString(remote) == apimMaskedData && asString(crd) != "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return DefaultEquivalence(crd, remote, ctx)

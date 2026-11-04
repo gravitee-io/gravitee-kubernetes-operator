@@ -28,6 +28,7 @@ const (
 	column             = ":"
 	propSuffix         = column + " "
 	notEqOpWithSpaces  = " " + notEqOp + " "
+	redactedSuffix     = propSuffix + "(encrypted value, not shown)"
 	notEqOp            = "!="
 	unchangedIndicator = "<unchanged>"
 	addition           = "+ "
@@ -45,6 +46,13 @@ func format(this *Result, b *strings.Builder, indent int) {
 }
 
 func formatValue(this *Result, b *strings.Builder, indent int) {
+	if this.context.Redacted {
+		addIndent(b, indent)
+		b.WriteString(fmt.Sprintf("%s%s", propertyLabel(this), redactedSuffix))
+		writeReason(this, b)
+		newLine(b)
+		return
+	}
 	if left, right, ok := stringPair(this.CRDValue, this.RemoteValue); ok && isMultiline(left, right) {
 		formatMultilineStrings(b, indent, propertyLabel(this), left, right)
 		writeReason(this, b)

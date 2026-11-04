@@ -175,6 +175,7 @@ spec:
                         properties:
                           value:
                             description: Plaintext value to encrypt on save.
+                            minLength: 1
                             type: string
                         required:
                           - value

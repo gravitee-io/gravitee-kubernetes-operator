@@ -102,7 +102,7 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 		switch {
 		case fieldType.Kind() == reflect.Slice:
 			equivalenceFunc := equivalenceRegistry.Get(driftFunc.Name, fieldType.Kind())
-			this.context.FuncArgs = driftFunc.Args
+			this.context.applyDriftFunc(driftFunc, fieldType.Kind())
 			equivalent := equivalenceFunc(crdPair.Interface, remotePair.Interface, this.context)
 			if equivalent.Skip {
 				if equivalent.Equivalent == Inequivalent {
@@ -138,7 +138,7 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 			detectItems(property, crdPairToDetect.Value, remotePairToDetect.Value, this, ordered, equivalent.PostFunc)
 		case fieldType.Kind() == reflect.Map:
 			equivalenceFunc := equivalenceRegistry.Get(driftFunc.Name, fieldType.Kind())
-			this.context.FuncArgs = driftFunc.Args
+			this.context.applyDriftFunc(driftFunc, fieldType.Kind())
 			equivalent := equivalenceFunc(crdPair.Interface, remotePair.Interface, this.context)
 			if !equivalent.Skip {
 				detectMapItems(property, driftFunc, crdPair.Value, remotePair.Value, this)
@@ -147,7 +147,7 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 			handleStructField(property, driftFunc, field, crdPair.Interface, remotePair.Interface, this)
 		default:
 			equivalenceFunc := equivalenceRegistry.Get(driftFunc.Name, fieldType.Kind())
-			this.context.FuncArgs = driftFunc.Args
+			this.context.applyDriftFunc(driftFunc, fieldType.Kind())
 			equivalent := equivalenceFunc(crdPair.Interface, remotePair.Interface, this.context)
 			this.AppendChild(&Result{
 				Property:    property,
@@ -453,7 +453,7 @@ func detectEntry(key string, driftFunc driftFunc, typ reflect.Type, crd, remote 
 		// so we need to check if we need to run the equivalence on the whole item or not
 		if runEquivalence {
 			equivalenceFunc := equivalenceRegistry.Get(driftFunc.Name, typ.Kind())
-			parent.context.FuncArgs = driftFunc.Args
+			parent.context.applyDriftFunc(driftFunc, typ.Kind())
 			equivalent := equivalenceFunc(crd.Interface, remote.Interface, parent.context)
 			parent.AppendChild(&Result{
 				Property:    key,
@@ -536,12 +536,13 @@ func (p *valuePair) setEmptySliceIfNilValue(typ reflect.Type) {
 func handleStructField(property string, driftFunc driftFunc, field reflect.StructField, crd any, remote any, this *Result) {
 	if isEmbeddedStruct(field) {
 		// no child creation we want fields to be flattened as it is embedded
+		this.context.applyDriftFunc(driftFunc, reflect.Struct)
 		detectStruct(crd, remote, this, false)
 		return
 	}
 
 	equivalenceFunc := equivalenceRegistry.Get(driftFunc.Name, reflect.Struct)
-	this.context.FuncArgs = driftFunc.Args
+	this.context.applyDriftFunc(driftFunc, reflect.Struct)
 	equivalence := equivalenceFunc(crd, remote, this.context)
 	if equivalence.Skip {
 		this.AppendChild(&Result{
@@ -575,4 +576,15 @@ func isEmbeddedStruct(field reflect.StructField) bool {
 		return true
 	}
 	return false
+}
+
+// applyDriftFunc carries the tag's arguments into the context, and marks the field redacted when the
+// tag is one whose values must not be printed.
+//
+// Only a string field is ever redacted. A container tagged this way would hide every value beneath
+// it, non-secret ones included, so the kind is checked here rather than relying on the equivalence
+// registry holding no entry for the other kinds.
+func (c *DriftContext) applyDriftFunc(f driftFunc, kind reflect.Kind) {
+	c.FuncArgs = f.Args
+	c.Redacted = f.Name == apimMaskedName && kind == reflect.String
 }
