@@ -3996,6 +3996,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `provider` _[Provider](#provider)_ | HTTP provider configuration for fetching dictionary data. |  | Required: \{\} <br /> |
 | `trigger` _[Trigger](#trigger)_ | Renewal schedule controlling how often the provider is polled. |  | Required: \{\} <br /> |
+| `encryption` _[EncryptionPolicy](#encryptionpolicy)_ | Encryption policy applied to the values the provider fetches. |  | Optional: \{\} <br /> |
 
 
 #### EncryptableValue
@@ -4012,6 +4013,22 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `value` _string_ | Plaintext value to encrypt on save. APIM never returns it: a read answers with a mask,<br />and sending that mask back keeps the stored value. |  | Required: \{\} <br /> |
+
+
+#### EncryptionPolicy
+
+
+
+EncryptionPolicy controls how a DYNAMIC dictionary stores the values it fetches.
+
+
+
+_Appears in:_
+- [DynamicSpec](#dynamicspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `encryptOnFetch` _boolean_ | Store every fetched value encrypted, from the first fetch. APIM defaults to false,<br />which keeps each key's stored classification. |  | Optional: \{\} <br /> |
 
 
 #### ManualSpec

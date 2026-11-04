@@ -48,6 +48,17 @@ var _ = Describe("Dictionary Drift detection", func() {
 			completeManualDictionaryDTO(),
 			model.ToDictionaryDTO(completeManualDictionarySpec(), manualDictHRID),
 		),
+		Entry("omitted encryption equivalent to APIM's default of false",
+			model.DictionaryDTO{
+				Dynamic: &model.DynamicSpec{Provider: &model.Provider{}},
+			},
+			model.DictionaryDTO{
+				Dynamic: &model.DynamicSpec{
+					Provider:   &model.Provider{},
+					Encryption: &dictionary.EncryptionPolicy{EncryptOnFetch: false},
+				},
+			},
+		),
 		Entry("provider headers empty equivalent to nil",
 			model.DictionaryDTO{
 				Dynamic: &model.DynamicSpec{
@@ -64,7 +75,32 @@ var _ = Describe("Dictionary Drift detection", func() {
 		),
 	)
 
+	DescribeTable("drifting values",
+		func(crd, remote any) {
+			result := drift.DetectWithNamespace(crd, remote, "")
+
+			Expect(result.DriftDetected()).To(BeTrue())
+		},
+		Entry("encrypt on fetch turned on outside Git",
+			model.DictionaryDTO{
+				Dynamic: &model.DynamicSpec{Provider: &model.Provider{}},
+			},
+			model.DictionaryDTO{
+				Dynamic: &model.DynamicSpec{
+					Provider:   &model.Provider{},
+					Encryption: &dictionary.EncryptionPolicy{EncryptOnFetch: true},
+				},
+			},
+		),
+	)
+
 	Describe("CRD mapping", func() {
+		It("carries encrypt-on-fetch into the DTO", func() {
+			dto := model.ToDictionaryDTO(completeDynamicDictionarySpec(), dynamicDictHRID)
+
+			Expect(dto.Dynamic.Encryption).To(Equal(&dictionary.EncryptionPolicy{EncryptOnFetch: true}))
+		})
+
 		It("carries encrypted properties into the DTO", func() {
 			dto := model.ToDictionaryDTO(completeManualDictionarySpec(), manualDictHRID)
 
