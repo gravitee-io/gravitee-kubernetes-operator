@@ -3157,7 +3157,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `value` _string_ | Plaintext value to encrypt on save. APIM never returns it: a read answers with a mask,<br />and sending that mask back keeps the stored value. |  | Required: \{\} <br /> |
+| `value` _string_ | Plaintext value to encrypt on save. APIM never returns it: a read answers with a mask,<br />and sending that mask back keeps the stored value. |  | MinLength: 1 <br />Required: \{\} <br /> |
 
 
 #### EncryptionPolicy

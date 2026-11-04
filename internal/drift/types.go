@@ -114,6 +114,8 @@ type DriftContext struct {
 	Namespace string
 	FuncArgs  []string
 	Kind      reflect.Kind
+	// Redacted marks a field whose values must never reach a drift report.
+	Redacted bool
 }
 
 // NewRootResult creates a new root result with the given namespace.
@@ -196,6 +198,9 @@ func merge(or Result, nr Result, merger *Result, parentIndex *int) {
 	merger.Index = result.Index
 	merger.CRDValue = result.CRDValue
 	merger.RemoteValue = result.RemoteValue
+	// The context carries the redaction flag. Without it a merged result prints values the
+	// detection marked as never printable, which is the path admission takes.
+	merger.context = result.context
 
 	if childrenAlignAtIndex(or, nr) {
 		mergeChildrenPositionally(or, nr, merger, merger.Index)
