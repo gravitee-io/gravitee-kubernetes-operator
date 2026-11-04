@@ -62,6 +62,7 @@ const (
 	CatalogMcpServerContextField  IndexField = "catalogmcpserver-context"
 	McpProxyContextField          IndexField = "mcpproxy-context"
 	McpProxyCatalogMcpServerField IndexField = "mcpproxy-catalogmcpserver"
+	AuthzPdpContextField          IndexField = "authzpdp-context"
 	AMSecurityContextField        IndexField = "am-sec-domain-context"
 	AMIdentityProviderDomainField IndexField = "am-idp-domain"
 	AMCertificateDomainField      IndexField = "am-cert-domain"
@@ -144,6 +145,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexMcpProxyManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.McpProxy{}, McpProxyCatalogMcpServerField,
 		indexMcpProxyCatalogMcpServers))
+	collect(newIndexer(ctx, cache, &v1alpha1.AuthzPdp{}, AuthzPdpContextField,
+		indexAuthzPdpManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
 		indexAMSecurityDomainContext))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityDomainFallbackCertificateField,
@@ -443,6 +446,14 @@ func indexMcpProxyManagementContexts(proxy *v1alpha1.McpProxy, fields *[]string)
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(proxy, proxy.Spec.Context))
+}
+
+func indexAuthzPdpManagementContexts(pdp *v1alpha1.AuthzPdp, fields *[]string) {
+	if pdp.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(pdp, pdp.Spec.Context))
 }
 
 // indexMcpProxyCatalogMcpServers indexes a Studio by every catalog server it references, through
