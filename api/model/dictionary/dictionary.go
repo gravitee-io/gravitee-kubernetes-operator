@@ -78,6 +78,17 @@ type DynamicSpec struct {
 	// Renewal schedule controlling how often the provider is polled.
 	// +kubebuilder:validation:Required
 	Trigger *Trigger `json:"trigger"`
+	// Encryption policy applied to the values the provider fetches.
+	// +kubebuilder:validation:Optional
+	Encryption *EncryptionPolicy `json:"encryption,omitempty"`
+}
+
+// EncryptionPolicy controls how a DYNAMIC dictionary stores the values it fetches.
+type EncryptionPolicy struct {
+	// Store every fetched value encrypted, from the first fetch. APIM defaults to false,
+	// which keeps each key's stored classification.
+	// +kubebuilder:validation:Optional
+	EncryptOnFetch bool `json:"encryptOnFetch,omitempty"`
 }
 
 // Provider defines the HTTP provider configuration for a DYNAMIC dictionary.

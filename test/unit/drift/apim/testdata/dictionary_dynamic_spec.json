@@ -21,6 +21,9 @@
     "trigger": {
       "rate": 30,
       "unit": "SECONDS"
+    },
+    "encryption": {
+      "encryptOnFetch": true
     }
   }
 }
