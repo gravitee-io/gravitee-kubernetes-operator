@@ -31,9 +31,12 @@ spec:
       specification: |
         [
           {
-            "operation": "default"
+            "operation": "default",
+            "spec": {}
           }
         ]
     trigger:
       rate: 30
       unit: SECONDS
+    encryption:
+      encryptOnFetch: true

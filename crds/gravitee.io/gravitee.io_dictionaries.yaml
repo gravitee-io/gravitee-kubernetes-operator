@@ -77,6 +77,13 @@ spec:
                   description: Dynamic dictionary specification. Required when type is DYNAMIC,
                     forbidden when type is MANUAL.
                   properties:
+                    encryption:
+                      description: Encryption policy applied to the values the provider fetches.
+                      properties:
+                        encryptOnFetch:
+                          description: Store every fetched value encrypted, from the first fetch.
+                          type: boolean
+                      type: object
                     provider:
                       description: HTTP provider configuration for fetching dictionary data.
                       properties:
