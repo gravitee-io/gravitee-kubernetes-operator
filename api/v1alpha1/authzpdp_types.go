@@ -38,7 +38,11 @@ var _ core.ConditionAware = &AuthzPdp{}
 type AuthzPdpSpec struct {
 	authzpdp.Type `json:",inline"`
 	// Reference to a ManagementContext that determines which APIM instance this PDP gateway is
-	// created in.
+	// created in. Immutable: the operator deletes a PDP through its current context only, so a PDP
+	// moved to another one would stay on the first platform with its routing scope and endpoint.
+	// The message is static: refs.NamespacedName strings carry no maxLength, so a message naming
+	// both values exceeds the API server's CEL cost budget and the CRD is refused.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable; delete and recreate the AuthzPdp"
 	Context *refs.NamespacedName `json:"contextRef,omitempty"`
 }
 
