@@ -1,0 +1,8 @@
+{
+  "hrid": "default-drift-full",
+  "name": "Drift full",
+  "targetPdpId": "drift-full",
+  "tag": "eu",
+  "strict": true,
+  "endpoint": {"path": "/authz/drift-full"}
+}
