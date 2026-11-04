@@ -37,6 +37,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 	It("should delete manual dictionary in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
+			AddSecret(constants.DictionarySecretFile).
 			WithDictionary(constants.DictionaryManualFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().

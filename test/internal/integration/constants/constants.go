@@ -169,6 +169,7 @@ const (
 	GroupFile = "apim/group/group.yml"
 
 	DictionaryManualFile  = "apim/dictionary/dictionary-manual.yml"
+	DictionarySecretFile  = "apim/dictionary/dev/dictionary-secret.yml"
 	DictionaryDynamicFile = "apim/dictionary/dictionary-dynamic.yml"
 
 	PortalFile             = "apim/portal/portal.yml"
