@@ -49,10 +49,25 @@ type Type struct {
 }
 
 // ManualSpec defines a manual dictionary with static key/value properties.
+// +kubebuilder:validation:XValidation:rule="has(self.properties) || has(self.encryptedProperties)",message="a manual dictionary must declare properties or encryptedProperties"
+// +kubebuilder:validation:XValidation:rule="!has(self.properties) || !has(self.encryptedProperties) || !self.properties.exists(k, k in self.encryptedProperties)",message="a key must not appear in both properties and encryptedProperties"
 type ManualSpec struct {
 	// Key/value pairs that constitute the dictionary data.
+	// +kubebuilder:validation:Optional
+	Properties map[string]string `json:"properties,omitempty"`
+	// Secret key/value pairs. Values are sent to APIM as plaintext and stored encrypted.
+	// A key must not appear in both properties and encryptedProperties.
+	// +kubebuilder:validation:Optional
+	EncryptedProperties map[string]EncryptableValue `json:"encryptedProperties,omitempty"`
+}
+
+// EncryptableValue is the value of a secret dictionary property.
+type EncryptableValue struct {
+	// Plaintext value to encrypt on save. APIM never returns it: a read answers with a mask,
+	// and sending that mask back keeps the stored value.
 	// +kubebuilder:validation:Required
-	Properties map[string]string `json:"properties"`
+	// +kubebuilder:validation:MinLength=1
+	Value string `json:"value"`
 }
 
 // DynamicSpec defines a dynamic dictionary populated from an external provider on a schedule.

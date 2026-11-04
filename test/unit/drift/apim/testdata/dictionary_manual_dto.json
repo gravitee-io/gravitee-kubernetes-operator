@@ -8,6 +8,11 @@
     "properties": {
       "env": "test",
       "region": "eu"
+    },
+    "encryptedProperties": {
+      "apiKey": {
+        "value": "my secret API key"
+      }
     }
   }
 }
