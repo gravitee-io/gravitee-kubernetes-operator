@@ -27,7 +27,8 @@ type DictionaryDTO struct {
 }
 
 type ManualSpec struct {
-	Properties map[string]string `json:"properties"`
+	Properties          map[string]string                      `json:"properties,omitempty" drift:"empty-is-nil"`
+	EncryptedProperties map[string]dictionary.EncryptableValue `json:"encryptedProperties,omitempty" drift:"empty-is-nil"`
 }
 
 type DynamicSpec struct {

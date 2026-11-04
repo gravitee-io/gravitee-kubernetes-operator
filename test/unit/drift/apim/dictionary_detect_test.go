@@ -19,9 +19,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 const dynamicDictHRID = "dynamic-dict"
+
+const manualDictHRID = "manual-dict"
 
 var _ = Describe("Dictionary Drift detection", func() {
 
@@ -41,6 +44,10 @@ var _ = Describe("Dictionary Drift detection", func() {
 			completeDynamicDictionaryDTO(),
 			model.ToDictionaryDTO(completeDynamicDictionarySpec(), dynamicDictHRID),
 		),
+		Entry("equal manual struct from CRD mapping, encrypted properties carried through",
+			completeManualDictionaryDTO(),
+			model.ToDictionaryDTO(completeManualDictionarySpec(), manualDictHRID),
+		),
 		Entry("provider headers empty equivalent to nil",
 			model.DictionaryDTO{
 				Dynamic: &model.DynamicSpec{
@@ -57,6 +64,16 @@ var _ = Describe("Dictionary Drift detection", func() {
 		),
 	)
 
+	Describe("CRD mapping", func() {
+		It("carries encrypted properties into the DTO", func() {
+			dto := model.ToDictionaryDTO(completeManualDictionarySpec(), manualDictHRID)
+
+			Expect(dto.Manual.EncryptedProperties).To(
+				HaveKeyWithValue("apiKey", dictionary.EncryptableValue{Value: "my secret API key"}),
+			)
+		})
+	})
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(completeDynamicDictionaryDTO(), completeDynamicDictionaryDTO())
@@ -67,6 +84,11 @@ var _ = Describe("Dictionary Drift detection", func() {
 func completeManualDictionaryDTO() model.DictionaryDTO {
 	GinkgoHelper()
 	return loadFixture[model.DictionaryDTO]("dictionary_manual_dto.json")
+}
+
+func completeManualDictionarySpec() dictionary.Type {
+	GinkgoHelper()
+	return loadFixture[dictionary.Type]("dictionary_manual_spec.json")
 }
 
 func completeDynamicDictionarySpec() dictionary.Type {
