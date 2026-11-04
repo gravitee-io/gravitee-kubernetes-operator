@@ -48,6 +48,10 @@ var _ = Describe("Dictionary Drift detection", func() {
 			completeManualDictionaryDTO(),
 			model.ToDictionaryDTO(completeManualDictionarySpec(), manualDictHRID),
 		),
+		Entry("a masked remote secret matches the value in the manifest",
+			manualDictionaryWithSecret("my secret API key"),
+			manualDictionaryWithSecret(apimMask),
+		),
 		Entry("omitted encryption equivalent to APIM's default of false",
 			model.DictionaryDTO{
 				Dynamic: &model.DynamicSpec{Provider: &model.Provider{}},
@@ -81,6 +85,18 @@ var _ = Describe("Dictionary Drift detection", func() {
 
 			Expect(result.DriftDetected()).To(BeTrue())
 		},
+		Entry("the key is encrypted in APIM but plain in the manifest",
+			model.DictionaryDTO{
+				Manual: &model.ManualSpec{Properties: map[string]string{"apiKey": "my secret API key"}},
+			},
+			manualDictionaryWithSecret(apimMask),
+		),
+		Entry("the key is plain in APIM but encrypted in the manifest",
+			manualDictionaryWithSecret("my secret API key"),
+			model.DictionaryDTO{
+				Manual: &model.ManualSpec{Properties: map[string]string{"apiKey": "my secret API key"}},
+			},
+		),
 		Entry("encrypt on fetch turned on outside Git",
 			model.DictionaryDTO{
 				Dynamic: &model.DynamicSpec{Provider: &model.Provider{}},
@@ -120,6 +136,16 @@ var _ = Describe("Dictionary Drift detection", func() {
 func completeManualDictionaryDTO() model.DictionaryDTO {
 	GinkgoHelper()
 	return loadFixture[model.DictionaryDTO]("dictionary_manual_dto.json")
+}
+
+const apimMask = "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+
+func manualDictionaryWithSecret(value string) model.DictionaryDTO {
+	return model.DictionaryDTO{
+		Manual: &model.ManualSpec{
+			EncryptedProperties: map[string]dictionary.EncryptableValue{"apiKey": {Value: value}},
+		},
+	}
 }
 
 func completeManualDictionarySpec() dictionary.Type {
