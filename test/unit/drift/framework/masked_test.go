@@ -18,6 +18,7 @@ import (
 	"github.com/gravitee-io/gravitee-automation-sdk/common/pkg/unstructured"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 type withMaskedConfig struct {
@@ -106,5 +107,67 @@ var _ = Describe("unstructured:masked", func() {
 		or := drift.DetectWithNamespace(oldCRD, remote, "")
 		nr := drift.DetectWithNamespace(newCRD, remote, "")
 		expectNoDrift(drift.Merge(or, nr))
+	})
+})
+
+const apimMask = "••••••••••••"
+
+type withMaskedSecret struct {
+	Name   string `json:"name,omitempty"`
+	Secret string `json:"secret,omitempty" drift:"masked"`
+}
+
+var _ = Describe("masked", func() {
+	DescribeTable("no drift",
+		func(crd, remote withMaskedSecret) {
+			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+		},
+		Entry("the remote answers with the mask",
+			withMaskedSecret{Secret: "s3cret"},
+			withMaskedSecret{Secret: apimMask},
+		),
+		Entry("neither side holds a value",
+			withMaskedSecret{},
+			withMaskedSecret{},
+		),
+	)
+
+	It("drifts when the CRD declares a secret the remote does not hold", func() {
+		result := drift.DetectWithNamespace(
+			withMaskedSecret{Secret: "s3cret"},
+			withMaskedSecret{},
+			"",
+		)
+
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
+
+	Describe("redaction", func() {
+		It("names the property and prints neither value", func() {
+			result := drift.DetectWithNamespace(
+				withMaskedSecret{Secret: "s3cret"},
+				withMaskedSecret{Secret: "a different secret"},
+				"",
+			)
+			report := result.String()
+
+			Expect(result.DriftDetected()).To(BeTrue())
+			Expect(report).To(ContainSubstring("secret"))
+			Expect(report).NotTo(ContainSubstring("s3cret"))
+			Expect(report).NotTo(ContainSubstring("a different secret"))
+		})
+
+		It("leaves untagged fields of the same object printed", func() {
+			result := drift.DetectWithNamespace(
+				withMaskedSecret{Name: "from Git", Secret: "s3cret"},
+				withMaskedSecret{Name: "renamed remotely", Secret: "a different secret"},
+				"",
+			)
+			report := result.String()
+
+			Expect(report).To(ContainSubstring("from Git"))
+			Expect(report).To(ContainSubstring("renamed remotely"))
+			Expect(report).NotTo(ContainSubstring("s3cret"))
+		})
 	})
 })
