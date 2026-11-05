@@ -27,7 +27,3 @@ spec:
     properties:
       env: "test"
       region: "eu"
-    encryptedProperties:
-      apiKey:
-        # Resolved from the Secret in ./dev/dictionary-secret.yml
-        value: "[[ secret `backend-creds/api-key` ]]"

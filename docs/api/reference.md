@@ -3474,7 +3474,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `encryptOnFetch` _boolean_ | Store every fetched value encrypted, from the first fetch. APIM defaults to false,<br />which keeps each key's stored classification. Removing this block leaves the policy APIM<br />already holds; set encryptOnFetch to false to turn it off.<br />Requires APIM 4.13.2 or later. |  | Optional: \{\} <br /> |
+| `encryptOnFetch` _boolean_ | Store every fetched value encrypted, from the first fetch. APIM defaults to false,<br />which keeps each key's stored classification. An omitted block is sent as false, so removing<br />it from the manifest turns encryption off.<br />Requires APIM 4.13.2 or later. |  | Optional: \{\} <br /> |
 
 
 #### ManualSpec

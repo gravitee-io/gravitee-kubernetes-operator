@@ -89,8 +89,8 @@ type DynamicSpec struct {
 // EncryptionPolicy controls how a DYNAMIC dictionary stores the values it fetches.
 type EncryptionPolicy struct {
 	// Store every fetched value encrypted, from the first fetch. APIM defaults to false,
-	// which keeps each key's stored classification. Removing this block leaves the policy APIM
-	// already holds; set encryptOnFetch to false to turn it off.
+	// which keeps each key's stored classification. An omitted block is sent as false, so removing
+	// it from the manifest turns encryption off.
 	// Requires APIM 4.13.2 or later.
 	// +kubebuilder:validation:Optional
 	EncryptOnFetch bool `json:"encryptOnFetch,omitempty"`
