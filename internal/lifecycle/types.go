@@ -49,6 +49,12 @@ type DeleteGuardFunc[T core.ContextAwareObject] func(ctx context.Context, obj T)
 // PostUpsertFunc mutates the CR after a successful Upsert (status, annotations).
 type PostUpsertFunc[T core.ContextAwareObject, R any] func(ctx context.Context, obj T, response R) error
 
+// UpsertErrorFunc records a failed Upsert on the CR (for example the remote's refusal findings in its status).
+// It mutates obj only. A non-nil error is returned by the reconcile as-is and decides the requeue, without
+// the lifecycle's classification; nil keeps the lifecycle's.
+// What it writes stays on the status until PostUpsert clears it.
+type UpsertErrorFunc[T core.ContextAwareObject] func(ctx context.Context, obj T, err error) error
+
 // RefResolverFunc writes resolved in-cluster refs onto obj (secrets, parent CRs). Mutates obj.
 type RefResolverFunc[T any] func(ctx context.Context, obj T, namespace string) error
 
@@ -106,6 +112,9 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 
 	// PostUpsert runs on create/update, after a successful Upsert. Nil skips.
 	PostUpsert PostUpsertFunc[T, R]
+
+	// OnUpsertError runs on create/update after a failed Upsert, before the error is returned. Nil skips.
+	OnUpsertError UpsertErrorFunc[T]
 }
 
 // AdmissionLifecycle is the admission holes for one CR kind.

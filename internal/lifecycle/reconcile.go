@@ -176,8 +176,13 @@ func (l ResourceLifecycle[T, D, C, R]) upsert(ctx context.Context, dc T) error {
 		return err
 	}
 	resp, err := l.Upsert(ctx, api, dto)
-	if err := wrapUnexpectedAsControlPlane(err); err != nil {
-		return err
+	if err != nil {
+		if l.OnUpsertError != nil {
+			if classified := l.OnUpsertError(ctx, dc, err); classified != nil {
+				return classified
+			}
+		}
+		return wrapUnexpectedAsControlPlane(err)
 	}
 	if l.PostUpsert == nil {
 		return nil
