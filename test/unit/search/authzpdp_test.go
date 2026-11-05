@@ -19,6 +19,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -119,6 +120,27 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(found).To(BeEmpty())
+	})
+
+	It("refuses a kind whose resources carry no contextRef", func() {
+		scheme := runtime.NewScheme()
+		Expect(corev1.AddToScheme(scheme)).To(Succeed())
+		field := search.McpProxyCatalogMcpServerField.String()
+		k8s.RegisterClient(fake.NewClientBuilder().
+			WithScheme(scheme).
+			WithObjects(&corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "orders-schema", Namespace: ns}}).
+			WithIndex(&corev1.ConfigMap{}, field, func(client.Object) []string { return []string{pdpRef.String()} }).
+			Build())
+		configMaps := search.AuthzPdpDependent{
+			Kind:    "ConfigMap",
+			Field:   search.McpProxyCatalogMcpServerField,
+			NewList: func() client.ObjectList { return &corev1.ConfigMapList{} },
+		}
+
+		_, err := search.FindAuthzPdpDependents(context.Background(), pdp,
+			[]search.AuthzPdpDependent{configMaps})
+
+		Expect(err).To(MatchError(ContainSubstring("unable to read the contextRef of ConfigMap")))
 	})
 
 	It("finds nothing while no kind is registered", func() {
