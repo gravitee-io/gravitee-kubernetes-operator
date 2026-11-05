@@ -55,7 +55,8 @@ type Dependents struct {
 // FindAuthzPdpDependents returns, for each kind in order, the resources whose pdpRef names pdp and
 // that sync through pdp's ManagementContext: a pdpRef to a PDP of another environment does not
 // resolve (see dynamic.ResolveAuthzPdpRoutingScope), so that resource does not target it. A kind
-// with none is left out.
+// with none is left out. A kind whose resources carry no contextRef is an error: its registration
+// is a mistake, and dropping them would hide it.
 func FindAuthzPdpDependents(
 	ctx context.Context,
 	pdp *v1alpha1.AuthzPdp,
@@ -76,7 +77,11 @@ func FindAuthzPdpDependents(
 		}
 		names := make([]string, 0, len(items))
 		for _, item := range items {
-			if obj, ok := item.(core.ContextAwareObject); ok && dynamic.ContextOf(obj) == pdpContext {
+			obj, ok := item.(core.ContextAwareObject)
+			if !ok {
+				return nil, fmt.Errorf("unable to read the contextRef of %s: %T is not context aware", kind.Kind, item)
+			}
+			if dynamic.ContextOf(obj) == pdpContext {
 				names = append(names, refs.NewNamespacedNameFromObject(obj).String())
 			}
 		}
