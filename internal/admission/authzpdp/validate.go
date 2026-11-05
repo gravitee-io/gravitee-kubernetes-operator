@@ -62,9 +62,7 @@ func validateContext(ctx context.Context, pdp *v1alpha1.AuthzPdp) *errors.Admiss
 func validateDryRun(ctx context.Context, pdp *v1alpha1.AuthzPdp) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp := pdp.DeepCopy()
-
-	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	apimClient, err := apim.FromContextRef(ctx, pdp.ContextRef(), pdp.GetNamespace())
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
@@ -72,7 +70,7 @@ func validateDryRun(ctx context.Context, pdp *v1alpha1.AuthzPdp) *errors.Admissi
 
 	// A dry run answers 200 with its findings; a refusal body is only expected from a real apply,
 	// but is read the same way should the platform answer one.
-	state, err := apimClient.AuthzPdps.DryRunCreateOrUpdate(cp)
+	state, err := apimClient.AuthzPdps.DryRunCreateOrUpdate(model.ToAuthzPdpDTO(pdp))
 	if err != nil {
 		errs.MergeWith(refusalToAdmissionErrors(err))
 		return errs

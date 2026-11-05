@@ -17,11 +17,8 @@ package service
 import (
 	"strconv"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 // authzPdpsPath is the authz module's PDP gateways collection under the automation
@@ -36,38 +33,33 @@ func NewAuthzPdps(client *client.Client) *AuthzPdps {
 	return &AuthzPdps{Client: client}
 }
 
-func (svc *AuthzPdps) CreateOrUpdate(pdp *v1alpha1.AuthzPdp) (*model.AuthzPdpState, error) {
-	return svc.createOrUpdate(pdp, false)
+func (svc *AuthzPdps) CreateOrUpdate(dto model.AuthzPdpDTO) (*model.AuthzPdpState, error) {
+	return svc.createOrUpdate(dto, false)
 }
 
-func (svc *AuthzPdps) DryRunCreateOrUpdate(pdp *v1alpha1.AuthzPdp) (*model.AuthzPdpState, error) {
-	return svc.createOrUpdate(pdp, true)
+func (svc *AuthzPdps) DryRunCreateOrUpdate(dto model.AuthzPdpDTO) (*model.AuthzPdpState, error) {
+	return svc.createOrUpdate(dto, true)
 }
 
-// createOrUpdate PUTs the spec on the collection and answers the state: ids, findings, the
+// createOrUpdate PUTs the payload on the collection and answers the state: ids, findings, the
 // routing scope and the AuthZEN discovery path. A dry run answers 200 with its findings in
 // errors.severe; a real apply refused by a finding answers 400. On a non-2xx the client returns
 // the error without decoding the body.
-func (svc *AuthzPdps) createOrUpdate(pdp *v1alpha1.AuthzPdp, dryRun bool) (*model.AuthzPdpState, error) {
+func (svc *AuthzPdps) createOrUpdate(dto model.AuthzPdpDTO, dryRun bool) (*model.AuthzPdpState, error) {
 	url := svc.AutomationTarget(authzPdpsPath).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	dto := model.ToAuthzPdpDTO(pdp)
 	state := new(model.AuthzPdpState)
-
 	if err := svc.HTTP.Put(url.String(), dto, state); err != nil {
 		return nil, err
 	}
-
-	k8s.AddAutomationAPIManagedCondition(pdp)
 
 	return state, nil
 }
 
 // Delete removes the PDP gateway and its endpoint. The platform answers 409, deleting nothing,
 // when the delete would leave a policy or an entity with no target.
-func (svc *AuthzPdps) Delete(pdp *v1alpha1.AuthzPdp) error {
-	hrid := refs.NewNamespacedNameFromObject(pdp).HRID()
+func (svc *AuthzPdps) Delete(hrid string) error {
 	url := svc.AutomationTarget(authzPdpsPath).WithPath(hrid)
 	return svc.HTTP.Delete(url.String(), nil)
 }

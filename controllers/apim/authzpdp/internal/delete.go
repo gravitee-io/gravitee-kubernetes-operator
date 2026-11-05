@@ -16,6 +16,7 @@ package internal
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -26,11 +27,6 @@ import (
 
 func Delete(ctx context.Context, pdp *v1alpha1.AuthzPdp) error {
 	if !util.ContainsFinalizer(pdp, core.AuthzPdpFinalizer) {
-		return nil
-	}
-
-	if !pdp.HasContext() {
-		// Nothing was ever synced to APIM without a context; let the finalizer be removed.
 		return nil
 	}
 
@@ -45,7 +41,7 @@ func Delete(ctx context.Context, pdp *v1alpha1.AuthzPdp) error {
 
 	// A 409 (the delete would leave a policy or an entity with no target) is recoverable: the
 	// finalizer stays and the delete is retried until those are retargeted.
-	if err := gerrors.IgnoreNotFound(apimClient.AuthzPdps.Delete(pdp)); err != nil {
+	if err := gerrors.IgnoreNotFound(apimClient.AuthzPdps.Delete(refs.NewNamespacedNameFromObject(pdp).HRID())); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 

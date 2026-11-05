@@ -37,21 +37,32 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 	const ns = "orders"
 
 	pdpRef := refs.NamespacedName{Name: "orders-eu", Namespace: ns}
+	devCtx := refs.NamespacedName{Name: "dev-ctx"}
+	pdp := &v1alpha1.AuthzPdp{
+		ObjectMeta: metav1.ObjectMeta{Name: "orders-eu", Namespace: ns},
+		Spec:       v1alpha1.AuthzPdpSpec{Context: &devCtx},
+	}
 	standIn := search.AuthzPdpDependent{
 		Kind:    "McpProxy",
 		Field:   search.McpProxyCatalogMcpServerField,
 		NewList: func() client.ObjectList { return &v1alpha1.McpProxyList{} },
 	}
-	targeting := func(name string, target refs.NamespacedName) *v1alpha1.McpProxy {
+	targetingThrough := func(name string, target, contextRef refs.NamespacedName) *v1alpha1.McpProxy {
 		return &v1alpha1.McpProxy{
 			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
-			Spec: v1alpha1.McpProxySpec{Type: mcpproxy.Type{
-				Mode: mcpproxy.ModeStudio,
-				Studio: &mcpproxy.Studio{Tools: []mcpproxy.StudioTool{
-					{ServerRef: target, Tool: "check"},
-				}},
-			}},
+			Spec: v1alpha1.McpProxySpec{
+				Context: &contextRef,
+				Type: mcpproxy.Type{
+					Mode: mcpproxy.ModeStudio,
+					Studio: &mcpproxy.Studio{Tools: []mcpproxy.StudioTool{
+						{ServerRef: target, Tool: "check"},
+					}},
+				},
+			},
 		}
+	}
+	targeting := func(name string, target refs.NamespacedName) *v1alpha1.McpProxy {
+		return targetingThrough(name, target, devCtx)
 	}
 	cluster := func(objects ...client.Object) {
 		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
@@ -73,7 +84,7 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 			targeting("audit-schema", pdpRef),
 		)
 
-		found, err := search.FindAuthzPdpDependents(context.Background(), pdpRef,
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp,
 			[]search.AuthzPdpDependent{standIn})
 
 		Expect(err).ToNot(HaveOccurred())
@@ -83,10 +94,27 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 		}}))
 	})
 
+	It("leaves out a resource synced through another context, whose pdpRef does not resolve", func() {
+		cluster(
+			targeting("orders-schema", pdpRef),
+			targetingThrough("prod-schema", pdpRef, refs.NamespacedName{Name: "prod-ctx"}),
+			targetingThrough("same-ctx-schema", pdpRef, refs.NamespacedName{Name: "dev-ctx", Namespace: ns}),
+		)
+
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp,
+			[]search.AuthzPdpDependent{standIn})
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(found).To(Equal([]search.Dependents{{
+			Kind:  "McpProxy",
+			Names: []string{"orders/orders-schema", "orders/same-ctx-schema"},
+		}}))
+	})
+
 	It("leaves out a kind with no resource targeting the PDP", func() {
 		cluster(targeting("billing-schema", refs.NamespacedName{Name: "billing"}))
 
-		found, err := search.FindAuthzPdpDependents(context.Background(), pdpRef,
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp,
 			[]search.AuthzPdpDependent{standIn})
 
 		Expect(err).ToNot(HaveOccurred())
@@ -96,7 +124,7 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 	It("finds nothing while no kind is registered", func() {
 		cluster(targeting("orders-schema", pdpRef))
 
-		found, err := search.FindAuthzPdpDependents(context.Background(), pdpRef, search.AuthzPdpDependents)
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp, search.AuthzPdpDependents())
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(found).To(BeEmpty())
