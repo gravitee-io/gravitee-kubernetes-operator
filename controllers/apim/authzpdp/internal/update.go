@@ -22,21 +22,16 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func CreateOrUpdate(ctx context.Context, pdp *v1alpha1.AuthzPdp) error {
-	if !pdp.HasContext() {
-		return gerrors.NewIllegalStateError(
-			fmt.Errorf("authz pdp [%s] has no management context", pdp.GetName()),
-		)
-	}
-
 	apimClient, err := apim.FromContextRef(ctx, pdp.ContextRef(), pdp.GetNamespace())
 	if err != nil {
 		return err
 	}
 
-	state, err := apimClient.AuthzPdps.CreateOrUpdate(pdp)
+	state, err := apimClient.AuthzPdps.CreateOrUpdate(model.ToAuthzPdpDTO(pdp))
 	if err != nil {
 		// A 400 is how the platform refuses an apply. Admission ran the same checks as a dry run, so a
 		// refusal here comes from a state that changed since (an endpoint path another API took, a
@@ -50,6 +45,8 @@ func CreateOrUpdate(ctx context.Context, pdp *v1alpha1.AuthzPdp) error {
 		}
 		return gerrors.NewControlPlaneError(err)
 	}
+
+	k8s.AddAutomationAPIManagedCondition(pdp)
 
 	// Setting fields by fields to keep the rest (conditions) intact
 	pdp.Status.ID = state.ID

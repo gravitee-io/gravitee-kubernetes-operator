@@ -69,7 +69,7 @@ func ResolveAuthzPdpRoutingScope(
 		return "", fmt.Errorf("%w: [%s] has no routing scope yet", ErrAuthzPdpNotSynced, ref.String())
 	}
 
-	if want, got := contextOf(dependent), contextOf(pdp); want != got {
+	if want, got := ContextOf(dependent), ContextOf(pdp); want != got {
 		return "", fmt.Errorf(
 			"authz pdp [%s] is synced through management context [%s], not [%s]",
 			ref.String(), got, want,
@@ -85,9 +85,10 @@ func IsAuthzPdpPending(err error) bool {
 	return errors.Is(err, ErrAuthzPdpNotFound) || errors.Is(err, ErrAuthzPdpNotSynced)
 }
 
-// contextOf returns the namespaced name of obj's ManagementContext, its namespace defaulted to
-// obj's, or an empty string without one.
-func contextOf(obj core.ContextAwareObject) string {
+// ContextOf returns the namespaced name of obj's ManagementContext, its namespace defaulted to
+// obj's, or an empty string without one. Two resources sync to the same environment when their
+// ContextOf are equal: a pdpRef resolves only then.
+func ContextOf(obj core.ContextAwareObject) string {
 	if !obj.HasContext() {
 		return ""
 	}

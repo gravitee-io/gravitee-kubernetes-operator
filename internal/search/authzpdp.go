@@ -20,6 +20,9 @@ import (
 	"sort"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -35,10 +38,12 @@ type AuthzPdpDependent struct {
 	NewList func() client.ObjectList
 }
 
-// AuthzPdpDependents lists the kinds that target an AuthzPdp, which deleting one warns about.
-// Each authz story adds its kind: AuthzSchema (AUTHZ-75), AuthzEntity (AUTHZ-81) and
+// AuthzPdpDependents returns the kinds that target an AuthzPdp, which deleting one warns about.
+// Each authz story adds its kind to the list: AuthzSchema (AUTHZ-75), AuthzEntity (AUTHZ-81) and
 // AuthzPolicy (AUTHZ-84).
-var AuthzPdpDependents = []AuthzPdpDependent{}
+func AuthzPdpDependents() []AuthzPdpDependent {
+	return nil
+}
 
 // Dependents are the resources of one kind that target an AuthzPdp.
 type Dependents struct {
@@ -47,13 +52,18 @@ type Dependents struct {
 	Names []string
 }
 
-// FindAuthzPdpDependents returns, for each kind in order, the resources whose pdpRef names the
-// AuthzPdp ref. A kind with none is left out.
+// FindAuthzPdpDependents returns, for each kind in order, the resources whose pdpRef names pdp and
+// that sync through pdp's ManagementContext: a pdpRef to a PDP of another environment does not
+// resolve (see dynamic.ResolveAuthzPdpRoutingScope), so that resource does not target it. A kind
+// with none is left out.
 func FindAuthzPdpDependents(
 	ctx context.Context,
-	ref refs.NamespacedName,
+	pdp *v1alpha1.AuthzPdp,
 	kinds []AuthzPdpDependent,
 ) ([]Dependents, error) {
+	ref := *refs.NewNamespacedNameFromObject(pdp)
+	pdpContext := dynamic.ContextOf(pdp)
+
 	found := make([]Dependents, 0)
 	for _, kind := range kinds {
 		list := kind.NewList()
@@ -66,7 +76,7 @@ func FindAuthzPdpDependents(
 		}
 		names := make([]string, 0, len(items))
 		for _, item := range items {
-			if obj, ok := item.(client.Object); ok {
+			if obj, ok := item.(core.ContextAwareObject); ok && dynamic.ContextOf(obj) == pdpContext {
 				names = append(names, refs.NewNamespacedNameFromObject(obj).String())
 			}
 		}

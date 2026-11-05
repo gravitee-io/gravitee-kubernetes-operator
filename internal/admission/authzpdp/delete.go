@@ -24,13 +24,14 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
-// validateDelete names, per kind, the resources whose pdpRef still names the PDP. It does not call
+// validateDelete names, per kind, the resources whose pdpRef still names the PDP through the PDP's
+// ManagementContext. It does not call
 // the platform's delete dry run: APIM 4.13 ignores dryRun on a DELETE and deletes the PDP.
 func validateDelete(ctx context.Context, pdp *v1alpha1.AuthzPdp) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	ref := refs.NewNamespacedName(pdp.GetNamespace(), pdp.GetName())
-	dependents, err := search.FindAuthzPdpDependents(ctx, ref, search.AuthzPdpDependents)
+	dependents, err := search.FindAuthzPdpDependents(ctx, pdp, search.AuthzPdpDependents())
 	if err != nil {
 		errs.AddWarningf("unable to check which resources target authz pdp [%s]: %s", ref.String(), err)
 		return errs
