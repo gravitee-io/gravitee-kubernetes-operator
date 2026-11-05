@@ -148,6 +148,9 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 
 	// DeleteGuard runs on delete review only. Nil skips.
 	DeleteGuard DeleteGuardFunc[T]
+
+	// DeleteCheck runs on delete review after DeleteGuard. Severe rejects, warnings admit. Nil skips.
+	DeleteCheck AdmissionCheckFunc[T]
 }
 
 // NewResourceLifecycle returns l, and panics on the first missing required hole.

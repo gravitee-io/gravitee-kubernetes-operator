@@ -322,6 +322,49 @@ var _ = Describe("AdmissionLifecycle", func() {
 			Expect(errs.IsSevere()).To(BeTrue())
 			Expect(errs.Severe[0].Message).To(ContainSubstring("still referenced"))
 		})
+
+		It("admits with the warnings DeleteCheck returns", func() {
+			a := minimalAdmission(&testClient{})
+			a.DeleteCheck = func(context.Context, *v1alpha1.Group) *gerrors.AdmissionErrors {
+				e := gerrors.NewAdmissionErrors()
+				e.AddWarning("still used by a gateway")
+				return e
+			}
+
+			errs := a.ValidateDelete(ctx, newGroup("g1", "ns"))
+
+			Expect(errs.IsSevere()).To(BeFalse())
+			Expect(errs.Warning).To(ConsistOf(HaveField("Message", "still used by a gateway")))
+		})
+
+		It("rejects on a severe DeleteCheck error", func() {
+			a := minimalAdmission(&testClient{})
+			a.DeleteCheck = func(context.Context, *v1alpha1.Group) *gerrors.AdmissionErrors {
+				e := gerrors.NewAdmissionErrors()
+				e.AddSevere("cannot delete while in use")
+				return e
+			}
+
+			errs := a.ValidateDelete(ctx, newGroup("g1", "ns"))
+
+			Expect(errs.IsSevere()).To(BeTrue())
+			Expect(errs.Severe[0].Message).To(Equal("cannot delete while in use"))
+		})
+
+		It("does not run DeleteCheck once DeleteGuard rejected", func() {
+			a := minimalAdmission(&testClient{})
+			a.DeleteGuard = func(context.Context, *v1alpha1.Group) error { return errors.New("still referenced") }
+			deleteCheck := false
+			a.DeleteCheck = func(context.Context, *v1alpha1.Group) *gerrors.AdmissionErrors {
+				deleteCheck = true
+				return nil
+			}
+
+			errs := a.ValidateDelete(ctx, newGroup("g1", "ns"))
+
+			Expect(errs.IsSevere()).To(BeTrue())
+			Expect(deleteCheck).To(BeFalse())
+		})
 	})
 
 	Describe("Pipeline ordering", func() {
