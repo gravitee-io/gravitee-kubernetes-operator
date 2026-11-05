@@ -31,14 +31,18 @@ func validateUpdate(
 	oldObj *v1alpha1.AuthzPdp,
 	newObj *v1alpha1.AuthzPdp,
 ) *errors.AdmissionErrors {
+	// A metadata-only update, the controller's own finalizer and annotation writes included,
+	// does not need the platform: only a spec change is dry-run. Hashed before validateContext,
+	// which compiles templates into newObj while oldObj keeps them: hashed after, a templated spec
+	// would always look changed.
+	specChanged := oldObj.Spec.Hash() != newObj.Spec.Hash()
+
 	errs := validateContext(ctx, newObj)
 	if errs.IsSevere() {
 		return errs
 	}
 
-	// A metadata-only update, the controller's own finalizer and annotation writes included,
-	// does not need the platform: only a spec change is dry-run.
-	if oldObj.Spec.Hash() != newObj.Spec.Hash() {
+	if specChanged {
 		errs.MergeWith(validateDryRun(ctx, newObj))
 		if errs.IsSevere() {
 			return errs
