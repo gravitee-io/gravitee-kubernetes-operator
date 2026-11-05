@@ -53,12 +53,10 @@ func PreCheck(ctx context.Context, obj *v1alpha1.AMIdentityProvider) *gerrors.Ad
 }
 
 // DryRun validates the identity provider against AM without persisting it. It is skipped without a client
-// (domain not in AM yet). Any AM error, an unreachable AM included, rejects it, as for the domain and the
-// APIM resources.
-func DryRun(ctx context.Context, client *am.Client, dto IdentityProvider) *gerrors.AdmissionErrors {
-	errs := gerrors.NewAdmissionErrors()
+// (domain not in AM yet). Any AM error, an unreachable AM included, returns AM's error.
+func DryRun(ctx context.Context, client *am.Client, dto IdentityProvider) (*gerrors.AdmissionErrors, error) {
 	if client == nil {
-		return errs
+		return nil, nil
 	}
 
 	resp, err := client.UpsertIdentityProviderWithResponse(ctx, dto.DomainKey,
@@ -67,14 +65,12 @@ func DryRun(ctx context.Context, client *am.Client, dto IdentityProvider) *gerro
 	if err = am.HasErrors(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
-		errs.AddSevere(err.Error())
-		return errs
+		return nil, err
 	}
 	if resp.JSON200 == nil {
-		errs.AddSevere(am.UnexpectedResponse(resp.HTTPResponse).Error())
-		return errs
+		return nil, am.UnexpectedResponse(resp.HTTPResponse)
 	}
-	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors)
+	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors), nil
 }
 
 // GetRemote fetches the identity provider for drift detection. Without a client (domain not in AM

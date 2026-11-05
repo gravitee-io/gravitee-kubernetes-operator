@@ -68,11 +68,10 @@ func warnMissingRefs(ctx context.Context, obj *v1alpha1.AMClientSecret) *gerrors
 
 // DryRun validates the client secret against AM without persisting it. It is skipped without a client
 // (application or domain not in AM yet) or without a value (Secret or entry missing). Any AM error, a
-// different value for an existing secret or a value too short included, rejects it with AM's message.
-func DryRun(ctx context.Context, client *am.Client, dto ClientSecret) *gerrors.AdmissionErrors {
-	errs := gerrors.NewAdmissionErrors()
+// different value for an existing secret or a value too short included, returns AM's error.
+func DryRun(ctx context.Context, client *am.Client, dto ClientSecret) (*gerrors.AdmissionErrors, error) {
 	if client == nil || dto.Value == nil {
-		return errs
+		return nil, nil
 	}
 
 	resp, err := client.UpsertClientSecretWithResponse(ctx, dto.DomainKey, dto.ApplicationKey,
@@ -81,14 +80,12 @@ func DryRun(ctx context.Context, client *am.Client, dto ClientSecret) *gerrors.A
 	if err = am.HasErrors(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
-		errs.AddSevere(err.Error())
-		return errs
+		return nil, err
 	}
 	if resp.JSON200 == nil {
-		errs.AddSevere(am.UnexpectedResponse(resp.HTTPResponse).Error())
-		return errs
+		return nil, am.UnexpectedResponse(resp.HTTPResponse)
 	}
-	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors)
+	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors), nil
 }
 
 // GetRemote fetches the client secret for drift detection. Without a client (application or domain not

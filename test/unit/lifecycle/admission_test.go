@@ -16,6 +16,7 @@ package lifecycle_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -140,9 +141,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 			a := minimalAdmission(tc)
 			a.ToDTO = failToDTO
 			dryRun := false
-			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) (*gerrors.AdmissionErrors, error) {
 				dryRun = true
-				return nil
+				return nil, nil
 			}
 			errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
 			Expect(errs.IsSevere()).To(BeTrue())
@@ -153,23 +154,74 @@ var _ = Describe("AdmissionLifecycle", func() {
 		It("runs DryRun and reports errors", func() {
 			tc := &testClient{}
 			a := minimalAdmission(tc)
-			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) (*gerrors.AdmissionErrors, error) {
 				e := gerrors.NewAdmissionErrors()
 				e.AddSevere("dry run rejected")
-				return e
+				return e, nil
 			}
 			errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
 			Expect(errs.IsSevere()).To(BeTrue())
 			Expect(errs.Severe[0].Message).To(ContainSubstring("dry run rejected"))
 		})
 
+		It("rejects with the call error when DryRun fails", func() {
+			a := minimalAdmission(&testClient{})
+			a.DryRun = func(context.Context, *testClient, testDTO) (*gerrors.AdmissionErrors, error) {
+				return nil, errors.New("400: value too short")
+			}
+			postCheck := false
+			a.PostCheck = func(context.Context, *v1alpha1.Group) *gerrors.AdmissionErrors {
+				postCheck = true
+				return nil
+			}
+
+			errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
+
+			Expect(errs.IsSevere()).To(BeTrue())
+			Expect(errs.Severe[0].Message).To(Equal("dry run failed: 400: value too short"))
+			Expect(postCheck).To(BeFalse())
+		})
+
+		DescribeTable("admits with warnings, and rejects with severe findings",
+			func(severe []string, wantSevere bool) {
+				a := minimalAdmission(&testClient{})
+				a.DryRun = func(context.Context, *testClient, testDTO) (*gerrors.AdmissionErrors, error) {
+					e := gerrors.NewAdmissionErrors()
+					e.AddWarning("field deprecated")
+					for _, message := range severe {
+						e.AddSevere(message)
+					}
+					return e, nil
+				}
+
+				errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
+
+				Expect(errs.IsSevere()).To(Equal(wantSevere))
+				Expect(errs.Warning).To(ConsistOf(HaveField("Message", "field deprecated")))
+			},
+			Entry("warnings only: admitted with the warnings", nil, false),
+			Entry("severe and warning: rejected, the warning kept", []string{"name is required"}, true),
+		)
+
+		It("reports nothing when DryRun returns no findings and no error", func() {
+			a := minimalAdmission(&testClient{})
+			a.DryRun = func(context.Context, *testClient, testDTO) (*gerrors.AdmissionErrors, error) {
+				return nil, nil
+			}
+
+			errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
+
+			Expect(errs.IsSevere()).To(BeFalse())
+			Expect(errs.Warning).To(BeEmpty())
+		})
+
 		It("runs PostCheck after DryRun", func() {
 			tc := &testClient{}
 			var order []string
 			a := minimalAdmission(tc)
-			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) (*gerrors.AdmissionErrors, error) {
 				order = append(order, "dryrun")
-				return gerrors.NewAdmissionErrors()
+				return gerrors.NewAdmissionErrors(), nil
 			}
 			a.PostCheck = func(_ context.Context, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 				order = append(order, "postcheck")
@@ -197,10 +249,10 @@ var _ = Describe("AdmissionLifecycle", func() {
 	Describe("ValidateUpdate", func() {
 		It("skips validation for an object being deleted", func() {
 			a := minimalAdmission(&testClient{})
-			a.DryRun = func(context.Context, *testClient, testDTO) *gerrors.AdmissionErrors {
+			a.DryRun = func(context.Context, *testClient, testDTO) (*gerrors.AdmissionErrors, error) {
 				e := gerrors.NewAdmissionErrors()
 				e.AddSevere("remote already deleted")
-				return e
+				return e, nil
 			}
 			oldObj := newGroup("g1", "ns")
 			newObj := oldObj.DeepCopy()
@@ -223,9 +275,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 				order = append(order, "immutable")
 				return gerrors.NewAdmissionErrors()
 			}
-			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) (*gerrors.AdmissionErrors, error) {
 				order = append(order, "dryrun")
-				return gerrors.NewAdmissionErrors()
+				return gerrors.NewAdmissionErrors(), nil
 			}
 			oldG := newGroup("g1", "ns")
 			errs := a.ValidateUpdate(ctx, oldG, withSpecChange(oldG))
@@ -242,9 +294,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 				e.AddSevere("field is immutable")
 				return e
 			}
-			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
+			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) (*gerrors.AdmissionErrors, error) {
 				dryRunCalled = true
-				return gerrors.NewAdmissionErrors()
+				return gerrors.NewAdmissionErrors(), nil
 			}
 			errs := a.ValidateUpdate(ctx, newGroup("g1", "ns"), newGroup("g1", "ns"))
 			Expect(errs.IsSevere()).To(BeTrue())
@@ -290,9 +342,9 @@ var _ = Describe("AdmissionLifecycle", func() {
 					order = append(order, "precheck")
 					return gerrors.NewAdmissionErrors()
 				},
-				DryRun: func(_ context.Context, _ *testClient, _ testDTO) *gerrors.AdmissionErrors {
+				DryRun: func(_ context.Context, _ *testClient, _ testDTO) (*gerrors.AdmissionErrors, error) {
 					order = append(order, "dryrun")
-					return gerrors.NewAdmissionErrors()
+					return gerrors.NewAdmissionErrors(), nil
 				},
 				PostCheck: func(_ context.Context, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 					order = append(order, "postcheck")
@@ -378,13 +430,13 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 	// calls records the DryRun and GetRemote calls of a.
 	type calls struct{ dryRun, getRemote bool }
 	recording := func(a *groupAdmission, c *calls, dryRunErr string) {
-		a.DryRun = func(context.Context, *testClient, testDTO) *gerrors.AdmissionErrors {
+		a.DryRun = func(context.Context, *testClient, testDTO) (*gerrors.AdmissionErrors, error) {
 			c.dryRun = true
 			e := gerrors.NewAdmissionErrors()
 			if dryRunErr != "" {
 				e.AddSevere(dryRunErr)
 			}
-			return e
+			return e, nil
 		}
 		getRemote := a.GetRemote
 		a.GetRemote = func(ctx context.Context, tc *testClient, dto testDTO) (testDTO, error) {
