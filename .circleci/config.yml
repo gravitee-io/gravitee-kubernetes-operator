@@ -206,6 +206,8 @@ jobs:
       - run:
           name: Run envtest suites
           command: |
+            export SAFE_RANDOM=true
+            export GKO_MANAGER_SILENT_LOG=true
             ENVTEST_ARGS="--junit-report=junit-envtest.xml --cover --coverprofile=cover-envtest.out --coverpkg=github.com/gravitee-io/gravitee-kubernetes-operator/... --output-dir=/tmp/junit/reports" \
              make -s envtest
       - save_cache:
