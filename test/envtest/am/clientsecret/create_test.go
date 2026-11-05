@@ -165,4 +165,27 @@ var _ = Describe("Create", func() {
 		expectAccepted(ctx, cs)
 		Expect(remoteSecrets(ctx, app)).To(HaveLen(1))
 	})
+
+	It("should be owned by its application while waiting for its Secret", func() {
+		fixtures := fixtures()
+		cs := fixtures.AMClientSecret
+		fixtures.AMClientSecret = nil
+		fixtures.Apply()
+		app := fixtures.AMApplication
+
+		By("creating the client secret without its Secret")
+
+		Expect(manager.Client().Create(ctx, cs)).To(Succeed())
+		expectCondition(ctx, cs, k8s.ConditionResolvedRefs, "Secret ["+cs.Spec.SecretRef.Name+"] not found")
+		Expect(cs.OwnerReferences).To(ConsistOf(And(
+			HaveField("Kind", "AMApplication"),
+			HaveField("Name", app.Name),
+			HaveField("UID", app.UID),
+		)))
+
+		By("creating the Secret")
+
+		createSecret(ctx, cs, withValue(cs, value))
+		expectAccepted(ctx, cs)
+	})
 })

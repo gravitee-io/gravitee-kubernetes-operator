@@ -51,9 +51,10 @@ func (l ResourceLifecycle[T, D, C, R]) Reconcile(
 	}
 	obj.SetNamespace(req.Namespace)
 
-	// The finalizer is saved before mutate: mutate writes template references to Secrets and ConfigMaps,
-	// and only a deletion reconcile releases them. Without a saved finalizer, there is no deletion reconcile.
-	if err := l.addFinalizer(ctx, cli, obj); err != nil {
+	// The finalizer and the owner reference are saved before mutate: mutate writes template references to
+	// Secrets and ConfigMaps, and only a deletion reconcile releases them. Without a saved finalizer, there is no
+	// deletion reconcile; without a saved owner reference, a resource whose upsert fails outlives its parent.
+	if err := l.saveMetadata(ctx, cli, obj); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -110,16 +111,6 @@ func (l ResourceLifecycle[T, D, C, R]) mutate(
 			return l.delete(ctx, obj, dc)
 		})
 	}
-	if l.Owner != nil {
-		if owner, block, err := l.Owner(ctx, dc); err != nil {
-			return gerrors.NewResolveRefError(err)
-		} else if owner != nil {
-			err := util.SetOwnerReference(owner, obj, cli.Scheme(), util.WithBlockOwnerDeletion(block))
-			if err != nil {
-				return wrapUnexpectedAsControlPlane(err)
-			}
-		}
-	}
 	// Compile saves a reference to obj on each Secret and ConfigMap it reads, at once and whatever the upsert returns.
 	if err := template.Compile(ctx, dc, true); err != nil {
 		// not wrapped: a template source created later must be retried, as in the other controllers
@@ -130,11 +121,22 @@ func (l ResourceLifecycle[T, D, C, R]) mutate(
 	})
 }
 
-// addFinalizer saves the finalizer with its own Update, before the reconcile touches any other object.
-// Added inside mutate, it would be lost whenever the upsert fails: a resource AM never accepted would then
-// be deleted at once, leaving its Secrets stuck on finalizers.gravitee.io/templating (GKO-3387).
-func (l ResourceLifecycle[T, D, C, R]) addFinalizer(ctx context.Context, cli client.Client, obj T) error {
-	if l.Finalizer == "" || obj.IsBeingDeleted() || !util.AddFinalizer(obj, l.Finalizer) {
+// saveMetadata saves the finalizer and the owner reference with their own Update, before the reconcile touches
+// any other object. Set in mutate, both would be lost whenever the upsert fails: a resource the remote never
+// accepted would be deleted at once, leaving its Secrets stuck on finalizers.gravitee.io/templating (GKO-3387),
+// and it would outlive its parent, since the garbage collector only sees saved owner references.
+func (l ResourceLifecycle[T, D, C, R]) saveMetadata(ctx context.Context, cli client.Client, obj T) error {
+	if obj.IsBeingDeleted() {
+		return nil
+	}
+	before := obj.DeepCopyObject()
+	if l.Finalizer != "" {
+		util.AddFinalizer(obj, l.Finalizer)
+	}
+	if err := l.setOwnerReference(ctx, cli, obj); err != nil {
+		return err
+	}
+	if equality.Semantic.DeepEqual(before, obj) {
 		return nil
 	}
 	gvk := obj.GetObjectKind().GroupVersionKind()
@@ -144,6 +146,19 @@ func (l ResourceLifecycle[T, D, C, R]) addFinalizer(ctx context.Context, cli cli
 	// Update clears the kind, which keys the references template.Compile records on Secrets and ConfigMaps.
 	obj.GetObjectKind().SetGroupVersionKind(gvk)
 	return nil
+}
+
+// setOwnerReference sets the owner Owner resolves. An Owner error (parent missing or not ready) leaves the
+// reference unset: ResolveRefs reports the cause in the status, and a later reconcile saves the reference.
+func (l ResourceLifecycle[T, D, C, R]) setOwnerReference(ctx context.Context, cli client.Client, obj T) error {
+	if l.Owner == nil {
+		return nil
+	}
+	owner, block, err := l.Owner(ctx, obj)
+	if err != nil || owner == nil {
+		return nil
+	}
+	return util.SetOwnerReference(owner, obj, cli.Scheme(), util.WithBlockOwnerDeletion(block))
 }
 
 func (l ResourceLifecycle[T, D, C, R]) upsert(ctx context.Context, dc T) error {

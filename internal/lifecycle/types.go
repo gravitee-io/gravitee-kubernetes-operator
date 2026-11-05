@@ -67,6 +67,7 @@ type DryRunFunc[C any, D store.Identifiable] func(ctx context.Context, client C,
 type GetRemoteFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) (D, error)
 
 // OwnerFunc returns the object that owns obj (a parent CR), or nil when it has none.
+// An error leaves the owner reference unset for this reconcile; it does not fail it.
 type OwnerFunc[T core.ContextAwareObject] func(ctx context.Context, obj T) (client.Object, bool, error)
 
 // ResourceLifecycle is the reconcile holes for one CR kind.
@@ -83,7 +84,8 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 	// ClientFactory runs after refs, before ToDTO. Required.
 	ClientFactory ClientFactoryFunc[T, C]
 
-	// Owner runs on create/update in mutate, before upsert. Nil skips. A nil owner skips.
+	// Owner runs on create/update before mutate, saved with the finalizer. Nil skips.
+	// A nil owner or an error skips. Requires ResolveRefs.
 	Owner OwnerFunc[T]
 
 	// ToDTO runs after ClientFactory, before Upsert or Delete. Required.
@@ -149,6 +151,8 @@ func NewResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C cor
 		panic("lifecycle: ResourceLifecycle.Upsert is required")
 	case l.Delete == nil:
 		panic("lifecycle: ResourceLifecycle.Delete is required")
+	case l.Owner != nil && l.ResolveRefs == nil:
+		panic("lifecycle: ResourceLifecycle.Owner requires ResolveRefs, which reports a missing owner")
 	}
 	return l
 }
