@@ -35,7 +35,8 @@ import (
 var _ = Describe("Authz PDP reconcile", func() {
 	// The finalizer must be saved even when the apply fails: template.Compile has already recorded
 	// the PDP on the Secrets and ConfigMaps it reads, and only a deletion reconcile releases them
-	// (GKO-3387). Here the apply fails because the ManagementContext does not exist.
+	// (GKO-3387). Here the apply fails because the ManagementContext does not exist: the suite's
+	// dynamic client answers 404.
 	It("saves the finalizer when the apply fails", func() {
 		scheme := runtime.NewScheme()
 		Expect(clientgoscheme.AddToScheme(scheme)).To(Succeed())
