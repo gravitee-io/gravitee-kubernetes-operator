@@ -176,6 +176,17 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 		})
 	})
 
+	upsertErrorEntries := []TableEntry{
+		Entry("plain error is wrapped as a recoverable control plane error",
+			errors.New("boom"), gerrors.ControlPlaneError, true),
+		Entry("recoverable server error requeues",
+			gerrors.ServerError{StatusCode: 503}, gerrors.ControlPlaneError, true),
+		Entry("unrecoverable server error aborts",
+			gerrors.ServerError{StatusCode: 400}, gerrors.ControlPlaneError, false),
+		Entry("a ReconcileError passes through unchanged",
+			gerrors.NewIllegalStateError(errors.New("bad state")), gerrors.IllegalStateError, false),
+	}
+
 	DescribeTable("classifies Upsert errors",
 		func(upsertErr error, wantType gerrors.ErrorType, wantRequeue bool) {
 			cli := newCluster(newGroup("g1", testNs))
@@ -192,15 +203,77 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
 			Expect(accepted.Reason).To(Equal(string(wantType)))
 		},
-		Entry("plain error is wrapped as a recoverable control plane error",
-			errors.New("boom"), gerrors.ControlPlaneError, true),
-		Entry("recoverable server error requeues",
-			gerrors.ServerError{StatusCode: 503}, gerrors.ControlPlaneError, true),
-		Entry("unrecoverable server error aborts",
-			gerrors.ServerError{StatusCode: 400}, gerrors.ControlPlaneError, false),
-		Entry("a ReconcileError passes through unchanged",
-			gerrors.NewIllegalStateError(errors.New("bad state")), gerrors.IllegalStateError, false),
+		upsertErrorEntries,
 	)
+
+	Describe("OnUpsertError", func() {
+		DescribeTable("passes a failed Upsert's error to OnUpsertError, persists its status, and keeps the classification",
+			func(upsertErr error, wantType gerrors.ErrorType, wantRequeue bool) {
+				cli := newCluster(newGroup("g1", testNs))
+				r.upsertErr = upsertErr
+				l := newGroupLifecycle(r)
+				var received error
+				l.OnUpsertError = func(_ context.Context, g *v1alpha1.Group, err error) error {
+					received = err
+					g.Status.ID = "refused"
+					return nil
+				}
+				postUpsert := false
+				l.PostUpsert = func(context.Context, *v1alpha1.Group, upsertResponse) error {
+					postUpsert = true
+					return nil
+				}
+
+				_, err := reconcile(l, cli, "g1")
+
+				Expect(received).To(MatchError(upsertErr))
+				Expect(postUpsert).To(BeFalse())
+				if wantRequeue {
+					Expect(reconcileErrorType(err)).To(Equal(wantType))
+				} else {
+					Expect(err).ToNot(HaveOccurred())
+				}
+				stored := fetch(cli, "g1")
+				Expect(stored.Status.ID).To(Equal("refused"))
+				Expect(condition(stored, k8s.ConditionAccepted).Reason).To(Equal(string(wantType)))
+			},
+			upsertErrorEntries,
+		)
+
+		It("returns the error OnUpsertError returns, as-is", func() {
+			cli := newCluster(newGroup("g1", testNs))
+			r.upsertErr = gerrors.ServerError{StatusCode: 400}
+			l := newGroupLifecycle(r)
+			l.OnUpsertError = func(_ context.Context, g *v1alpha1.Group, err error) error {
+				g.Status.ID = "refused"
+				return fmt.Errorf("refused: %w", err)
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).To(MatchError("refused: " + gerrors.ServerError{StatusCode: 400}.Error()))
+			Expect(errors.As(err, new(gerrors.ReconcileError))).To(BeFalse())
+			Expect(errors.As(err, new(gerrors.ServerError))).To(BeTrue())
+			stored := fetch(cli, "g1")
+			Expect(stored.Status.ID).To(Equal("refused"))
+			Expect(condition(stored, k8s.ConditionAccepted).Status).To(Equal(metav1.ConditionFalse))
+		})
+
+		It("does not call OnUpsertError when Upsert succeeds", func() {
+			cli := newCluster(newGroup("g1", testNs))
+			l := newGroupLifecycle(r)
+			called := false
+			l.OnUpsertError = func(context.Context, *v1alpha1.Group, error) error {
+				called = true
+				return nil
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(called).To(BeFalse())
+		})
+	})
 
 	Describe("delete", func() {
 		It("deletes the remote DTO and removes the finalizer", func() {
