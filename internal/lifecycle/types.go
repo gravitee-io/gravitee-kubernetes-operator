@@ -60,7 +60,10 @@ type AdmissionCheckFunc[T core.ContextAwareObject] func(ctx context.Context, obj
 type ImmutableFieldsFunc[T core.ContextAwareObject] func(oldValue, newValue T) *gerrors.AdmissionErrors
 
 // DryRunFunc validates dto against the remote API without persisting. Never maps the CR.
-type DryRunFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) *gerrors.AdmissionErrors
+// The findings are the remote's validation result (severe rejects, warnings admit); err is a call that
+// failed (transport, HTTP 4xx/5xx, undecodable body), which the lifecycle reports as a severe error.
+// Nil findings and nil error: nothing to report (for example no client yet).
+type DryRunFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) (*gerrors.AdmissionErrors, error)
 
 // GetRemoteFunc returns the live remote object for dto.Identity().
 // Return the client error as-is, including 404.

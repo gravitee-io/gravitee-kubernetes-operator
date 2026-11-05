@@ -177,9 +177,12 @@ func (a AdmissionLifecycle[T, D, C]) dryRun(
 		errs.AddSeveref("could not map the resource: %s", err.Error())
 		return
 	}
-	if err := a.DryRun(ctx, apiClient, dto); err != nil {
-		errs.MergeWith(err)
+	findings, err := a.DryRun(ctx, apiClient, dto)
+	if err != nil {
+		errs.AddSeveref("dry run failed: %s", err.Error())
+		return
 	}
+	errs.MergeWith(findings)
 }
 
 func (a AdmissionLifecycle[T, D, C]) detectDrift(

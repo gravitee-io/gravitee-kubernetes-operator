@@ -116,12 +116,22 @@ var _ = Describe("AMSecurityDomain AM calls", func() {
 		Expect(err).To(HaveOccurred())
 	})
 
-	It("rejects a dry run answered without a JSON body", func() {
+	It("returns an error on a dry run answered without a JSON body", func() {
 		s := newAMServer(http.StatusOK, "text/plain", "ok")
 
-		errs := internal.DryRun(ctx, clientFor(s), dto)
+		findings, err := internal.DryRun(ctx, clientFor(s), dto)
 
-		Expect(errs.IsSevere()).To(BeTrue())
+		Expect(err).To(HaveOccurred())
+		Expect(findings).To(BeNil())
+	})
+
+	It("returns AM's message on a dry run answered 400", func() {
+		s := newAMServer(http.StatusBadRequest, "application/json", `{"message":"path already used"}`)
+
+		findings, err := internal.DryRun(ctx, clientFor(s), dto)
+
+		Expect(err).To(MatchError(ContainSubstring("path already used")))
+		Expect(findings).To(BeNil())
 	})
 
 	It("returns an error on a get answered without a JSON body", func() {

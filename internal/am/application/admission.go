@@ -101,11 +101,10 @@ func validateSiblingRef(ctx context.Context, obj *v1alpha1.AMApplication, siblin
 
 // DryRun validates the application against AM without persisting it. It is skipped without a client
 // (domain not in AM yet). Any AM error, an unreachable AM, a duplicate clientId or a type change to or from
-// agent included, rejects it with AM's message.
-func DryRun(ctx context.Context, client *am.Client, dto Application) *gerrors.AdmissionErrors {
-	errs := gerrors.NewAdmissionErrors()
+// agent included, returns AM's error.
+func DryRun(ctx context.Context, client *am.Client, dto Application) (*gerrors.AdmissionErrors, error) {
 	if client == nil {
-		return errs
+		return nil, nil
 	}
 
 	resp, err := client.UpsertApplicationWithResponse(ctx, dto.DomainKey,
@@ -114,14 +113,12 @@ func DryRun(ctx context.Context, client *am.Client, dto Application) *gerrors.Ad
 	if err = am.HasErrors(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
-		errs.AddSevere(err.Error())
-		return errs
+		return nil, err
 	}
 	if resp.JSON200 == nil {
-		errs.AddSevere(am.UnexpectedResponse(resp.HTTPResponse).Error())
-		return errs
+		return nil, am.UnexpectedResponse(resp.HTTPResponse)
 	}
-	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors)
+	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors), nil
 }
 
 // GetRemote fetches the application for drift detection. Without a client (domain not in AM

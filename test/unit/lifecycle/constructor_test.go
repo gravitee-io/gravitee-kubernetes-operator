@@ -28,7 +28,7 @@ import (
 
 type groupAdmission = lifecycle.AdmissionLifecycle[*v1alpha1.Group, testDTO, *testClient]
 
-func dryRunOK(context.Context, *testClient, testDTO) *gerrors.AdmissionErrors { return nil }
+func dryRunOK(context.Context, *testClient, testDTO) (*gerrors.AdmissionErrors, error) { return nil, nil }
 
 var _ = Describe("NewResourceLifecycle", func() {
 	It("returns a lifecycle with all required holes", func() {

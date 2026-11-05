@@ -52,12 +52,10 @@ func PreCheck(ctx context.Context, obj *v1alpha1.AMCertificate) *gerrors.Admissi
 }
 
 // DryRun validates the certificate against AM without persisting it. It is skipped without a client
-// (domain not in AM yet). Any AM error, an unreachable AM or a license refusal included, rejects it,
-// as for the domain and the identity provider.
-func DryRun(ctx context.Context, client *am.Client, dto Certificate) *gerrors.AdmissionErrors {
-	errs := gerrors.NewAdmissionErrors()
+// (domain not in AM yet). Any AM error, an unreachable AM or a license refusal included, returns AM's error.
+func DryRun(ctx context.Context, client *am.Client, dto Certificate) (*gerrors.AdmissionErrors, error) {
 	if client == nil {
-		return errs
+		return nil, nil
 	}
 
 	resp, err := client.UpsertCertificateWithResponse(ctx, dto.DomainKey,
@@ -66,14 +64,12 @@ func DryRun(ctx context.Context, client *am.Client, dto Certificate) *gerrors.Ad
 	if err = am.HasErrors(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
-		errs.AddSevere(err.Error())
-		return errs
+		return nil, err
 	}
 	if resp.JSON200 == nil {
-		errs.AddSevere(am.UnexpectedResponse(resp.HTTPResponse).Error())
-		return errs
+		return nil, am.UnexpectedResponse(resp.HTTPResponse)
 	}
-	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors)
+	return am.ToAdmissionErrors(resp.JSON200.DryRunErrors), nil
 }
 
 // GetRemote fetches the certificate for drift detection. Without a client (domain not in AM
