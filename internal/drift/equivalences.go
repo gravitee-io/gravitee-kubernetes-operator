@@ -28,7 +28,7 @@ const (
 	emptyIsNilName          = "empty-is-nil"
 	ignoreName              = "ignore"
 	ignoreRemoteDefaultName = "ignore-remote-default"
-	apimMaskedName          = "apim-masked"
+	maskedName              = "masked"
 )
 
 // InitRegistry initializes the equivalence registry.
@@ -42,7 +42,7 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Struct, IgnoreRemoteDefaultStruct)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
-	RegisterEquivalenceFunc(apimMaskedName, reflect.String, APIMMasked)
+	RegisterEquivalenceFunc(maskedName, reflect.String, Masked)
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
 	RegisterEquivalenceFunc(ignoreName, reflect.Bool, Ignore)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
@@ -521,15 +521,20 @@ func TimeStruct(crd any, remote any, ctx DriftContext) Equivalence {
 	return Equivalence{Equivalent: Inequivalent, Skip: true}
 }
 
-// APIMMasked treats the mask APIM returns for an encrypted value as equal to the value the CRD
-// holds. APIM never returns the plaintext or the ciphertext, so the two can only be compared by
-// presence: a mask against a non-empty CRD value means "the key is still encrypted, as declared".
-// An empty CRD value is not equivalent — the manifest would then declare a secret it does not carry.
-func APIMMasked(crd any, remote any, ctx DriftContext) Equivalence {
-	if asString(remote) == apimMaskedData && asString(crd) != "" {
+// Masked treats a value the server reports as masked as equal to the value the CRD holds. The
+// server returns neither the plaintext nor the ciphertext, so the two can only be compared by
+// presence.
+func Masked(crd any, remote any, ctx DriftContext) Equivalence {
+	if isMasked(remote) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return DefaultEquivalence(crd, remote, ctx)
+}
+
+// isMasked reports whether a value is a placeholder a server sends in place of a secret.
+func isMasked(v any) bool {
+	s := asString(v)
+	return s == maskedData || s == apimMaskedData
 }
 
 // CaseInsensitive checks if the value is equal ignoring the case.
@@ -670,7 +675,7 @@ func ignoreMaskedData(r *Result) {
 	for _, c := range r.children {
 		if len(c.children) > 0 {
 			ignoreMaskedData(c)
-		} else if asString(c.RemoteValue) == maskedData && c.Equivalent == Inequivalent &&
+		} else if isMasked(c.RemoteValue) && c.Equivalent == Inequivalent &&
 			(c.CRDValue == nil || isString(c.CRDValue)) {
 			c.Equivalent = Equivalent
 		}

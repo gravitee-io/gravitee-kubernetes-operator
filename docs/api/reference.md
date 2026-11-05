@@ -3157,7 +3157,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `value` _string_ | Plaintext value to encrypt on save. APIM never returns it: a read answers with a mask,<br />and sending that mask back keeps the stored value. |  | MinLength: 1 <br />Required: \{\} <br /> |
+| `value` _string_ | Plaintext value to encrypt on save. APIM never returns it: a read answers with a mask,<br />and sending that mask back keeps the stored value. Making the value plain again is a<br />two-step change: remove the key and apply, then declare it under properties. |  | MinLength: 1 <br />Required: \{\} <br /> |
 
 
 #### EncryptionPolicy
@@ -3173,7 +3173,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `encryptOnFetch` _boolean_ | Store every fetched value encrypted, from the first fetch. APIM defaults to false,<br />which keeps each key's stored classification. |  | Optional: \{\} <br /> |
+| `encryptOnFetch` _boolean_ | Store every fetched value encrypted, from the first fetch. APIM defaults to false,<br />which keeps each key's stored classification. Removing this block leaves the policy APIM<br />already holds; set encryptOnFetch to false to turn it off.<br />Requires APIM 4.13.2 or later. |  | Optional: \{\} <br /> |
 
 
 #### ManualSpec
@@ -3191,7 +3191,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `properties` _object (keys:string, values:string)_ | Key/value pairs that constitute the dictionary data. |  | Optional: \{\} <br /> |
-| `encryptedProperties` _object (keys:string, values:[EncryptableValue](#encryptablevalue))_ | Secret key/value pairs. Values are sent to APIM as plaintext and stored encrypted.<br />A key must not appear in both properties and encryptedProperties. |  | Optional: \{\} <br /> |
+| `encryptedProperties` _object (keys:string, values:[EncryptableValue](#encryptablevalue))_ | Secret key/value pairs. Values are sent to APIM as plaintext and stored encrypted.<br />A key APIM holds encrypted must be declared here: declaring it under properties is refused.<br />A key must not appear in both properties and encryptedProperties.<br />Requires APIM 4.13.2 or later; earlier versions ignore this field and store nothing. |  | Optional: \{\} <br /> |
 
 
 #### Provider

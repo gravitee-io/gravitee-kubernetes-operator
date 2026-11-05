@@ -586,5 +586,5 @@ func isEmbeddedStruct(field reflect.StructField) bool {
 // registry holding no entry for the other kinds.
 func (c *DriftContext) applyDriftFunc(f driftFunc, kind reflect.Kind) {
 	c.FuncArgs = f.Args
-	c.Redacted = f.Name == apimMaskedName && kind == reflect.String
+	c.Redacted = f.Name == maskedName && kind == reflect.String
 }

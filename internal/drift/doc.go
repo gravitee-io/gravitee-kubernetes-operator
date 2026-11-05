@@ -81,10 +81,10 @@
 //   - time (struct): compares [time.Time] values as instants, ignoring location and
 //     monotonic clock, and skips children; any other struct gets the default struct equivalence.
 //   - case-insensitive (string): compares strings case-insensitively.
-//   - apim-masked (string): treats the mask APIM returns for an encrypted dictionary value as
-//     equal to a non-empty CRD value. APIM returns neither the plaintext nor the ciphertext, so
-//     the two can only be compared by presence. Distinct from unstructured:masked, which matches
-//     AM's ******** inside a free-form blob rather than a typed string field.
+//   - masked (string): treats a value the server reports as masked as equal to the CRD value.
+//     The server returns neither the plaintext nor the ciphertext, so the two can only be compared
+//     by presence. Matches the same placeholders as unstructured:masked, on a typed string field
+//     rather than inside a free-form blob.
 //   - ignore-remote-default (string): ignores a difference when the CRD value is unset;
 //     with no arguments any remote value is accepted, with arguments only a listed
 //     remote value (a server default) is.

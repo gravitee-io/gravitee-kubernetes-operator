@@ -15,6 +15,8 @@
 package apim
 
 import (
+	"encoding/json"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/dictionary"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
@@ -149,9 +151,6 @@ var _ = Describe("Dictionary Drift detection", func() {
 	})
 
 	Describe("A key the manifest never declared", func() {
-		// Scalar map entries absent from the CRD are nil and merge drops them
-		// (remoteOnlyDriftUnchanged); a struct entry is zero-filled instead, so the same addition
-		// under encryptedProperties is reported. Pinned here because the two maps differ.
 		It("is tolerated under properties", func() {
 			merged := mergedDrift(
 				model.DictionaryDTO{Manual: &model.ManualSpec{Properties: map[string]string{"env": "test"}}},
@@ -163,7 +162,7 @@ var _ = Describe("Dictionary Drift detection", func() {
 			Expect(merged.DriftDetected()).To(BeFalse())
 		})
 
-		It("is reported under encryptedProperties, without its value", func() {
+		It("is tolerated under encryptedProperties", func() {
 			merged := mergedDrift(
 				model.DictionaryDTO{Manual: &model.ManualSpec{Properties: map[string]string{"env": "test"}}},
 				model.DictionaryDTO{Manual: &model.ManualSpec{
@@ -172,13 +171,27 @@ var _ = Describe("Dictionary Drift detection", func() {
 				}},
 			)
 
-			Expect(merged.DriftDetected()).To(BeTrue())
-			Expect(merged.String()).To(ContainSubstring("addedInConsole"))
-			Expect(merged.String()).NotTo(ContainSubstring(apimMask))
+			Expect(merged.DriftDetected()).To(BeFalse())
 		})
 	})
 
 	Describe("CRD mapping", func() {
+		It("sends an empty properties map so a dictionary can still be cleared", func() {
+			dto := model.ToDictionaryDTO(
+				dictionary.Type{
+					Name:           "manual-dict",
+					DictionaryType: dictionary.ManualType,
+					Manual:         &dictionary.ManualSpec{Properties: map[string]string{}},
+				},
+				manualDictHRID,
+			)
+
+			payload, err := json.Marshal(dto)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(payload)).To(ContainSubstring(`"properties":{}`))
+		})
+
 		It("carries encrypt-on-fetch into the DTO", func() {
 			dto := model.ToDictionaryDTO(completeDynamicDictionarySpec(), dynamicDictHRID)
 
