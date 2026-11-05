@@ -18,7 +18,7 @@ info:
   version: 0.0.1
 actions:
   - target: $.components.schemas.AutomationIdentityProvider
-    update: { x-go-type-name: IdentityProvider }
+    update: { x-gko-name: IdentityProvider }
 
   # key: remove it for now, only lives in the SDK
   - target: $.components.schemas.AutomationIdentityProvider.required[?(@ == 'key')]
@@ -65,7 +65,7 @@ actions:
     update: ["domainRef"]
 
   - target: $.components.schemas.AutomationCertificate
-    update: { x-go-type-name: Certificate }
+    update: { x-gko-name: Certificate }
 
   # key: remove it for now, only lives in the SDK
   - target: $.components.schemas.AutomationCertificate.required[?(@ == 'key')]
@@ -116,7 +116,7 @@ actions:
     update: ["domainRef"]
 
   - target: $.components.schemas.AutomationReporter
-    update: { x-go-type-name: Reporter }
+    update: { x-gko-name: Reporter }
 
   # key: remove it for now, only lives in the SDK
   - target: $.components.schemas.AutomationReporter.required[?(@ == 'key')]
@@ -171,55 +171,55 @@ actions:
   # Names: drop the Automation prefix on every schema reached from AutomationApplication
   # (AutomationAccountSettings is renamed with the domain below).
   - target: $.components.schemas.AutomationApplication
-    update: { x-go-type-name: Application }
+    update: { x-gko-name: Application }
   - target: $.components.schemas.AutomationApplicationIdentityProvider
-    update: { x-go-type-name: ApplicationIdentityProvider }
+    update: { x-gko-name: ApplicationIdentityProvider }
   - target: $.components.schemas.AutomationApplicationSettings
-    update: { x-go-type-name: ApplicationSettings }
+    update: { x-gko-name: ApplicationSettings }
   - target: $.components.schemas.AutomationApplicationOAuthSettings
-    update: { x-go-type-name: ApplicationOAuthSettings }
+    update: { x-gko-name: ApplicationOAuthSettings }
   - target: $.components.schemas.AutomationApplicationSAMLSettings
-    update: { x-go-type-name: ApplicationSAMLSettings }
+    update: { x-gko-name: ApplicationSAMLSettings }
   - target: $.components.schemas.AutomationApplicationFactorSettings
-    update: { x-go-type-name: ApplicationFactorSettings }
+    update: { x-gko-name: ApplicationFactorSettings }
   - target: $.components.schemas.AutomationAdvancedSettings
-    update: { x-go-type-name: AdvancedSettings }
+    update: { x-gko-name: AdvancedSettings }
   - target: $.components.schemas.AutomationCookieSettings
-    update: { x-go-type-name: CookieSettings }
+    update: { x-gko-name: CookieSettings }
   - target: $.components.schemas.AutomationMfaSettings
-    update: { x-go-type-name: MfaSettings }
+    update: { x-gko-name: MfaSettings }
   - target: $.components.schemas.AutomationFactorSettings
-    update: { x-go-type-name: FactorSettings }
+    update: { x-gko-name: FactorSettings }
   - target: $.components.schemas.AutomationChallengeSettings
-    update: { x-go-type-name: ChallengeSettings }
+    update: { x-gko-name: ChallengeSettings }
   - target: $.components.schemas.AutomationEnrollSettings
-    update: { x-go-type-name: EnrollSettings }
+    update: { x-gko-name: EnrollSettings }
   - target: $.components.schemas.AutomationEnrollmentSettings
-    update: { x-go-type-name: EnrollmentSettings }
+    update: { x-gko-name: EnrollmentSettings }
   - target: $.components.schemas.AutomationRememberDeviceSettings
-    update: { x-go-type-name: RememberDeviceSettings }
+    update: { x-gko-name: RememberDeviceSettings }
   - target: $.components.schemas.AutomationRiskAssessmentSettings
-    update: { x-go-type-name: RiskAssessmentSettings }
+    update: { x-gko-name: RiskAssessmentSettings }
   - target: $.components.schemas.AutomationAssessmentSettings
-    update: { x-go-type-name: AssessmentSettings }
+    update: { x-gko-name: AssessmentSettings }
   - target: $.components.schemas.AutomationStepUpAuthenticationSettings
-    update: { x-go-type-name: StepUpAuthenticationSettings }
+    update: { x-gko-name: StepUpAuthenticationSettings }
   - target: $.components.schemas.AutomationScopeSettings
-    update: { x-go-type-name: ScopeSettings }
+    update: { x-gko-name: ScopeSettings }
   - target: $.components.schemas.AutomationSessionSettings
-    update: { x-go-type-name: SessionSettings }
+    update: { x-gko-name: SessionSettings }
   - target: $.components.schemas.AutomationTokenClaim
-    update: { x-go-type-name: TokenClaim }
+    update: { x-gko-name: TokenClaim }
   - target: $.components.schemas.AutomationUserInfoClaim
-    update: { x-go-type-name: UserInfoClaim }
+    update: { x-gko-name: UserInfoClaim }
   - target: $.components.schemas.AutomationSamlAssertionAttribute
-    update: { x-go-type-name: SamlAssertionAttribute }
+    update: { x-gko-name: SamlAssertionAttribute }
   - target: $.components.schemas.AutomationCrossAppAccessSettings
-    update: { x-go-type-name: CrossAppAccessSettings }
+    update: { x-gko-name: CrossAppAccessSettings }
   - target: $.components.schemas.AutomationCrossAppAccessResourceServer
-    update: { x-go-type-name: CrossAppAccessResourceServer }
+    update: { x-gko-name: CrossAppAccessResourceServer }
   - target: $.components.schemas.AutomationWorkloadIdentitySettings
-    update: { x-go-type-name: WorkloadIdentitySettings }
+    update: { x-gko-name: WorkloadIdentitySettings }
 
   # key: not in the CRD, always namespace-name.
   - target: $.components.schemas.AutomationApplication.required[?(@ == 'key')]
@@ -316,19 +316,19 @@ actions:
 
   # Names: drop the Automation prefix on every schema reached from AutomationDomain.
   - target: $.components.schemas.AutomationDomain
-    update: { x-go-type-name: Domain }
+    update: { x-gko-name: Domain }
   - target: $.components.schemas.AutomationAccountSettings
-    update: { x-go-type-name: AccountSettings }
+    update: { x-gko-name: AccountSettings }
   - target: $.components.schemas.AutomationCertificateSettings
-    update: { x-go-type-name: CertificateSettings }
+    update: { x-gko-name: CertificateSettings }
   - target: $.components.schemas.AutomationOidcSettings
-    update: { x-go-type-name: OidcSettings }
+    update: { x-gko-name: OidcSettings }
   - target: $.components.schemas.AutomationCIBASettings
-    update: { x-go-type-name: CIBASettings }
+    update: { x-gko-name: CIBASettings }
   - target: $.components.schemas.AutomationClientRegistrationSettings
-    update: { x-go-type-name: ClientRegistrationSettings }
+    update: { x-gko-name: ClientRegistrationSettings }
   - target: $.components.schemas.AutomationSamlSettings
-    update: { x-go-type-name: SamlSettings }
+    update: { x-gko-name: SamlSettings }
 
   # key: not in the CRD, always namespace-name (the HRID the IdP resolves from domainRef).
   - target: $.components.schemas.AutomationDomain.required[?(@ == 'key')]

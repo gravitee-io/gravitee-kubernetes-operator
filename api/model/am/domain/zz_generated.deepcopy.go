@@ -379,7 +379,7 @@ func (in *Domain) DeepCopyInto(out *Domain) {
 	*out = *in
 	if in.AccountSettings != nil {
 		in, out := &in.AccountSettings, &out.AccountSettings
-		*out = new(AutomationAccountSettings)
+		*out = new(AccountSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.AlertEnabled != nil {
@@ -389,7 +389,7 @@ func (in *Domain) DeepCopyInto(out *Domain) {
 	}
 	if in.CertificateSettings != nil {
 		in, out := &in.CertificateSettings, &out.CertificateSettings
-		*out = new(AutomationCertificateSettings)
+		*out = new(CertificateSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.CorsSettings != nil {
@@ -429,7 +429,7 @@ func (in *Domain) DeepCopyInto(out *Domain) {
 	}
 	if in.Oidc != nil {
 		in, out := &in.Oidc, &out.Oidc
-		*out = new(AutomationOidcSettings)
+		*out = new(OidcSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.PasswordSettings != nil {
@@ -439,7 +439,7 @@ func (in *Domain) DeepCopyInto(out *Domain) {
 	}
 	if in.Saml != nil {
 		in, out := &in.Saml, &out.Saml
-		*out = new(AutomationSamlSettings)
+		*out = new(SamlSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Scim != nil {
@@ -696,12 +696,12 @@ func (in *OidcSettings) DeepCopyInto(out *OidcSettings) {
 	*out = *in
 	if in.CibaSettings != nil {
 		in, out := &in.CibaSettings, &out.CibaSettings
-		*out = new(AutomationCIBASettings)
+		*out = new(CIBASettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ClientRegistrationSettings != nil {
 		in, out := &in.ClientRegistrationSettings, &out.ClientRegistrationSettings
-		*out = new(AutomationClientRegistrationSettings)
+		*out = new(ClientRegistrationSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.PostLogoutRedirectUris != nil {

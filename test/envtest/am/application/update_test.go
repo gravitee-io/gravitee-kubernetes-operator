@@ -44,8 +44,8 @@ var _ = Describe("Update", func() {
 		app.Spec.Name = "Renamed"
 		app.Spec.Type = "web"
 		app.Spec.Metadata = utils.NewGenericStringMap().Put("owner", "web-team")
-		app.Spec.Settings = &appmodel.AutomationApplicationSettings{
-			Oauth: &appmodel.AutomationApplicationOAuthSettings{RedirectUris: []string{"https://example.com/callback"}},
+		app.Spec.Settings = &appmodel.ApplicationSettings{
+			Oauth: &appmodel.ApplicationOAuthSettings{RedirectUris: []string{"https://example.com/callback"}},
 		}
 		Expect(manager.Client().Update(ctx, app)).To(Succeed())
 
@@ -93,7 +93,7 @@ var _ = Describe("Update", func() {
 		By("declaring a login block")
 
 		Expect(manager.GetLatest(ctx, app)).To(Succeed())
-		app.Spec.Settings = &appmodel.AutomationApplicationSettings{
+		app.Spec.Settings = &appmodel.ApplicationSettings{
 			Login: &appmodel.LoginSettings{Inherited: new(false), ForgotPasswordEnabled: new(true)},
 		}
 		Expect(manager.Client().Update(ctx, app)).To(Succeed())

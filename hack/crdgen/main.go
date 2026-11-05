@@ -14,7 +14,7 @@
 
 // Command crdgen amends an OpenAPI spec shipped in a Go module so that
 // oapi-codegen generates CRD-ready structs from it: it applies overlays,
-// drops read-only properties and writes kubebuilder markers into descriptions.
+// renames schemas, drops read-only properties and writes kubebuilder markers into descriptions.
 package main
 
 import (
@@ -71,6 +71,9 @@ func run(module, spec string, overlays []string, out string) error {
 		if err := applyOverlay(node, path); err != nil {
 			return err
 		}
+	}
+	if err := amend.RenameSchemas(node); err != nil {
+		return err
 	}
 	doc, err := load(node)
 	if err != nil {

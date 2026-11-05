@@ -106,11 +106,11 @@ _Appears in:_
 | `description` _string_ | Description Description of the application. |  | Optional: \{\} <br /> |
 | `domainRef` _[NamespacedName](#namespacedname)_ | DomainRef Domain CRD reference |  | Required: \{\} <br /> |
 | `enabled` _boolean_ | Enabled Whether the application is enabled. Disabling it revokes its tokens.<br />Defaults to true. | true | Optional: \{\} <br /> |
-| `identityProviders` _[AutomationApplicationIdentityProvider](#automationapplicationidentityprovider) array_ | IdentityProviders Identity providers users can authenticate with on this application. |  | Optional: \{\} <br /> |
+| `identityProviders` _[ApplicationIdentityProvider](#applicationidentityprovider) array_ | IdentityProviders Identity providers users can authenticate with on this application. |  | Optional: \{\} <br /> |
 | `kind` _string_ | Kind Agent persona. Required when type is agent, rejected otherwise. |  | Enum: [USER_EMBEDDED HOSTED_DELEGATED AUTONOMOUS] <br />Optional: \{\} <br /> |
 | `metadata` _[GenericStringMap](#genericstringmap)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
 | `name` _string_ | Name Human-readable name of the application. Also used as the OAuth 2.0 client name. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
-| `settings` _[AutomationApplicationSettings](#automationapplicationsettings)_ | Settings Settings of the application. The login, account and cookieSettings blocks, when omitted, are inherited from the domain; any other omitted block is unset. |  |  |
+| `settings` _[ApplicationSettings](#applicationsettings)_ | Settings Settings of the application. The login, account and cookieSettings blocks, when omitted, are inherited from the domain; any other omitted block is unset. |  |  |
 | `template` _boolean_ | Template Whether the application is a registration template for dynamic client registration rather than an active application.<br />Defaults to false. |  | Optional: \{\} <br /> |
 | `type` _string_ | Type Application type. It drives the computed OAuth 2.0 settings. Can be changed, except to or from agent: such a change is rejected with 400 (delete and recreate the application). Changing the type resets grantTypes, responseTypes and tokenEndpointAuthMethod to the new type's defaults before the payload applies. |  | Enum: [web native browser service resource_server agent] <br />Required: \{\} <br /> |
 
@@ -467,9 +467,9 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `accountSettings` _[AutomationAccountSettings](#automationaccountsettings)_ | AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior. |  |  |
+| `accountSettings` _[AccountSettings](#accountsettings)_ | AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior. |  |  |
 | `alertEnabled` _boolean_ | AlertEnabled Whether alerting is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
-| `certificateSettings` _[AutomationCertificateSettings](#automationcertificatesettings)_ | CertificateSettings Domain-level certificate settings. |  |  |
+| `certificateSettings` _[CertificateSettings](#certificatesettings)_ | CertificateSettings Domain-level certificate settings. |  |  |
 | `corsSettings` _[CorsSettings](#corssettings)_ | CorsSettings Cross-Origin Resource Sharing configuration controlling which web origins may call the domain's endpoints from a browser. |  |  |
 | `dataPlaneId` _string_ | DataPlaneId Identifier of the data plane this domain is connected to. Optional at creation and resolved from the environment's data planes when omitted. Immutable afterwards: an apply that names a different one is rejected. |  | MaxLength: 255 <br />Optional: \{\} <br /> |
 | `description` _string_ | Description Human-readable description of the domain. |  | Optional: \{\} <br /> |
@@ -478,10 +478,10 @@ _Appears in:_
 | `loginSettings` _[LoginSettings](#loginsettings)_ | LoginSettings Configuration of the domain's login flow and the features offered on the sign-in page. |  |  |
 | `master` _boolean_ | Master Whether this is the master domain of its environment. A master domain may perform cross-domain token introspection.<br />Defaults to false. |  | Optional: \{\} <br /> |
 | `name` _string_ | Name Human-readable name of the domain. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
-| `oidc` _[AutomationOidcSettings](#automationoidcsettings)_ | Oidc OpenID Connect settings for the domain. CIMD (client identity metadata document) settings are not exposed by the Automation API and are reset on update. |  |  |
+| `oidc` _[OidcSettings](#oidcsettings)_ | Oidc OpenID Connect settings for the domain. CIMD (client identity metadata document) settings are not exposed by the Automation API and are reset on update. |  |  |
 | `passwordSettings` _[PasswordSettings](#passwordsettings)_ | PasswordSettings Password policy applied to users of the domain: complexity requirements, expiry, and history. |  |  |
 | `path` _string_ | Path Context path the domain is served under, relative to the gateway. Must start with a slash. |  | MaxLength: 255 <br />MinLength: 1 <br />Pattern: `^/.*` <br />Required: \{\} <br /> |
-| `saml` _[AutomationSamlSettings](#automationsamlsettings)_ | Saml Settings for the domain acting as a SAML 2.0 identity provider (IdP). |  |  |
+| `saml` _[SamlSettings](#samlsettings)_ | Saml Settings for the domain acting as a SAML 2.0 identity provider (IdP). |  |  |
 | `scim` _[SCIMSettings](#scimsettings)_ | Scim Configuration of the domain's SCIM 2.0 provisioning endpoints. |  |  |
 | `secretExpirationSettings` _[SecretExpirationSettings](#secretexpirationsettings)_ | SecretExpirationSettings Controls whether client secrets in the domain expire and after how long. |  |  |
 | `selfServiceAccountManagementSettings` _[SelfServiceAccountManagementSettings](#selfserviceaccountmanagementsettings)_ | SelfServiceAccountManagementSettings Controls whether end users can manage their own account (for example, reset their password) and the rules that apply. |  |  |
@@ -1902,8 +1902,61 @@ Code generated by github.com/oapi-codegen/oapi-codegen/v2 version v2.8.0 DO NOT 
 
 
 
+#### AccountSettings
 
 
+
+AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior.
+
+
+
+_Appears in:_
+- [ApplicationSettings](#applicationsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `accountBlockedDuration` _integer_ | AccountBlockedDuration Duration, in seconds, for which the account remains blocked after too many failed login attempts. |  | Optional: \{\} <br /> |
+| `autoLoginAfterRegistration` _boolean_ | AutoLoginAfterRegistration Whether the user is automatically logged in after completing registration.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `autoLoginAfterResetPassword` _boolean_ | AutoLoginAfterResetPassword Whether the user is automatically logged in after a password reset.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `completeRegistrationWhenResetPassword` _boolean_ | CompleteRegistrationWhenResetPassword Whether resetting a password also completes a pending registration.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `defaultIdentityProviderForRegistration` _string_ | DefaultIdentityProviderForRegistration Default identity provider for user registration: the key of an identity provider of the domain, or id:<uuid> when the reference was not set by the Automation API. The reference is not checked against existing identity providers: it can name one created after the domain or since deleted, and resolves whenever that identity provider exists. |  | Optional: \{\} <br /> |
+| `deletePasswordlessDevicesAfterResetPassword` _boolean_ | DeletePasswordlessDevicesAfterResetPassword Whether passwordless (WebAuthn) devices are deleted when the password is reset.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `dynamicUserRegistration` _boolean_ | DynamicUserRegistration Whether dynamic (self-service) user registration is enabled.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited Whether account settings are inherited from the parent (domain). When true, the other fields are ignored. Has no effect when applied to domains.<br />Defaults to true. |  | Optional: \{\} <br /> |
+| `loginAttemptsDetectionEnabled` _boolean_ | LoginAttemptsDetectionEnabled Whether brute-force authentication attempts are detected and blocked.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `loginAttemptsResetTime` _integer_ | LoginAttemptsResetTime Time, in seconds, after which the login attempt counter is reset when the maximum has not been reached. |  | Optional: \{\} <br /> |
+| `maxLoginAttempts` _integer_ | MaxLoginAttempts Maximum number of failed login attempts before the account is blocked. |  | Optional: \{\} <br /> |
+| `mfaChallengeAttemptsDetectionEnabled` _boolean_ | MfaChallengeAttemptsDetectionEnabled Whether failed MFA challenge attempts are detected and blocked.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `mfaChallengeAttemptsResetTime` _integer_ | MfaChallengeAttemptsResetTime Time, in seconds, after which the MFA challenge attempt counter is reset. |  | Optional: \{\} <br /> |
+| `mfaChallengeMaxAttempts` _integer_ | MfaChallengeMaxAttempts Maximum number of failed MFA challenge attempts before the user is blocked. |  | Optional: \{\} <br /> |
+| `mfaChallengeSendVerifyAlertEmail` _boolean_ | MfaChallengeSendVerifyAlertEmail Whether to send an alert email after too many failed MFA challenge attempts.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `redirectUriAfterRegistration` _string_ | RedirectUriAfterRegistration URL the user is redirected to after registration. |  | Optional: \{\} <br /> |
+| `redirectUriAfterResetPassword` _string_ | RedirectUriAfterResetPassword URL the user is redirected to after a password reset. |  | Optional: \{\} <br /> |
+| `rememberMe` _boolean_ | RememberMe Whether users can remain logged in for a fixed duration (remember-me).<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `rememberMeDuration` _integer_ | RememberMeDuration Duration, in seconds, for which a remembered session stays valid. |  | Optional: \{\} <br /> |
+| `resetPasswordConfirmIdentity` _boolean_ | ResetPasswordConfirmIdentity Whether the user must confirm their identity before resetting a password.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `resetPasswordCustomForm` _boolean_ | ResetPasswordCustomForm Whether a custom form is used for the password-reset step.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `resetPasswordCustomFormFields` _[FormField](#formfield) array_ | ResetPasswordCustomFormFields Custom fields rendered on the password-reset form. |  | Optional: \{\} <br /> |
+| `resetPasswordInvalidateTokens` _boolean_ | ResetPasswordInvalidateTokens Whether existing tokens are invalidated when the password is reset.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `sendRecoverAccountEmail` _boolean_ | SendRecoverAccountEmail Whether to send an account-recovery email.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `sendVerifyRegistrationAccountEmail` _boolean_ | SendVerifyRegistrationAccountEmail Whether to send a registration-verification email.<br />Defaults to false. |  | Optional: \{\} <br /> |
+
+
+#### AdvancedSettings
+
+
+
+AdvancedSettings Advanced application settings.
+
+
+
+_Appears in:_
+- [ApplicationSettings](#applicationsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `flowsInherited` _boolean_ | FlowsInherited Whether the domain flows are executed for this application in addition to its own flows.<br />Defaults to true. |  | Optional: \{\} <br /> |
+| `skipConsent` _boolean_ | SkipConsent Whether the user consent page is skipped: requested scopes are granted without asking the user.<br />Defaults to false. |  | Optional: \{\} <br /> |
 
 
 #### Application
@@ -1934,8 +1987,41 @@ _Appears in:_
 | `members` _[Member](#member)_ | Application members |  | Optional: \{\} <br /> |
 
 
+#### ApplicationFactorSettings
 
 
+
+ApplicationFactorSettings A factor available to the application.
+
+
+
+_Appears in:_
+- [FactorSettings](#factorsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | Id The factor, as id:<uuid> (factors have no Automation API endpoint). |  | Required: \{\} <br /> |
+| `selectionRule` _string_ | SelectionRule Expression Language rule selecting this factor. When empty, the factor is always available. |  | Optional: \{\} <br /> |
+
+
+#### ApplicationIdentityProvider
+
+
+
+ApplicationIdentityProvider An identity provider users can authenticate with on this application.
+
+
+
+_Appears in:_
+- [AMApplicationSpec](#amapplicationspec)
+- [Application](#application)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `identity` _string_ | Identity AM key of an identity provider of the domain, or id:<uuid>. Not checked by AM: it resolves whenever that identity provider exists. Exactly one of identity or identityRef. |  | Optional: \{\} <br /> |
+| `identityRef` _[NamespacedName](#namespacedname)_ | IdentityRef AMIdentityProvider of the application's namespace and domain, sent to AM as its key. The application waits (ResolvedRefs=False) until the AMIdentityProvider exists. Exactly one of identity or identityRef. |  | Optional: \{\} <br /> |
+| `priority` _integer_ | Priority Evaluation order among the application's identity providers: lowest first; negative values come last.<br />Defaults to 0. |  | Optional: \{\} <br /> |
+| `selectionRule` _string_ | SelectionRule Expression Language rule selecting this identity provider for the current request. When empty, the identity provider is always selectable. |  | Optional: \{\} <br /> |
 
 
 #### ApplicationLightweightJwtSettings
@@ -1956,64 +2042,150 @@ _Appears in:_
 | `enabled` _boolean_ | Enabled Whether Lightweight JWT is enabled.<br />Defaults to false. |  | Optional: \{\} <br /> |
 
 
+#### ApplicationOAuthSettings
 
 
 
+ApplicationOAuthSettings OAuth 2.0 and OpenID Connect settings of the application. Fields described as computed are filled in by AM when omitted. tokenExchangeOAuthSettings, when omitted, is inherited from the domain.
 
 
 
+_Appears in:_
+- [ApplicationSettings](#applicationsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `accessTokenValiditySeconds` _integer_ | AccessTokenValiditySeconds Access token validity, in seconds. Computed (7200) when omitted.<br />Defaults to 7200. |  | Optional: \{\} <br /> |
+| `authorizationEncryptedResponseAlg` _string_ | AuthorizationEncryptedResponseAlg JWE alg algorithm encrypting the authorization responses (JARM). |  | Optional: \{\} <br /> |
+| `authorizationEncryptedResponseEnc` _string_ | AuthorizationEncryptedResponseEnc JWE enc algorithm encrypting the authorization responses (JARM). |  | Optional: \{\} <br /> |
+| `authorizationSignedResponseAlg` _string_ | AuthorizationSignedResponseAlg JWS algorithm signing the authorization responses (JARM). |  | Optional: \{\} <br /> |
+| `clientUri` _string_ | ClientUri URL of the application home page. |  | Optional: \{\} <br /> |
+| `contacts` _string array_ | Contacts Email addresses of the people responsible for the application. |  | Optional: \{\} <br /> |
+| `crossAppAccessSettings` _[CrossAppAccessSettings](#crossappaccesssettings)_ | CrossAppAccessSettings Resource servers this application may request an ID-JAG for. |  |  |
+| `defaultACRvalues` _string array_ | DefaultACRvalues Default requested Authentication Context Class Reference values. |  | Optional: \{\} <br /> |
+| `defaultMaxAge` _integer_ | DefaultMaxAge Default maximum authentication age, in seconds. |  | Optional: \{\} <br /> |
+| `disableRefreshTokenRotation` _boolean_ | DisableRefreshTokenRotation Whether a refresh token stays valid when used, instead of being replaced by a new one.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `dpopBoundAccessTokens` _boolean_ | DpopBoundAccessTokens Whether access tokens must be bound to a DPoP proof (RFC 9449).<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `enhanceScopesWithUserPermissions` _boolean_ | EnhanceScopesWithUserPermissions Whether the permissions of the user roles are added to the scopes of the issued tokens.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `forcePKCE` _boolean_ | ForcePKCE Whether the authorization code flow requires PKCE. Computed (true) for browser and native applications created without grantTypes, and for user_embedded agents.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `forceS256CodeChallengeMethod` _boolean_ | ForceS256CodeChallengeMethod Whether PKCE requires the S256 code challenge method. Computed (true) for browser applications created without grantTypes, and for user_embedded agents.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `grantTypes` _string array_ | GrantTypes OAuth 2.0 grant types the application may use. Computed when omitted, from the application type: web authorization_code and password; browser and native authorization_code; service client_credentials; resource_server adds client_credentials; agent per kind (user_embedded authorization_code; hosted_delegated authorization_code, client_credentials and token exchange; autonomous client_credentials and token exchange). |  | Optional: \{\} <br /> |
+| `idJagValiditySeconds` _integer_ | IdJagValiditySeconds Validity, in seconds, of the identity assertion authorization grants (ID-JAG) issued to the application. Computed (300) when omitted.<br />Defaults to 300. |  | Optional: \{\} <br /> |
+| `idTokenEncryptedResponseAlg` _string_ | IdTokenEncryptedResponseAlg JWE alg algorithm encrypting the ID tokens issued to the application. |  | Optional: \{\} <br /> |
+| `idTokenEncryptedResponseEnc` _string_ | IdTokenEncryptedResponseEnc JWE enc algorithm encrypting the ID tokens issued to the application. |  | Optional: \{\} <br /> |
+| `idTokenSignedResponseAlg` _string_ | IdTokenSignedResponseAlg JWS algorithm signing the ID tokens issued to the application. |  | Optional: \{\} <br /> |
+| `idTokenValiditySeconds` _integer_ | IdTokenValiditySeconds ID token validity, in seconds. Computed (14400) when omitted.<br />Defaults to 14400. |  | Optional: \{\} <br /> |
+| `initiateLoginUri` _string_ | InitiateLoginUri URI, using the https scheme, a third party can use to initiate a login by the application. |  | Optional: \{\} <br /> |
+| `jwks` _[GenericStringMap](#genericstringmap)_ | Jwks JSON Web Key Set of the application passed by value (RFC 7517 section 5): an object with a keys array of JWKs. Same use as jwksUri, which it excludes. |  | Optional: \{\} <br /> |
+| `jwksUri` _string_ | JwksUri URL of the application JSON Web Key Set, holding the keys used to verify its signatures. Mutually exclusive with jwks. |  | Optional: \{\} <br /> |
+| `lightweightJwtSettings` _[ApplicationLightweightJwtSettings](#applicationlightweightjwtsettings)_ | LightweightJwtSettings Restricts the JWT access token and the ID token returned to the client to the reserved protocol claims and the allowlisted claims. |  |  |
+| `logoUri` _string_ | LogoUri URL of the application logo, displayed to users. |  | Optional: \{\} <br /> |
+| `optInScopeSelection` _boolean_ | OptInScopeSelection When true, users must explicitly select each scope on the consent page; when false, all requested scopes are preselected and users can deselect them. Computed (true) when omitted.<br />Defaults to true. |  | Optional: \{\} <br /> |
+| `policyUri` _string_ | PolicyUri URL of the application policy on the use of profile data. |  | Optional: \{\} <br /> |
+| `postLogoutRedirectUris` _string array_ | PostLogoutRedirectUris URLs the user may be redirected to after logout (post_logout_redirect_uri). |  | Optional: \{\} <br /> |
+| `redirectUris` _string array_ | RedirectUris Redirection URIs. The redirect_uri of an authorization request must match one of them. At least one is required for the authorization_code and implicit grants. |  | Optional: \{\} <br /> |
+| `refreshTokenValiditySeconds` _integer_ | RefreshTokenValiditySeconds Refresh token validity, in seconds. Computed (14400) when omitted.<br />Defaults to 14400. |  | Optional: \{\} <br /> |
+| `requestObjectEncryptionAlg` _string_ | RequestObjectEncryptionAlg JWE alg algorithm the application may encrypt its request objects with. |  | Optional: \{\} <br /> |
+| `requestObjectEncryptionEnc` _string_ | RequestObjectEncryptionEnc JWE enc algorithm the application may encrypt its request objects with. |  | Optional: \{\} <br /> |
+| `requestObjectSigningAlg` _string_ | RequestObjectSigningAlg JWS algorithm the application signs its request objects with. |  | Optional: \{\} <br /> |
+| `requestUris` _string array_ | RequestUris request_uri values pre-registered by the application. |  | Optional: \{\} <br /> |
+| `requireAuthTime` _boolean_ | RequireAuthTime Whether the auth_time claim is required in the ID token.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `responseTypes` _string array_ | ResponseTypes OAuth 2.0 / OIDC response types the application may use. Computed from grantTypes when omitted: authorization_code adds code, implicit adds token and id_token. |  | Optional: \{\} <br /> |
+| `scopeSettings` _[ScopeSettings](#scopesettings) array_ | ScopeSettings Scopes the application can request. Each scope must exist in the domain, otherwise the request is rejected with 400. Resource server applications always get the uma_protection scope. |  | Optional: \{\} <br /> |
+| `sectorIdentifierUri` _string_ | SectorIdentifierUri URL, using the https scheme, used to compute pairwise subject identifiers. |  | Optional: \{\} <br /> |
+| `silentReAuthentication` _boolean_ | SilentReAuthentication Whether the id_token_hint parameter can be used to re-authenticate the user silently.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `singleSignOut` _boolean_ | SingleSignOut Whether logout also calls the end_session_endpoint of the external OIDC provider the user authenticated with.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `subjectType` _string_ | SubjectType Subject identifier type of the responses: public or pairwise. |  | Optional: \{\} <br /> |
+| `tlsClientAuthSanDns` _string_ | TlsClientAuthSanDns Expected dNSName subject alternative name of the client certificate, for the tls_client_auth method. |  | Optional: \{\} <br /> |
+| `tlsClientAuthSanEmail` _string_ | TlsClientAuthSanEmail Expected rfc822Name subject alternative name of the client certificate, for the tls_client_auth method. |  | Optional: \{\} <br /> |
+| `tlsClientAuthSanIp` _string_ | TlsClientAuthSanIp Expected iPAddress subject alternative name of the client certificate, for the tls_client_auth method. |  | Optional: \{\} <br /> |
+| `tlsClientAuthSanUri` _string_ | TlsClientAuthSanUri Expected uniformResourceIdentifier subject alternative name of the client certificate, for the tls_client_auth method. |  | Optional: \{\} <br /> |
+| `tlsClientAuthSubjectDn` _string_ | TlsClientAuthSubjectDn Expected subject distinguished name of the client certificate, for the tls_client_auth method. |  | Optional: \{\} <br /> |
+| `tlsClientCertificateBoundAccessTokens` _boolean_ | TlsClientCertificateBoundAccessTokens Whether access tokens are bound to the client certificate (RFC 8705).<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `tokenCustomClaims` _[TokenClaim](#tokenclaim) array_ | TokenCustomClaims Custom claims added to the issued tokens. |  | Optional: \{\} <br /> |
+| `tokenEndpointAuthMethod` _string_ | TokenEndpointAuthMethod Client authentication method at the token endpoint: client_secret_basic, client_secret_post, client_secret_jwt, private_key_jwt, tls_client_auth, self_signed_tls_client_auth or none. Computed when omitted: client_secret_basic on creation, none for browser and native applications created without grantTypes, per kind for agents (user_embedded none; hosted_delegated and autonomous private_key_jwt). |  | Optional: \{\} <br /> |
+| `tokenEndpointAuthSigningAlg` _string_ | TokenEndpointAuthSigningAlg JWS algorithm the application signs its authentication JWT with, for the private_key_jwt and client_secret_jwt methods. |  | Optional: \{\} <br /> |
+| `tokenExchangeOAuthSettings` _[TokenExchangeOAuthSettings](#tokenexchangeoauthsettings)_ | TokenExchangeOAuthSettings OAuth-specific token-exchange behavior, such as how scopes are handled, with optional inheritance from domain defaults. |  |  |
+| `tosUri` _string_ | TosUri URL of the application terms of service. |  | Optional: \{\} <br /> |
+| `userinfoCustomClaims` _[UserInfoClaim](#userinfoclaim) array_ | UserinfoCustomClaims Custom claims added to the UserInfo responses. |  | Optional: \{\} <br /> |
+| `userinfoEncryptedResponseAlg` _string_ | UserinfoEncryptedResponseAlg JWE alg algorithm encrypting the UserInfo responses. |  | Optional: \{\} <br /> |
+| `userinfoEncryptedResponseEnc` _string_ | UserinfoEncryptedResponseEnc JWE enc algorithm encrypting the UserInfo responses. |  | Optional: \{\} <br /> |
+| `userinfoSignedResponseAlg` _string_ | UserinfoSignedResponseAlg JWS algorithm signing the UserInfo responses. |  | Optional: \{\} <br /> |
+
+
+#### ApplicationSAMLSettings
 
 
 
+ApplicationSAMLSettings Settings of the application acting as a SAML 2.0 service provider (SP).
 
 
 
+_Appears in:_
+- [ApplicationSettings](#applicationsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `assertionAttributes` _[SamlAssertionAttribute](#samlassertionattribute) array_ | AssertionAttributes Custom attributes of the SAML assertion. When not empty, they replace the default attribute set. |  | Optional: \{\} <br /> |
+| `assertionValiditySeconds` _integer_ | AssertionValiditySeconds Validity, in seconds, of the issued assertion. When absent, the IdP default applies. Used when includeAssertionConditions is true. |  | Optional: \{\} <br /> |
+| `attributeConsumeServiceUrl` _string_ | AttributeConsumeServiceUrl SP endpoint the IdP sends SAML responses to (Assertion Consumer Service URL). |  | Optional: \{\} <br /> |
+| `audiences` _string array_ | Audiences Audience URIs added to the SP entity ID in the AudienceRestriction. Used when includeAssertionConditions is true. |  | Optional: \{\} <br /> |
+| `certificate` _string_ | Certificate The SP's PEM-encoded public key certificate, used by the IdP to verify SAML requests and, when assertions are encrypted, to wrap the symmetric key. Required when wantAssertionsEncrypted is true. |  | Optional: \{\} <br /> |
+| `dataEncryptionAlgorithm` _string_ | DataEncryptionAlgorithm Data encryption algorithm URI of encrypted assertions (XML Encryption EncryptedData). |  | Optional: \{\} <br /> |
+| `entityId` _string_ | EntityId URL or URN that uniquely identifies the SP (the SAML entity ID). |  | Optional: \{\} <br /> |
+| `includeAssertionConditions` _boolean_ | IncludeAssertionConditions Whether assertions carry Conditions (validity time bounds and audience restriction), configured by the fields below.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `keyTransportEncryptionAlgorithm` _string_ | KeyTransportEncryptionAlgorithm Key transport algorithm URI of encrypted assertions (XML Encryption EncryptedKey). |  | Optional: \{\} <br /> |
+| `nameIdMapping` _string_ | NameIdMapping Expression Language expression producing the NameID of the SAML response. When empty, the internal user id is used, or the user's email when the SP requests the email format. |  | Optional: \{\} <br /> |
+| `notBeforeTimeSkewSeconds` _integer_ | NotBeforeTimeSkewSeconds Clock skew, in seconds, subtracted from NotBefore. |  | Optional: \{\} <br /> |
+| `notOnOrAfterTimeSkewSeconds` _integer_ | NotOnOrAfterTimeSkewSeconds Clock skew, in seconds, added to NotOnOrAfter. |  | Optional: \{\} <br /> |
+| `responseBinding` _string_ | ResponseBinding Binding used to send SAML responses to the SP. The default answers with the binding of the initial request.<br />Defaults to urn:oasis:names:tc:SAML:2.0:bindings:custom:Initial-Request. |  | Optional: \{\} <br /> |
+| `singleLogoutServiceUrl` _string_ | SingleLogoutServiceUrl SP endpoint the IdP redirects to after a single logout. |  | Optional: \{\} <br /> |
+| `wantAssertionsEncrypted` _boolean_ | WantAssertionsEncrypted Whether the SP requires encrypted SAML assertions.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `wantAssertionsSigned` _boolean_ | WantAssertionsSigned Whether the SP requires signed SAML assertions.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `wantResponseSigned` _boolean_ | WantResponseSigned Whether the SP requires signed SAML responses.<br />Defaults to true. |  | Optional: \{\} <br /> |
+
+
+#### ApplicationSettings
 
 
 
+ApplicationSettings Settings of the application. The login, account and cookieSettings blocks, when omitted, are inherited from the domain; any other omitted block is unset.
 
 
 
+_Appears in:_
+- [AMApplicationSpec](#amapplicationspec)
+- [Application](#application)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `account` _[AccountSettings](#accountsettings)_ | Account User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior. |  |  |
+| `advanced` _[AdvancedSettings](#advancedsettings)_ | Advanced Advanced application settings. |  |  |
+| `cookieSettings` _[CookieSettings](#cookiesettings)_ | CookieSettings Session cookie settings of the application. |  |  |
+| `login` _[LoginSettings](#loginsettings)_ | Login Configuration of the domain's login flow and the features offered on the sign-in page. |  |  |
+| `mfa` _[MfaSettings](#mfasettings)_ | Mfa Multi-factor authentication settings of the application. |  |  |
+| `oauth` _[ApplicationOAuthSettings](#applicationoauthsettings)_ | Oauth OAuth 2.0 and OpenID Connect settings of the application. Fields described as computed are filled in by AM when omitted. tokenExchangeOAuthSettings, when omitted, is inherited from the domain. |  |  |
+| `riskAssessment` _[RiskAssessmentSettings](#riskassessmentsettings)_ | RiskAssessment Risk assessment of the authentication attempts, used by risk-based MFA. Effective only with the Enterprise Edition risk assessment plugin. |  |  |
+| `saml` _[ApplicationSAMLSettings](#applicationsamlsettings)_ | Saml Settings of the application acting as a SAML 2.0 service provider (SP). |  |  |
+| `secretExpirationSettings` _[SecretExpirationSettings](#secretexpirationsettings)_ | SecretExpirationSettings Controls whether client secrets in the domain expire and after how long. |  |  |
+| `workloadIdentitySettings` _[WorkloadIdentitySettings](#workloadidentitysettings)_ | WorkloadIdentitySettings SPIFFE workload identity the application authenticates with (JWT-SVID client authentication). |  |  |
+
+
+#### AssessmentSettings
 
 
 
+AssessmentSettings Settings of one risk assessment.
 
 
 
+_Appears in:_
+- [RiskAssessmentSettings](#riskassessmentsettings)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled Whether this assessment is enabled.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `thresholds` _[GenericStringMap](#genericstringmap)_ | Thresholds Score threshold of each risk level: an assessment scoring at or above a threshold reaches that level. |  | Optional: \{\} <br /> |
 
 
 #### CertificateRef
@@ -2035,6 +2207,22 @@ _Appears in:_
 | `namespace` _string_ | Namespace of the referenced resource. Defaults to the Application namespace. |  | Optional: \{\} <br /> |
 
 
+#### ChallengeSettings
+
+
+
+ChallengeSettings When users are challenged for a second factor.
+
+
+
+_Appears in:_
+- [MfaSettings](#mfasettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `active` _boolean_ | Active Whether users are challenged for a second factor.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `challengeRule` _string_ | ChallengeRule Expression Language rule of a conditional challenge: when it evaluates to true, the challenge is skipped. |  | Optional: \{\} <br /> |
+| `type` _string_ | Type required: always challenge. conditional: challenge unless challengeRule evaluates to true. risk_based: challenge according to the risk assessment. |  | Enum: [required conditional risk_based] <br />Optional: \{\} <br /> |
 
 
 #### ClientCertificate
@@ -2059,16 +2247,114 @@ _Appears in:_
 | `encoded` _boolean_ | Encoded indicates whether the content is base64 encoded.<br />If true, the content will be decoded before being sent to APIM. |  | Optional: \{\} <br /> |
 
 
+#### CookieSettings
 
 
 
+CookieSettings Session cookie settings of the application.
 
 
 
+_Appears in:_
+- [ApplicationSettings](#applicationsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `inherited` _boolean_ | Inherited Whether the cookie settings are inherited from the domain. When true, the other fields are ignored.<br />Defaults to true. |  | Optional: \{\} <br /> |
+| `session` _[SessionSettings](#sessionsettings)_ | Session Session cookie settings. |  |  |
+
+
+#### CrossAppAccessResourceServer
 
 
 
+CrossAppAccessResourceServer A resource server this application may request an ID-JAG for.
 
+
+
+_Appears in:_
+- [CrossAppAccessSettings](#crossappaccesssettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `clientId` _string_ | ClientId Identifier this application is registered with at the resource authorization server. |  | MaxLength: 512 <br />Optional: \{\} <br /> |
+| `resourceServerId` _string_ | ResourceServerId Resource server of the trusted domain, as id:<uuid> (a key is rejected with 400). |  | Optional: \{\} <br /> |
+| `trustDomainId` _string_ | TrustDomainId Trusted domain the resource server belongs to, as id:<uuid> (a key is rejected with 400). A hint used to resolve the resource server; the resource server reference remains authoritative. |  | Optional: \{\} <br /> |
+
+
+#### CrossAppAccessSettings
+
+
+
+CrossAppAccessSettings Resource servers this application may request an ID-JAG for.
+
+
+
+_Appears in:_
+- [ApplicationOAuthSettings](#applicationoauthsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled Whether this application participates in Cross App Access.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `resourceServers` _[CrossAppAccessResourceServer](#crossappaccessresourceserver) array_ | ResourceServers Resource servers this application may reach, one entry per resource server. |  | Optional: \{\} <br /> |
+
+
+#### EnrollSettings
+
+
+
+EnrollSettings When users are asked to enroll a factor.
+
+
+
+_Appears in:_
+- [MfaSettings](#mfasettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `active` _boolean_ | Active Whether users are asked to enroll a factor.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `enrollmentRule` _string_ | EnrollmentRule Expression Language rule of a conditional enrollment: when it evaluates to true, the enrollment is skipped. |  | Optional: \{\} <br /> |
+| `enrollmentSkipActive` _boolean_ | EnrollmentSkipActive Whether users can skip the enrollment.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `enrollmentSkipRule` _string_ | EnrollmentSkipRule Expression Language rule: when it evaluates to true, users can skip the enrollment. |  | Optional: \{\} <br /> |
+| `forceEnrollment` _boolean_ | ForceEnrollment Whether users must enroll a factor. |  | Optional: \{\} <br /> |
+| `skipTimeSeconds` _integer_ | SkipTimeSeconds Duration, in seconds, during which a skipped enrollment is not asked again. |  | Optional: \{\} <br /> |
+| `type` _string_ | Type optional: users can skip the enrollment. required: users must enroll. conditional: enrollment required unless enrollmentRule evaluates to true. |  | Enum: [optional required conditional] <br />Optional: \{\} <br /> |
+
+
+#### EnrollmentSettings
+
+
+
+EnrollmentSettings Deprecated: use enroll. Legacy enrollment settings.
+
+Deprecated: this type has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+
+
+
+_Appears in:_
+- [MfaSettings](#mfasettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `forceEnrollment` _boolean_ | ForceEnrollment Whether users must enroll a factor. |  | Optional: \{\} <br /> |
+| `skipTimeSeconds` _integer_ | SkipTimeSeconds Duration, in seconds, during which users can skip the enrollment. |  | Optional: \{\} <br /> |
+
+
+#### FactorSettings
+
+
+
+FactorSettings Factors offered to the users of the application.
+
+
+
+_Appears in:_
+- [MfaSettings](#mfasettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `applicationFactors` _[ApplicationFactorSettings](#applicationfactorsettings) array_ | ApplicationFactors Factors available to the application. |  | Optional: \{\} <br /> |
+| `defaultFactorId` _string_ | DefaultFactorId Factor proposed first, as id:<uuid> (factors have no Automation API endpoint). |  | Optional: \{\} <br /> |
 
 
 #### FormField
@@ -2194,6 +2480,28 @@ _Appears in:_
 | `hidden` _boolean_ | Metadata is hidden or not? |  | Optional: \{\} <br /> |
 
 
+#### MfaSettings
+
+
+
+MfaSettings Multi-factor authentication settings of the application.
+
+
+
+_Appears in:_
+- [ApplicationSettings](#applicationsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `adaptiveAuthenticationRule` _string_ | AdaptiveAuthenticationRule Deprecated: use challenge.challengeRule. Expression Language rule of the adaptive authentication.<br />Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set |  | Optional: \{\} <br /> |
+| `challenge` _[ChallengeSettings](#challengesettings)_ | Challenge When users are challenged for a second factor. |  |  |
+| `enroll` _[EnrollSettings](#enrollsettings)_ | Enroll When users are asked to enroll a factor. |  |  |
+| `enrollment` _[EnrollmentSettings](#enrollmentsettings)_ | Enrollment Deprecated: use enroll. Legacy enrollment settings.<br />Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set |  |  |
+| `factor` _[FactorSettings](#factorsettings)_ | Factor Factors offered to the users of the application. |  |  |
+| `loginRule` _string_ | LoginRule Legacy MFA login rule, kept for round-trip fidelity. Use challenge and enroll to configure when MFA applies. |  | Optional: \{\} <br /> |
+| `rememberDevice` _[RememberDeviceSettings](#rememberdevicesettings)_ | RememberDevice Remember device: skips the MFA challenge on a device already used to authenticate. |  |  |
+| `stepUpAuthentication` _[StepUpAuthenticationSettings](#stepupauthenticationsettings)_ | StepUpAuthentication Step-up authentication: asks for MFA again during a session when its rule matches. |  |  |
+| `stepUpAuthenticationRule` _string_ | StepUpAuthenticationRule Deprecated: use stepUpAuthentication. Expression Language rule triggering step-up authentication.<br />Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set |  | Optional: \{\} <br /> |
 
 
 #### OAuthClientSettings
@@ -2229,12 +2537,78 @@ _Appears in:_
 
 
 
+#### RememberDeviceSettings
 
 
 
+RememberDeviceSettings Remember device: skips the MFA challenge on a device already used to authenticate.
 
 
 
+_Appears in:_
+- [MfaSettings](#mfasettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `active` _boolean_ | Active Whether remember device is enabled.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `deviceIdentifierId` _string_ | DeviceIdentifierId Device identifier used to recognize devices, as id:<uuid> (device identifiers have no Automation API endpoint). |  | Optional: \{\} <br /> |
+| `expirationTimeSeconds` _integer_ | ExpirationTimeSeconds Duration, in seconds, for which a device is remembered. |  | Optional: \{\} <br /> |
+| `skipRememberDevice` _boolean_ | SkipRememberDevice Only used with a conditional MFA challenge: when true, remember device is not applied when the MFA condition evaluates to no risk.<br />Defaults to false. |  | Optional: \{\} <br /> |
+
+
+#### RiskAssessmentSettings
+
+
+
+RiskAssessmentSettings Risk assessment of the authentication attempts, used by risk-based MFA. Effective only with the Enterprise Edition risk assessment plugin.
+
+
+
+_Appears in:_
+- [ApplicationSettings](#applicationsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `deviceAssessment` _[AssessmentSettings](#assessmentsettings)_ | DeviceAssessment Settings of one risk assessment. |  |  |
+| `enabled` _boolean_ | Enabled Whether risk assessment is enabled.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `geoVelocityAssessment` _[AssessmentSettings](#assessmentsettings)_ | GeoVelocityAssessment Settings of one risk assessment. |  |  |
+| `ipReputationAssessment` _[AssessmentSettings](#assessmentsettings)_ | IpReputationAssessment Settings of one risk assessment. |  |  |
+
+
+#### SamlAssertionAttribute
+
+
+
+SamlAssertionAttribute A custom attribute of the SAML assertion.
+
+
+
+_Appears in:_
+- [ApplicationSAMLSettings](#applicationsamlsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Name Name of the SAML attribute. |  | Required: \{\} <br /> |
+| `value` _string_ | Value Expression Language expression resolved to the attribute value. |  | Required: \{\} <br /> |
+
+
+#### ScopeSettings
+
+
+
+ScopeSettings A scope the application can request, with its settings.
+
+
+
+_Appears in:_
+- [ApplicationOAuthSettings](#applicationoauthsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `defaultScope` _boolean_ | DefaultScope Whether the scope is granted when the authorization request carries no scope parameter.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `requiredScope` _boolean_ | RequiredScope Whether the user cannot deselect this scope on the consent page.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `scope` _string_ | Scope Key of a scope of the domain. The scope must exist, otherwise the request is rejected with 400. |  | Required: \{\} <br /> |
+| `scopeApproval` _integer_ | ScopeApproval Duration, in seconds, of the user consent to this scope. When absent, the domain scope setting applies. |  | Optional: \{\} <br /> |
 
 
 #### SecretExpirationSettings
@@ -2254,6 +2628,20 @@ _Appears in:_
 | `expiryTimeSeconds` _integer_ | ExpiryTimeSeconds Lifetime, in seconds, of a client secret before it expires. |  | Optional: \{\} <br /> |
 
 
+#### SessionSettings
+
+
+
+SessionSettings Session cookie settings.
+
+
+
+_Appears in:_
+- [CookieSettings](#cookiesettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `persistent` _boolean_ | Persistent Whether the session cookie is persistent (kept after the browser is closed) rather than a session cookie.<br />Defaults to false. |  | Optional: \{\} <br /> |
 
 
 #### Setting
@@ -2314,6 +2702,21 @@ _Appears in:_
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
+#### StepUpAuthenticationSettings
+
+
+
+StepUpAuthenticationSettings Step-up authentication: asks for MFA again during a session when its rule matches.
+
+
+
+_Appears in:_
+- [MfaSettings](#mfasettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `active` _boolean_ | Active Whether step-up authentication is enabled.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `stepUpAuthenticationRule` _string_ | StepUpAuthenticationRule Expression Language rule: when it evaluates to true, the user is challenged again. |  | Optional: \{\} <br /> |
 
 
 #### TLSSettings
@@ -2334,6 +2737,22 @@ _Appears in:_
 | `clientCertificates` _[ClientCertificate](#clientcertificate) array_ | List of client certificates for mTLS plans.<br />Supports inline PEM/Base64, template [[ ]] notation, and references to Secrets/ConfigMaps.<br />Cannot be used at the same time as ClientCertificate. |  | Optional: \{\} <br /> |
 
 
+#### TokenClaim
+
+
+
+TokenClaim A custom claim added to the tokens issued to the application.
+
+
+
+_Appears in:_
+- [ApplicationOAuthSettings](#applicationoauthsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `claimName` _string_ | ClaimName Name of the claim. |  | Required: \{\} <br /> |
+| `claimValue` _string_ | ClaimValue Value of the claim: a literal or an Expression Language expression. |  | Required: \{\} <br /> |
+| `tokenType` _string_ | TokenType Token the claim is added to. |  | Enum: [access_token refresh_token id_token id_jag] <br />Required: \{\} <br /> |
 
 
 #### TokenExchangeOAuthSettings
@@ -2353,8 +2772,39 @@ _Appears in:_
 | `scopeHandling` _string_ | ScopeHandling How scopes are handled when issuing the exchanged token. DOWNSCOPING restricts the issued token to a subset of the original scopes.<br />Defaults to downscoping. |  | Enum: [downscoping permissive] <br />Optional: \{\} <br /> |
 
 
+#### UserInfoClaim
 
 
+
+UserInfoClaim A custom claim added to the UserInfo responses of the application.
+
+
+
+_Appears in:_
+- [ApplicationOAuthSettings](#applicationoauthsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `claimName` _string_ | ClaimName Name of the claim. |  | Required: \{\} <br /> |
+| `claimValue` _string_ | ClaimValue Value of the claim: a literal or an Expression Language expression. |  | Required: \{\} <br /> |
+
+
+#### WorkloadIdentitySettings
+
+
+
+WorkloadIdentitySettings SPIFFE workload identity the application authenticates with (JWT-SVID client authentication).
+
+
+
+_Appears in:_
+- [ApplicationSettings](#applicationsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `subject` _string_ | Subject SPIFFE ID expected in the SVID sub claim, interpreted per subjectMatchMode. |  | Optional: \{\} <br /> |
+| `subjectMatchMode` _string_ | SubjectMatchMode How subject is matched against the SVID sub claim. exact (default) requires equality. prefix is only allowed for hosted_delegated or autonomous agent applications: subject must end with / and the SVID sub is accepted when it starts with subject; the full SVID SPIFFE ID then becomes the per-instance act.sub in minted tokens.<br />Defaults to exact. |  | Enum: [exact prefix] <br />Optional: \{\} <br /> |
+| `trustDomain` _string_ | TrustDomain Name of the trusted domain this application authenticates against. |  | Optional: \{\} <br /> |
 
 
 
@@ -3443,8 +3893,6 @@ Code generated by github.com/oapi-codegen/oapi-codegen/v2 version v2.8.0 DO NOT 
 
 
 
-
-
 #### Certificate
 
 
@@ -3791,26 +4239,106 @@ Code generated by github.com/oapi-codegen/oapi-codegen/v2 version v2.8.0 DO NOT 
 
 
 
+#### AccountSettings
 
 
 
+AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior.
 
 
 
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `accountBlockedDuration` _integer_ | AccountBlockedDuration Duration, in seconds, for which the account remains blocked after too many failed login attempts. |  | Optional: \{\} <br /> |
+| `autoLoginAfterRegistration` _boolean_ | AutoLoginAfterRegistration Whether the user is automatically logged in after completing registration.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `autoLoginAfterResetPassword` _boolean_ | AutoLoginAfterResetPassword Whether the user is automatically logged in after a password reset.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `completeRegistrationWhenResetPassword` _boolean_ | CompleteRegistrationWhenResetPassword Whether resetting a password also completes a pending registration.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `defaultIdentityProviderForRegistration` _string_ | DefaultIdentityProviderForRegistration Default identity provider for user registration: the key of an identity provider of the domain, or id:<uuid> when the reference was not set by the Automation API. The reference is not checked against existing identity providers: it can name one created after the domain or since deleted, and resolves whenever that identity provider exists. |  | Optional: \{\} <br /> |
+| `deletePasswordlessDevicesAfterResetPassword` _boolean_ | DeletePasswordlessDevicesAfterResetPassword Whether passwordless (WebAuthn) devices are deleted when the password is reset.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `dynamicUserRegistration` _boolean_ | DynamicUserRegistration Whether dynamic (self-service) user registration is enabled.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `inherited` _boolean_ | Inherited Whether account settings are inherited from the parent (domain). When true, the other fields are ignored. Has no effect when applied to domains.<br />Defaults to true. |  | Optional: \{\} <br /> |
+| `loginAttemptsDetectionEnabled` _boolean_ | LoginAttemptsDetectionEnabled Whether brute-force authentication attempts are detected and blocked.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `loginAttemptsResetTime` _integer_ | LoginAttemptsResetTime Time, in seconds, after which the login attempt counter is reset when the maximum has not been reached. |  | Optional: \{\} <br /> |
+| `maxLoginAttempts` _integer_ | MaxLoginAttempts Maximum number of failed login attempts before the account is blocked. |  | Optional: \{\} <br /> |
+| `mfaChallengeAttemptsDetectionEnabled` _boolean_ | MfaChallengeAttemptsDetectionEnabled Whether failed MFA challenge attempts are detected and blocked.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `mfaChallengeAttemptsResetTime` _integer_ | MfaChallengeAttemptsResetTime Time, in seconds, after which the MFA challenge attempt counter is reset. |  | Optional: \{\} <br /> |
+| `mfaChallengeMaxAttempts` _integer_ | MfaChallengeMaxAttempts Maximum number of failed MFA challenge attempts before the user is blocked. |  | Optional: \{\} <br /> |
+| `mfaChallengeSendVerifyAlertEmail` _boolean_ | MfaChallengeSendVerifyAlertEmail Whether to send an alert email after too many failed MFA challenge attempts.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `redirectUriAfterRegistration` _string_ | RedirectUriAfterRegistration URL the user is redirected to after registration. |  | Optional: \{\} <br /> |
+| `redirectUriAfterResetPassword` _string_ | RedirectUriAfterResetPassword URL the user is redirected to after a password reset. |  | Optional: \{\} <br /> |
+| `rememberMe` _boolean_ | RememberMe Whether users can remain logged in for a fixed duration (remember-me).<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `rememberMeDuration` _integer_ | RememberMeDuration Duration, in seconds, for which a remembered session stays valid. |  | Optional: \{\} <br /> |
+| `resetPasswordConfirmIdentity` _boolean_ | ResetPasswordConfirmIdentity Whether the user must confirm their identity before resetting a password.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `resetPasswordCustomForm` _boolean_ | ResetPasswordCustomForm Whether a custom form is used for the password-reset step.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `resetPasswordCustomFormFields` _[FormField](#formfield) array_ | ResetPasswordCustomFormFields Custom fields rendered on the password-reset form. |  | Optional: \{\} <br /> |
+| `resetPasswordInvalidateTokens` _boolean_ | ResetPasswordInvalidateTokens Whether existing tokens are invalidated when the password is reset.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `sendRecoverAccountEmail` _boolean_ | SendRecoverAccountEmail Whether to send an account-recovery email.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `sendVerifyRegistrationAccountEmail` _boolean_ | SendVerifyRegistrationAccountEmail Whether to send a registration-verification email.<br />Defaults to false. |  | Optional: \{\} <br /> |
+
+
+#### CIBASettings
 
 
 
+CIBASettings Client-Initiated Backchannel Authentication (CIBA) settings for the domain. CIBA lets a relying party initiate end-user authentication from a separate consumption device, without redirecting the user through the browser. Authentication device notifiers are not managed by the Automation API and are not exposed here.
 
 
 
+_Appears in:_
+- [OidcSettings](#oidcsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `authReqExpiry` _integer_ | AuthReqExpiry Default validity period, in seconds, of the issued auth_req_id.<br />Defaults to 600. |  | Optional: \{\} <br /> |
+| `bindingMessageLength` _integer_ | BindingMessageLength Maximum number of characters accepted for the binding_message parameter.<br />Defaults to 256. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled Whether Client-Initiated Backchannel Authentication is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `tokenReqInterval` _integer_ | TokenReqInterval Minimum delay, in seconds, that a client must wait between two polls of the token endpoint for the same auth_req_id (POLL or PING delivery mode).<br />Defaults to 5. |  | Optional: \{\} <br /> |
+
+
+#### CertificateSettings
 
 
 
+CertificateSettings Domain-level certificate settings.
 
 
 
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `fallbackCertificate` _string_ | FallbackCertificate Fallback certificate used when a client does not specify one: the key of a certificate of the domain, or id:<uuid> when the reference was not set by the Automation API. The reference is not checked against existing certificates: it can name one created after the domain or since deleted, and resolves whenever that certificate exists. |  | Optional: \{\} <br /> |
 
 
+#### ClientRegistrationSettings
+
+
+
+ClientRegistrationSettings OpenID Connect Dynamic Client Registration configuration for the domain.
+
+
+
+_Appears in:_
+- [OidcSettings](#oidcsettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `allowHttpSchemeRedirectUri` _boolean_ | AllowHttpSchemeRedirectUri Whether the unsecured http scheme is permitted in redirect URIs.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `allowLocalhostRedirectUri` _boolean_ | AllowLocalhostRedirectUri Whether localhost is permitted as a redirect URI host.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `allowRedirectUriParamsExpressionLanguage` _boolean_ | AllowRedirectUriParamsExpressionLanguage Whether expression language is permitted in redirect URI parameters.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `allowWildCardRedirectUri` _boolean_ | AllowWildCardRedirectUri Whether wildcards are permitted in redirect URIs.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `allowedScopes` _string array_ | AllowedScopes Scopes permitted on client registration requests when the allowed list is enabled. |  | Optional: \{\} <br /> |
+| `allowedScopesEnabled` _boolean_ | AllowedScopesEnabled Whether registered client scopes are restricted to an allowed list.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `clientTemplateEnabled` _boolean_ | ClientTemplateEnabled Whether a client may be used as a template for dynamic client registration.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `defaultScopes` _string array_ | DefaultScopes Default scopes added to every client registration request. |  | Optional: \{\} <br /> |
+| `dynamicClientRegistrationEnabled` _boolean_ | DynamicClientRegistrationEnabled Whether Dynamic Client Registration is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `openDynamicClientRegistrationEnabled` _boolean_ | OpenDynamicClientRegistrationEnabled Whether open (unauthenticated) Dynamic Client Registration is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
 
 
 #### CorsSettings
@@ -3869,9 +4397,9 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `accountSettings` _[AutomationAccountSettings](#automationaccountsettings)_ | AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior. |  |  |
+| `accountSettings` _[AccountSettings](#accountsettings)_ | AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior. |  |  |
 | `alertEnabled` _boolean_ | AlertEnabled Whether alerting is enabled for the domain.<br />Defaults to false. |  | Optional: \{\} <br /> |
-| `certificateSettings` _[AutomationCertificateSettings](#automationcertificatesettings)_ | CertificateSettings Domain-level certificate settings. |  |  |
+| `certificateSettings` _[CertificateSettings](#certificatesettings)_ | CertificateSettings Domain-level certificate settings. |  |  |
 | `corsSettings` _[CorsSettings](#corssettings)_ | CorsSettings Cross-Origin Resource Sharing configuration controlling which web origins may call the domain's endpoints from a browser. |  |  |
 | `dataPlaneId` _string_ | DataPlaneId Identifier of the data plane this domain is connected to. Optional at creation and resolved from the environment's data planes when omitted. Immutable afterwards: an apply that names a different one is rejected. |  | MaxLength: 255 <br />Optional: \{\} <br /> |
 | `description` _string_ | Description Human-readable description of the domain. |  | Optional: \{\} <br /> |
@@ -3880,10 +4408,10 @@ _Appears in:_
 | `loginSettings` _[LoginSettings](#loginsettings)_ | LoginSettings Configuration of the domain's login flow and the features offered on the sign-in page. |  |  |
 | `master` _boolean_ | Master Whether this is the master domain of its environment. A master domain may perform cross-domain token introspection.<br />Defaults to false. |  | Optional: \{\} <br /> |
 | `name` _string_ | Name Human-readable name of the domain. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
-| `oidc` _[AutomationOidcSettings](#automationoidcsettings)_ | Oidc OpenID Connect settings for the domain. CIMD (client identity metadata document) settings are not exposed by the Automation API and are reset on update. |  |  |
+| `oidc` _[OidcSettings](#oidcsettings)_ | Oidc OpenID Connect settings for the domain. CIMD (client identity metadata document) settings are not exposed by the Automation API and are reset on update. |  |  |
 | `passwordSettings` _[PasswordSettings](#passwordsettings)_ | PasswordSettings Password policy applied to users of the domain: complexity requirements, expiry, and history. |  |  |
 | `path` _string_ | Path Context path the domain is served under, relative to the gateway. Must start with a slash. |  | MaxLength: 255 <br />MinLength: 1 <br />Pattern: `^/.*` <br />Required: \{\} <br /> |
-| `saml` _[AutomationSamlSettings](#automationsamlsettings)_ | Saml Settings for the domain acting as a SAML 2.0 identity provider (IdP). |  |  |
+| `saml` _[SamlSettings](#samlsettings)_ | Saml Settings for the domain acting as a SAML 2.0 identity provider (IdP). |  |  |
 | `scim` _[SCIMSettings](#scimsettings)_ | Scim Configuration of the domain's SCIM 2.0 provisioning endpoints. |  |  |
 | `secretExpirationSettings` _[SecretExpirationSettings](#secretexpirationsettings)_ | SecretExpirationSettings Controls whether client secrets in the domain expire and after how long. |  |  |
 | `selfServiceAccountManagementSettings` _[SelfServiceAccountManagementSettings](#selfserviceaccountmanagementsettings)_ | SelfServiceAccountManagementSettings Controls whether end users can manage their own account (for example, reset their password) and the rules that apply. |  |  |
@@ -3983,6 +4511,27 @@ _Appears in:_
 | `resetPasswordOnExpiration` _boolean_ | ResetPasswordOnExpiration Whether the user is forced to reset their password once it expires. |  | Optional: \{\} <br /> |
 
 
+#### OidcSettings
+
+
+
+OidcSettings OpenID Connect settings for the domain. CIMD (client identity metadata document) settings are not exposed by the Automation API and are reset on update.
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `cibaSettings` _[CIBASettings](#cibasettings)_ | CibaSettings Client-Initiated Backchannel Authentication (CIBA) settings for the domain. CIBA lets a relying party initiate end-user authentication from a separate consumption device, without redirecting the user through the browser. Authentication device notifiers are not managed by the Automation API and are not exposed here. |  |  |
+| `clientRegistrationSettings` _[ClientRegistrationSettings](#clientregistrationsettings)_ | ClientRegistrationSettings OpenID Connect Dynamic Client Registration configuration for the domain. |  |  |
+| `postLogoutRedirectUris` _string array_ | PostLogoutRedirectUris URLs the user may be redirected to after sign-out (post_logout_redirect_uri). |  | Optional: \{\} <br /> |
+| `redirectUriStrictMatching` _boolean_ | RedirectUriStrictMatching Whether redirect_uri and post_logout_redirect_uri values are matched strictly during OpenID Connect flows.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `requestUris` _string array_ | RequestUris Allowed request_uri values for passing OpenID Connect request objects by reference. |  | Optional: \{\} <br /> |
+| `securityProfileSettings` _[SecurityProfileSettings](#securityprofilesettings)_ | SecurityProfileSettings Financial-grade API (FAPI) security profile configuration for the domain. |  |  |
+| `workloadIdentitySettings` _[SpiffeDomainSettings](#spiffedomainsettings)_ | WorkloadIdentitySettings Workload identity (SPIFFE) settings for the domain. |  |  |
 
 
 #### PasswordSettings
@@ -4049,6 +4598,23 @@ _Appears in:_
 | `idpSelectionRule` _string_ | IdpSelectionRule Expression that selects the identity provider for a SCIM-provisioned user. |  | Optional: \{\} <br /> |
 
 
+#### SamlSettings
+
+
+
+SamlSettings Settings for the domain acting as a SAML 2.0 identity provider (IdP).
+
+
+
+_Appears in:_
+- [AMSecurityDomainSpec](#amsecuritydomainspec)
+- [Domain](#domain)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `certificate` _string_ | Certificate Certificate signing SAML responses: the key of a certificate of the domain, or id:<uuid> when the reference was not set by the Automation API. The reference is not checked against existing certificates: it can name one created after the domain or since deleted, and resolves whenever that certificate exists. |  | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Enabled Whether the domain exposes the SAML 2.0 IdP protocol.<br />Defaults to false. |  | Optional: \{\} <br /> |
+| `entityId` _string_ | EntityId URL or URN that uniquely identifies this IdP (the SAML entity ID). |  | Optional: \{\} <br /> |
 
 
 #### SecretExpirationSettings
@@ -4642,8 +5208,6 @@ _Appears in:_
 Package identityprovider provides primitives to interact with the openapi HTTP API.
 
 Code generated by github.com/oapi-codegen/oapi-codegen/v2 version v2.8.0 DO NOT EDIT.
-
-
 
 
 
@@ -6134,8 +6698,6 @@ _Appears in:_
 Package reporter provides primitives to interact with the openapi HTTP API.
 
 Code generated by github.com/oapi-codegen/oapi-codegen/v2 version v2.8.0 DO NOT EDIT.
-
-
 
 
 
