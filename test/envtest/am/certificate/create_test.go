@@ -15,7 +15,9 @@ package amcertificate
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -78,6 +80,7 @@ var _ = Describe("Create", func() {
 			refs := k8s.MapConditions(cert.Status.Conditions)[k8s.ConditionResolvedRefs]
 			return assert.Equals("ResolvedRefs", metaV1.ConditionFalse, refs.Status)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), cert.Name)
+		Expect(cert.OwnerReferences).To(BeEmpty())
 
 		By("creating the domain")
 
@@ -94,5 +97,59 @@ var _ = Describe("Create", func() {
 
 		status, _ := remoteCertificate(ctx, cert)
 		Expect(status).To(Equal(http.StatusOK))
+		Expect(cert.OwnerReferences).To(ConsistOf(HaveField("UID", domain.UID)))
+	})
+
+	It("should be owned by its domain while waiting for its keystore Secret", func() {
+		fixtures := secretFixtures()
+		keystore, cert := fixtures.Secrets[1], fixtures.AMCertificate
+		fixtures.Secrets, fixtures.AMCertificate = fixtures.Secrets[:1], nil
+		fixtures.Apply()
+		domain := fixtures.AMSecurityDomain
+
+		// The keystore Secret has a fixed name that other specs leave behind: give this spec its own.
+		shared := keystore.Name + "/"
+		keystore.Name = cert.Name
+		for key, value := range cert.Spec.Configuration.Object {
+			if text, ok := value.(string); ok {
+				cert.Spec.Configuration.Object[key] = strings.ReplaceAll(text, shared, keystore.Name+"/")
+			}
+		}
+
+		By("creating the certificate without its keystore Secret")
+
+		Expect(manager.Client().Create(ctx, cert)).To(Succeed())
+
+		missing := "secret [" + cert.Namespace + "/" + keystore.Name + "] not found"
+		Eventually(ctx, func() error {
+			if err := manager.GetLatest(ctx, cert); err != nil {
+				return err
+			}
+			refs := k8s.MapConditions(cert.Status.Conditions)[k8s.ConditionResolvedRefs]
+			if !strings.Contains(refs.Message, missing) {
+				return fmt.Errorf("ResolvedRefs message %q does not name %s", refs.Message, missing)
+			}
+			if err := assert.Equals("ownerReferences", 1, len(cert.OwnerReferences)); err != nil {
+				return err
+			}
+			owner := cert.OwnerReferences[0]
+			if err := assert.Equals("owner", "AMSecurityDomain/"+domain.Name+"/"+string(domain.UID),
+				owner.Kind+"/"+owner.Name+"/"+string(owner.UID)); err != nil {
+				return err
+			}
+			accepted := k8s.MapConditions(cert.Status.Conditions)[k8s.ConditionAccepted]
+			return assert.Equals("Accepted", metaV1.ConditionFalse, accepted.Status)
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), cert.Name)
+
+		By("creating the keystore Secret")
+
+		Expect(manager.Client().Create(ctx, keystore)).To(Succeed())
+
+		Eventually(ctx, func() error {
+			if err := manager.GetLatest(ctx, cert); err != nil {
+				return err
+			}
+			return assert.AMCertificateAccepted(cert)
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), cert.Name)
 	})
 })

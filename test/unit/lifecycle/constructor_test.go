@@ -19,6 +19,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -40,6 +41,14 @@ var _ = Describe("NewResourceLifecycle", func() {
 		l.Upsert = nil
 		Expect(func() { lifecycle.NewResourceLifecycle(l) }).
 			To(PanicWith("lifecycle: ResourceLifecycle.Upsert is required"))
+	})
+
+	It("panics when Owner is set without ResolveRefs", func() {
+		l := newGroupLifecycle(&remote{})
+		l.Owner = func(context.Context, *v1alpha1.Group) (client.Object, bool, error) { return nil, false, nil }
+		l.ResolveRefs = nil
+		Expect(func() { lifecycle.NewResourceLifecycle(l) }).
+			To(PanicWith("lifecycle: ResourceLifecycle.Owner requires ResolveRefs, which reports a missing owner"))
 	})
 })
 

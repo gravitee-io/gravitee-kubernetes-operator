@@ -32,6 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -368,18 +369,116 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			Expect(fetch(cli, "g1").OwnerReferences).To(HaveLen(1))
 		})
 
-		It("requeues with a ResolveRef error and does not upsert when the owner is not found", func() {
+		It("saves no ownerReference, and does not fail, when Owner cannot find the owner", func() {
+			notFound := apierrors.NewNotFound(v1alpha1.GroupVersion.WithResource("groups").GroupResource(), "parent")
 			cli := newCluster(newGroup("g1", testNs))
 			l := newGroupLifecycle(r)
-			l.Owner = func(context.Context, *v1alpha1.Group) (client.Object, bool, error) {
-				return nil, false, apierrors.NewNotFound(v1alpha1.GroupVersion.WithResource("groups").GroupResource(), "parent")
-			}
+			l.Owner = func(context.Context, *v1alpha1.Group) (client.Object, bool, error) { return nil, false, notFound }
+			l.ResolveRefs = func(context.Context, *v1alpha1.Group, string) error { return notFound }
 
 			_, err := reconcile(l, cli, "g1")
 
 			Expect(reconcileErrorType(err)).To(Equal(gerrors.ResolveRefError))
 			Expect(r.upserted).To(BeEmpty())
-			Expect(fetch(cli, "g1").OwnerReferences).To(BeEmpty())
+			stored := fetch(cli, "g1")
+			Expect(stored.OwnerReferences).To(BeEmpty())
+			Expect(stored.Finalizers).To(ContainElement(testFinalizer))
+		})
+
+		It("upserts without an ownerReference when only Owner fails", func() {
+			cli := newCluster(newGroup("g1", testNs))
+			l := newGroupLifecycle(r)
+			l.Owner = func(context.Context, *v1alpha1.Group) (client.Object, bool, error) {
+				return nil, false, errors.New("cache not synced")
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(r.upserted).To(HaveLen(1))
+			stored := fetch(cli, "g1")
+			Expect(stored.OwnerReferences).To(BeEmpty())
+			Expect(condition(stored, k8s.ConditionAccepted).Status).To(Equal(metav1.ConditionTrue))
+		})
+
+		DescribeTable("saves the ownerReference and the finalizer, but not the spec hash, when the reconcile fails",
+			func(fail func(l *groupLifecycle)) {
+				parent := parentGroup()
+				cli := newCluster(newGroup("g1", testNs), parent)
+				l := newGroupLifecycle(r)
+				l.Owner = func(context.Context, *v1alpha1.Group) (client.Object, bool, error) { return parent, false, nil }
+				fail(&l)
+
+				_, _ = reconcile(l, cli, "g1")
+
+				stored := fetch(cli, "g1")
+				Expect(ownerNamed(stored, "parent").UID).To(Equal(types.UID("parent-uid")))
+				Expect(stored.Finalizers).To(ContainElement(testFinalizer))
+				Expect(stored.Annotations).ToNot(HaveKey(core.LastSpecHashAnnotation))
+			},
+			Entry("saves the ownerReference when the upsert fails", func(*groupLifecycle) {
+				r.upsertErr = gerrors.ServerError{StatusCode: 400}
+			}),
+			Entry("saves the ownerReference when ResolveRefs fails", func(l *groupLifecycle) {
+				l.ResolveRefs = func(context.Context, *v1alpha1.Group, string) error { return errors.New("secret missing") }
+			}),
+		)
+
+		It("saves the finalizer and the ownerReference in one Update", func() {
+			parent := parentGroup()
+			fakeCli, ok := newCluster(newGroup("g1", testNs), parent).(client.WithWatch)
+			Expect(ok).To(BeTrue())
+			updates := 0
+			cli := interceptor.NewClient(fakeCli, interceptor.Funcs{
+				Update: func(ctx context.Context, c client.WithWatch, obj client.Object, opts ...client.UpdateOption) error {
+					updates++
+					return c.Update(ctx, obj, opts...)
+				},
+			})
+			updatesBeforeUpsert := -1
+			l := newGroupLifecycle(r)
+			l.Owner = func(context.Context, *v1alpha1.Group) (client.Object, bool, error) { return parent, false, nil }
+			var savedBeforeUpsert *v1alpha1.Group
+			l.Upsert = func(context.Context, *testClient, testDTO) (upsertResponse, error) {
+				updatesBeforeUpsert = updates
+				savedBeforeUpsert = fetch(cli, "g1")
+				return upsertResponse{}, nil
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(updatesBeforeUpsert).To(Equal(1))
+			Expect(savedBeforeUpsert.Finalizers).To(ContainElement(testFinalizer))
+			Expect(ownerNamed(savedBeforeUpsert, "parent").UID).To(Equal(types.UID("parent-uid")))
+		})
+
+		It("makes no metadata Update once the finalizer and the ownerReference are saved", func() {
+			parent := parentGroup()
+			fakeCli, ok := newCluster(newGroup("g1", testNs), parent).(client.WithWatch)
+			Expect(ok).To(BeTrue())
+			updates := 0
+			cli := interceptor.NewClient(fakeCli, interceptor.Funcs{
+				Update: func(ctx context.Context, c client.WithWatch, obj client.Object, opts ...client.UpdateOption) error {
+					updates++
+					return c.Update(ctx, obj, opts...)
+				},
+			})
+			l := newGroupLifecycle(r)
+			l.Owner = func(context.Context, *v1alpha1.Group) (client.Object, bool, error) { return parent, false, nil }
+			_, err := reconcile(l, cli, "g1")
+			Expect(err).ToNot(HaveOccurred())
+
+			updates = 0
+			updatesBeforeUpsert := -1
+			l.Upsert = func(context.Context, *testClient, testDTO) (upsertResponse, error) {
+				updatesBeforeUpsert = updates
+				return upsertResponse{}, nil
+			}
+			_, err = reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(updatesBeforeUpsert).To(Equal(0))
 		})
 
 		It("sets no ownerReference when Owner returns nil", func() {
