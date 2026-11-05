@@ -42,7 +42,6 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		dict := fixture.
 			Builder().
-			AddSecret(constants.DictionarySecretFile).
 			WithDictionary(constants.DictionaryManualFile).
 			Build()
 
@@ -106,7 +105,6 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		dict := fixture.
 			Builder().
-			AddSecret(constants.DictionarySecretFile).
 			WithDictionary(constants.DictionaryManualFile).
 			Build()
 

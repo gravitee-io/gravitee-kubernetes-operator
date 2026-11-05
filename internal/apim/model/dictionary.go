@@ -34,7 +34,7 @@ type ManualSpec struct {
 type DynamicSpec struct {
 	Provider   *Provider                    `json:"provider"`
 	Trigger    *Trigger                     `json:"trigger"`
-	Encryption *dictionary.EncryptionPolicy `json:"encryption,omitempty" drift:"empty-is-nil"`
+	Encryption *dictionary.EncryptionPolicy `json:"encryption,omitempty"`
 }
 
 type Provider struct {
@@ -65,5 +65,8 @@ type DictionaryState struct {
 func ToDictionaryDTO(crd dictionary.Type, hrid string) DictionaryDTO {
 	dto := mapViaJSON[DictionaryDTO](crd)
 	dto.HRID = hrid
+	if dto.Dynamic != nil && dto.Dynamic.Encryption == nil {
+		dto.Dynamic.Encryption = &dictionary.EncryptionPolicy{}
+	}
 	return dto
 }

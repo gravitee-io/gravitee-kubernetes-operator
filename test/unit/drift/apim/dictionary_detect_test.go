@@ -54,17 +54,6 @@ var _ = Describe("Dictionary Drift detection", func() {
 			manualDictionaryWithSecret("my secret API key"),
 			manualDictionaryWithSecret(apimMask),
 		),
-		Entry("omitted encryption equivalent to APIM's default of false",
-			model.DictionaryDTO{
-				Dynamic: &model.DynamicSpec{Provider: &model.Provider{}},
-			},
-			model.DictionaryDTO{
-				Dynamic: &model.DynamicSpec{
-					Provider:   &model.Provider{},
-					Encryption: &dictionary.EncryptionPolicy{EncryptOnFetch: false},
-				},
-			},
-		),
 		Entry("provider headers empty equivalent to nil",
 			model.DictionaryDTO{
 				Dynamic: &model.DynamicSpec{
@@ -190,6 +179,15 @@ var _ = Describe("Dictionary Drift detection", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(payload)).To(ContainSubstring(`"properties":{}`))
+		})
+
+		It("sends an explicit policy when the manifest omits encryption", func() {
+			spec := completeDynamicDictionarySpec()
+			spec.Dynamic.Encryption = nil
+
+			dto := model.ToDictionaryDTO(spec, dynamicDictHRID)
+
+			Expect(dto.Dynamic.Encryption).To(Equal(&dictionary.EncryptionPolicy{EncryptOnFetch: false}))
 		})
 
 		It("carries encrypt-on-fetch into the DTO", func() {
