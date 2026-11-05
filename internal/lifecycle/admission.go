@@ -115,6 +115,9 @@ func (a AdmissionLifecycle[T, D, C]) ValidateDelete(ctx context.Context, obj T) 
 			errs.AddSevere(err.Error())
 		}
 	}
+	if !errs.IsSevere() && a.DeleteCheck != nil {
+		errs.MergeWith(a.DeleteCheck(ctx, obj))
+	}
 	return errs
 }
 
