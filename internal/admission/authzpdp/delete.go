@@ -25,8 +25,8 @@ import (
 )
 
 // validateDelete names, per kind, the resources whose pdpRef still names the PDP through the PDP's
-// ManagementContext. It does not call
-// the platform's delete dry run: APIM 4.13 ignores dryRun on a DELETE and deletes the PDP.
+// ManagementContext. It does not call the platform's delete dry run: APIM 4.13 ignores dryRun on a
+// DELETE and deletes the PDP.
 func validateDelete(ctx context.Context, pdp *v1alpha1.AuthzPdp) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
