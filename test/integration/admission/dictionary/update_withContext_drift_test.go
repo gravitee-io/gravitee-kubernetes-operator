@@ -36,7 +36,6 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 	It("should not drift on a simple update", func() {
 		fixtures := fixture.
 			Builder().
-			AddSecret(constants.DictionarySecretFile).
 			WithDictionary(constants.DictionaryManualFile).
 			WithContext(constants.ContextWithCredentialsFile).
 			Build().
@@ -55,7 +54,6 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 	It("should detect drift", func() {
 		fixtures := fixture.
 			Builder().
-			AddSecret(constants.DictionarySecretFile).
 			WithDictionary(constants.DictionaryManualFile).
 			WithContext(constants.ContextWithCredentialsFile).
 			Build().
