@@ -54,9 +54,11 @@ type Type struct {
 type ManualSpec struct {
 	// Key/value pairs that constitute the dictionary data.
 	// +kubebuilder:validation:Optional
-	Properties map[string]string `json:"properties,omitempty"`
+	Properties map[string]string `json:"properties"`
 	// Secret key/value pairs. Values are sent to APIM as plaintext and stored encrypted.
+	// A key APIM holds encrypted must be declared here: declaring it under properties is refused.
 	// A key must not appear in both properties and encryptedProperties.
+	// Requires APIM 4.13.2 or later; earlier versions ignore this field and store nothing.
 	// +kubebuilder:validation:Optional
 	EncryptedProperties map[string]EncryptableValue `json:"encryptedProperties,omitempty"`
 }
@@ -64,10 +66,11 @@ type ManualSpec struct {
 // EncryptableValue is the value of a secret dictionary property.
 type EncryptableValue struct {
 	// Plaintext value to encrypt on save. APIM never returns it: a read answers with a mask,
-	// and sending that mask back keeps the stored value.
+	// and sending that mask back keeps the stored value. Making the value plain again is a
+	// two-step change: remove the key and apply, then declare it under properties.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
-	Value string `json:"value" drift:"apim-masked"`
+	Value string `json:"value" drift:"masked"`
 }
 
 // DynamicSpec defines a dynamic dictionary populated from an external provider on a schedule.
@@ -86,7 +89,9 @@ type DynamicSpec struct {
 // EncryptionPolicy controls how a DYNAMIC dictionary stores the values it fetches.
 type EncryptionPolicy struct {
 	// Store every fetched value encrypted, from the first fetch. APIM defaults to false,
-	// which keeps each key's stored classification.
+	// which keeps each key's stored classification. Removing this block leaves the policy APIM
+	// already holds; set encryptOnFetch to false to turn it off.
+	// Requires APIM 4.13.2 or later.
 	// +kubebuilder:validation:Optional
 	EncryptOnFetch bool `json:"encryptOnFetch,omitempty"`
 }
