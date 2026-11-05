@@ -64,11 +64,11 @@ var _ = Describe("CRD validation", func() {
 
 	It("should require exactly one of identity or identityRef on an identity provider", func() {
 		neither := newApplication()
-		neither.Spec.IdentityProviders = []appmodel.AutomationApplicationIdentityProvider{{}}
+		neither.Spec.IdentityProviders = []appmodel.ApplicationIdentityProvider{{}}
 		Expect(create(neither)).To(MatchError(ContainSubstring("exactly one of identity or identityRef must be set")))
 
 		both := newApplication()
-		both.Spec.IdentityProviders = []appmodel.AutomationApplicationIdentityProvider{
+		both.Spec.IdentityProviders = []appmodel.ApplicationIdentityProvider{
 			{Identity: new("users"), IdentityRef: &refs.NamespacedName{Name: "users"}},
 		}
 		Expect(create(both)).To(MatchError(ContainSubstring("exactly one of identity or identityRef must be set")))
@@ -84,7 +84,7 @@ var _ = Describe("CRD validation", func() {
 		Expect(create(app)).To(MatchError(ContainSubstring("certificateRef.name must not be empty")))
 
 		app = newApplication()
-		app.Spec.IdentityProviders = []appmodel.AutomationApplicationIdentityProvider{
+		app.Spec.IdentityProviders = []appmodel.ApplicationIdentityProvider{
 			{IdentityRef: &refs.NamespacedName{}},
 		}
 		Expect(create(app)).To(MatchError(ContainSubstring("identityRef.name must not be empty")))

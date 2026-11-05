@@ -8,11 +8,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
-// AutomationReporter A reporter managed under a domain by the Automation API. Reporters persist audit events to a backend. The key field is the stable, immutable identity used for idempotent create-or-update.
-// +kubebuilder:validation:XValidation:rule="(has(self.system) && self.system) || (has(self.name) && has(self.type) && has(self.configuration))",message="name, type and configuration are required unless system is true"
-// +kubebuilder:validation:XValidation:rule="has(self.type) == has(oldSelf.type) && (!has(self.type) || self.type == oldSelf.type)",message="type is immutable"
-type AutomationReporter = Reporter
-
 // Reporter A reporter managed under a domain by the Automation API. Reporters persist audit events to a backend. The key field is the stable, immutable identity used for idempotent create-or-update.
 // +kubebuilder:validation:XValidation:rule="(has(self.system) && self.system) || (has(self.name) && has(self.type) && has(self.configuration))",message="name, type and configuration are required unless system is true"
 // +kubebuilder:validation:XValidation:rule="has(self.type) == has(oldSelf.type) && (!has(self.type) || self.type == oldSelf.type)",message="type is immutable"

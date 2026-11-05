@@ -222,7 +222,7 @@ func (in *Application) DeepCopyInto(out *Application) {
 	}
 	if in.IdentityProviders != nil {
 		in, out := &in.IdentityProviders, &out.IdentityProviders
-		*out = make([]AutomationApplicationIdentityProvider, len(*in))
+		*out = make([]ApplicationIdentityProvider, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -238,7 +238,7 @@ func (in *Application) DeepCopyInto(out *Application) {
 	}
 	if in.Settings != nil {
 		in, out := &in.Settings, &out.Settings
-		*out = new(AutomationApplicationSettings)
+		*out = new(ApplicationSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Template != nil {
@@ -378,7 +378,7 @@ func (in *ApplicationOAuthSettings) DeepCopyInto(out *ApplicationOAuthSettings) 
 	}
 	if in.CrossAppAccessSettings != nil {
 		in, out := &in.CrossAppAccessSettings, &out.CrossAppAccessSettings
-		*out = new(AutomationCrossAppAccessSettings)
+		*out = new(CrossAppAccessSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.DefaultACRvalues != nil {
@@ -527,7 +527,7 @@ func (in *ApplicationOAuthSettings) DeepCopyInto(out *ApplicationOAuthSettings) 
 	}
 	if in.ScopeSettings != nil {
 		in, out := &in.ScopeSettings, &out.ScopeSettings
-		*out = make([]AutomationScopeSettings, len(*in))
+		*out = make([]ScopeSettings, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -584,7 +584,7 @@ func (in *ApplicationOAuthSettings) DeepCopyInto(out *ApplicationOAuthSettings) 
 	}
 	if in.TokenCustomClaims != nil {
 		in, out := &in.TokenCustomClaims, &out.TokenCustomClaims
-		*out = make([]AutomationTokenClaim, len(*in))
+		*out = make([]TokenClaim, len(*in))
 		copy(*out, *in)
 	}
 	if in.TokenEndpointAuthMethod != nil {
@@ -609,7 +609,7 @@ func (in *ApplicationOAuthSettings) DeepCopyInto(out *ApplicationOAuthSettings) 
 	}
 	if in.UserinfoCustomClaims != nil {
 		in, out := &in.UserinfoCustomClaims, &out.UserinfoCustomClaims
-		*out = make([]AutomationUserInfoClaim, len(*in))
+		*out = make([]UserInfoClaim, len(*in))
 		copy(*out, *in)
 	}
 	if in.UserinfoEncryptedResponseAlg != nil {
@@ -644,7 +644,7 @@ func (in *ApplicationSAMLSettings) DeepCopyInto(out *ApplicationSAMLSettings) {
 	*out = *in
 	if in.AssertionAttributes != nil {
 		in, out := &in.AssertionAttributes, &out.AssertionAttributes
-		*out = make([]AutomationSamlAssertionAttribute, len(*in))
+		*out = make([]SamlAssertionAttribute, len(*in))
 		copy(*out, *in)
 	}
 	if in.AssertionValiditySeconds != nil {
@@ -744,17 +744,17 @@ func (in *ApplicationSettings) DeepCopyInto(out *ApplicationSettings) {
 	*out = *in
 	if in.Account != nil {
 		in, out := &in.Account, &out.Account
-		*out = new(AutomationAccountSettings)
+		*out = new(AccountSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Advanced != nil {
 		in, out := &in.Advanced, &out.Advanced
-		*out = new(AutomationAdvancedSettings)
+		*out = new(AdvancedSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.CookieSettings != nil {
 		in, out := &in.CookieSettings, &out.CookieSettings
-		*out = new(AutomationCookieSettings)
+		*out = new(CookieSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Login != nil {
@@ -764,22 +764,22 @@ func (in *ApplicationSettings) DeepCopyInto(out *ApplicationSettings) {
 	}
 	if in.Mfa != nil {
 		in, out := &in.Mfa, &out.Mfa
-		*out = new(AutomationMfaSettings)
+		*out = new(MfaSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Oauth != nil {
 		in, out := &in.Oauth, &out.Oauth
-		*out = new(AutomationApplicationOAuthSettings)
+		*out = new(ApplicationOAuthSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.RiskAssessment != nil {
 		in, out := &in.RiskAssessment, &out.RiskAssessment
-		*out = new(AutomationRiskAssessmentSettings)
+		*out = new(RiskAssessmentSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Saml != nil {
 		in, out := &in.Saml, &out.Saml
-		*out = new(AutomationApplicationSAMLSettings)
+		*out = new(ApplicationSAMLSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.SecretExpirationSettings != nil {
@@ -789,7 +789,7 @@ func (in *ApplicationSettings) DeepCopyInto(out *ApplicationSettings) {
 	}
 	if in.WorkloadIdentitySettings != nil {
 		in, out := &in.WorkloadIdentitySettings, &out.WorkloadIdentitySettings
-		*out = new(AutomationWorkloadIdentitySettings)
+		*out = new(WorkloadIdentitySettings)
 		(*in).DeepCopyInto(*out)
 	}
 }
@@ -868,7 +868,7 @@ func (in *CookieSettings) DeepCopyInto(out *CookieSettings) {
 	}
 	if in.Session != nil {
 		in, out := &in.Session, &out.Session
-		*out = new(AutomationSessionSettings)
+		*out = new(SessionSettings)
 		(*in).DeepCopyInto(*out)
 	}
 }
@@ -923,7 +923,7 @@ func (in *CrossAppAccessSettings) DeepCopyInto(out *CrossAppAccessSettings) {
 	}
 	if in.ResourceServers != nil {
 		in, out := &in.ResourceServers, &out.ResourceServers
-		*out = make([]AutomationCrossAppAccessResourceServer, len(*in))
+		*out = make([]CrossAppAccessResourceServer, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -1020,7 +1020,7 @@ func (in *FactorSettings) DeepCopyInto(out *FactorSettings) {
 	*out = *in
 	if in.ApplicationFactors != nil {
 		in, out := &in.ApplicationFactors, &out.ApplicationFactors
-		*out = make([]AutomationApplicationFactorSettings, len(*in))
+		*out = make([]ApplicationFactorSettings, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -1172,22 +1172,22 @@ func (in *MfaSettings) DeepCopyInto(out *MfaSettings) {
 	}
 	if in.Challenge != nil {
 		in, out := &in.Challenge, &out.Challenge
-		*out = new(AutomationChallengeSettings)
+		*out = new(ChallengeSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Enroll != nil {
 		in, out := &in.Enroll, &out.Enroll
-		*out = new(AutomationEnrollSettings)
+		*out = new(EnrollSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Enrollment != nil {
 		in, out := &in.Enrollment, &out.Enrollment
-		*out = new(AutomationEnrollmentSettings)
+		*out = new(EnrollmentSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Factor != nil {
 		in, out := &in.Factor, &out.Factor
-		*out = new(AutomationFactorSettings)
+		*out = new(FactorSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.LoginRule != nil {
@@ -1197,12 +1197,12 @@ func (in *MfaSettings) DeepCopyInto(out *MfaSettings) {
 	}
 	if in.RememberDevice != nil {
 		in, out := &in.RememberDevice, &out.RememberDevice
-		*out = new(AutomationRememberDeviceSettings)
+		*out = new(RememberDeviceSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.StepUpAuthentication != nil {
 		in, out := &in.StepUpAuthentication, &out.StepUpAuthentication
-		*out = new(AutomationStepUpAuthenticationSettings)
+		*out = new(StepUpAuthenticationSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.StepUpAuthenticationRule != nil {
@@ -1262,7 +1262,7 @@ func (in *RiskAssessmentSettings) DeepCopyInto(out *RiskAssessmentSettings) {
 	*out = *in
 	if in.DeviceAssessment != nil {
 		in, out := &in.DeviceAssessment, &out.DeviceAssessment
-		*out = new(AutomationAssessmentSettings)
+		*out = new(AssessmentSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Enabled != nil {
@@ -1272,12 +1272,12 @@ func (in *RiskAssessmentSettings) DeepCopyInto(out *RiskAssessmentSettings) {
 	}
 	if in.GeoVelocityAssessment != nil {
 		in, out := &in.GeoVelocityAssessment, &out.GeoVelocityAssessment
-		*out = new(AutomationAssessmentSettings)
+		*out = new(AssessmentSettings)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.IpReputationAssessment != nil {
 		in, out := &in.IpReputationAssessment, &out.IpReputationAssessment
-		*out = new(AutomationAssessmentSettings)
+		*out = new(AssessmentSettings)
 		(*in).DeepCopyInto(*out)
 	}
 }

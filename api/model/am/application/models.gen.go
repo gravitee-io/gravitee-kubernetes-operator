@@ -8,27 +8,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
-// ApplicationLightweightJwtSettings Restricts the JWT access token and the ID token returned to the client to the reserved protocol claims and the allowlisted claims.
-type ApplicationLightweightJwtSettings struct {
-	// AllowedAccessTokenClaims Claim names kept in the access and refresh tokens in addition to the reserved claims. A listed claim is kept only if AM issues it. Names must be unique, must not have leading or trailing whitespace and must not contain control characters.
-	// +kubebuilder:validation:Optional
-	// +listType=set
-	AllowedAccessTokenClaims []string `json:"allowedAccessTokenClaims,omitempty"`
-
-	// AllowedIdTokenClaims Claim names kept in the ID token in addition to the reserved claims. A listed claim is kept only if AM issues it. Names must be unique, must not have leading or trailing whitespace and must not contain control characters.
-	// +kubebuilder:validation:Optional
-	// +listType=set
-	AllowedIdTokenClaims []string `json:"allowedIdTokenClaims,omitempty"`
-
-	// Enabled Whether Lightweight JWT is enabled.
-	// +kubebuilder:validation:Optional
-	// Defaults to false.
-	Enabled *bool `json:"enabled,omitempty"`
-}
-
-// AutomationAccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior.
-type AutomationAccountSettings = AccountSettings
-
 // AccountSettings User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior.
 type AccountSettings struct {
 	// AccountBlockedDuration Duration, in seconds, for which the account remains blocked after too many failed login attempts.
@@ -147,9 +126,6 @@ type AccountSettings struct {
 	SendVerifyRegistrationAccountEmail *bool `json:"sendVerifyRegistrationAccountEmail,omitempty"`
 }
 
-// AutomationAdvancedSettings Advanced application settings.
-type AutomationAdvancedSettings = AdvancedSettings
-
 // AdvancedSettings Advanced application settings.
 type AdvancedSettings struct {
 	// FlowsInherited Whether the domain flows are executed for this application in addition to its own flows.
@@ -162,11 +138,6 @@ type AdvancedSettings struct {
 	// Defaults to false.
 	SkipConsent *bool `json:"skipConsent,omitempty"`
 }
-
-// AutomationApplication An application (OAuth 2.0 / OIDC client) managed under a domain by the Automation API. The key field is the stable, immutable identity used for idempotent create-or-update.
-// +kubebuilder:validation:XValidation:rule="!has(oldSelf.clientId) || (has(self.clientId) && self.clientId == oldSelf.clientId)",message="clientId is immutable once set"
-// +kubebuilder:validation:XValidation:rule="has(self.certificate) != has(self.certificateRef)",message="exactly one of certificate or certificateRef must be set"
-type AutomationApplication = Application
 
 // Application An application (OAuth 2.0 / OIDC client) managed under a domain by the Automation API. The key field is the stable, immutable identity used for idempotent create-or-update.
 // +kubebuilder:validation:XValidation:rule="!has(oldSelf.clientId) || (has(self.clientId) && self.clientId == oldSelf.clientId)",message="clientId is immutable once set"
@@ -203,7 +174,7 @@ type Application struct {
 
 	// IdentityProviders Identity providers users can authenticate with on this application.
 	// +kubebuilder:validation:Optional
-	IdentityProviders []AutomationApplicationIdentityProvider `json:"identityProviders,omitempty"`
+	IdentityProviders []ApplicationIdentityProvider `json:"identityProviders,omitempty"`
 
 	// Kind Agent persona. Required when type is agent, rejected otherwise.
 	// +kubebuilder:validation:Optional
@@ -221,7 +192,7 @@ type Application struct {
 	Name string `json:"name"`
 
 	// Settings Settings of the application. The login, account and cookieSettings blocks, when omitted, are inherited from the domain; any other omitted block is unset.
-	Settings *AutomationApplicationSettings `json:"settings,omitempty"`
+	Settings *ApplicationSettings `json:"settings,omitempty"`
 
 	// Template Whether the application is a registration template for dynamic client registration rather than an active application.
 	// +kubebuilder:validation:Optional
@@ -234,9 +205,6 @@ type Application struct {
 	Type string `json:"type"`
 }
 
-// AutomationApplicationFactorSettings A factor available to the application.
-type AutomationApplicationFactorSettings = ApplicationFactorSettings
-
 // ApplicationFactorSettings A factor available to the application.
 type ApplicationFactorSettings struct {
 	// Id The factor, as id:<uuid> (factors have no Automation API endpoint).
@@ -247,10 +215,6 @@ type ApplicationFactorSettings struct {
 	// +kubebuilder:validation:Optional
 	SelectionRule *string `json:"selectionRule,omitempty"`
 }
-
-// AutomationApplicationIdentityProvider An identity provider users can authenticate with on this application.
-// +kubebuilder:validation:XValidation:rule="has(self.identity) != has(self.identityRef)",message="exactly one of identity or identityRef must be set"
-type AutomationApplicationIdentityProvider = ApplicationIdentityProvider
 
 // ApplicationIdentityProvider An identity provider users can authenticate with on this application.
 // +kubebuilder:validation:XValidation:rule="has(self.identity) != has(self.identityRef)",message="exactly one of identity or identityRef must be set"
@@ -274,8 +238,23 @@ type ApplicationIdentityProvider struct {
 	SelectionRule *string `json:"selectionRule,omitempty"`
 }
 
-// AutomationApplicationOAuthSettings OAuth 2.0 and OpenID Connect settings of the application. Fields described as computed are filled in by AM when omitted. tokenExchangeOAuthSettings, when omitted, is inherited from the domain.
-type AutomationApplicationOAuthSettings = ApplicationOAuthSettings
+// ApplicationLightweightJwtSettings Restricts the JWT access token and the ID token returned to the client to the reserved protocol claims and the allowlisted claims.
+type ApplicationLightweightJwtSettings struct {
+	// AllowedAccessTokenClaims Claim names kept in the access and refresh tokens in addition to the reserved claims. A listed claim is kept only if AM issues it. Names must be unique, must not have leading or trailing whitespace and must not contain control characters.
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	AllowedAccessTokenClaims []string `json:"allowedAccessTokenClaims,omitempty"`
+
+	// AllowedIdTokenClaims Claim names kept in the ID token in addition to the reserved claims. A listed claim is kept only if AM issues it. Names must be unique, must not have leading or trailing whitespace and must not contain control characters.
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	AllowedIdTokenClaims []string `json:"allowedIdTokenClaims,omitempty"`
+
+	// Enabled Whether Lightweight JWT is enabled.
+	// +kubebuilder:validation:Optional
+	// Defaults to false.
+	Enabled *bool `json:"enabled,omitempty"`
+}
 
 // ApplicationOAuthSettings OAuth 2.0 and OpenID Connect settings of the application. Fields described as computed are filled in by AM when omitted. tokenExchangeOAuthSettings, when omitted, is inherited from the domain.
 type ApplicationOAuthSettings struct {
@@ -305,7 +284,7 @@ type ApplicationOAuthSettings struct {
 	Contacts []string `json:"contacts,omitempty"`
 
 	// CrossAppAccessSettings Resource servers this application may request an ID-JAG for.
-	CrossAppAccessSettings *AutomationCrossAppAccessSettings `json:"crossAppAccessSettings,omitempty"`
+	CrossAppAccessSettings *CrossAppAccessSettings `json:"crossAppAccessSettings,omitempty"`
 
 	// DefaultACRvalues Default requested Authentication Context Class Reference values.
 	// +kubebuilder:validation:Optional
@@ -434,7 +413,7 @@ type ApplicationOAuthSettings struct {
 
 	// ScopeSettings Scopes the application can request. Each scope must exist in the domain, otherwise the request is rejected with 400. Resource server applications always get the uma_protection scope.
 	// +kubebuilder:validation:Optional
-	ScopeSettings []AutomationScopeSettings `json:"scopeSettings,omitempty"`
+	ScopeSettings []ScopeSettings `json:"scopeSettings,omitempty"`
 
 	// SectorIdentifierUri URL, using the https scheme, used to compute pairwise subject identifiers.
 	// +kubebuilder:validation:Optional
@@ -481,7 +460,7 @@ type ApplicationOAuthSettings struct {
 
 	// TokenCustomClaims Custom claims added to the issued tokens.
 	// +kubebuilder:validation:Optional
-	TokenCustomClaims []AutomationTokenClaim `json:"tokenCustomClaims,omitempty"`
+	TokenCustomClaims []TokenClaim `json:"tokenCustomClaims,omitempty"`
 
 	// TokenEndpointAuthMethod Client authentication method at the token endpoint: client_secret_basic, client_secret_post, client_secret_jwt, private_key_jwt, tls_client_auth, self_signed_tls_client_auth or none. Computed when omitted: client_secret_basic on creation, none for browser and native applications created without grantTypes, per kind for agents (user_embedded none; hosted_delegated and autonomous private_key_jwt).
 	// +kubebuilder:validation:Optional
@@ -500,7 +479,7 @@ type ApplicationOAuthSettings struct {
 
 	// UserinfoCustomClaims Custom claims added to the UserInfo responses.
 	// +kubebuilder:validation:Optional
-	UserinfoCustomClaims []AutomationUserInfoClaim `json:"userinfoCustomClaims,omitempty"`
+	UserinfoCustomClaims []UserInfoClaim `json:"userinfoCustomClaims,omitempty"`
 
 	// UserinfoEncryptedResponseAlg JWE alg algorithm encrypting the UserInfo responses.
 	// +kubebuilder:validation:Optional
@@ -515,14 +494,11 @@ type ApplicationOAuthSettings struct {
 	UserinfoSignedResponseAlg *string `json:"userinfoSignedResponseAlg,omitempty"`
 }
 
-// AutomationApplicationSAMLSettings Settings of the application acting as a SAML 2.0 service provider (SP).
-type AutomationApplicationSAMLSettings = ApplicationSAMLSettings
-
 // ApplicationSAMLSettings Settings of the application acting as a SAML 2.0 service provider (SP).
 type ApplicationSAMLSettings struct {
 	// AssertionAttributes Custom attributes of the SAML assertion. When not empty, they replace the default attribute set.
 	// +kubebuilder:validation:Optional
-	AssertionAttributes []AutomationSamlAssertionAttribute `json:"assertionAttributes,omitempty"`
+	AssertionAttributes []SamlAssertionAttribute `json:"assertionAttributes,omitempty"`
 
 	// AssertionValiditySeconds Validity, in seconds, of the issued assertion. When absent, the IdP default applies. Used when includeAssertionConditions is true.
 	// +kubebuilder:validation:Optional
@@ -594,44 +570,38 @@ type ApplicationSAMLSettings struct {
 	WantResponseSigned *bool `json:"wantResponseSigned,omitempty"`
 }
 
-// AutomationApplicationSettings Settings of the application. The login, account and cookieSettings blocks, when omitted, are inherited from the domain; any other omitted block is unset.
-type AutomationApplicationSettings = ApplicationSettings
-
 // ApplicationSettings Settings of the application. The login, account and cookieSettings blocks, when omitted, are inherited from the domain; any other omitted block is unset.
 type ApplicationSettings struct {
 	// Account User account settings for the domain: brute-force protection, registration, password reset, remember-me, and MFA challenge behavior.
-	Account *AutomationAccountSettings `json:"account,omitempty"`
+	Account *AccountSettings `json:"account,omitempty"`
 
 	// Advanced Advanced application settings.
-	Advanced *AutomationAdvancedSettings `json:"advanced,omitempty"`
+	Advanced *AdvancedSettings `json:"advanced,omitempty"`
 
 	// CookieSettings Session cookie settings of the application.
-	CookieSettings *AutomationCookieSettings `json:"cookieSettings,omitempty"`
+	CookieSettings *CookieSettings `json:"cookieSettings,omitempty"`
 
 	// Login Configuration of the domain's login flow and the features offered on the sign-in page.
 	Login *LoginSettings `json:"login,omitempty"`
 
 	// Mfa Multi-factor authentication settings of the application.
-	Mfa *AutomationMfaSettings `json:"mfa,omitempty"`
+	Mfa *MfaSettings `json:"mfa,omitempty"`
 
 	// Oauth OAuth 2.0 and OpenID Connect settings of the application. Fields described as computed are filled in by AM when omitted. tokenExchangeOAuthSettings, when omitted, is inherited from the domain.
-	Oauth *AutomationApplicationOAuthSettings `json:"oauth,omitempty"`
+	Oauth *ApplicationOAuthSettings `json:"oauth,omitempty"`
 
 	// RiskAssessment Risk assessment of the authentication attempts, used by risk-based MFA. Effective only with the Enterprise Edition risk assessment plugin.
-	RiskAssessment *AutomationRiskAssessmentSettings `json:"riskAssessment,omitempty"`
+	RiskAssessment *RiskAssessmentSettings `json:"riskAssessment,omitempty"`
 
 	// Saml Settings of the application acting as a SAML 2.0 service provider (SP).
-	Saml *AutomationApplicationSAMLSettings `json:"saml,omitempty"`
+	Saml *ApplicationSAMLSettings `json:"saml,omitempty"`
 
 	// SecretExpirationSettings Controls whether client secrets in the domain expire and after how long.
 	SecretExpirationSettings *SecretExpirationSettings `json:"secretExpirationSettings,omitempty"`
 
 	// WorkloadIdentitySettings SPIFFE workload identity the application authenticates with (JWT-SVID client authentication).
-	WorkloadIdentitySettings *AutomationWorkloadIdentitySettings `json:"workloadIdentitySettings,omitempty"`
+	WorkloadIdentitySettings *WorkloadIdentitySettings `json:"workloadIdentitySettings,omitempty"`
 }
-
-// AutomationAssessmentSettings Settings of one risk assessment.
-type AutomationAssessmentSettings = AssessmentSettings
 
 // AssessmentSettings Settings of one risk assessment.
 type AssessmentSettings struct {
@@ -644,9 +614,6 @@ type AssessmentSettings struct {
 	// +kubebuilder:validation:Optional
 	Thresholds *utils.GenericStringMap `json:"thresholds,omitempty"`
 }
-
-// AutomationChallengeSettings When users are challenged for a second factor.
-type AutomationChallengeSettings = ChallengeSettings
 
 // ChallengeSettings When users are challenged for a second factor.
 type ChallengeSettings struct {
@@ -665,9 +632,6 @@ type ChallengeSettings struct {
 	Type *string `json:"type,omitempty"`
 }
 
-// AutomationCookieSettings Session cookie settings of the application.
-type AutomationCookieSettings = CookieSettings
-
 // CookieSettings Session cookie settings of the application.
 type CookieSettings struct {
 	// Inherited Whether the cookie settings are inherited from the domain. When true, the other fields are ignored.
@@ -676,11 +640,8 @@ type CookieSettings struct {
 	Inherited *bool `json:"inherited,omitempty"`
 
 	// Session Session cookie settings.
-	Session *AutomationSessionSettings `json:"session,omitempty"`
+	Session *SessionSettings `json:"session,omitempty"`
 }
-
-// AutomationCrossAppAccessResourceServer A resource server this application may request an ID-JAG for.
-type AutomationCrossAppAccessResourceServer = CrossAppAccessResourceServer
 
 // CrossAppAccessResourceServer A resource server this application may request an ID-JAG for.
 type CrossAppAccessResourceServer struct {
@@ -698,9 +659,6 @@ type CrossAppAccessResourceServer struct {
 	TrustDomainId *string `json:"trustDomainId,omitempty"`
 }
 
-// AutomationCrossAppAccessSettings Resource servers this application may request an ID-JAG for.
-type AutomationCrossAppAccessSettings = CrossAppAccessSettings
-
 // CrossAppAccessSettings Resource servers this application may request an ID-JAG for.
 type CrossAppAccessSettings struct {
 	// Enabled Whether this application participates in Cross App Access.
@@ -710,11 +668,8 @@ type CrossAppAccessSettings struct {
 
 	// ResourceServers Resource servers this application may reach, one entry per resource server.
 	// +kubebuilder:validation:Optional
-	ResourceServers []AutomationCrossAppAccessResourceServer `json:"resourceServers,omitempty"`
+	ResourceServers []CrossAppAccessResourceServer `json:"resourceServers,omitempty"`
 }
-
-// AutomationEnrollSettings When users are asked to enroll a factor.
-type AutomationEnrollSettings = EnrollSettings
 
 // EnrollSettings When users are asked to enroll a factor.
 type EnrollSettings struct {
@@ -750,9 +705,6 @@ type EnrollSettings struct {
 	Type *string `json:"type,omitempty"`
 }
 
-// AutomationEnrollmentSettings Deprecated: use enroll. Legacy enrollment settings.
-type AutomationEnrollmentSettings = EnrollmentSettings
-
 // EnrollmentSettings Deprecated: use enroll. Legacy enrollment settings.
 //
 // Deprecated: this type has been marked as deprecated upstream, but no `x-deprecated-reason` was set
@@ -766,218 +718,15 @@ type EnrollmentSettings struct {
 	SkipTimeSeconds *int64 `json:"skipTimeSeconds,omitempty"`
 }
 
-// AutomationFactorSettings Factors offered to the users of the application.
-type AutomationFactorSettings = FactorSettings
-
 // FactorSettings Factors offered to the users of the application.
 type FactorSettings struct {
 	// ApplicationFactors Factors available to the application.
 	// +kubebuilder:validation:Optional
-	ApplicationFactors []AutomationApplicationFactorSettings `json:"applicationFactors,omitempty"`
+	ApplicationFactors []ApplicationFactorSettings `json:"applicationFactors,omitempty"`
 
 	// DefaultFactorId Factor proposed first, as id:<uuid> (factors have no Automation API endpoint).
 	// +kubebuilder:validation:Optional
 	DefaultFactorId *string `json:"defaultFactorId,omitempty"`
-}
-
-// AutomationMfaSettings Multi-factor authentication settings of the application.
-type AutomationMfaSettings = MfaSettings
-
-// MfaSettings Multi-factor authentication settings of the application.
-type MfaSettings struct {
-	// AdaptiveAuthenticationRule Deprecated: use challenge.challengeRule. Expression Language rule of the adaptive authentication.
-	// +kubebuilder:validation:Optional
-	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
-	AdaptiveAuthenticationRule *string `json:"adaptiveAuthenticationRule,omitempty"`
-
-	// Challenge When users are challenged for a second factor.
-	Challenge *AutomationChallengeSettings `json:"challenge,omitempty"`
-
-	// Enroll When users are asked to enroll a factor.
-	Enroll *AutomationEnrollSettings `json:"enroll,omitempty"`
-
-	// Enrollment Deprecated: use enroll. Legacy enrollment settings.
-	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
-	Enrollment *AutomationEnrollmentSettings `json:"enrollment,omitempty"`
-
-	// Factor Factors offered to the users of the application.
-	Factor *AutomationFactorSettings `json:"factor,omitempty"`
-
-	// LoginRule Legacy MFA login rule, kept for round-trip fidelity. Use challenge and enroll to configure when MFA applies.
-	// +kubebuilder:validation:Optional
-	LoginRule *string `json:"loginRule,omitempty"`
-
-	// RememberDevice Remember device: skips the MFA challenge on a device already used to authenticate.
-	RememberDevice *AutomationRememberDeviceSettings `json:"rememberDevice,omitempty"`
-
-	// StepUpAuthentication Step-up authentication: asks for MFA again during a session when its rule matches.
-	StepUpAuthentication *AutomationStepUpAuthenticationSettings `json:"stepUpAuthentication,omitempty"`
-
-	// StepUpAuthenticationRule Deprecated: use stepUpAuthentication. Expression Language rule triggering step-up authentication.
-	// +kubebuilder:validation:Optional
-	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
-	StepUpAuthenticationRule *string `json:"stepUpAuthenticationRule,omitempty"`
-}
-
-// AutomationRememberDeviceSettings Remember device: skips the MFA challenge on a device already used to authenticate.
-type AutomationRememberDeviceSettings = RememberDeviceSettings
-
-// RememberDeviceSettings Remember device: skips the MFA challenge on a device already used to authenticate.
-type RememberDeviceSettings struct {
-	// Active Whether remember device is enabled.
-	// +kubebuilder:validation:Optional
-	// Defaults to false.
-	Active *bool `json:"active,omitempty"`
-
-	// DeviceIdentifierId Device identifier used to recognize devices, as id:<uuid> (device identifiers have no Automation API endpoint).
-	// +kubebuilder:validation:Optional
-	DeviceIdentifierId *string `json:"deviceIdentifierId,omitempty"`
-
-	// ExpirationTimeSeconds Duration, in seconds, for which a device is remembered.
-	// +kubebuilder:validation:Optional
-	ExpirationTimeSeconds *int64 `json:"expirationTimeSeconds,omitempty"`
-
-	// SkipRememberDevice Only used with a conditional MFA challenge: when true, remember device is not applied when the MFA condition evaluates to no risk.
-	// +kubebuilder:validation:Optional
-	// Defaults to false.
-	SkipRememberDevice *bool `json:"skipRememberDevice,omitempty"`
-}
-
-// AutomationRiskAssessmentSettings Risk assessment of the authentication attempts, used by risk-based MFA. Effective only with the Enterprise Edition risk assessment plugin.
-type AutomationRiskAssessmentSettings = RiskAssessmentSettings
-
-// RiskAssessmentSettings Risk assessment of the authentication attempts, used by risk-based MFA. Effective only with the Enterprise Edition risk assessment plugin.
-type RiskAssessmentSettings struct {
-	// DeviceAssessment Settings of one risk assessment.
-	DeviceAssessment *AutomationAssessmentSettings `json:"deviceAssessment,omitempty"`
-
-	// Enabled Whether risk assessment is enabled.
-	// +kubebuilder:validation:Optional
-	// Defaults to false.
-	Enabled *bool `json:"enabled,omitempty"`
-
-	// GeoVelocityAssessment Settings of one risk assessment.
-	GeoVelocityAssessment *AutomationAssessmentSettings `json:"geoVelocityAssessment,omitempty"`
-
-	// IpReputationAssessment Settings of one risk assessment.
-	IpReputationAssessment *AutomationAssessmentSettings `json:"ipReputationAssessment,omitempty"`
-}
-
-// AutomationSamlAssertionAttribute A custom attribute of the SAML assertion.
-type AutomationSamlAssertionAttribute = SamlAssertionAttribute
-
-// SamlAssertionAttribute A custom attribute of the SAML assertion.
-type SamlAssertionAttribute struct {
-	// Name Name of the SAML attribute.
-	// +kubebuilder:validation:Required
-	Name string `json:"name"`
-
-	// Value Expression Language expression resolved to the attribute value.
-	// +kubebuilder:validation:Required
-	Value string `json:"value"`
-}
-
-// AutomationScopeSettings A scope the application can request, with its settings.
-type AutomationScopeSettings = ScopeSettings
-
-// ScopeSettings A scope the application can request, with its settings.
-type ScopeSettings struct {
-	// DefaultScope Whether the scope is granted when the authorization request carries no scope parameter.
-	// +kubebuilder:validation:Optional
-	// Defaults to false.
-	DefaultScope *bool `json:"defaultScope,omitempty"`
-
-	// RequiredScope Whether the user cannot deselect this scope on the consent page.
-	// +kubebuilder:validation:Optional
-	// Defaults to false.
-	RequiredScope *bool `json:"requiredScope,omitempty"`
-
-	// Scope Key of a scope of the domain. The scope must exist, otherwise the request is rejected with 400.
-	// +kubebuilder:validation:Required
-	Scope string `json:"scope"`
-
-	// ScopeApproval Duration, in seconds, of the user consent to this scope. When absent, the domain scope setting applies.
-	// +kubebuilder:validation:Optional
-	ScopeApproval *int32 `json:"scopeApproval,omitempty"`
-}
-
-// AutomationSessionSettings Session cookie settings.
-type AutomationSessionSettings = SessionSettings
-
-// SessionSettings Session cookie settings.
-type SessionSettings struct {
-	// Persistent Whether the session cookie is persistent (kept after the browser is closed) rather than a session cookie.
-	// +kubebuilder:validation:Optional
-	// Defaults to false.
-	Persistent *bool `json:"persistent,omitempty"`
-}
-
-// AutomationStepUpAuthenticationSettings Step-up authentication: asks for MFA again during a session when its rule matches.
-type AutomationStepUpAuthenticationSettings = StepUpAuthenticationSettings
-
-// StepUpAuthenticationSettings Step-up authentication: asks for MFA again during a session when its rule matches.
-type StepUpAuthenticationSettings struct {
-	// Active Whether step-up authentication is enabled.
-	// +kubebuilder:validation:Optional
-	// Defaults to false.
-	Active *bool `json:"active,omitempty"`
-
-	// StepUpAuthenticationRule Expression Language rule: when it evaluates to true, the user is challenged again.
-	// +kubebuilder:validation:Optional
-	StepUpAuthenticationRule *string `json:"stepUpAuthenticationRule,omitempty"`
-}
-
-// AutomationTokenClaim A custom claim added to the tokens issued to the application.
-type AutomationTokenClaim = TokenClaim
-
-// TokenClaim A custom claim added to the tokens issued to the application.
-type TokenClaim struct {
-	// ClaimName Name of the claim.
-	// +kubebuilder:validation:Required
-	ClaimName string `json:"claimName"`
-
-	// ClaimValue Value of the claim: a literal or an Expression Language expression.
-	// +kubebuilder:validation:Required
-	ClaimValue string `json:"claimValue"`
-
-	// TokenType Token the claim is added to.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=access_token;refresh_token;id_token;id_jag
-	TokenType string `json:"tokenType"`
-}
-
-// AutomationUserInfoClaim A custom claim added to the UserInfo responses of the application.
-type AutomationUserInfoClaim = UserInfoClaim
-
-// UserInfoClaim A custom claim added to the UserInfo responses of the application.
-type UserInfoClaim struct {
-	// ClaimName Name of the claim.
-	// +kubebuilder:validation:Required
-	ClaimName string `json:"claimName"`
-
-	// ClaimValue Value of the claim: a literal or an Expression Language expression.
-	// +kubebuilder:validation:Required
-	ClaimValue string `json:"claimValue"`
-}
-
-// AutomationWorkloadIdentitySettings SPIFFE workload identity the application authenticates with (JWT-SVID client authentication).
-type AutomationWorkloadIdentitySettings = WorkloadIdentitySettings
-
-// WorkloadIdentitySettings SPIFFE workload identity the application authenticates with (JWT-SVID client authentication).
-type WorkloadIdentitySettings struct {
-	// Subject SPIFFE ID expected in the SVID sub claim, interpreted per subjectMatchMode.
-	// +kubebuilder:validation:Optional
-	Subject *string `json:"subject,omitempty"`
-
-	// SubjectMatchMode How subject is matched against the SVID sub claim. exact (default) requires equality. prefix is only allowed for hosted_delegated or autonomous agent applications: subject must end with / and the SVID sub is accepted when it starts with subject; the full SVID SPIFFE ID then becomes the per-instance act.sub in minted tokens.
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum=exact;prefix
-	// Defaults to exact.
-	SubjectMatchMode *string `json:"subjectMatchMode,omitempty"`
-
-	// TrustDomain Name of the trusted domain this application authenticates against.
-	// +kubebuilder:validation:Optional
-	TrustDomain *string `json:"trustDomain,omitempty"`
 }
 
 // FormField A single field shown on a user-facing form, such as registration.
@@ -1070,6 +819,112 @@ type LoginSettings struct {
 	ResetPasswordOnExpiration *bool `json:"resetPasswordOnExpiration,omitempty"`
 }
 
+// MfaSettings Multi-factor authentication settings of the application.
+type MfaSettings struct {
+	// AdaptiveAuthenticationRule Deprecated: use challenge.challengeRule. Expression Language rule of the adaptive authentication.
+	// +kubebuilder:validation:Optional
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+	AdaptiveAuthenticationRule *string `json:"adaptiveAuthenticationRule,omitempty"`
+
+	// Challenge When users are challenged for a second factor.
+	Challenge *ChallengeSettings `json:"challenge,omitempty"`
+
+	// Enroll When users are asked to enroll a factor.
+	Enroll *EnrollSettings `json:"enroll,omitempty"`
+
+	// Enrollment Deprecated: use enroll. Legacy enrollment settings.
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+	Enrollment *EnrollmentSettings `json:"enrollment,omitempty"`
+
+	// Factor Factors offered to the users of the application.
+	Factor *FactorSettings `json:"factor,omitempty"`
+
+	// LoginRule Legacy MFA login rule, kept for round-trip fidelity. Use challenge and enroll to configure when MFA applies.
+	// +kubebuilder:validation:Optional
+	LoginRule *string `json:"loginRule,omitempty"`
+
+	// RememberDevice Remember device: skips the MFA challenge on a device already used to authenticate.
+	RememberDevice *RememberDeviceSettings `json:"rememberDevice,omitempty"`
+
+	// StepUpAuthentication Step-up authentication: asks for MFA again during a session when its rule matches.
+	StepUpAuthentication *StepUpAuthenticationSettings `json:"stepUpAuthentication,omitempty"`
+
+	// StepUpAuthenticationRule Deprecated: use stepUpAuthentication. Expression Language rule triggering step-up authentication.
+	// +kubebuilder:validation:Optional
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+	StepUpAuthenticationRule *string `json:"stepUpAuthenticationRule,omitempty"`
+}
+
+// RememberDeviceSettings Remember device: skips the MFA challenge on a device already used to authenticate.
+type RememberDeviceSettings struct {
+	// Active Whether remember device is enabled.
+	// +kubebuilder:validation:Optional
+	// Defaults to false.
+	Active *bool `json:"active,omitempty"`
+
+	// DeviceIdentifierId Device identifier used to recognize devices, as id:<uuid> (device identifiers have no Automation API endpoint).
+	// +kubebuilder:validation:Optional
+	DeviceIdentifierId *string `json:"deviceIdentifierId,omitempty"`
+
+	// ExpirationTimeSeconds Duration, in seconds, for which a device is remembered.
+	// +kubebuilder:validation:Optional
+	ExpirationTimeSeconds *int64 `json:"expirationTimeSeconds,omitempty"`
+
+	// SkipRememberDevice Only used with a conditional MFA challenge: when true, remember device is not applied when the MFA condition evaluates to no risk.
+	// +kubebuilder:validation:Optional
+	// Defaults to false.
+	SkipRememberDevice *bool `json:"skipRememberDevice,omitempty"`
+}
+
+// RiskAssessmentSettings Risk assessment of the authentication attempts, used by risk-based MFA. Effective only with the Enterprise Edition risk assessment plugin.
+type RiskAssessmentSettings struct {
+	// DeviceAssessment Settings of one risk assessment.
+	DeviceAssessment *AssessmentSettings `json:"deviceAssessment,omitempty"`
+
+	// Enabled Whether risk assessment is enabled.
+	// +kubebuilder:validation:Optional
+	// Defaults to false.
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// GeoVelocityAssessment Settings of one risk assessment.
+	GeoVelocityAssessment *AssessmentSettings `json:"geoVelocityAssessment,omitempty"`
+
+	// IpReputationAssessment Settings of one risk assessment.
+	IpReputationAssessment *AssessmentSettings `json:"ipReputationAssessment,omitempty"`
+}
+
+// SamlAssertionAttribute A custom attribute of the SAML assertion.
+type SamlAssertionAttribute struct {
+	// Name Name of the SAML attribute.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Value Expression Language expression resolved to the attribute value.
+	// +kubebuilder:validation:Required
+	Value string `json:"value"`
+}
+
+// ScopeSettings A scope the application can request, with its settings.
+type ScopeSettings struct {
+	// DefaultScope Whether the scope is granted when the authorization request carries no scope parameter.
+	// +kubebuilder:validation:Optional
+	// Defaults to false.
+	DefaultScope *bool `json:"defaultScope,omitempty"`
+
+	// RequiredScope Whether the user cannot deselect this scope on the consent page.
+	// +kubebuilder:validation:Optional
+	// Defaults to false.
+	RequiredScope *bool `json:"requiredScope,omitempty"`
+
+	// Scope Key of a scope of the domain. The scope must exist, otherwise the request is rejected with 400.
+	// +kubebuilder:validation:Required
+	Scope string `json:"scope"`
+
+	// ScopeApproval Duration, in seconds, of the user consent to this scope. When absent, the domain scope setting applies.
+	// +kubebuilder:validation:Optional
+	ScopeApproval *int32 `json:"scopeApproval,omitempty"`
+}
+
 // SecretExpirationSettings Controls whether client secrets in the domain expire and after how long.
 type SecretExpirationSettings struct {
 	// Enabled Whether client-secret expiration is enabled.
@@ -1079,6 +934,42 @@ type SecretExpirationSettings struct {
 	// ExpiryTimeSeconds Lifetime, in seconds, of a client secret before it expires.
 	// +kubebuilder:validation:Optional
 	ExpiryTimeSeconds *int64 `json:"expiryTimeSeconds,omitempty"`
+}
+
+// SessionSettings Session cookie settings.
+type SessionSettings struct {
+	// Persistent Whether the session cookie is persistent (kept after the browser is closed) rather than a session cookie.
+	// +kubebuilder:validation:Optional
+	// Defaults to false.
+	Persistent *bool `json:"persistent,omitempty"`
+}
+
+// StepUpAuthenticationSettings Step-up authentication: asks for MFA again during a session when its rule matches.
+type StepUpAuthenticationSettings struct {
+	// Active Whether step-up authentication is enabled.
+	// +kubebuilder:validation:Optional
+	// Defaults to false.
+	Active *bool `json:"active,omitempty"`
+
+	// StepUpAuthenticationRule Expression Language rule: when it evaluates to true, the user is challenged again.
+	// +kubebuilder:validation:Optional
+	StepUpAuthenticationRule *string `json:"stepUpAuthenticationRule,omitempty"`
+}
+
+// TokenClaim A custom claim added to the tokens issued to the application.
+type TokenClaim struct {
+	// ClaimName Name of the claim.
+	// +kubebuilder:validation:Required
+	ClaimName string `json:"claimName"`
+
+	// ClaimValue Value of the claim: a literal or an Expression Language expression.
+	// +kubebuilder:validation:Required
+	ClaimValue string `json:"claimValue"`
+
+	// TokenType Token the claim is added to.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=access_token;refresh_token;id_token;id_jag
+	TokenType string `json:"tokenType"`
 }
 
 // TokenExchangeOAuthSettings OAuth-specific token-exchange behavior, such as how scopes are handled, with optional inheritance from domain defaults.
@@ -1093,4 +984,32 @@ type TokenExchangeOAuthSettings struct {
 	// +kubebuilder:validation:Enum=downscoping;permissive
 	// Defaults to downscoping.
 	ScopeHandling *string `json:"scopeHandling,omitempty"`
+}
+
+// UserInfoClaim A custom claim added to the UserInfo responses of the application.
+type UserInfoClaim struct {
+	// ClaimName Name of the claim.
+	// +kubebuilder:validation:Required
+	ClaimName string `json:"claimName"`
+
+	// ClaimValue Value of the claim: a literal or an Expression Language expression.
+	// +kubebuilder:validation:Required
+	ClaimValue string `json:"claimValue"`
+}
+
+// WorkloadIdentitySettings SPIFFE workload identity the application authenticates with (JWT-SVID client authentication).
+type WorkloadIdentitySettings struct {
+	// Subject SPIFFE ID expected in the SVID sub claim, interpreted per subjectMatchMode.
+	// +kubebuilder:validation:Optional
+	Subject *string `json:"subject,omitempty"`
+
+	// SubjectMatchMode How subject is matched against the SVID sub claim. exact (default) requires equality. prefix is only allowed for hosted_delegated or autonomous agent applications: subject must end with / and the SVID sub is accepted when it starts with subject; the full SVID SPIFFE ID then becomes the per-instance act.sub in minted tokens.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=exact;prefix
+	// Defaults to exact.
+	SubjectMatchMode *string `json:"subjectMatchMode,omitempty"`
+
+	// TrustDomain Name of the trusted domain this application authenticates against.
+	// +kubebuilder:validation:Optional
+	TrustDomain *string `json:"trustDomain,omitempty"`
 }
