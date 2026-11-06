@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -41,8 +42,9 @@ var (
 //
 // A missing, deleted or not yet synced AuthzPdp is a state to wait out (see IsAuthzPdpPending):
 // callers report ResolvedRefs=False and requeue, and admission warns and skips the dry run. An
-// AuthzPdp synced through another ManagementContext is an error that no event resolves: its
-// routing scope does not exist in the dependent's environment.
+// AuthzPdp of another ManagementContext is an error that no event resolves, whatever its state:
+// its routing scope does not exist in the dependent's environment. It is checked first, so a
+// deleted or unsynced AuthzPdp of another context is refused rather than waited for.
 func ResolveAuthzPdpRoutingScope(
 	ctx context.Context,
 	dependent core.ContextAwareObject,
@@ -61,6 +63,13 @@ func ResolveAuthzPdpRoutingScope(
 		return "", fmt.Errorf("unable to read authz pdp [%s]: %w", ref.String(), err)
 	}
 
+	if want, got := ContextOf(dependent), ContextOf(pdp); want != got {
+		return "", fmt.Errorf(
+			"authz pdp [%s] belongs to management context [%s], not [%s]",
+			ref.String(), got, want,
+		)
+	}
+
 	if pdp.IsBeingDeleted() {
 		return "", fmt.Errorf("%w: [%s] is being deleted", ErrAuthzPdpNotFound, ref.String())
 	}
@@ -69,14 +78,24 @@ func ResolveAuthzPdpRoutingScope(
 		return "", fmt.Errorf("%w: [%s] has no routing scope yet", ErrAuthzPdpNotSynced, ref.String())
 	}
 
-	if want, got := ContextOf(dependent), ContextOf(pdp); want != got {
-		return "", fmt.Errorf(
-			"authz pdp [%s] is synced through management context [%s], not [%s]",
-			ref.String(), got, want,
-		)
-	}
-
 	return pdp.Status.RoutingScope, nil
+}
+
+// ResolveAuthzTarget returns what target sends on the wire: an empty string without a target, the
+// scope as written, or the routing scope its pdpRef resolves to (see ResolveAuthzPdpRoutingScope,
+// whose errors it returns unchanged).
+func ResolveAuthzTarget(
+	ctx context.Context,
+	dependent core.ContextAwareObject,
+	target *authzpdp.Target,
+) (string, error) {
+	if target == nil {
+		return "", nil
+	}
+	if target.PdpRef == nil {
+		return target.Scope, nil
+	}
+	return ResolveAuthzPdpRoutingScope(ctx, dependent, *target.PdpRef)
 }
 
 // IsAuthzPdpPending tells whether err is a pdpRef to wait out: an AuthzPdp missing, being

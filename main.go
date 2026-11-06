@@ -60,6 +60,7 @@ import (
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	authzPdpAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzpdp"
+	authzSchemaAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzschema"
 	catalogMcpServerAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/catalogmcpserver"
 	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
 	documentationAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
@@ -88,6 +89,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
@@ -448,6 +450,16 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for authz pdps")
 		os.Exit(1)
 	}
+
+	if err := (&authzschema.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("authzschema-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzSchemaList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for authz schemas")
+		os.Exit(1)
+	}
 }
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
@@ -770,6 +782,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (authzPdpAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (authzSchemaAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

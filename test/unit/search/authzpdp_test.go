@@ -25,15 +25,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/mcpproxy"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
-// No authz kind targets an AuthzPdp yet. McpProxy and its catalog server index stand in for a
-// dependent kind and its pdpRef index: both key a resource by the namespaced name it references.
 var _ = Describe("FindAuthzPdpDependents", func() {
 	const ns = "orders"
 
@@ -43,71 +42,83 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 		ObjectMeta: metav1.ObjectMeta{Name: "orders-eu", Namespace: ns},
 		Spec:       v1alpha1.AuthzPdpSpec{Context: &devCtx},
 	}
-	standIn := search.AuthzPdpDependent{
-		Kind:    "McpProxy",
-		Field:   search.McpProxyCatalogMcpServerField,
-		NewList: func() client.ObjectList { return &v1alpha1.McpProxyList{} },
-	}
-	targetingThrough := func(name string, target, contextRef refs.NamespacedName) *v1alpha1.McpProxy {
-		return &v1alpha1.McpProxy{
+	schemaThrough := func(name string, target *authzpdp.Target, contextRef refs.NamespacedName) *v1alpha1.AuthzSchema {
+		return &v1alpha1.AuthzSchema{
 			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
-			Spec: v1alpha1.McpProxySpec{
+			Spec: v1alpha1.AuthzSchemaSpec{
 				Context: &contextRef,
-				Type: mcpproxy.Type{
-					Mode: mcpproxy.ModeStudio,
-					Studio: &mcpproxy.Studio{Tools: []mcpproxy.StudioTool{
-						{ServerRef: target, Tool: "check"},
-					}},
-				},
+				Type:    authzschema.Type{Name: name, Target: target, Schema: "entity User;"},
 			},
 		}
 	}
-	targeting := func(name string, target refs.NamespacedName) *v1alpha1.McpProxy {
-		return targetingThrough(name, target, devCtx)
+	targeting := func(name string, ref refs.NamespacedName) *v1alpha1.AuthzSchema {
+		return schemaThrough(name, &authzpdp.Target{PdpRef: &ref}, devCtx)
 	}
+	// cluster indexes schemas with the function InitCache registers, as the manager's cache does.
 	cluster := func(objects ...client.Object) {
 		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
 		Expect(search.InitCache(context.Background(), c)).To(Succeed())
 		scheme := runtime.NewScheme()
 		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
-		field := search.McpProxyCatalogMcpServerField.String()
+		field := search.AuthzSchemaAuthzPdpField.String()
 		k8s.RegisterClient(fake.NewClientBuilder().
 			WithScheme(scheme).
 			WithObjects(objects...).
-			WithIndex(&v1alpha1.McpProxy{}, field, c.indexers[field]).
+			WithIndex(&v1alpha1.AuthzSchema{}, field, c.indexers[field]).
 			Build())
 	}
 
-	It("names the resources that target the PDP, sorted", func() {
+	It("registers AuthzSchema as a kind that targets an AuthzPdp", func() {
+		kinds := search.AuthzPdpDependents()
+
+		Expect(kinds).To(HaveLen(1))
+		Expect(kinds[0].Kind).To(Equal("AuthzSchema"))
+		Expect(kinds[0].Field).To(Equal(search.AuthzSchemaAuthzPdpField))
+		Expect(kinds[0].NewList()).To(BeAssignableToTypeOf(&v1alpha1.AuthzSchemaList{}))
+	})
+
+	It("names the schemas whose pdpRef names the PDP, sorted, its namespace defaulted", func() {
 		cluster(
 			targeting("orders-schema", refs.NamespacedName{Name: "orders-eu"}),
 			targeting("billing-schema", refs.NamespacedName{Name: "billing"}),
 			targeting("audit-schema", pdpRef),
 		)
 
-		found, err := search.FindAuthzPdpDependents(context.Background(), pdp,
-			[]search.AuthzPdpDependent{standIn})
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp, search.AuthzPdpDependents())
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(found).To(Equal([]search.Dependents{{
-			Kind:  "McpProxy",
+			Kind:  "AuthzSchema",
 			Names: []string{"orders/audit-schema", "orders/orders-schema"},
 		}}))
 	})
 
-	It("leaves out a resource synced through another context, whose pdpRef does not resolve", func() {
+	It("leaves out a scope target, even one naming the PDP's routing scope, and a schema without target", func() {
 		cluster(
 			targeting("orders-schema", pdpRef),
-			targetingThrough("prod-schema", pdpRef, refs.NamespacedName{Name: "prod-ctx"}),
-			targetingThrough("same-ctx-schema", pdpRef, refs.NamespacedName{Name: "dev-ctx", Namespace: ns}),
+			schemaThrough("scoped-schema", &authzpdp.Target{Scope: "orders@eu"}, devCtx),
+			schemaThrough("untargeted-schema", nil, devCtx),
 		)
 
-		found, err := search.FindAuthzPdpDependents(context.Background(), pdp,
-			[]search.AuthzPdpDependent{standIn})
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp, search.AuthzPdpDependents())
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(found).To(Equal([]search.Dependents{{Kind: "AuthzSchema", Names: []string{"orders/orders-schema"}}}))
+	})
+
+	It("leaves out a schema synced through another context, whose pdpRef does not resolve", func() {
+		cluster(
+			targeting("orders-schema", pdpRef),
+			schemaThrough("prod-schema", &authzpdp.Target{PdpRef: &pdpRef}, refs.NamespacedName{Name: "prod-ctx"}),
+			schemaThrough("same-ctx-schema", &authzpdp.Target{PdpRef: &pdpRef},
+				refs.NamespacedName{Name: "dev-ctx", Namespace: ns}),
+		)
+
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp, search.AuthzPdpDependents())
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(found).To(Equal([]search.Dependents{{
-			Kind:  "McpProxy",
+			Kind:  "AuthzSchema",
 			Names: []string{"orders/orders-schema", "orders/same-ctx-schema"},
 		}}))
 	})
@@ -115,8 +126,7 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 	It("leaves out a kind with no resource targeting the PDP", func() {
 		cluster(targeting("billing-schema", refs.NamespacedName{Name: "billing"}))
 
-		found, err := search.FindAuthzPdpDependents(context.Background(), pdp,
-			[]search.AuthzPdpDependent{standIn})
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp, search.AuthzPdpDependents())
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(found).To(BeEmpty())
@@ -125,7 +135,7 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 	It("refuses a kind whose resources carry no contextRef", func() {
 		scheme := runtime.NewScheme()
 		Expect(corev1.AddToScheme(scheme)).To(Succeed())
-		field := search.McpProxyCatalogMcpServerField.String()
+		field := search.AuthzSchemaAuthzPdpField.String()
 		k8s.RegisterClient(fake.NewClientBuilder().
 			WithScheme(scheme).
 			WithObjects(&corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "orders-schema", Namespace: ns}}).
@@ -133,7 +143,7 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 			Build())
 		configMaps := search.AuthzPdpDependent{
 			Kind:    "ConfigMap",
-			Field:   search.McpProxyCatalogMcpServerField,
+			Field:   search.AuthzSchemaAuthzPdpField,
 			NewList: func() client.ObjectList { return &corev1.ConfigMapList{} },
 		}
 
@@ -141,14 +151,5 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 			[]search.AuthzPdpDependent{configMaps})
 
 		Expect(err).To(MatchError(ContainSubstring("unable to read the contextRef of ConfigMap")))
-	})
-
-	It("finds nothing while no kind is registered", func() {
-		cluster(targeting("orders-schema", pdpRef))
-
-		found, err := search.FindAuthzPdpDependents(context.Background(), pdp, search.AuthzPdpDependents())
-
-		Expect(err).ToNot(HaveOccurred())
-		Expect(found).To(BeEmpty())
 	})
 })
