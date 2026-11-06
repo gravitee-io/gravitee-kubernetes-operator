@@ -220,3 +220,82 @@ var _ = Describe("Resolving an authz target", func() {
 		Expect(dynamic.IsAuthzPdpPending(err)).To(BeTrue())
 	})
 })
+
+var _ = Describe("Resolving a list of authz targets", func() {
+	const ns = "travel"
+	ctx := context.Background()
+	devCtx := refs.NamespacedName{Name: "dev-ctx"}
+
+	entity := &v1alpha1.AuthzEntity{
+		ObjectMeta: metav1.ObjectMeta{Name: "agents-group", Namespace: ns},
+		Spec:       v1alpha1.AuthzEntitySpec{Context: &devCtx},
+	}
+	pdp := func(name string, contextRef refs.NamespacedName, scope string) *v1alpha1.AuthzPdp {
+		return &v1alpha1.AuthzPdp{
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+			Spec:       v1alpha1.AuthzPdpSpec{Context: &contextRef, Type: authzpdp.Type{Name: name, TargetPdpID: name}},
+			Status:     v1alpha1.AuthzPdpStatus{Status: authzpdp.Status{RoutingScope: scope}},
+		}
+	}
+	cluster := func(objects ...client.Object) {
+		scheme := runtime.NewScheme()
+		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
+		k8s.RegisterClient(fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...).Build())
+	}
+	byRef := func(name string) authzpdp.Target {
+		return authzpdp.Target{PdpRef: &refs.NamespacedName{Name: name}}
+	}
+
+	It("sends no targets for a resource without any", func() {
+		cluster()
+
+		targets, err := dynamic.ResolveAuthzTargets(ctx, entity, nil)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(targets).To(BeNil())
+	})
+
+	It("sends scopes as written, in their order", func() {
+		cluster()
+
+		targets, err := dynamic.ResolveAuthzTargets(ctx, entity,
+			[]authzpdp.Target{{Scope: "orders@us"}, {Scope: "default"}})
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(targets).To(Equal([]string{"orders@us", "default"}))
+	})
+
+	It("resolves pdpRefs among scopes, keeping the declaration order", func() {
+		cluster(pdp("orders-eu", devCtx, "orders@eu"))
+
+		targets, err := dynamic.ResolveAuthzTargets(ctx, entity,
+			[]authzpdp.Target{{Scope: "default"}, byRef("orders-eu"), {Scope: "*"}})
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(targets).To(Equal([]string{"default", "orders@eu", "*"}))
+	})
+
+	It("waits for every pending AuthzPdp, naming each", func() {
+		cluster(pdp("orders-us", devCtx, ""))
+
+		_, err := dynamic.ResolveAuthzTargets(ctx, entity,
+			[]authzpdp.Target{byRef("orders-eu"), {Scope: "default"}, byRef("orders-us")})
+
+		Expect(dynamic.IsAuthzPdpPending(err)).To(BeTrue())
+		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotFound))
+		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotSynced))
+		Expect(err).To(MatchError("authz pdp not found: [travel/orders-eu]; " +
+			"authz pdp not synced: [travel/orders-us] has no routing scope yet"))
+	})
+
+	It("returns an AuthzPdp of another context, even beside a pending one", func() {
+		cluster(pdp("orders-us", refs.NamespacedName{Name: "prod-ctx"}, "orders@us"))
+
+		_, err := dynamic.ResolveAuthzTargets(ctx, entity,
+			[]authzpdp.Target{byRef("orders-eu"), byRef("orders-us")})
+
+		Expect(dynamic.IsAuthzPdpPending(err)).To(BeFalse())
+		Expect(err).To(MatchError(
+			"authz pdp [travel/orders-us] belongs to management context [travel/prod-ctx], not [travel/dev-ctx]"))
+	})
+})
