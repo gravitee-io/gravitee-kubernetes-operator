@@ -1,0 +1,8 @@
+{
+  "metadata": {"name": "drift-minimal", "namespace": "default"},
+  "spec": {
+    "contextRef": {"name": "dev-ctx"},
+    "name": "Drift minimal",
+    "schema": "entity User;\n"
+  }
+}
