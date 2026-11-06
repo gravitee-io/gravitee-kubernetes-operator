@@ -76,6 +76,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoAuthzSchemas(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -421,6 +425,29 @@ func assertNoAuthzPdps(ctx context.Context, ctxRef refs.NamespacedName, contextN
 				"kubectl get authzpdps.gravitee.io "+
 				kubectlCommand,
 			contextName, len(pdps.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func assertNoAuthzSchemas(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	schemas := &v1alpha1.AuthzSchemaList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		AuthzSchemaContextField,
+		ctxRef,
+		schemas,
+	); err != nil {
+		return err
+	}
+
+	if len(schemas.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d authz schemas are relying on this context. "+
+				reviewMessage+
+				"kubectl get authzschemas.gravitee.io "+
+				kubectlCommand,
+			contextName, len(schemas.Items), contextName,
 		)
 	}
 	return nil
