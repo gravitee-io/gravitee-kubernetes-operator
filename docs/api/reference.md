@@ -6,6 +6,7 @@
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/authzentity](#graviteeiov1alpha1authzentity)
 - [gravitee.io/v1alpha1/authzpdp](#graviteeiov1alpha1authzpdp)
+- [gravitee.io/v1alpha1/authzpolicy](#graviteeiov1alpha1authzpolicy)
 - [gravitee.io/v1alpha1/authzschema](#graviteeiov1alpha1authzschema)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
 - [gravitee.io/v1alpha1/catalogmcpserver](#graviteeiov1alpha1catalogmcpserver)
@@ -53,6 +54,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [Application](#application)
 - [AuthzEntity](#authzentity)
 - [AuthzPdp](#authzpdp)
+- [AuthzPolicy](#authzpolicy)
 - [AuthzSchema](#authzschema)
 - [CatalogMcpServer](#catalogmcpserver)
 - [Dictionary](#dictionary)
@@ -858,6 +860,78 @@ _Appears in:_
 | `wellKnownPath` _string_ | The AuthZEN discovery path of the endpoint. Absent without an endpoint, or when another API<br />already held that path when the endpoint was created. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzPdp.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the PDP gateway has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### AuthzPolicy
+
+
+
+AuthzPolicy is a GAPL policy of Gravitee Authorization Management as a Kubernetes resource,
+deployed to the PDP gateways its targets name. One policy of the environment holds an entityId:
+an id another policy holds is refused, naming that policy.
+
+A target names an AuthzPdp through pdpRef, or a routing scope no AuthzPdp declares through
+scope. A pdpRef waits on ResolvedRefs=False until the AuthzPdp has a routing scope.
+
+Every apply deploys the policy: a policy disabled in the Console is deployed again by the next
+spec change, with a warning that says so. The ManagementContext's token needs the
+ENVIRONMENT_AUTHZ_PDP UPDATE permission to apply a policy and to delete a deployed one: a delete
+refused for it leaves the resource Terminating, its Accepted condition naming the reason.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AuthzPolicy` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AuthzPolicySpec](#authzpolicyspec)_ |  |  |  |
+| `status` _[AuthzPolicyStatus](#authzpolicystatus)_ |  |  |  |
+
+
+#### AuthzPolicySpec
+
+
+
+AuthzPolicySpec defines the desired state of an AuthzPolicy.
+
+
+
+_Appears in:_
+- [AuthzPolicy](#authzpolicy)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityId` _string_ | Id of the policy in the engine and in the Console: policy. then one or more segments<br />separated by a dot. One policy of the environment holds it: an id another policy holds is<br />refused, naming that policy. Immutable. |  | MaxLength: 255 <br />Pattern: `^policy(\.[A-Za-z0-9_:-]+)+$` <br />Required: \{\} <br /> |
+| `name` _string_ | Display name of the policy in the Console. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `policyType` _string_ | What the policy governs, as the Console groups policies. Immutable. |  | Enum: [MCP AGENT MODEL API CUSTOM] <br />Required: \{\} <br /> |
+| `policyText` _string_ | The GAPL text, one or more permit and forbid statements, replaced whole on every apply. A<br />text that does not parse, or a template (?principal, ?resource), is refused. |  | MinLength: 1 <br />Required: \{\} <br /> |
+| `targets` _[Target](#target) array_ | The PDP gateways the policy is deployed to. Empty, it is deployed to the default engine on<br />every gateway, the only engine an MCP proxy asks. Deleting the AuthzPdp a pdpRef names removes<br />its scope here; the platform refuses that delete when the policy would be left with no target. |  | Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this policy is created<br />in. Immutable: the operator deletes a policy through its current context only, so a policy<br />moved to another one would stay on the first platform, deployed to its targets.<br />The message is static: refs.NamespacedName strings carry no maxLength, so a message naming<br />both values exceeds the API server's CEL cost budget and the CRD is refused. Required, so the<br />rule also holds without the admission webhook: CEL compares the field only when both sides have it. |  | Required: \{\} <br /> |
+
+
+#### AuthzPolicyStatus
+
+
+
+AuthzPolicyStatus defines the observed state of an AuthzPolicy.
+
+
+
+_Appears in:_
+- [AuthzPolicy](#authzpolicy)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the policy in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this policy by, derived from the resource<br />namespace and name. |  | Optional: \{\} <br /> |
+| `policyStatus` _string_ | Whether the PDP gateways enforce the policy, as the last apply answered: DEPLOYED after every<br />accepted apply. A disable in the Console is not reflected until the next apply, which deploys<br />the policy again. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzPolicy.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the policy has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### AuthzSchema
@@ -2618,7 +2692,9 @@ routing scope no AuthzPdp declares (default, a gateway created in the Console).
 
 _Appears in:_
 - [AuthzEntitySpec](#authzentityspec)
+- [AuthzPolicySpec](#authzpolicyspec)
 - [AuthzSchemaSpec](#authzschemaspec)
+- [Type](#type)
 - [Type](#type)
 - [Type](#type)
 
@@ -2647,6 +2723,67 @@ _Appears in:_
 | `tag` _string_ | Sharding tag of the gateways that run the PDP; omit it for an untagged gateway. Immutable. |  | MaxLength: 64 <br />Optional: \{\} <br />Pattern: `^-?[a-z0-9]+(-[a-z0-9]+)*$` <br /> |
 | `strict` _boolean_ | Whether the engine checks policies and entities against its schema. Defaults to false.<br />Shared by every PDP of the targetPdpId: on create it must agree with the registered ones, and<br />a change aligns them all with a warning naming each. Two AuthzPdp resources of one<br />targetPdpId that disagree overwrite each other on every reconcile. |  | Optional: \{\} <br /> |
 | `endpoint` _[Endpoint](#endpoint)_ | The AuthZEN endpoint of the PDP. Omitted, the PDP has none, and an existing one is deleted. |  | Optional: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/authzpolicy
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [AuthzPolicyStatus](#authzpolicystatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the policy in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this policy by, derived from the resource<br />namespace and name. |  | Optional: \{\} <br /> |
+| `policyStatus` _string_ | Whether the PDP gateways enforce the policy, as the last apply answered: DEPLOYED after every<br />accepted apply. A disable in the Console is not reflected until the next apply, which deploys<br />the policy again. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzPolicy.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the policy has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of an AuthzPolicy resource: one GAPL policy of Authorization
+Management and the PDP gateways it is deployed to.
+
+
+
+_Appears in:_
+- [AuthzPolicySpec](#authzpolicyspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityId` _string_ | Id of the policy in the engine and in the Console: policy. then one or more segments<br />separated by a dot. One policy of the environment holds it: an id another policy holds is<br />refused, naming that policy. Immutable. |  | MaxLength: 255 <br />Pattern: `^policy(\.[A-Za-z0-9_:-]+)+$` <br />Required: \{\} <br /> |
+| `name` _string_ | Display name of the policy in the Console. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `policyType` _string_ | What the policy governs, as the Console groups policies. Immutable. |  | Enum: [MCP AGENT MODEL API CUSTOM] <br />Required: \{\} <br /> |
+| `policyText` _string_ | The GAPL text, one or more permit and forbid statements, replaced whole on every apply. A<br />text that does not parse, or a template (?principal, ?resource), is refused. |  | MinLength: 1 <br />Required: \{\} <br /> |
+| `targets` _[Target](#target) array_ | The PDP gateways the policy is deployed to. Empty, it is deployed to the default engine on<br />every gateway, the only engine an MCP proxy asks. Deleting the AuthzPdp a pdpRef names removes<br />its scope here; the platform refuses that delete when the policy would be left with no target. |  | Optional: \{\} <br /> |
 
 
 
@@ -6448,6 +6585,7 @@ _Appears in:_
 - [Auth](#auth)
 - [AuthzEntitySpec](#authzentityspec)
 - [AuthzPdpSpec](#authzpdpspec)
+- [AuthzPolicySpec](#authzpolicyspec)
 - [AuthzSchemaSpec](#authzschemaspec)
 - [CatalogMcpServerSpec](#catalogmcpserverspec)
 - [Certificate](#certificate)
@@ -6656,6 +6794,7 @@ _Appears in:_
 - [ApplicationStatus](#applicationstatus)
 - [AuthzEntityStatus](#authzentitystatus)
 - [AuthzPdpStatus](#authzpdpstatus)
+- [AuthzPolicyStatus](#authzpolicystatus)
 - [AuthzSchemaStatus](#authzschemastatus)
 - [AutomationStatus](#automationstatus)
 - [CatalogMcpServerStatus](#catalogmcpserverstatus)
@@ -6668,6 +6807,7 @@ _Appears in:_
 - [PortalStatus](#portalstatus)
 - [PortalThemeStatus](#portalthemestatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)

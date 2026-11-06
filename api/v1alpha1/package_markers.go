@@ -44,6 +44,7 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&Application{}, &ApplicationList{},
 		&AuthzEntity{}, &AuthzEntityList{},
 		&AuthzPdp{}, &AuthzPdpList{},
+		&AuthzPolicy{}, &AuthzPolicyList{},
 		&AuthzSchema{}, &AuthzSchemaList{},
 		&CatalogMcpServer{}, &CatalogMcpServerList{},
 		&McpProxy{}, &McpProxyList{},
