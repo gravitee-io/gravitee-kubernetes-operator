@@ -73,7 +73,8 @@ func ValidateDriftWithContext[T client.Object](
 	oldCopy := oldCRD.DeepCopyObject().(T)
 	newCopy := newCRD.DeepCopyObject().(T)
 
-	if !CompileTemplates(ctx, oldCopy, newCopy, errs) {
+	secrets, ok := CompileTemplates(ctx, oldCopy, newCopy, errs)
+	if !ok {
 		return errs
 	}
 
@@ -103,6 +104,6 @@ func ValidateDriftWithContext[T client.Object](
 		return errs
 	}
 
-	CompareWithRemote(newCopy, mapDTO(oldCopy), mapDTO(newCopy), remoteObject, errs)
+	CompareWithRemote(newCopy, mapDTO(oldCopy), mapDTO(newCopy), remoteObject, secrets, errs)
 	return errs
 }

@@ -46,6 +46,7 @@ type ctxKey string
 
 const objectIDCtxKey = ctxKey("gravitee.io/templating/objectId")
 const objectAnnotationKey = ctxKey("gravitee.io/templating/annotationKey")
+const resolvedSecretsKey = ctxKey("gravitee.io/templating/resolvedSecrets")
 const totalReferenceKey = "gravitee.io/references"
 
 func Compile(ctx context.Context, obj client.Object, updateObjectMetadata bool) error {
@@ -65,6 +66,20 @@ func Compile(ctx context.Context, obj client.Object, updateObjectMetadata bool) 
 		obj,
 		updateObjectMetadata,
 	)
+}
+
+// CompileRecordingSecrets compiles obj in place like Compile without updating the referenced
+// Secrets and ConfigMaps, and returns the values its secret templates resolved to.
+func CompileRecordingSecrets(ctx context.Context, obj client.Object) ([]string, error) {
+	secrets := new([]string)
+	err := Compile(context.WithValue(ctx, resolvedSecretsKey, secrets), obj, false)
+	return *secrets, err
+}
+
+func recordSecret(ctx context.Context, value string) {
+	if secrets, ok := ctx.Value(resolvedSecretsKey).(*[]string); ok {
+		*secrets = append(*secrets, value)
+	}
 }
 
 func doCompile(ctx context.Context, obj client.Object, updateObjectMetadata bool) error {
@@ -240,6 +255,7 @@ func resolveSecret(ctx context.Context, ns, name string, updateObjectMetadata bo
 	if len(v) == 0 {
 		return "", fmt.Errorf("key [%s] not found in secret [%s/%s]", key, ns, name)
 	}
+	recordSecret(ctx, string(v))
 
 	if !updateObjectMetadata {
 		return string(v), nil
