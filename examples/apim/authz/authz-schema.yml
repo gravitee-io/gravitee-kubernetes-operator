@@ -28,5 +28,6 @@ spec:
       name: orders-eu
   schema: |
     entity User in Group;
+    entity Group in [Group] { department?: String };
     entity Hotel;
     action read appliesTo { principal: User, resource: Hotel };

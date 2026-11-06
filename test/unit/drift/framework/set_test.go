@@ -63,6 +63,28 @@ type setOfStructs struct {
 	Values []MultipleWithPtr `json:"values" drift:"set"`
 }
 
+// mirrors AuthzEntityParentDTO: every field a scalar, none tagged
+type flatItem struct {
+	EntityType string `json:"entityType"`
+	EntityID   string `json:"entityId"`
+}
+
+type setOfFlatStructs struct {
+	Parents []flatItem `json:"parents,omitempty" drift:"set"`
+}
+
+type setOfFlatStructPointers struct {
+	Parents []*flatItem `json:"parents,omitempty" drift:"set"`
+}
+
+type taggedItem struct {
+	Name string `json:"name" drift:"case-insensitive"`
+}
+
+type setOfTaggedStructs struct {
+	Values []taggedItem `json:"values" drift:"set"`
+}
+
 type setOnString struct {
 	Value string `json:"value" drift:"set"`
 }
@@ -210,7 +232,40 @@ var _ = Describe("set equivalence", func() {
            + "x"`)
 	})
 
-	It("compares non-scalar items by position", func() {
+	Describe("flat struct items", func() {
+		agents := flatItem{EntityType: "Group", EntityID: "agents"}
+		travel := flatItem{EntityType: "Group", EntityID: "travel"}
+
+		It("compares them by value, regardless of order", func() {
+			expectNoDrift(detect(setOfFlatStructs{[]flatItem{agents, travel}}, setOfFlatStructs{[]flatItem{travel, agents}}))
+		})
+
+		It("reads an absent list as an empty set", func() {
+			expectNoDrift(detect(setOfFlatStructs{}, setOfFlatStructs{[]flatItem{}}))
+		})
+
+		It("compares pointer items by the value they point to", func() {
+			expectNoDrift(detect(setOfFlatStructPointers{[]*flatItem{&agents, &travel}},
+				setOfFlatStructPointers{[]*flatItem{&travel, &agents}}))
+		})
+
+		It("names the item missing on the remote", func() {
+			expectDrift(detect(setOfFlatStructs{[]flatItem{agents, travel}}, setOfFlatStructs{[]flatItem{agents}}),
+				`parents: (1 unchanged)
+  + {"entityType":"Group","entityId":"travel"}
+                                               !=
+                                                  <unchanged>`)
+		})
+
+		It("compares items holding a tagged field by position, so the tag still applies", func() {
+			crd := setOfTaggedStructs{[]taggedItem{{Name: "a"}, {Name: "b"}}}
+			expectNoDrift(detect(crd, setOfTaggedStructs{[]taggedItem{{Name: "A"}, {Name: "B"}}}))
+			reordered := detect(crd, setOfTaggedStructs{[]taggedItem{{Name: "b"}, {Name: "a"}}})
+			Expect(reordered.DriftDetected()).To(BeTrue())
+		})
+	})
+
+	It("compares items holding pointers by position", func() {
 		crd := setOfStructs{[]MultipleWithPtr{{Name: new("a")}, {Name: new("b")}}}
 		remote := setOfStructs{[]MultipleWithPtr{{Name: new("b")}, {Name: new("a")}}}
 		result := detect(crd, remote)

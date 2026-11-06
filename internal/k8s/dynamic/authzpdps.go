@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -96,6 +97,50 @@ func ResolveAuthzTarget(
 		return target.Scope, nil
 	}
 	return ResolveAuthzPdpRoutingScope(ctx, dependent, *target.PdpRef)
+}
+
+// ResolveAuthzTargets returns what targets send on the wire, in declaration order: each scope as
+// written, each pdpRef resolved by ResolveAuthzPdpRoutingScope. A target that fails for another
+// reason than a pending AuthzPdp is returned at once. The pending ones are returned together, as
+// one error that IsAuthzPdpPending recognizes and whose message names each of them. No targets
+// resolve to nil.
+func ResolveAuthzTargets(
+	ctx context.Context,
+	dependent core.ContextAwareObject,
+	targets []authzpdp.Target,
+) ([]string, error) {
+	var resolved []string
+	var pending pendingTargets
+	for i := range targets {
+		scope, err := ResolveAuthzTarget(ctx, dependent, &targets[i])
+		switch {
+		case err == nil:
+			resolved = append(resolved, scope)
+		case IsAuthzPdpPending(err):
+			pending = append(pending, err)
+		default:
+			return nil, err
+		}
+	}
+	if len(pending) > 0 {
+		return nil, pending
+	}
+	return resolved, nil
+}
+
+// pendingTargets holds the pdpRefs of a list of targets still to wait out, in declaration order.
+type pendingTargets []error
+
+func (p pendingTargets) Error() string {
+	messages := make([]string, 0, len(p))
+	for _, err := range p {
+		messages = append(messages, err.Error())
+	}
+	return strings.Join(messages, "; ")
+}
+
+func (p pendingTargets) Unwrap() []error {
+	return p
 }
 
 // IsAuthzPdpPending tells whether err is a pdpRef to wait out: an AuthzPdp missing, being

@@ -80,6 +80,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoAuthzEntities(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -448,6 +452,29 @@ func assertNoAuthzSchemas(ctx context.Context, ctxRef refs.NamespacedName, conte
 				"kubectl get authzschemas.gravitee.io "+
 				kubectlCommand,
 			contextName, len(schemas.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func assertNoAuthzEntities(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	entities := &v1alpha1.AuthzEntityList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		AuthzEntityContextField,
+		ctxRef,
+		entities,
+	); err != nil {
+		return err
+	}
+
+	if len(entities.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d authz entities are relying on this context. "+
+				reviewMessage+
+				"kubectl get authzentities.gravitee.io "+
+				kubectlCommand,
+			contextName, len(entities.Items), contextName,
 		)
 	}
 	return nil
