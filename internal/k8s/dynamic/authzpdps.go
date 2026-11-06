@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -84,6 +85,23 @@ func ResolveAuthzPdpRoutingScope(
 	}
 
 	return pdp.Status.RoutingScope, nil
+}
+
+// ResolveAuthzTarget returns what target sends on the wire: an empty string without a target, the
+// scope as written, or the routing scope its pdpRef resolves to (see ResolveAuthzPdpRoutingScope,
+// whose errors it returns unchanged).
+func ResolveAuthzTarget(
+	ctx context.Context,
+	dependent core.ContextAwareObject,
+	target *authzpdp.Target,
+) (string, error) {
+	if target == nil {
+		return "", nil
+	}
+	if target.PdpRef == nil {
+		return target.Scope, nil
+	}
+	return ResolveAuthzPdpRoutingScope(ctx, dependent, *target.PdpRef)
 }
 
 // IsAuthzPdpPending tells whether err is a pdpRef to wait out: an AuthzPdp missing, being
