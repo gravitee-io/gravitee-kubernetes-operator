@@ -47,6 +47,7 @@ type APIM struct {
 	McpProxies        *service.McpProxies
 	AuthzPdps         *service.AuthzPdps
 	AuthzSchemas      *service.AuthzSchemas
+	AuthzEntities     *service.AuthzEntities
 	Env               *service.Env
 
 	Context core.ContextModel
@@ -103,6 +104,7 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		McpProxies:        service.NewMcpProxies(c),
 		AuthzPdps:         service.NewAuthzPdps(c),
 		AuthzSchemas:      service.NewAuthzSchemas(c),
+		AuthzEntities:     service.NewAuthzEntities(c),
 		Env:               service.NewEnv(c),
 		Context:           context,
 	}, nil
