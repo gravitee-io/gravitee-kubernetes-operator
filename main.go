@@ -88,6 +88,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/catalogmcpserver"
@@ -458,6 +459,16 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzSchemaList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for authz schemas")
+		os.Exit(1)
+	}
+
+	if err := (&authzentity.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("authzentity-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzEntityList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for authz entities")
 		os.Exit(1)
 	}
 }
