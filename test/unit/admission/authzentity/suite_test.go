@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
@@ -48,26 +49,36 @@ func (c *recordingCache) IndexField(_ context.Context, _ client.Object, field st
 }
 
 // platform records what the APIM stub receives and answers what the running spec sets: 500 unless
-// a spec calls answer.
+// a spec calls answer. A GET, drift detection's read, gets what answerGet sets instead, when set,
+// and is not recorded.
 var platform = &platformStub{}
 
 type platformStub struct {
-	mu     sync.Mutex
-	status int
-	body   string
-	calls  []string
+	mu        sync.Mutex
+	status    int
+	body      string
+	getStatus int
+	getBody   string
+	calls     []string
 }
 
 func (p *platformStub) reset() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.status, p.body, p.calls = http.StatusInternalServerError, "", nil
+	p.getStatus, p.getBody = 0, ""
 }
 
 func (p *platformStub) answer(status int, body string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.status, p.body = status, body
+}
+
+func (p *platformStub) answerGet(status int, body string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.getStatus, p.getBody = status, body
 }
 
 // requests returns the bodies received, one per call.
@@ -81,8 +92,13 @@ func (p *platformStub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.calls = append(p.calls, string(body))
 	w.Header().Set("Content-Type", "application/json")
+	if r.Method == http.MethodGet && p.getStatus != 0 {
+		w.WriteHeader(p.getStatus)
+		_, _ = w.Write([]byte(p.getBody))
+		return
+	}
+	p.calls = append(p.calls, string(body))
 	w.WriteHeader(p.status)
 	_, _ = w.Write([]byte(p.body))
 }
@@ -90,6 +106,8 @@ func (p *platformStub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // The dynamic client resolves ManagementContexts: it answers the dev-ctx context of the travel
 // namespace, pointing at the APIM stub, and 404 for anything else.
 var _ = BeforeSuite(func() {
+	drift.Init()
+
 	apim := httptest.NewServer(platform)
 	DeferCleanup(apim.Close)
 
