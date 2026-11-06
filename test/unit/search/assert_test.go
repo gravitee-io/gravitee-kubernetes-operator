@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -153,5 +154,66 @@ var _ = Describe("AssertNoAMCertificateRef", func() {
 
 			Expect(search.AssertNoAMCertificateRef(context.Background(), domainCert)).To(Succeed())
 		})
+	})
+})
+
+// typedRecordingCache keeps every index InitCache registers with the kind it indexes. Only
+// IndexField is used.
+type typedRecordingCache struct {
+	cache.Cache
+	indexes []typedIndex
+}
+
+type typedIndex struct {
+	obj     client.Object
+	field   string
+	extract client.IndexerFunc
+}
+
+func (c *typedRecordingCache) IndexField(_ context.Context, obj client.Object, field string, f client.IndexerFunc) error {
+	c.indexes = append(c.indexes, typedIndex{obj: obj, field: field, extract: f})
+	return nil
+}
+
+var _ = Describe("AssertNoContextRef", func() {
+	const ns = "ns"
+
+	mCtx := &v1alpha1.ManagementContext{ObjectMeta: metav1.ObjectMeta{Name: "dev-ctx", Namespace: ns}}
+	policy := func(name, contextName string) *v1alpha1.AuthzPolicy {
+		return &v1alpha1.AuthzPolicy{
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+			Spec:       v1alpha1.AuthzPolicySpec{Context: &refs.NamespacedName{Name: contextName}},
+		}
+	}
+	// cluster registers a fake client with every gravitee.io index InitCache registers: the
+	// assertion lists each kind that can reference a context.
+	cluster := func(objects ...client.Object) {
+		c := &typedRecordingCache{}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+		scheme := runtime.NewScheme()
+		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
+		builder := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...)
+		for _, index := range c.indexes {
+			if _, _, err := scheme.ObjectKinds(index.obj); err == nil {
+				builder = builder.WithIndex(index.obj, index.field, index.extract)
+			}
+		}
+		k8s.RegisterClient(builder.Build())
+	}
+
+	It("fails with the number of authz policies that rely on the context", func() {
+		cluster(policy("p1", "dev-ctx"), policy("p2", "other-ctx"), policy("p3", "dev-ctx"))
+
+		err := search.AssertNoContextRef(context.Background(), mCtx)
+
+		Expect(err).To(MatchError(ContainSubstring(
+			"[dev-ctx] cannot be deleted because 2 authz policies are relying on this context")))
+		Expect(err).To(MatchError(ContainSubstring("kubectl get authzpolicies.gravitee.io")))
+	})
+
+	It("succeeds when no authz policy relies on the context", func() {
+		cluster(policy("p1", "other-ctx"))
+
+		Expect(search.AssertNoContextRef(context.Background(), mCtx)).To(Succeed())
 	})
 })

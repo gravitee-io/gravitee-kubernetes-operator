@@ -132,6 +132,21 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
+	// Only a spec change is dry-run: the controller writes its finalizer and annotations on every
+	// reconcile.
+	It("makes no platform call on a metadata-only update whose targets resolve", func() {
+		cluster(newPdp("orders-eu", devCtx, "orders@eu"))
+		oldObj := newPolicy("hotel-booking-read", "policy.hotel-booking-read", byRef("orders-eu"))
+		oldObj.Status.ID = "5f1c"
+		newObj := oldObj.DeepCopy()
+		newObj.Annotations = map[string]string{"gravitee.io/last-spec-hash": "5f1c"}
+
+		_, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
 	It("refuses a pdpRef naming another kind, naming its index", func() {
 		cluster()
 		mcp := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu", Kind: "McpProxy"}}
@@ -257,5 +272,33 @@ var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 
 		Expect(err).To(MatchError(ContainSubstring("drift detected")))
 		Expect(err).To(MatchError(ContainSubstring("forbid(principal, action, resource);")))
+	})
+
+	// Comparing would apply the remote-missing policy, deny here, and refuse the very edit that
+	// unblocks a policy waiting on its AuthzPdp.
+	It("compares nothing for a policy the platform never received", func() {
+		cluster()
+		platform.answerGet(http.StatusNotFound, `{"message":"not found"}`)
+		neverApplied := applied()
+		neverApplied.Status.ID = ""
+
+		_, err := ctrl.ValidateUpdate(ctx, neverApplied, renamed(neverApplied))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(platform.requests()).To(HaveLen(1))
+	})
+
+	// The usual cause is a deleted AuthzPdp, whose scope the platform has already removed from the
+	// policy: comparing the old targets would refuse the edit that retargets it.
+	It("compares nothing while an old pdpRef no longer resolves", func() {
+		cluster()
+		platform.answerGet(http.StatusOK, remote(`forbid(principal, action, resource);`, "DEPLOYED"))
+		retargeted := applied()
+		orphaned := retargeted.DeepCopy()
+		orphaned.Spec.Targets = []authzpdp.Target{byRef("orders-eu")}
+
+		_, err := ctrl.ValidateUpdate(ctx, orphaned, retargeted)
+
+		Expect(err).ToNot(HaveOccurred())
 	})
 })
