@@ -958,3 +958,17 @@ spec:
             description: Latest observed conditions.
             x-descriptors:
               - urn:alm:descriptor:io.kubernetes.conditions
+      # --- AuthzSchema ---
+      - name: authzschemas.gravitee.io
+        version: v1alpha1
+        kind: AuthzSchema
+        displayName: Authz Schema
+        description: >-
+          Declares the GAPL schema document a PDP gateway of Gravitee
+          Authorization Management enforces.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
