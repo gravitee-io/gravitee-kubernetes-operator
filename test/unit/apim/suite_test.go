@@ -17,6 +17,7 @@ package apim_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -33,7 +34,7 @@ func TestAPIM(t *testing.T) {
 }
 
 // refusingContextPath is where the cluster stub serves ManagementContext gravitee/refusing-ctx,
-// whose APIM refuses every PUT with the ownership finding.
+// whose APIM refuses every PUT with the ownership finding of the resource's kind.
 const refusingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/refusing-ctx"
 
 // The dynamic client resolves ManagementContexts and falls back to the ambient kubeconfig, which
@@ -42,6 +43,7 @@ const refusingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/mana
 var _ = BeforeSuite(func() {
 	// The 400 the refusing APIM answers: an entityId another source holds.
 	refusingPlatformBody := `{"errors":{"severe":[` + mustJSON(ownershipFinding) + `]}}`
+	refusingPolicyBody := `{"errors":{"severe":[` + mustJSON(policyOwnershipFinding) + `]}}`
 	platform := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method != http.MethodPut {
@@ -49,6 +51,10 @@ var _ = BeforeSuite(func() {
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
+		if strings.HasSuffix(r.URL.Path, "/authz/policies") {
+			_, _ = w.Write([]byte(refusingPolicyBody))
+			return
+		}
 		_, _ = w.Write([]byte(refusingPlatformBody))
 	}))
 	DeferCleanup(platform.Close)

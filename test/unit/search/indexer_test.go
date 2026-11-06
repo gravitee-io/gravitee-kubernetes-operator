@@ -26,6 +26,7 @@ import (
 	amdomain "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/am/domain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -148,5 +149,37 @@ var _ = Describe("InitCache", func() {
 		Expect(index).ToNot(BeNil())
 		Expect(index(entity)).To(Equal([]string{"ns/dev-ctx/Group/agents", "ns/dev-ctx/Travel::Team/agents"}))
 		Expect(search.AuthzEntityParentKey("ns/dev-ctx", "Group", "agents")).To(Equal("ns/dev-ctx/Group/agents"))
+	})
+
+	It("indexes an AuthzPolicy by its management context, its namespace defaulted", func() {
+		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+
+		policy := &v1alpha1.AuthzPolicy{ObjectMeta: metav1.ObjectMeta{Name: "hotel-booking-read", Namespace: "ns"}}
+		index := c.indexers[search.AuthzPolicyContextField.String()]
+		Expect(index).ToNot(BeNil())
+		Expect(index(policy)).To(BeEmpty())
+
+		policy.Spec.Context = &refs.NamespacedName{Name: "dev-ctx"}
+		Expect(index(policy)).To(ConsistOf("ns/dev-ctx"))
+	})
+
+	It("indexes an AuthzPolicy by each distinct pdpRef it targets, its namespace defaulted", func() {
+		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+
+		policy := &v1alpha1.AuthzPolicy{
+			ObjectMeta: metav1.ObjectMeta{Name: "hotel-booking-read", Namespace: "ns"},
+			Spec: v1alpha1.AuthzPolicySpec{Type: authzpolicy.Type{Targets: []authzpdp.Target{
+				{PdpRef: &refs.NamespacedName{Name: "orders-eu"}},
+				{Scope: "default"},
+				{PdpRef: &refs.NamespacedName{Name: "orders-eu", Namespace: "ns"}},
+				{PdpRef: &refs.NamespacedName{Name: "orders-us", Namespace: "billing"}},
+			}}},
+		}
+
+		index := c.indexers[search.AuthzPolicyAuthzPdpField.String()]
+		Expect(index).ToNot(BeNil())
+		Expect(index(policy)).To(Equal([]string{"ns/orders-eu", "billing/orders-us"}))
 	})
 })

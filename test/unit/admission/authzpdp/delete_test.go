@@ -26,6 +26,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -67,6 +68,17 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 		},
 	}
 
+	policy := &v1alpha1.AuthzPolicy{
+		ObjectMeta: metav1.ObjectMeta{Name: "hotel-booking-read", Namespace: ns},
+		Spec: v1alpha1.AuthzPolicySpec{
+			Context: &devCtx,
+			Type: authzpolicy.Type{
+				EntityID: "policy.hotel-booking-read", Name: "Hotel booking", PolicyType: "API",
+				PolicyText: "permit(principal, action, resource);", Targets: []authzpdp.Target{target},
+			},
+		},
+	}
+
 	// cluster indexes the dependents with the functions InitCache registers, as the manager's
 	// cache does.
 	cluster := func(objects ...client.Object) {
@@ -75,11 +87,13 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 		scheme := runtime.NewScheme()
 		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
 		schemaField, entityField := search.AuthzSchemaAuthzPdpField.String(), search.AuthzEntityAuthzPdpField.String()
+		policyField := search.AuthzPolicyAuthzPdpField.String()
 		k8s.RegisterClient(fake.NewClientBuilder().
 			WithScheme(scheme).
 			WithObjects(objects...).
 			WithIndex(&v1alpha1.AuthzSchema{}, schemaField, c.indexers[schemaField]).
 			WithIndex(&v1alpha1.AuthzEntity{}, entityField, c.indexers[entityField]).
+			WithIndex(&v1alpha1.AuthzPolicy{}, policyField, c.indexers[policyField]).
 			Build())
 	}
 
@@ -105,16 +119,29 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 			"ResolvedRefs=False until its pdpRef names another AuthzPdp. " + refused))
 	})
 
-	It("warns once per kind, the schema first", func() {
-		cluster(schema, entity)
+	It("warns about a policy with the 409 sentence", func() {
+		cluster(policy)
 
 		warnings, err := ctrl.ValidateDelete(ctx, pdp)
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(HaveLen(2))
+		Expect(warnings).To(ConsistOf("authz pdp [travel-team/orders-eu] is still targeted by AuthzPolicy " +
+			"[travel-team/hotel-booking-read]: deleting it removes orders@eu from their targets, and each waits on " +
+			"ResolvedRefs=False until its pdpRef names another AuthzPdp. " + refused))
+	})
+
+	It("warns once per kind, the schema first", func() {
+		cluster(schema, entity, policy)
+
+		warnings, err := ctrl.ValidateDelete(ctx, pdp)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(HaveLen(3))
 		Expect(warnings[0]).To(ContainSubstring("AuthzSchema [travel-team/travel-schema]"))
 		Expect(warnings[0]).ToNot(ContainSubstring("409"))
 		Expect(warnings[1]).To(ContainSubstring("AuthzEntity [travel-team/agents-group]"))
 		Expect(warnings[1]).To(HaveSuffix(refused))
+		Expect(warnings[2]).To(ContainSubstring("AuthzPolicy [travel-team/hotel-booking-read]"))
+		Expect(warnings[2]).To(HaveSuffix(refused))
 	})
 })
