@@ -84,6 +84,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoAuthzPolicies(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -670,5 +674,28 @@ func AssertNoSharedPolicyGroupRef(ctx context.Context, spg *v1alpha1.SharedPolic
 		)
 	}
 
+	return nil
+}
+
+func assertNoAuthzPolicies(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	policies := &v1alpha1.AuthzPolicyList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		AuthzPolicyContextField,
+		ctxRef,
+		policies,
+	); err != nil {
+		return err
+	}
+
+	if len(policies.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d authz policies are relying on this context. "+
+				reviewMessage+
+				"kubectl get authzpolicies.gravitee.io "+
+				kubectlCommand,
+			contextName, len(policies.Items), contextName,
+		)
+	}
 	return nil
 }
