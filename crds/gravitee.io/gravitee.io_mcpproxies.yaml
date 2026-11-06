@@ -897,19 +897,32 @@ spec:
                   description: The lifecycle state the platform observes.
                   type: string
                 tools:
-                  description: The tools a Studio exposes, with their catalog identities.
+                  description: >-
+                    The tools a Studio exposes, in the order of the platform's
+                    state, with their catalog
+
+                    identities and...
                   items:
-                    description: StudioToolStatus is a tool a Studio exposes, with the catalog
-                      identity a policy names.
+                    description: >-
+                      StudioToolStatus is a tool a Studio exposes, with its
+                      catalog identity and the reference a
+
+                      policy...
                     properties:
                       alias:
+                        description: Name the Studio exposes the tool under, when one is declared.
+                        type: string
+                      authPolicyRef:
+                        description: What an AuthzPolicy names the tool by, e.g. MCPTool::"github.
                         type: string
                       entityId:
+                        description: Catalog identity of the tool, e.g. mcp-tool.github.create_issue.
                         type: string
                       server:
                         description: HRID of the catalog server the tool comes from.
                         type: string
                       tool:
+                        description: Runtime name of the tool on its server.
                         type: string
                     type: object
                   type: array

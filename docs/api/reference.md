@@ -1097,7 +1097,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `entityId` _string_ | Stable catalog identity of the server, the name authorization policies reference:<br />lowercase, dot-separated segments, first segment `mcp-server`. Validated, never<br />repaired, and immutable once the server exists. |  | MaxLength: 255 <br />Pattern: `^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
+| `entityId` _string_ | Stable catalog identity of the server: lowercase, dot-separated segments, first segment<br />`mcp-server`. Validated, never repaired, and immutable once the server exists. A policy names<br />the server by status.authPolicyRef, not by this id. |  | MaxLength: 255 <br />Pattern: `^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
 | `description` _string_ |  |  | Optional: \{\} <br /> |
 | `connection` _[Connection](#connection)_ |  |  | Required: \{\} <br /> |
 | `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this server is registered in. |  |  |
@@ -1120,6 +1120,7 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
 | `hrid` _string_ | The human-readable ID the platform addresses this server by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `authPolicyRef` _string_ | What an AuthzPolicy names the server by, derived from entityId: its engine type and the slug of<br />entityId, e.g. MCPServer::"github". |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the CatalogMcpServer.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the server has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 | `lastSyncedAt` _string_ | When the platform last discovered the server, as an RFC 3339 date-time. |  | Optional: \{\} <br /> |
@@ -1538,7 +1539,7 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
 | `hrid` _string_ | The human-readable ID the platform addresses this proxy by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
 | `state` _string_ | The lifecycle state the platform observes. |  | Optional: \{\} <br /> |
-| `tools` _[StudioToolStatus](#studiotoolstatus) array_ | The tools a Studio exposes, with their catalog identities. |  | Optional: \{\} <br /> |
+| `tools` _[StudioToolStatus](#studiotoolstatus) array_ | The tools a Studio exposes, in the order of the platform's state, with their catalog<br />identities and the references policies name them by. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the McpProxy.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the proxy has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
@@ -4341,7 +4342,7 @@ _Appears in:_
 
 
 
-Prompt is a prompt the upstream server exposes, with the catalog identity a policy names.
+Prompt is a prompt the upstream server exposes, with its catalog identity.
 
 
 
@@ -4360,7 +4361,7 @@ _Appears in:_
 
 
 
-Resource is a resource the upstream server exposes, with the catalog identity a policy names.
+Resource is a resource the upstream server exposes, with its catalog identity.
 
 
 
@@ -4412,6 +4413,7 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
 | `hrid` _string_ | The human-readable ID the platform addresses this server by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `authPolicyRef` _string_ | What an AuthzPolicy names the server by, derived from entityId: its engine type and the slug of<br />entityId, e.g. MCPServer::"github". |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the CatalogMcpServer.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the server has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 | `lastSyncedAt` _string_ | When the platform last discovered the server, as an RFC 3339 date-time. |  | Optional: \{\} <br /> |
@@ -4426,7 +4428,8 @@ _Appears in:_
 
 
 
-Tool is a tool the upstream server exposes, with the catalog identity a policy names.
+Tool is a tool the upstream server exposes, with its catalog identity and the reference a policy
+names it by.
 
 
 
@@ -4438,7 +4441,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `name` _string_ |  |  | Optional: \{\} <br /> |
-| `entityId` _string_ |  |  | Optional: \{\} <br /> |
+| `entityId` _string_ | Catalog identity of the tool, e.g. mcp-tool.github.create_issue. |  | Optional: \{\} <br /> |
+| `authPolicyRef` _string_ | What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue": the resource the<br />gateway checks on tools/call when a Studio exposing the tool sets enableFGA, whatever its alias. |  | Optional: \{\} <br /> |
 
 
 #### Transport
@@ -4473,7 +4477,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `entityId` _string_ | Stable catalog identity of the server, the name authorization policies reference:<br />lowercase, dot-separated segments, first segment `mcp-server`. Validated, never<br />repaired, and immutable once the server exists. |  | MaxLength: 255 <br />Pattern: `^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
+| `entityId` _string_ | Stable catalog identity of the server: lowercase, dot-separated segments, first segment<br />`mcp-server`. Validated, never repaired, and immutable once the server exists. A policy names<br />the server by status.authPolicyRef, not by this id. |  | MaxLength: 255 <br />Pattern: `^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$` <br />Required: \{\} <br /> |
 | `description` _string_ |  |  | Optional: \{\} <br /> |
 | `connection` _[Connection](#connection)_ |  |  | Required: \{\} <br /> |
 
@@ -6647,7 +6651,7 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
 | `hrid` _string_ | The human-readable ID the platform addresses this proxy by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
 | `state` _string_ | The lifecycle state the platform observes. |  | Optional: \{\} <br /> |
-| `tools` _[StudioToolStatus](#studiotoolstatus) array_ | The tools a Studio exposes, with their catalog identities. |  | Optional: \{\} <br /> |
+| `tools` _[StudioToolStatus](#studiotoolstatus) array_ | The tools a Studio exposes, in the order of the platform's state, with their catalog<br />identities and the references policies name them by. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the McpProxy.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the proxy has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
@@ -6693,7 +6697,8 @@ _Appears in:_
 
 
 
-StudioToolStatus is a tool a Studio exposes, with the catalog identity a policy names.
+StudioToolStatus is a tool a Studio exposes, with its catalog identity and the reference a
+policy names it by.
 
 
 
@@ -6704,9 +6709,10 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `server` _string_ | HRID of the catalog server the tool comes from. |  | Optional: \{\} <br /> |
-| `tool` _string_ |  |  | Optional: \{\} <br /> |
-| `alias` _string_ |  |  | Optional: \{\} <br /> |
-| `entityId` _string_ |  |  | Optional: \{\} <br /> |
+| `tool` _string_ | Runtime name of the tool on its server. |  | Optional: \{\} <br /> |
+| `alias` _string_ | Name the Studio exposes the tool under, when one is declared. |  | Optional: \{\} <br /> |
+| `entityId` _string_ | Catalog identity of the tool, e.g. mcp-tool.github.create_issue. |  | Optional: \{\} <br /> |
+| `authPolicyRef` _string_ | What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue": the resource the<br />gateway checks on tools/call when enableFGA is set. An aliased tool keeps the reference of the<br />tool it exposes. |  | Optional: \{\} <br /> |
 
 
 #### StudioUpstreamAuth

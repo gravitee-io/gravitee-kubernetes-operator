@@ -132,17 +132,19 @@ var _ = Describe("Catalog MCP server", func() {
 	})
 
 	Describe("state decoding", func() {
-		It("decodes the payload, the ids and what the platform discovered", func() {
+		It("decodes the payload, the ids, what the platform discovered and the policy references", func() {
 			body := `{
 				"hrid": "gravitee-github",
 				"entityId": "mcp-server.github",
 				"connection": {"endpoint": "https://api.githubcopilot.com/mcp/", "transport": "HTTP", "auth": {"type": "HEADER", "name": "Authorization"}},
 				"id": "8c21f0a2", "organizationId": "DEFAULT", "environmentId": "DEFAULT",
+				"authPolicyRef": "MCPServer::\"github\"",
 				"errors": {"warning": ["something to know"]},
 				"lastSyncedAt": "2026-09-23T09:12:04Z",
 				"protocolVersion": "2025-03-26",
 				"serverInfo": {"name": "github-mcp", "version": "1.4.0"},
-				"tools": [{"name": "create_issue", "entityId": "mcp-tool.github.create_issue"}],
+				"tools": [{"name": "create_issue", "entityId": "mcp-tool.github.create_issue",
+					"authPolicyRef": "MCPTool::\"github.create_issue\""}],
 				"prompts": [{"name": "summarize_pr", "entityId": "mcp-prompt.github.summarize_pr"}],
 				"resources": [{"uri": "github://repos", "name": "repositories", "entityId": "mcp-resource.github.repositories"}]
 			}`
@@ -160,6 +162,8 @@ var _ = Describe("Catalog MCP server", func() {
 			Expect(state.ServerInfo.Name).To(Equal("github-mcp"))
 			Expect(state.Tools).To(HaveLen(1))
 			Expect(state.Tools[0].EntityID).To(Equal("mcp-tool.github.create_issue"))
+			Expect(state.AuthPolicyRef).To(Equal(`MCPServer::"github"`))
+			Expect(state.Tools[0].AuthPolicyRef).To(Equal(`MCPTool::"github.create_issue"`))
 			Expect(state.Prompts[0].Name).To(Equal("summarize_pr"))
 			Expect(state.Resources[0].URI).To(Equal("github://repos"))
 		})

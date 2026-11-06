@@ -26,15 +26,21 @@ type ServerInfo struct {
 	Version string `json:"version,omitempty"`
 }
 
-// Tool is a tool the upstream server exposes, with the catalog identity a policy names.
+// Tool is a tool the upstream server exposes, with its catalog identity and the reference a policy
+// names it by.
 type Tool struct {
 	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
+	// Catalog identity of the tool, e.g. mcp-tool.github.create_issue.
 	// +kubebuilder:validation:Optional
 	EntityID string `json:"entityId,omitempty"`
+	// What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue": the resource the
+	// gateway checks on tools/call when a Studio exposing the tool sets enableFGA, whatever its alias.
+	// +kubebuilder:validation:Optional
+	AuthPolicyRef string `json:"authPolicyRef,omitempty"`
 }
 
-// Prompt is a prompt the upstream server exposes, with the catalog identity a policy names.
+// Prompt is a prompt the upstream server exposes, with its catalog identity.
 type Prompt struct {
 	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
@@ -42,7 +48,7 @@ type Prompt struct {
 	EntityID string `json:"entityId,omitempty"`
 }
 
-// Resource is a resource the upstream server exposes, with the catalog identity a policy names.
+// Resource is a resource the upstream server exposes, with its catalog identity.
 type Resource struct {
 	// +kubebuilder:validation:Optional
 	URI string `json:"uri,omitempty"`
@@ -85,6 +91,10 @@ type Status struct {
 	// resource namespace and name.
 	// +kubebuilder:validation:Optional
 	HRID string `json:"hrid,omitempty"`
+	// What an AuthzPolicy names the server by, derived from entityId: its engine type and the slug of
+	// entityId, e.g. MCPServer::"github".
+	// +kubebuilder:validation:Optional
+	AuthPolicyRef string `json:"authPolicyRef,omitempty"`
 	// Conditions describe the current conditions of the CatalogMcpServer.
 	//
 	// Known condition types are:
