@@ -101,7 +101,7 @@ type ClientSecretResolved struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Application",type=string,JSONPath=`.spec.applicationRef.name`
 // +kubebuilder:printcolumn:name="Secret",type=string,JSONPath=`.spec.secretRef.name`
-// +kubebuilder:printcolumn:name="Expires At",type=date,JSONPath=`.status.expiresAt`
+// +kubebuilder:printcolumn:name="Expires At",type=string,JSONPath=`.status.expiresAt`
 // +kubebuilder:resource:shortName=graviteeamclientsecrets
 // +kubebuilder:storageversion
 type AMClientSecret struct {
