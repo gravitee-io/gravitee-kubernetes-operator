@@ -167,6 +167,25 @@ var _ = Describe("Authz policy reconcile", func() {
 		Expect(p.Status.PolicyStatus).To(BeEmpty())
 	})
 
+	It("records in status the deployment and the identifiers the platform answers", func() {
+		policy := newAuthzPolicy()
+		policy.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}
+		policy.Spec.Targets = []authzpdp.Target{{Scope: "default"}}
+		r, cli := setup(policy)
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+
+		p := stored(cli)
+		Expect(p.Status.ID).To(Equal("5f1c"))
+		Expect(p.Status.OrgID).To(Equal("DEFAULT"))
+		Expect(p.Status.EnvID).To(Equal("DEFAULT"))
+		Expect(p.Status.HRID).To(Equal("gravitee-hotel-booking-read"))
+		Expect(p.Status.PolicyStatus).To(Equal("DEPLOYED"))
+		Expect(condition(cli, k8s.ConditionAccepted).Status).To(Equal(metav1.ConditionTrue))
+		Expect(k8s.IsAutomationAPIManaged(p)).To(BeTrue())
+	})
+
 	It("deletes a policy still waiting on its AuthzPdp", func() {
 		r, cli := setup(twoPdps())
 
