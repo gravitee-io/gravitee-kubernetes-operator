@@ -153,7 +153,7 @@ errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldObj, newObj, resolveContex
 
 Provide four callbacks:
 
-1. **`RefResolver`** (`func(ctx context.Context, obj *v1alpha1.MyResource) error`) — resolve inlined references (Secrets, ConfigMaps, templates) on **both** old and new deep copies before comparison. Return a non-nil error to abort with a severe admission error (e.g. application client-certificate resolution in `resolveAppRefs`).
+1. **`RefResolver`** (`func(ctx context.Context, obj *v1alpha1.MyResource) error`) — resolve inlined references (Secrets, ConfigMaps) on **both** old and new deep copies before comparison. Templates are not its job: `ValidateDriftWithContext` (and the AM lifecycle) compiles them read-only on both copies first, skips drift with a warning when the old copy's templates no longer resolve, and redacts from the report every value a `secret` template resolved to. Return a non-nil error to abort with a severe admission error (e.g. application client-certificate resolution in `resolveAppRefs`).
 2. **`RemoteObjectGetter`** (`func(*apim.APIM, *v1alpha1.MyResource) (any, error)`) — fetch the live APIM object. Branch on `k8s.IsAutomationAPIManaged` (HRID + Automation API) vs legacy (UUID + Management API). Return the APIM client error as-is (including HTTP 404). `ValidateDriftWithContext` uses `errors.IsNotFound` to apply `OnRemoteMissing` vs `OnFetchFailure`.
 3. **`DTOMapper`** — map each CRD copy to the **same struct type** returned by the remote getter. Use `drift.MapDTO(func(cr *v1alpha1.MyResource) model.MyDTO { ... })` for type safety. The DTO must represent what is (or would be) sent to APIM, not the raw CRD spec.
 4. **`ContextResolver`** (only for `ValidateDriftWithContext`) — when the CRD has no `ManagementContext` ref of its own but depends on a related resource's context (subscription → application).
@@ -196,6 +196,7 @@ The equivalence registry lives in `internal/drift/equivalences.go` and is wired 
 - Remote-only change → **drift** (reject)
 - CRD update that realigns with remote → **ok** (allow)
 - Unchanged CRD, remote changed → **drift** (reject)
+- A value the old CRD left unset is not protected: whatever the remote holds there (a server default, or a value set elsewhere) is ignored while the CRD leaves it unset, and setting it is a CRD change → **ok**
 
 See `internal/drift/types.go` (`Merge` comment) and `internal/drift/doc.go`.
 

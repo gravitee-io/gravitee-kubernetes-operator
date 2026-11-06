@@ -16,6 +16,7 @@ package drift
 
 import (
 	"cmp"
+	"fmt"
 	"log"
 	"reflect"
 	"slices"
@@ -130,6 +131,36 @@ func (r *Result) String() string {
 	return strings.TrimSpace(strings.TrimRight(builder.String(), "\n"))
 }
 
+// Redact marks every compared value holding one of the given values, on either side, as never
+// printable. It changes the report only, never the comparison: a drift stays a drift.
+func (r *Result) Redact(values []string) {
+	if len(values) == 0 {
+		return
+	}
+	for _, child := range r.children {
+		child.Redact(values)
+	}
+	if containsAny(r.CRDValue, values) || containsAny(r.RemoteValue, values) {
+		r.context.Redacted = true
+	}
+}
+
+func containsAny(v any, values []string) bool {
+	if v == nil {
+		return false
+	}
+	s, ok := v.(string)
+	if !ok {
+		s = fmt.Sprint(v)
+	}
+	for _, value := range values {
+		if value != "" && strings.Contains(s, value) {
+			return true
+		}
+	}
+	return false
+}
+
 // DriftDetected returns true if the result or any of its children is found to be inequivalent, false otherwise.
 func (r *Result) DriftDetected() bool {
 	if r.Equivalent == Inequivalent {
@@ -175,7 +206,8 @@ func (r *Result) IsSet() bool {
 // Case 3: Only remote changed (O/R diff, N/R diff) => Drift
 // Case 4: Only CRD changed (O/R equivalent, N/R diff) => Ok
 // Case 5: CRD change but is not equivalent to remote change (O/R diff, N/R diff)  => Drift
-// As a result: when both O/R and N/R are drifted, the result is a drift.
+// As a result: when both O/R and N/R are drifted, the result is a drift, unless the old CRD left the
+// value unset: a value it never set is not protected, so setting it now is case 4 (see unsetBefore).
 func Merge(or Result, nr Result) Result {
 	m := Result{}
 	merge(or, nr, &m, nil)
@@ -262,7 +294,7 @@ func evaluateDrift(or Result, nr Result, parentIndex *int) Result {
 	// Case 1, both are Equivalent => Equivalent
 	// Case 3 & 5, both are Inequivalent => Inequivalent
 	if or.Equivalent == nr.Equivalent {
-		if parentIndex == nil && or.Equivalent == Inequivalent && remoteOnlyDriftUnchanged(or, nr) {
+		if parentIndex == nil && or.Equivalent == Inequivalent && unsetBefore(or, nr) {
 			return Result{Equivalence: Equivalence{Equivalent: Equivalent}}
 		}
 		return nr
@@ -281,8 +313,10 @@ func evaluateDrift(or Result, nr Result, parentIndex *int) Result {
 	return Result{}
 }
 
-// remoteOnlyDriftUnchanged is true when old and new CRD are both absent for a remote-only
-// map entry and the remote value did not change between comparisons.
-func remoteOnlyDriftUnchanged(or Result, nr Result) bool {
-	return or.CRDValue == nil && nr.CRDValue == nil && reflect.DeepEqual(or.RemoteValue, nr.RemoteValue)
+// unsetBefore is true when the old CRD left the value unset and the remote value did not change
+// between comparisons. A value the CRD never set is not under drift protection: the remote may hold
+// a server default or a value set elsewhere. Leaving it unset keeps it so, and setting it in the new
+// CRD is a CRD-only change (case 4), not drift.
+func unsetBefore(or Result, nr Result) bool {
+	return or.CRDValue == nil && reflect.DeepEqual(or.RemoteValue, nr.RemoteValue)
 }

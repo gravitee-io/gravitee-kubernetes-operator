@@ -49,7 +49,9 @@ func ApplyRemoteFetchPolicy(obj client.Object, err error, errs *errors.Admission
 
 // CompareWithRemote compares the old and new DTOs of obj with the remote one, merges both results
 // (see drift.Merge) and applies the drift policy when drift remains.
-func CompareWithRemote(obj client.Object, oldDTO, newDTO, remote any, errs *errors.AdmissionErrors) {
+// CompareWithRemote applies the drift policy to the drift between the remote and the CRD. Values
+// holding one of the given secrets are never printed.
+func CompareWithRemote(obj client.Object, oldDTO, newDTO, remote any, secrets []string, errs *errors.AdmissionErrors) {
 	ns := obj.GetNamespace()
 	oldVsRemote := drift.DetectWithNamespace(oldDTO, remote, ns)
 	newVsRemote := drift.DetectWithNamespace(newDTO, remote, ns)
@@ -58,6 +60,7 @@ func CompareWithRemote(obj client.Object, oldDTO, newDTO, remote any, errs *erro
 	if !result.DriftDetected() {
 		return
 	}
+	result.Redact(secrets)
 	applyPolicy(env.Config.DriftDetection.Policy, func() string {
 		if env.Config.DriftDetection.Policy == env.DriftPolicyAllow {
 			ref := client.ObjectKeyFromObject(obj)

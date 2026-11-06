@@ -73,6 +73,11 @@ func ValidateDriftWithContext[T client.Object](
 	oldCopy := oldCRD.DeepCopyObject().(T)
 	newCopy := newCRD.DeepCopyObject().(T)
 
+	secrets, ok := CompileTemplates(ctx, oldCopy, newCopy, errs)
+	if !ok {
+		return errs
+	}
+
 	// We need to resolve all references to compare the content that sent to the remote API
 	err := resolveRefs(ctx, oldCopy)
 	if err != nil {
@@ -99,6 +104,6 @@ func ValidateDriftWithContext[T client.Object](
 		return errs
 	}
 
-	CompareWithRemote(newCopy, mapDTO(oldCopy), mapDTO(newCopy), remoteObject, errs)
+	CompareWithRemote(newCopy, mapDTO(oldCopy), mapDTO(newCopy), remoteObject, secrets, errs)
 	return errs
 }

@@ -28,7 +28,7 @@ const (
 	column             = ":"
 	propSuffix         = column + " "
 	notEqOpWithSpaces  = " " + notEqOp + " "
-	redactedSuffix     = propSuffix + "(encrypted value, not shown)"
+	redactedSuffix     = propSuffix + "(secret value, not shown)"
 	notEqOp            = "!="
 	unchangedIndicator = "<unchanged>"
 	addition           = "+ "

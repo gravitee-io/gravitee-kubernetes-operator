@@ -23,7 +23,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
 
 func validateUpdate(
@@ -62,11 +61,10 @@ func validateUpdate(
 	return errs
 }
 
-// resolveRefs compiles templates on the copy drift compares, so a templated URL or step
-// configuration is compared resolved on both the old and the new side. Credential values are
-// ignored by the DTO's drift tags, whatever form the spec supplied them in.
-func resolveRefs(ctx context.Context, proxy *v1alpha1.McpProxy) error {
-	return template.Compile(ctx, proxy, false)
+// resolveRefs has nothing to resolve: the shared drift path compiles templates on both sides.
+// Credential values are ignored by the DTO's drift tags, whatever form the spec supplied them in.
+func resolveRefs(context.Context, *v1alpha1.McpProxy) error {
+	return nil
 }
 
 // getRemoteMcpProxy reads the platform's copy and returns the payload half, in the order the
