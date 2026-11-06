@@ -42,6 +42,7 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ApiV4Definition{}, &ApiV4DefinitionList{},
 		&ApiResource{}, &ApiResourceList{},
 		&Application{}, &ApplicationList{},
+		&AuthzEntity{}, &AuthzEntityList{},
 		&AuthzPdp{}, &AuthzPdpList{},
 		&AuthzSchema{}, &AuthzSchemaList{},
 		&CatalogMcpServer{}, &CatalogMcpServerList{},
