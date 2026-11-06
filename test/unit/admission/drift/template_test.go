@@ -16,6 +16,7 @@ package drift
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/dictionary"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -27,11 +28,13 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 const (
@@ -104,6 +107,32 @@ var _ = Describe("Drift detection on templated values", func() {
 			ContainSubstring("drift detection skipped, the templates of the previous version no longer resolve"))))
 	})
 
+	It("never prints a value a secret template resolved to", func() {
+		errs := validateTemplated(currentSecret, rotatedSecret, "changed-in-apim")
+
+		Expect(errs.Severe).To(HaveLen(1))
+		Expect(errs.Severe[0].Message).To(ContainSubstring("clientSecret: (secret value, not shown)"))
+		Expect(errs.Severe[0].Message).NotTo(ContainSubstring("current-value"))
+		Expect(errs.Severe[0].Message).NotTo(ContainSubstring("rotated-value"))
+		Expect(errs.Severe[0].Message).NotTo(ContainSubstring("changed-in-apim"))
+	})
+
+	It("reads the secrets of a new object validation already compiled from the admission request", func() {
+		submitted := templatedDictionary(rotatedSecret)
+		compiledInPlace := templatedDictionary("rotated-value")
+		raw, err := json.Marshal(submitted)
+		Expect(err).NotTo(HaveOccurred())
+		ctx := admission.NewContextWithRequest(context.Background(), admission.Request{
+			AdmissionRequest: admissionv1.AdmissionRequest{Object: runtime.RawExtension{Raw: raw}},
+		})
+
+		errs := validate(ctx, templatedDictionary("plain-old"), compiledInPlace, "changed-in-apim")
+
+		Expect(errs.Severe).To(HaveLen(1))
+		Expect(errs.Severe[0].Message).To(ContainSubstring("clientSecret: (secret value, not shown)"))
+		Expect(errs.Severe[0].Message).NotTo(ContainSubstring("rotated-value"))
+	})
+
 	It("refuses an update whose new templates do not resolve", func() {
 		errs := validateTemplated(currentSecret, deletedSecret, "current-value")
 
@@ -113,15 +142,17 @@ var _ = Describe("Drift detection on templated values", func() {
 })
 
 func validateTemplated(oldValue, newValue, remoteValue string) *errors.AdmissionErrors {
-	stored := templatedDictionary(oldValue)
-	updated := templatedDictionary(newValue)
+	return validate(context.Background(), templatedDictionary(oldValue), templatedDictionary(newValue), remoteValue)
+}
+
+func validate(ctx context.Context, stored, updated *v1alpha1.Dictionary, remoteValue string) *errors.AdmissionErrors {
 	remote := templatedDictionary(remoteValue)
 
 	toDTO := func(crd *v1alpha1.Dictionary) any {
 		return model.ToDictionaryDTO(crd.Spec.Type, "default-templated")
 	}
 	return admdrift.ValidateDriftWithContext(
-		context.Background(),
+		ctx,
 		stored,
 		updated,
 		func(context.Context) (*apim.APIM, error) {
