@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -60,4 +61,40 @@ func FindAuthzEntityChildren(ctx context.Context, entity *v1alpha1.AuthzEntity) 
 	}
 	sort.Strings(names)
 	return names, nil
+}
+
+// FindUndeclaredAuthzEntityParents returns the parents of entity that no AuthzEntity of its
+// ManagementContext declares, a Terminating one counting as gone: a parent the operator deleted,
+// or one another source created on the platform.
+func FindUndeclaredAuthzEntityParents(
+	ctx context.Context,
+	entity *v1alpha1.AuthzEntity,
+) ([]authzentity.Parent, error) {
+	contextOf := dynamic.ContextOf(entity)
+	if contextOf == "" || len(entity.Spec.Parents) == 0 {
+		return nil, nil
+	}
+	entities := &v1alpha1.AuthzEntityList{}
+	filter := &client.ListOptions{
+		FieldSelector: fields.SelectorFromSet(fields.Set{AuthzEntityContextField.String(): contextOf}),
+	}
+	if err := k8s.GetClient().List(ctx, entities, filter); err != nil {
+		return nil, fmt.Errorf("unable to list AuthzEntity: %w", err)
+	}
+
+	declared := make(map[authzentity.Parent]struct{}, len(entities.Items))
+	for i := range entities.Items {
+		item := &entities.Items[i]
+		if item.DeletionTimestamp.IsZero() {
+			declared[authzentity.Parent{EntityType: item.Spec.EntityType, EntityID: item.Spec.EntityID}] = struct{}{}
+		}
+	}
+
+	var undeclared []authzentity.Parent
+	for _, parent := range entity.Spec.Parents {
+		if _, ok := declared[parent]; !ok {
+			undeclared = append(undeclared, parent)
+		}
+	}
+	return undeclared, nil
 }

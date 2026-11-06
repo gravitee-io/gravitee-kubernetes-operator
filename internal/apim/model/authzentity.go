@@ -15,6 +15,7 @@
 package model
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
@@ -51,6 +52,11 @@ type AuthzEntityState struct {
 	Errors         status.Errors `json:"errors,omitempty"`
 }
 
+// ToAuthzEntityParentDTO maps a declared parent onto its wire shape.
+func ToAuthzEntityParentDTO(parent authzentity.Parent) AuthzEntityParentDTO {
+	return AuthzEntityParentDTO{EntityType: parent.EntityType, EntityID: parent.EntityID}
+}
+
 // ToAuthzEntityDTO maps the CRD onto the wire payload with the targets the caller resolved, in
 // declaration order. It is the single mapping used by the sync path, the dry run and drift
 // detection. The targets are a parameter rather than read from the spec: a pdpRef has no wire
@@ -58,7 +64,7 @@ type AuthzEntityState struct {
 func ToAuthzEntityDTO(crd *v1alpha1.AuthzEntity, targets []string) AuthzEntityDTO {
 	var parents []AuthzEntityParentDTO
 	for _, parent := range crd.Spec.Parents {
-		parents = append(parents, AuthzEntityParentDTO{EntityType: parent.EntityType, EntityID: parent.EntityID})
+		parents = append(parents, ToAuthzEntityParentDTO(parent))
 	}
 	return AuthzEntityDTO{
 		HRID:       refs.NewNamespacedNameFromObject(crd).HRID(),
