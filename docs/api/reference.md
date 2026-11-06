@@ -4,6 +4,7 @@
 - [gravitee.io/v1alpha1](#graviteeiov1alpha1)
 - [gravitee.io/v1alpha1/am](#graviteeiov1alpha1am)
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
+- [gravitee.io/v1alpha1/authzentity](#graviteeiov1alpha1authzentity)
 - [gravitee.io/v1alpha1/authzpdp](#graviteeiov1alpha1authzpdp)
 - [gravitee.io/v1alpha1/authzschema](#graviteeiov1alpha1authzschema)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
@@ -50,6 +51,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ApiResource](#apiresource)
 - [ApiV4Definition](#apiv4definition)
 - [Application](#application)
+- [AuthzEntity](#authzentity)
 - [AuthzPdp](#authzpdp)
 - [AuthzSchema](#authzschema)
 - [CatalogMcpServer](#catalogmcpserver)
@@ -712,6 +714,79 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### AuthzEntity
+
+
+
+AuthzEntity is a principal or a resource of Gravitee Authorization Management as a Kubernetes
+resource, published to the PDP gateways its targets name. One entity of the environment holds
+an entityId: an id another entity holds is refused, naming the source that declared it.
+
+A target names an AuthzPdp through pdpRef, or a routing scope no AuthzPdp declares through
+scope. A pdpRef waits on ResolvedRefs=False until the AuthzPdp has a routing scope.
+
+Deleting an AuthzEntity deletes its RESOURCE children and detaches its PRINCIPAL children on the
+platform: an AuthzEntity declaring one of them differs from the platform until its spec next
+changes. A delete that would remove more entities than the platform's cascade limit is refused
+(413): the resource stays Terminating, its Accepted condition naming the reason.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AuthzEntity` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AuthzEntitySpec](#authzentityspec)_ |  |  |  |
+| `status` _[AuthzEntityStatus](#authzentitystatus)_ |  |  |  |
+
+
+#### AuthzEntitySpec
+
+
+
+AuthzEntitySpec defines the desired state of an AuthzEntity.
+
+
+
+_Appears in:_
+- [AuthzEntity](#authzentity)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityId` _string_ | Id of the entity in policies, without its type: agents, not Group::"agents". One entity of<br />the environment holds it: an id another entity holds is refused, naming that entity's source.<br />Immutable. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `kind` _string_ | Whether the entity acts (PRINCIPAL) or is acted upon (RESOURCE). Immutable. |  | Enum: [PRINCIPAL RESOURCE] <br />Required: \{\} <br /> |
+| `entityType` _string_ | Type of the entity, spelled the way the engine spells it: Group, not group. A built-in type<br />sets the kind. Immutable. |  | MaxLength: 255 <br />Pattern: `^[_a-zA-Z][_a-zA-Z0-9]*(?:::[_a-zA-Z][_a-zA-Z0-9]*)*$` <br />Required: \{\} <br /> |
+| `attributes` _[GenericStringMap](#genericstringmap)_ | Attributes of the entity, replaced whole on every apply. A key starting with _ is reserved<br />to the platform and refused. |  | Optional: \{\} <br /> |
+| `parents` _[Parent](#parent) array_ | The entities this one is a member of, replaced whole on every apply. Each is declared once,<br />and never in a cycle. |  | Optional: \{\} <br /> |
+| `active` _boolean_ | Whether the entity is published to the PDP gateways it targets. | true | Optional: \{\} <br /> |
+| `targets` _[Target](#target) array_ | The PDP gateways the entity is published to. Empty, it is published to the default engine on<br />every gateway. An Action entity takes none. Deleting the AuthzPdp a pdpRef names removes its<br />scope here; the platform refuses that delete when the entity would be left with no target. |  | Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this entity is created<br />in. Immutable: the operator deletes an entity through its current context only, so an entity<br />moved to another one would stay on the first platform, published to its targets.<br />The message is static: refs.NamespacedName strings carry no maxLength, so a message naming<br />both values exceeds the API server's CEL cost budget and the CRD is refused. Required, so the<br />rule also holds without the admission webhook: CEL compares the field only when both sides have it. |  | Required: \{\} <br /> |
+
+
+#### AuthzEntityStatus
+
+
+
+AuthzEntityStatus defines the observed state of an AuthzEntity.
+
+
+
+_Appears in:_
+- [AuthzEntity](#authzentity)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the entity in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this entity by, derived from the resource<br />namespace and name. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzEntity.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the entity has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### AuthzPdp
@@ -2394,6 +2469,86 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/authzentity
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+
+#### Parent
+
+
+
+Parent is an entity this one is a member of, spelled the way the engine spells it.
+
+
+
+_Appears in:_
+- [AuthzEntitySpec](#authzentityspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityType` _string_ | Type of the parent, spelled the way the engine spells it: Group, not group. |  | MaxLength: 255 <br />Pattern: `^[_a-zA-Z][_a-zA-Z0-9]*(?:::[_a-zA-Z][_a-zA-Z0-9]*)*$` <br />Required: \{\} <br /> |
+| `entityId` _string_ | Id of the parent, under the same rule as entityId. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [AuthzEntityStatus](#authzentitystatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the entity in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this entity by, derived from the resource<br />namespace and name. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzEntity.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the entity has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of an AuthzEntity resource: a principal or a resource of
+Authorization Management, its parents, its attributes and the PDP gateways it is published to.
+
+
+
+_Appears in:_
+- [AuthzEntitySpec](#authzentityspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entityId` _string_ | Id of the entity in policies, without its type: agents, not Group::"agents". One entity of<br />the environment holds it: an id another entity holds is refused, naming that entity's source.<br />Immutable. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `kind` _string_ | Whether the entity acts (PRINCIPAL) or is acted upon (RESOURCE). Immutable. |  | Enum: [PRINCIPAL RESOURCE] <br />Required: \{\} <br /> |
+| `entityType` _string_ | Type of the entity, spelled the way the engine spells it: Group, not group. A built-in type<br />sets the kind. Immutable. |  | MaxLength: 255 <br />Pattern: `^[_a-zA-Z][_a-zA-Z0-9]*(?:::[_a-zA-Z][_a-zA-Z0-9]*)*$` <br />Required: \{\} <br /> |
+| `attributes` _[GenericStringMap](#genericstringmap)_ | Attributes of the entity, replaced whole on every apply. A key starting with _ is reserved<br />to the platform and refused. |  | Optional: \{\} <br /> |
+| `parents` _[Parent](#parent) array_ | The entities this one is a member of, replaced whole on every apply. Each is declared once,<br />and never in a cycle. |  | Optional: \{\} <br /> |
+| `active` _boolean_ | Whether the entity is published to the PDP gateways it targets. | true | Optional: \{\} <br /> |
+| `targets` _[Target](#target) array_ | The PDP gateways the entity is published to. Empty, it is published to the default engine on<br />every gateway. An Action entity takes none. Deleting the AuthzPdp a pdpRef names removes its<br />scope here; the platform refuses that delete when the entity would be left with no target. |  | Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/authzpdp
 
 
@@ -2462,7 +2617,9 @@ routing scope no AuthzPdp declares (default, a gateway created in the Console).
 
 
 _Appears in:_
+- [AuthzEntitySpec](#authzentityspec)
 - [AuthzSchemaSpec](#authzschemaspec)
+- [Type](#type)
 - [Type](#type)
 
 | Field | Description | Default | Validation |
@@ -6289,6 +6446,7 @@ _Appears in:_
 - [ApplicationSpec](#applicationspec)
 - [Auth](#auth)
 - [Auth](#auth)
+- [AuthzEntitySpec](#authzentityspec)
 - [AuthzPdpSpec](#authzpdpspec)
 - [AuthzSchemaSpec](#authzschemaspec)
 - [CatalogMcpServerSpec](#catalogmcpserverspec)
@@ -6496,6 +6654,7 @@ _Appears in:_
 - [ApiStatus](#apistatus)
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
 - [ApplicationStatus](#applicationstatus)
+- [AuthzEntityStatus](#authzentitystatus)
 - [AuthzPdpStatus](#authzpdpstatus)
 - [AuthzSchemaStatus](#authzschemastatus)
 - [AutomationStatus](#automationstatus)
@@ -6509,6 +6668,7 @@ _Appears in:_
 - [PortalStatus](#portalstatus)
 - [PortalThemeStatus](#portalthemestatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
@@ -6641,6 +6801,7 @@ _Appears in:_
 - [Application](#application)
 - [ApplicationOAuthSettings](#applicationoauthsettings)
 - [AssessmentSettings](#assessmentsettings)
+- [AuthzEntitySpec](#authzentityspec)
 - [Certificate](#certificate)
 - [ConsumerConfiguration](#consumerconfiguration)
 - [DynamicPropertyService](#dynamicpropertyservice)
@@ -6663,6 +6824,7 @@ _Appears in:_
 - [Resource](#resource)
 - [Service](#service)
 - [Step](#step)
+- [Type](#type)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
