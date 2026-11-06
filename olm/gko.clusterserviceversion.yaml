@@ -986,3 +986,17 @@ spec:
             description: Latest observed conditions.
             x-descriptors:
               - urn:alm:descriptor:io.kubernetes.conditions
+      # --- AuthzPolicy ---
+      - name: authzpolicies.gravitee.io
+        version: v1alpha1
+        kind: AuthzPolicy
+        displayName: Authz Policy
+        description: >-
+          Deploys a GAPL policy of Gravitee Authorization Management to the PDP
+          gateways its targets name.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
