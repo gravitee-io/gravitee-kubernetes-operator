@@ -72,6 +72,7 @@ rules:
       - catalogmcpservers.gravitee.io
       - mcpproxies.gravitee.io
       - authzpdps.gravitee.io
+      - authzschemas.gravitee.io
 {{- if .Values.gatewayAPI.controller.enabled }}
       - gatewayclassparameters.gravitee.io
       - kafkaroutes.gravitee.io
