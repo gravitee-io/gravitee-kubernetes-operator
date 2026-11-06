@@ -86,6 +86,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
@@ -444,6 +445,16 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzPdpList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for authz pdps")
+		os.Exit(1)
+	}
+
+	if err := (&authzschema.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("authzschema-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzSchemaList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for authz schemas")
 		os.Exit(1)
 	}
 }
