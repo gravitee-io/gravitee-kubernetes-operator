@@ -175,3 +175,75 @@ var _ = Describe("Resolving a pdpRef", func() {
 		Expect(gerrors.IsRecoverable(err)).To(BeTrue())
 	})
 })
+
+var _ = Describe("Resolving an authz target", func() {
+	const ns = "travel"
+	ctx := context.Background()
+	devCtx := refs.NamespacedName{Name: "dev-ctx"}
+
+	schema := &v1alpha1.AuthzSchema{
+		ObjectMeta: metav1.ObjectMeta{Name: "travel-schema", Namespace: ns},
+		Spec:       v1alpha1.AuthzSchemaSpec{Context: &devCtx},
+	}
+	pdp := func(scope string) *v1alpha1.AuthzPdp {
+		return &v1alpha1.AuthzPdp{
+			ObjectMeta: metav1.ObjectMeta{Name: "orders-eu", Namespace: ns},
+			Spec: v1alpha1.AuthzPdpSpec{
+				Context: &devCtx,
+				Type:    authzpdp.Type{Name: "Orders PDP (EU)", TargetPdpID: "orders", Tag: "eu"},
+			},
+			Status: v1alpha1.AuthzPdpStatus{Status: authzpdp.Status{RoutingScope: scope}},
+		}
+	}
+	cluster := func(objects ...client.Object) {
+		scheme := runtime.NewScheme()
+		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
+		k8s.RegisterClient(fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...).Build())
+	}
+	byRef := &authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu"}}
+
+	It("sends no target for a resource without one", func() {
+		cluster()
+
+		target, err := dynamic.ResolveAuthzTarget(ctx, schema, nil)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(target).To(BeEmpty())
+	})
+
+	It("sends a scope as written, without reading the cluster", func() {
+		cluster()
+
+		target, err := dynamic.ResolveAuthzTarget(ctx, schema, &authzpdp.Target{Scope: "default"})
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(target).To(Equal("default"))
+	})
+
+	It("sends the routing scope of the AuthzPdp a pdpRef names", func() {
+		cluster(pdp("orders@eu"))
+
+		target, err := dynamic.ResolveAuthzTarget(ctx, schema, byRef)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(target).To(Equal("orders@eu"))
+	})
+
+	It("waits for an AuthzPdp that does not exist", func() {
+		cluster()
+
+		_, err := dynamic.ResolveAuthzTarget(ctx, schema, byRef)
+
+		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotFound))
+		Expect(dynamic.IsAuthzPdpPending(err)).To(BeTrue())
+	})
+
+	It("waits for an AuthzPdp the platform has not synced yet", func() {
+		cluster(pdp(""))
+
+		_, err := dynamic.ResolveAuthzTarget(ctx, schema, byRef)
+
+		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotSynced))
+		Expect(dynamic.IsAuthzPdpPending(err)).To(BeTrue())
+	})
+})
