@@ -61,7 +61,7 @@ func InitRegistry() {
 }
 
 func Set(crd any, remote any, context DriftContext) Equivalence {
-	// only compare array of scalar types (pointers or not)
+	// only compare arrays of scalars or flat structs (pointers or not)
 	if !isCompItems(crd) || !isCompItems(remote) {
 		return defaultSliceEquivalence(crd, remote, context)
 	}
@@ -88,7 +88,8 @@ func Set(crd any, remote any, context DriftContext) Equivalence {
 	}
 }
 
-// isCompItems tells if v is a slice of scalars or pointers to scalars. An absent slice (nil) is an empty set.
+// isCompItems tells if v is a slice of scalars or flat structs, or of pointers to either. An absent slice (nil) is
+// an empty set.
 func isCompItems(v any) bool {
 	if v == nil {
 		return true
@@ -97,7 +98,23 @@ func isCompItems(v any) bool {
 	if itemType.Kind() == reflect.Pointer {
 		itemType = itemType.Elem()
 	}
-	return isScalar(itemType.Kind())
+	return isScalar(itemType.Kind()) || isFlatStruct(itemType)
+}
+
+// isFlatStruct tells if t is a struct whose fields are all scalars without a drift tag: its items then compare by
+// value. A struct holding a pointer, a slice, a map or a tagged field keeps the equivalences of its fields, and is
+// compared by position.
+func isFlatStruct(t reflect.Type) bool {
+	if t.Kind() != reflect.Struct || t.NumField() == 0 {
+		return false
+	}
+	for i := range t.NumField() {
+		field := t.Field(i)
+		if !isScalar(field.Type.Kind()) || field.Tag.Get("drift") != "" {
+			return false
+		}
+	}
+	return true
 }
 
 // uniqueItems returns the dereferenced items of the slice v, without duplicates, in declaration order.
