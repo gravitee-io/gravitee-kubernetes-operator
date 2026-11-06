@@ -196,6 +196,7 @@ The equivalence registry lives in `internal/drift/equivalences.go` and is wired 
 - Remote-only change → **drift** (reject)
 - CRD update that realigns with remote → **ok** (allow)
 - Unchanged CRD, remote changed → **drift** (reject)
+- A value the old CRD left unset is not protected: whatever the remote holds there (a server default, or a value set elsewhere) is ignored while the CRD leaves it unset, and setting it is a CRD change → **ok**
 
 See `internal/drift/types.go` (`Merge` comment) and `internal/drift/doc.go`.
 

@@ -74,6 +74,23 @@ var _ = Describe("Security domain drift detection", func() {
                <unchanged>`)
 	})
 
+	DescribeTable("compares an oidc setting against the defaults AM fills in",
+		func(old, updated *bool, remote bool, expectDrift bool) {
+			merged := drift.Merge(
+				drift.DetectWithNamespace(domainWithDynamicRegistration(old), remoteDomainWithDynamicRegistration(remote), ""),
+				drift.DetectWithNamespace(domainWithDynamicRegistration(updated), remoteDomainWithDynamicRegistration(remote), ""),
+			)
+
+			Expect(merged.DriftDetected()).To(Equal(expectDrift), merged.String())
+		},
+		Entry("a setting left unset stays unset", nil, nil, false, false),
+		Entry("the first change to a setting AM defaulted is a CRD change", nil, new(true), false, false),
+		Entry("a setting first set to the value AM holds is no change", nil, new(false), false, false),
+		Entry("a CRD change to a declared setting is accepted", new(false), new(true), false, false),
+		Entry("an AM change to a declared setting is drift", new(true), new(true), false, true),
+		Entry("unsetting a declared setting AM changed is drift", new(true), nil, false, true),
+	)
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(securityDomainForDrift(), remoteSecurityDomain())
@@ -92,4 +109,37 @@ func securityDomainForDrift() sdk.Domain {
 func remoteSecurityDomain() sdk.Domain {
 	GinkgoHelper()
 	return loadFixture[sdk.Domain]("securitydomain_dto.json")
+}
+
+// domainWithDynamicRegistration is a domain whose spec sets no oidc unless dynamicRegistration is set.
+func domainWithDynamicRegistration(dynamicRegistration *bool) sdk.Domain {
+	domain := sdk.Domain{Name: "cs"}
+	if dynamicRegistration != nil {
+		domain.Oidc = &sdk.AutomationOidcSettings{
+			ClientRegistrationSettings: &sdk.AutomationClientRegistrationSettings{
+				DynamicClientRegistrationEnabled: dynamicRegistration,
+			},
+		}
+	}
+	return domain
+}
+
+// remoteDomainWithDynamicRegistration is the domain AM returns: every client registration
+// setting filled in, false by default.
+func remoteDomainWithDynamicRegistration(dynamicRegistration bool) sdk.Domain {
+	return sdk.Domain{
+		Name: "cs",
+		Oidc: &sdk.AutomationOidcSettings{
+			ClientRegistrationSettings: &sdk.AutomationClientRegistrationSettings{
+				AllowHttpSchemeRedirectUri:               new(false),
+				AllowLocalhostRedirectUri:                new(false),
+				AllowRedirectUriParamsExpressionLanguage: new(false),
+				AllowWildCardRedirectUri:                 new(false),
+				AllowedScopesEnabled:                     new(false),
+				ClientTemplateEnabled:                    new(false),
+				DynamicClientRegistrationEnabled:         new(dynamicRegistration),
+				OpenDynamicClientRegistrationEnabled:     new(false),
+			},
+		},
+	}
 }
