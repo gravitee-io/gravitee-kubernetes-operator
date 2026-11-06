@@ -39,10 +39,16 @@ type AuthzPdpDependent struct {
 }
 
 // AuthzPdpDependents returns the kinds that target an AuthzPdp, which deleting one warns about.
-// Each authz story adds its kind to the list: AuthzSchema (AUTHZ-75), AuthzEntity (AUTHZ-81) and
-// AuthzPolicy (AUTHZ-84).
+// Each authz story adds its kind to the list: AuthzSchema (AUTHZ-75), then AuthzEntity (AUTHZ-81)
+// and AuthzPolicy (AUTHZ-84).
 func AuthzPdpDependents() []AuthzPdpDependent {
-	return nil
+	return []AuthzPdpDependent{
+		{
+			Kind:    "AuthzSchema",
+			Field:   AuthzSchemaAuthzPdpField,
+			NewList: func() client.ObjectList { return &v1alpha1.AuthzSchemaList{} },
+		},
+	}
 }
 
 // Dependents are the resources of one kind that target an AuthzPdp.

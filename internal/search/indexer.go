@@ -63,6 +63,8 @@ const (
 	McpProxyContextField          IndexField = "mcpproxy-context"
 	McpProxyCatalogMcpServerField IndexField = "mcpproxy-catalogmcpserver"
 	AuthzPdpContextField          IndexField = "authzpdp-context"
+	AuthzSchemaContextField       IndexField = "authzschema-context"
+	AuthzSchemaAuthzPdpField      IndexField = "authzschema-authzpdp"
 	AMSecurityContextField        IndexField = "am-sec-domain-context"
 	AMIdentityProviderDomainField IndexField = "am-idp-domain"
 	AMCertificateDomainField      IndexField = "am-cert-domain"
@@ -144,6 +146,10 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexMcpProxyCatalogMcpServers))
 	collect(newIndexer(ctx, cache, &v1alpha1.AuthzPdp{}, AuthzPdpContextField,
 		indexAuthzPdpManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.AuthzSchema{}, AuthzSchemaContextField,
+		indexAuthzSchemaManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.AuthzSchema{}, AuthzSchemaAuthzPdpField,
+		indexAuthzSchemaAuthzPdps))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
 		indexAMSecurityDomainContext))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityDomainFallbackCertificateField,
@@ -447,6 +453,24 @@ func indexAuthzPdpManagementContexts(pdp *v1alpha1.AuthzPdp, fields *[]string) {
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(pdp, pdp.Spec.Context))
+}
+
+func indexAuthzSchemaManagementContexts(schema *v1alpha1.AuthzSchema, fields *[]string) {
+	if schema.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(schema, schema.Spec.Context))
+}
+
+// indexAuthzSchemaAuthzPdps indexes a schema by the AuthzPdp its target names. A scope target is
+// not indexed: no AuthzPdp represents it.
+func indexAuthzSchemaAuthzPdps(schema *v1alpha1.AuthzSchema, fields *[]string) {
+	if schema.Spec.Target == nil || schema.Spec.Target.PdpRef == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(schema, schema.Spec.Target.PdpRef))
 }
 
 // indexMcpProxyCatalogMcpServers indexes a Studio by every catalog server it references, through
