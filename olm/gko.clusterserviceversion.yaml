@@ -972,3 +972,17 @@ spec:
             description: Latest observed conditions.
             x-descriptors:
               - urn:alm:descriptor:io.kubernetes.conditions
+      # --- AuthzEntity ---
+      - name: authzentities.gravitee.io
+        version: v1alpha1
+        kind: AuthzEntity
+        displayName: Authz Entity
+        description: >-
+          Declares a principal or a resource of Gravitee Authorization Management,
+          with its parents, attributes and the PDP gateways it is published to.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
