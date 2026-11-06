@@ -15,6 +15,7 @@
 package drift
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -95,7 +96,7 @@ func printSetItem(items []any, b *strings.Builder, indent int) int {
 	} else {
 		m := 0
 		for _, x := range items {
-			s := fmt.Sprintf("%s%v", addition, resolve(x))
+			s := fmt.Sprintf("%s%v", addition, resolveSetItem(x))
 			m = max(len(s), m)
 			addIndent(b, indent)
 			b.WriteString(s)
@@ -158,6 +159,16 @@ func formatChildren(this *Result, b *strings.Builder, indent int) {
 		}
 		format(child, b, indent)
 	}
+}
+
+// resolveSetItem prints a struct item of a set as compact JSON, the way the manifest spells its fields.
+func resolveSetItem(v any) any {
+	if reflect.ValueOf(v).Kind() == reflect.Struct {
+		if b, err := json.Marshal(v); err == nil {
+			return string(b)
+		}
+	}
+	return resolve(v)
 }
 
 func resolve(v any) any {
