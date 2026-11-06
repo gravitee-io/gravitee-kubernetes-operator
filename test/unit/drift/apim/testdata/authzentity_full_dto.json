@@ -1,0 +1,17 @@
+{
+  "hrid": "default-drift-full",
+  "entityId": "drift-full",
+  "kind": "PRINCIPAL",
+  "entityType": "User",
+  "attributes": {
+    "department": "travel",
+    "address": {"city": "Paris", "country": "France"},
+    "badges": ["gold", "silver"]
+  },
+  "parents": [
+    {"entityType": "Group", "entityId": "agents"},
+    {"entityType": "Group", "entityId": "travel"}
+  ],
+  "active": true,
+  "targets": ["drift-full@eu", "default"]
+}

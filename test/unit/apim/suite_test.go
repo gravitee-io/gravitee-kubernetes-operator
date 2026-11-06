@@ -32,11 +32,36 @@ func TestAPIM(t *testing.T) {
 	RunSpecs(t, "APIM unit tests suite")
 }
 
+// refusingContextPath is where the cluster stub serves ManagementContext gravitee/refusing-ctx,
+// whose APIM refuses every PUT with the ownership finding.
+const refusingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/refusing-ctx"
+
 // The dynamic client resolves ManagementContexts and falls back to the ambient kubeconfig, which
-// reaches a developer's cluster and exits where there is none (CI). Every lookup answers 404 here.
+// reaches a developer's cluster and exits where there is none (CI). Every lookup answers 404 here,
+// but gravitee/refusing-ctx.
 var _ = BeforeSuite(func() {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	// The 400 the refusing APIM answers: an entityId another source holds.
+	refusingPlatformBody := `{"errors":{"severe":[` + mustJSON(ownershipFinding) + `]}}`
+	platform := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		if r.Method != http.MethodPut {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(refusingPlatformBody))
+	}))
+	DeferCleanup(platform.Close)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == refusingContextPath {
+			_, _ = w.Write([]byte(`{"apiVersion":"gravitee.io/v1alpha1","kind":"ManagementContext",` +
+				`"metadata":{"name":"refusing-ctx","namespace":"gravitee"},` +
+				`"spec":{"baseUrl":"` + platform.URL + `","organizationId":"DEFAULT","environmentId":"DEFAULT",` +
+				`"auth":{"bearerToken":"test"}}}`))
+			return
+		}
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte(`{"kind":"Status","apiVersion":"v1","status":"Failure",` +
 			`"reason":"NotFound","code":404,"message":"not found"}`))

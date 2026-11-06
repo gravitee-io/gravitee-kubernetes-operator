@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -54,27 +55,65 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 	targeting := func(name string, ref refs.NamespacedName) *v1alpha1.AuthzSchema {
 		return schemaThrough(name, &authzpdp.Target{PdpRef: &ref}, devCtx)
 	}
-	// cluster indexes schemas with the function InitCache registers, as the manager's cache does.
+	entityTargeting := func(name string, targets ...authzpdp.Target) *v1alpha1.AuthzEntity {
+		return &v1alpha1.AuthzEntity{
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+			Spec: v1alpha1.AuthzEntitySpec{
+				Context: &devCtx,
+				Type:    authzentity.Type{EntityID: name, Kind: "PRINCIPAL", EntityType: "Group", Targets: targets},
+			},
+		}
+	}
+	// cluster indexes schemas and entities with the functions InitCache registers, as the
+	// manager's cache does.
 	cluster := func(objects ...client.Object) {
 		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
 		Expect(search.InitCache(context.Background(), c)).To(Succeed())
 		scheme := runtime.NewScheme()
 		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
-		field := search.AuthzSchemaAuthzPdpField.String()
+		schemaField, entityField := search.AuthzSchemaAuthzPdpField.String(), search.AuthzEntityAuthzPdpField.String()
 		k8s.RegisterClient(fake.NewClientBuilder().
 			WithScheme(scheme).
 			WithObjects(objects...).
-			WithIndex(&v1alpha1.AuthzSchema{}, field, c.indexers[field]).
+			WithIndex(&v1alpha1.AuthzSchema{}, schemaField, c.indexers[schemaField]).
+			WithIndex(&v1alpha1.AuthzEntity{}, entityField, c.indexers[entityField]).
 			Build())
 	}
 
-	It("registers AuthzSchema as a kind that targets an AuthzPdp", func() {
+	It("registers AuthzSchema, then AuthzEntity, which needs a target", func() {
 		kinds := search.AuthzPdpDependents()
 
-		Expect(kinds).To(HaveLen(1))
+		Expect(kinds).To(HaveLen(2))
 		Expect(kinds[0].Kind).To(Equal("AuthzSchema"))
 		Expect(kinds[0].Field).To(Equal(search.AuthzSchemaAuthzPdpField))
 		Expect(kinds[0].NewList()).To(BeAssignableToTypeOf(&v1alpha1.AuthzSchemaList{}))
+		Expect(kinds[0].NeedsTarget).To(BeFalse())
+		Expect(kinds[1].Kind).To(Equal("AuthzEntity"))
+		Expect(kinds[1].Field).To(Equal(search.AuthzEntityAuthzPdpField))
+		Expect(kinds[1].NewList()).To(BeAssignableToTypeOf(&v1alpha1.AuthzEntityList{}))
+		Expect(kinds[1].NeedsTarget).To(BeTrue())
+	})
+
+	It("finds an entity from either of the PDPs it targets, and leaves out a scope-only entity", func() {
+		usRef := refs.NamespacedName{Name: "orders-us", Namespace: ns}
+		usPdp := &v1alpha1.AuthzPdp{
+			ObjectMeta: metav1.ObjectMeta{Name: "orders-us", Namespace: ns},
+			Spec:       v1alpha1.AuthzPdpSpec{Context: &devCtx},
+		}
+		cluster(
+			entityTargeting("agents", authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu"}},
+				authzpdp.Target{Scope: "default"}, authzpdp.Target{PdpRef: &usRef}),
+			entityTargeting("scoped", authzpdp.Target{Scope: "orders@eu"}),
+		)
+
+		for _, target := range []*v1alpha1.AuthzPdp{pdp, usPdp} {
+			found, err := search.FindAuthzPdpDependents(context.Background(), target, search.AuthzPdpDependents())
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(found).To(Equal([]search.Dependents{
+				{Kind: "AuthzEntity", NeedsTarget: true, Names: []string{"orders/agents"}},
+			}))
+		}
 	})
 
 	It("names the schemas whose pdpRef names the PDP, sorted, its namespace defaulted", func() {

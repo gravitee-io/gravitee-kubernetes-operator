@@ -24,6 +24,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	amdomain "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/am/domain"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -112,5 +114,39 @@ var _ = Describe("InitCache", func() {
 		Expect(index(domain(nil))).To(BeEmpty())
 		Expect(index(domain(&amdomain.CertificateSettings{}))).To(BeEmpty())
 		Expect(index(domain(&amdomain.CertificateSettings{FallbackCertificate: new("")}))).To(BeEmpty())
+	})
+	It("indexes an AuthzEntity by each distinct pdpRef it targets, its namespace defaulted", func() {
+		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+
+		entity := &v1alpha1.AuthzEntity{ObjectMeta: metav1.ObjectMeta{Name: "agents", Namespace: "ns"}}
+		entity.Spec.Targets = []authzpdp.Target{
+			{PdpRef: &refs.NamespacedName{Name: "orders-eu"}},
+			{Scope: "default"},
+			{PdpRef: &refs.NamespacedName{Name: "orders-eu", Namespace: "ns"}},
+			{PdpRef: &refs.NamespacedName{Name: "orders-us", Namespace: "billing"}},
+		}
+
+		index := c.indexers[search.AuthzEntityAuthzPdpField.String()]
+		Expect(index).ToNot(BeNil())
+		Expect(index(entity)).To(Equal([]string{"ns/orders-eu", "billing/orders-us"}))
+	})
+
+	It("indexes an AuthzEntity by each distinct parent, under its management context", func() {
+		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
+		Expect(search.InitCache(context.Background(), c)).To(Succeed())
+
+		entity := &v1alpha1.AuthzEntity{ObjectMeta: metav1.ObjectMeta{Name: "alice", Namespace: "ns"}}
+		entity.Spec.Context = &refs.NamespacedName{Name: "dev-ctx"}
+		entity.Spec.Parents = []authzentity.Parent{
+			{EntityType: "Group", EntityID: "agents"},
+			{EntityType: "Travel::Team", EntityID: "agents"},
+			{EntityType: "Group", EntityID: "agents"},
+		}
+
+		index := c.indexers[search.AuthzEntityParentField.String()]
+		Expect(index).ToNot(BeNil())
+		Expect(index(entity)).To(Equal([]string{"ns/dev-ctx/Group/agents", "ns/dev-ctx/Travel::Team/agents"}))
+		Expect(search.AuthzEntityParentKey("ns/dev-ctx", "Group", "agents")).To(Equal("ns/dev-ctx/Group/agents"))
 	})
 })
