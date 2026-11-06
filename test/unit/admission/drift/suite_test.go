@@ -17,6 +17,7 @@ package drift
 import (
 	"testing"
 
+	admdrift "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -25,3 +26,7 @@ func TestAdmissionDrift(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Admission drift unit tests suite")
 }
+
+var _ = BeforeSuite(func() {
+	admdrift.Init()
+})
