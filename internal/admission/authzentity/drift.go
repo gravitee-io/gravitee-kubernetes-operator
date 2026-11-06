@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
@@ -143,6 +144,10 @@ func getRemoteAuthzEntity(
 
 		old := oldObj.DeepCopy()
 		deleted, findErr := cascadedParents(ctx, old)
+		if findErr != nil {
+			log.Error(ctx, findErr, "Unable to undo a parent's cascade, comparing the platform's copy as is",
+				log.KeyValues(oldObj)...)
+		}
 		if findErr != nil || len(deleted) == 0 {
 			if missing {
 				return nil, err

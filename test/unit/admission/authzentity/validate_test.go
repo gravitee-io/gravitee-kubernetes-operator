@@ -283,6 +283,30 @@ var _ = Describe("Detecting drift after a parent's delete", func() {
 		Expect(err).ToNot(HaveOccurred())
 	})
 
+	It("takes a parent declared through another management context as deleted", func() {
+		ritz := declared("ritz", "RESOURCE", "Hotel")
+		elsewhere := newEntity("agents-group", "agents")
+		elsewhere.Spec.Context = &refs.NamespacedName{Name: "prod-ctx"}
+		cluster(ritz, elsewhere)
+		platform.answerGet(http.StatusNotFound, notFound)
+
+		_, err := ctrl.ValidateUpdate(ctx, ritz, deactivated(ritz))
+
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	// A cascade detaches a PRINCIPAL rather than deleting it: one the platform no longer holds was
+	// deleted another way.
+	It("refuses an edit to a PRINCIPAL the platform no longer holds", func() {
+		alice := declared("alice", "PRINCIPAL", "User")
+		cluster(alice)
+		platform.answerGet(http.StatusNotFound, notFound)
+
+		_, err := ctrl.ValidateUpdate(ctx, alice, deactivated(alice))
+
+		Expect(err).To(MatchError(ContainSubstring("[travel/alice] not found during drift detection")))
+	})
+
 	It("admits an edit to a PRINCIPAL its deleted parent detached", func() {
 		alice := declared("alice", "PRINCIPAL", "User")
 		cluster(alice)
