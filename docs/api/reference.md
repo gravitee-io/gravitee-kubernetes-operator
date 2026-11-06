@@ -5,6 +5,7 @@
 - [gravitee.io/v1alpha1/am](#graviteeiov1alpha1am)
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/authzpdp](#graviteeiov1alpha1authzpdp)
+- [gravitee.io/v1alpha1/authzschema](#graviteeiov1alpha1authzschema)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
 - [gravitee.io/v1alpha1/catalogmcpserver](#graviteeiov1alpha1catalogmcpserver)
 - [gravitee.io/v1alpha1/certificate](#graviteeiov1alpha1certificate)
@@ -51,6 +52,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ApiV4Definition](#apiv4definition)
 - [Application](#application)
 - [AuthzPdp](#authzpdp)
+- [AuthzSchema](#authzschema)
 - [CatalogMcpServer](#catalogmcpserver)
 - [Dictionary](#dictionary)
 - [Documentation](#documentation)
@@ -842,6 +844,73 @@ _Appears in:_
 | `wellKnownPath` _string_ | The AuthZEN discovery path of the endpoint. Absent without an endpoint, or when another API<br />already held that path when the endpoint was created. |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzPdp.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the PDP gateway has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### AuthzSchema
+
+
+
+AuthzSchema is a GAPL schema document of Gravitee Authorization Management as a Kubernetes
+resource, published to the PDP gateway its target names. A PDP gateway holds one schema
+document: a target another schema holds is refused.
+
+A target names an AuthzPdp through pdpRef, or a routing scope no AuthzPdp declares through
+scope. A pdpRef waits on ResolvedRefs=False until the AuthzPdp has a routing scope. Deleting
+that AuthzPdp removes the target on the platform: the document stays stored and published
+nowhere, and the AuthzSchema waits on ResolvedRefs=False until its pdpRef names another AuthzPdp.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `AuthzSchema` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[AuthzSchemaSpec](#authzschemaspec)_ |  |  |  |
+| `status` _[AuthzSchemaStatus](#authzschemastatus)_ |  |  |  |
+
+
+#### AuthzSchemaSpec
+
+
+
+AuthzSchemaSpec defines the desired state of an AuthzSchema.
+
+
+
+_Appears in:_
+- [AuthzSchema](#authzschema)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the schema document. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `target` _[Target](#target)_ | The PDP gateway that enforces the document. One document per gateway: a target another<br />schema holds is refused. Omitted, the document is stored and published nowhere. Deleting<br />the AuthzPdp a pdpRef names removes the target on the platform. |  | Optional: \{\} <br /> |
+| `schema` _string_ | The GAPL schema text, replaced whole on every apply. |  | MinLength: 1 <br />Required: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this schema document<br />is created in. Immutable: the operator deletes a schema through its current context only, so<br />a schema moved to another one would stay on the first platform, published to its target.<br />The message is static: refs.NamespacedName strings carry no maxLength, so a message naming<br />both values exceeds the API server's CEL cost budget and the CRD is refused. Required, so the<br />rule also holds without the admission webhook: CEL compares the field only when both sides have it. |  | Required: \{\} <br /> |
+
+
+#### AuthzSchemaStatus
+
+
+
+AuthzSchemaStatus defines the observed state of an AuthzSchema.
+
+
+
+_Appears in:_
+- [AuthzSchema](#authzschema)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the schema document in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this schema document by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `target` _string_ | The routing scope the platform publishes the document to, as it answered the last apply.<br />Empty for a document with no target. A failed apply leaves it as it was. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzSchema.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the schema document has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### CatalogMcpServer
@@ -2939,6 +3008,25 @@ _Appears in:_
 | `errors` _[Errors](#errors)_ | When the PDP gateway has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
+#### Target
+
+
+
+Target names the PDP gateway a resource is published to: an AuthzPdp through pdpRef, or a
+routing scope no AuthzPdp declares (default, a gateway created in the Console).
+
+
+
+_Appears in:_
+- [AuthzSchemaSpec](#authzschemaspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `pdpRef` _[NamespacedName](#namespacedname)_ | The AuthzPdp whose status.routingScope is the target, its namespace defaulted to the<br />resource's. It must sync through the same ManagementContext. The resource waits on<br />ResolvedRefs=False until the AuthzPdp has a routing scope. |  | Optional: \{\} <br /> |
+| `scope` _string_ | A routing scope written as the gateway reports it: targetPdpId@tag, targetPdpId when<br />untagged, default, or * where the kind allows it. Not resolved: a bare targetPdpId naming a<br />tagged gateway is refused by the platform. |  | MaxLength: 320 <br />Optional: \{\} <br />Pattern: `^(\*\|[A-Za-z0-9_.-]+(@-?[a-z0-9]+(-[a-z0-9]+)*)?)$` <br /> |
+
+
 #### Type
 
 
@@ -2958,6 +3046,65 @@ _Appears in:_
 | `tag` _string_ | Sharding tag of the gateways that run the PDP; omit it for an untagged gateway. Immutable. |  | MaxLength: 64 <br />Optional: \{\} <br />Pattern: `^-?[a-z0-9]+(-[a-z0-9]+)*$` <br /> |
 | `strict` _boolean_ | Whether the engine checks policies and entities against its schema. Defaults to false.<br />Shared by every PDP of the targetPdpId: on create it must agree with the registered ones, and<br />a change aligns them all with a warning naming each. Two AuthzPdp resources of one<br />targetPdpId that disagree overwrite each other on every reconcile. |  | Optional: \{\} <br /> |
 | `endpoint` _[Endpoint](#endpoint)_ | The AuthZEN endpoint of the PDP. Omitted, the PDP has none, and an existing one is deleted. |  | Optional: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/authzschema
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [AuthzSchemaStatus](#authzschemastatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the schema document in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `hrid` _string_ | The human-readable ID the platform addresses this schema document by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
+| `target` _string_ | The routing scope the platform publishes the document to, as it answered the last apply.<br />Empty for a document with no target. A failed apply leaves it as it was. |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the AuthzSchema.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the schema document has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of an AuthzSchema resource: a GAPL schema document of
+Authorization Management and the PDP gateway that enforces it.
+
+
+
+_Appears in:_
+- [AuthzSchemaSpec](#authzschemaspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the schema document. |  | MaxLength: 255 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `target` _[Target](#target)_ | The PDP gateway that enforces the document. One document per gateway: a target another<br />schema holds is refused. Omitted, the document is stored and published nowhere. Deleting<br />the AuthzPdp a pdpRef names removes the target on the platform. |  | Optional: \{\} <br /> |
+| `schema` _string_ | The GAPL schema text, replaced whole on every apply. |  | MinLength: 1 <br />Required: \{\} <br /> |
 
 
 
@@ -6848,6 +6995,7 @@ _Appears in:_
 - [Auth](#auth)
 - [Auth](#auth)
 - [AuthzPdpSpec](#authzpdpspec)
+- [AuthzSchemaSpec](#authzschemaspec)
 - [CatalogMcpServerSpec](#catalogmcpserverspec)
 - [Certificate](#certificate)
 - [Cloud](#cloud)
@@ -6868,6 +7016,7 @@ _Appears in:_
 - [StudioTool](#studiotool)
 - [StudioUpstreamAuth](#studioupstreamauth)
 - [SubscriptionSpec](#subscriptionspec)
+- [Target](#target)
 - [Type](#type)
 - [Type](#type)
 - [Type](#type)
@@ -7051,6 +7200,7 @@ _Appears in:_
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
 - [ApplicationStatus](#applicationstatus)
 - [AuthzPdpStatus](#authzpdpstatus)
+- [AuthzSchemaStatus](#authzschemastatus)
 - [AutomationStatus](#automationstatus)
 - [CatalogMcpServerStatus](#catalogmcpserverstatus)
 - [DictionaryStatus](#dictionarystatus)
@@ -7062,6 +7212,7 @@ _Appears in:_
 - [PortalStatus](#portalstatus)
 - [PortalThemeStatus](#portalthemestatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
