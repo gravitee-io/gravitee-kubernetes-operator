@@ -26,6 +26,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -77,6 +78,17 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 		},
 	}
 
+	policy := &v1alpha1.AuthzPolicy{
+		ObjectMeta: metav1.ObjectMeta{Name: "hotel-booking-read", Namespace: ns},
+		Spec: v1alpha1.AuthzPolicySpec{
+			Context: &devCtx,
+			Type: authzpolicy.Type{
+				EntityID: "policy.hotel-booking-read", Name: "Hotel booking", PolicyType: "API",
+				PolicyText: "permit(principal, action, resource);", Targets: []authzpdp.Target{target},
+			},
+		},
+	}
+
 	// cluster indexes the dependents with the functions InitCache registers, as the manager's
 	// cache does.
 	cluster := func(objects ...client.Object) {
@@ -85,11 +97,13 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 		scheme := runtime.NewScheme()
 		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
 		schemaField, entityField := search.AuthzSchemaAuthzPdpField.String(), search.AuthzEntityAuthzPdpField.String()
+		policyField := search.AuthzPolicyAuthzPdpField.String()
 		k8s.RegisterClient(fake.NewClientBuilder().
 			WithScheme(scheme).
 			WithObjects(objects...).
 			WithIndex(&v1alpha1.AuthzSchema{}, schemaField, c.indexers[schemaField]).
 			WithIndex(&v1alpha1.AuthzEntity{}, entityField, c.indexers[entityField]).
+			WithIndex(&v1alpha1.AuthzPolicy{}, policyField, c.indexers[policyField]).
 			Build())
 	}
 
@@ -125,8 +139,20 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 		))
 	})
 
+	It("adds the Terminating warning for a policy the PDP is the only target of", func() {
+		cluster(policy)
+
+		warnings, err := ctrl.ValidateDelete(ctx, pdp)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(HaveExactElements(
+			"authz pdp [travel-team/orders-eu] is targeted by AuthzPolicy [travel-team/hotel-booking-read]"+targeted,
+			"authz pdp [travel-team/orders-eu] is the only target of AuthzPolicy [travel-team/hotel-booking-read]"+sole,
+		))
+	})
+
 	It("warns per kind, the schema first, and names only the sole targets in the Terminating warning", func() {
-		cluster(schema, entity, alice)
+		cluster(schema, entity, alice, policy)
 
 		warnings, err := ctrl.ValidateDelete(ctx, pdp)
 
@@ -136,6 +162,8 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 			"authz pdp [travel-team/orders-eu] is targeted by AuthzEntity [travel-team/agents-group, travel-team/alice]"+
 				targeted,
 			"authz pdp [travel-team/orders-eu] is the only target of AuthzEntity [travel-team/alice]"+sole,
+			"authz pdp [travel-team/orders-eu] is targeted by AuthzPolicy [travel-team/hotel-booking-read]"+targeted,
+			"authz pdp [travel-team/orders-eu] is the only target of AuthzPolicy [travel-team/hotel-booking-read]"+sole,
 		))
 	})
 })

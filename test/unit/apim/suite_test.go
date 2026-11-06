@@ -37,8 +37,48 @@ func TestAPIM(t *testing.T) {
 }
 
 // refusingContextPath is where the cluster stub serves ManagementContext gravitee/refusing-ctx,
-// whose APIM refuses every PUT with the ownership finding.
+// whose APIM refuses every PUT with the ownership finding of the resource's kind.
 const refusingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/refusing-ctx"
+
+// acceptingContextPath is where the cluster stub serves ManagementContext gravitee/accepting-ctx,
+// whose APIM accepts every PUT and answers the state acceptedStates holds for its collection.
+const acceptingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/accepting-ctx"
+
+// acceptedStates are the states the accepting APIM answers, by collection path suffix.
+var acceptedStates = map[string]string{
+	"/authz/policies": `{"hrid":"gravitee-hotel-booking-read","id":"5f1c","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT","policyStatus":"DEPLOYED"}`,
+}
+
+// lastReceived holds the last body an accepting or the cascade APIM received, by collection path
+// suffix.
+var lastReceived sync.Map
+
+// answering accepts every PUT, recording its body in lastReceived, and answers the state states
+// holds for its collection path suffix.
+func answering(states map[string]string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPut {
+			for suffix, state := range states {
+				if strings.HasSuffix(r.URL.Path, suffix) {
+					body, _ := io.ReadAll(r.Body)
+					lastReceived.Store(suffix, string(body))
+					_, _ = w.Write([]byte(state))
+					return
+				}
+			}
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func contextBody(name, baseURL string) string {
+	return `{"apiVersion":"gravitee.io/v1alpha1","kind":"ManagementContext",` +
+		`"metadata":{"name":"` + name + `","namespace":"gravitee"},` +
+		`"spec":{"baseUrl":"` + baseURL + `","organizationId":"DEFAULT","environmentId":"DEFAULT",` +
+		`"auth":{"bearerToken":"test"}}}`
+}
 
 // cascadeContextPath is where the cluster stub serves ManagementContext gravitee/cascade-ctx, whose
 // APIM holds no parent anymore: it refuses a RESOURCE declared under one, as the platform does once
@@ -50,9 +90,6 @@ func missingParentFinding(parent string) string {
 	return "parent " + parent + " does not exist: a RESOURCE is deleted with its parent, " +
 		"so declare the parent first or drop it from parents"
 }
-
-// lastReceived holds the last body the cascade APIM received, by collection path suffix.
-var lastReceived sync.Map
 
 // cascadePlatform answers an AuthzEntity PUT as a platform whose parents have all been deleted,
 // recording its body in lastReceived.
@@ -85,10 +122,11 @@ func cascadePlatform(w http.ResponseWriter, r *http.Request) {
 
 // The dynamic client resolves ManagementContexts and falls back to the ambient kubeconfig, which
 // reaches a developer's cluster and exits where there is none (CI). Every lookup answers 404 here,
-// but gravitee/refusing-ctx and gravitee/cascade-ctx.
+// but gravitee/refusing-ctx, gravitee/accepting-ctx and gravitee/cascade-ctx.
 var _ = BeforeSuite(func() {
 	// The 400 the refusing APIM answers: an entityId another source holds.
 	refusingPlatformBody := `{"errors":{"severe":[` + mustJSON(ownershipFinding) + `]}}`
+	refusingPolicyBody := `{"errors":{"severe":[` + mustJSON(policyOwnershipFinding) + `]}}`
 	platform := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method != http.MethodPut {
@@ -96,26 +134,30 @@ var _ = BeforeSuite(func() {
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
+		if strings.HasSuffix(r.URL.Path, "/authz/policies") {
+			_, _ = w.Write([]byte(refusingPolicyBody))
+			return
+		}
 		_, _ = w.Write([]byte(refusingPlatformBody))
 	}))
 	DeferCleanup(platform.Close)
 	cascade := httptest.NewServer(http.HandlerFunc(cascadePlatform))
 	DeferCleanup(cascade.Close)
 
+	accepting := httptest.NewServer(answering(acceptedStates))
+	DeferCleanup(accepting.Close)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.URL.Path == refusingContextPath {
-			_, _ = w.Write([]byte(`{"apiVersion":"gravitee.io/v1alpha1","kind":"ManagementContext",` +
-				`"metadata":{"name":"refusing-ctx","namespace":"gravitee"},` +
-				`"spec":{"baseUrl":"` + platform.URL + `","organizationId":"DEFAULT","environmentId":"DEFAULT",` +
-				`"auth":{"bearerToken":"test"}}}`))
+		switch r.URL.Path {
+		case refusingContextPath:
+			_, _ = w.Write([]byte(contextBody("refusing-ctx", platform.URL)))
 			return
-		}
-		if r.URL.Path == cascadeContextPath {
-			_, _ = w.Write([]byte(`{"apiVersion":"gravitee.io/v1alpha1","kind":"ManagementContext",` +
-				`"metadata":{"name":"cascade-ctx","namespace":"gravitee"},` +
-				`"spec":{"baseUrl":"` + cascade.URL + `","organizationId":"DEFAULT","environmentId":"DEFAULT",` +
-				`"auth":{"bearerToken":"test"}}}`))
+		case acceptingContextPath:
+			_, _ = w.Write([]byte(contextBody("accepting-ctx", accepting.URL)))
+			return
+		case cascadeContextPath:
+			_, _ = w.Write([]byte(contextBody("cascade-ctx", cascade.URL)))
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)

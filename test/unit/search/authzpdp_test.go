@@ -27,6 +27,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -64,7 +65,19 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 			},
 		}
 	}
-	// cluster indexes schemas and entities with the functions InitCache registers, as the
+	policyTargeting := func(name string, targets ...authzpdp.Target) *v1alpha1.AuthzPolicy {
+		return &v1alpha1.AuthzPolicy{
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+			Spec: v1alpha1.AuthzPolicySpec{
+				Context: &devCtx,
+				Type: authzpolicy.Type{
+					EntityID: "policy." + name, Name: name, PolicyType: "API",
+					PolicyText: "permit(principal, action, resource);", Targets: targets,
+				},
+			},
+		}
+	}
+	// cluster indexes schemas, entities and policies with the functions InitCache registers, as the
 	// manager's cache does.
 	cluster := func(objects ...client.Object) {
 		c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
@@ -72,18 +85,20 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 		scheme := runtime.NewScheme()
 		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
 		schemaField, entityField := search.AuthzSchemaAuthzPdpField.String(), search.AuthzEntityAuthzPdpField.String()
+		policyField := search.AuthzPolicyAuthzPdpField.String()
 		k8s.RegisterClient(fake.NewClientBuilder().
 			WithScheme(scheme).
 			WithObjects(objects...).
 			WithIndex(&v1alpha1.AuthzSchema{}, schemaField, c.indexers[schemaField]).
 			WithIndex(&v1alpha1.AuthzEntity{}, entityField, c.indexers[entityField]).
+			WithIndex(&v1alpha1.AuthzPolicy{}, policyField, c.indexers[policyField]).
 			Build())
 	}
 
-	It("registers AuthzSchema, then AuthzEntity, which needs a target", func() {
+	It("registers AuthzSchema, then AuthzEntity and AuthzPolicy, which need a target", func() {
 		kinds := search.AuthzPdpDependents()
 
-		Expect(kinds).To(HaveLen(2))
+		Expect(kinds).To(HaveLen(3))
 		Expect(kinds[0].Kind).To(Equal("AuthzSchema"))
 		Expect(kinds[0].Field).To(Equal(search.AuthzSchemaAuthzPdpField))
 		Expect(kinds[0].NewList()).To(BeAssignableToTypeOf(&v1alpha1.AuthzSchemaList{}))
@@ -92,6 +107,32 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 		Expect(kinds[1].Field).To(Equal(search.AuthzEntityAuthzPdpField))
 		Expect(kinds[1].NewList()).To(BeAssignableToTypeOf(&v1alpha1.AuthzEntityList{}))
 		Expect(kinds[1].Targets).ToNot(BeNil())
+		Expect(kinds[2].Kind).To(Equal("AuthzPolicy"))
+		Expect(kinds[2].Field).To(Equal(search.AuthzPolicyAuthzPdpField))
+		Expect(kinds[2].NewList()).To(BeAssignableToTypeOf(&v1alpha1.AuthzPolicyList{}))
+		Expect(kinds[2].Targets).ToNot(BeNil())
+	})
+
+	It("finds a policy from either of the PDPs it targets, and leaves out a scope-only policy", func() {
+		usRef := refs.NamespacedName{Name: "orders-us", Namespace: ns}
+		usPdp := &v1alpha1.AuthzPdp{
+			ObjectMeta: metav1.ObjectMeta{Name: "orders-us", Namespace: ns},
+			Spec:       v1alpha1.AuthzPdpSpec{Context: &devCtx},
+		}
+		cluster(
+			policyTargeting("hotel-booking-read", authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu"}},
+				authzpdp.Target{Scope: "default"}, authzpdp.Target{PdpRef: &usRef}),
+			policyTargeting("scoped", authzpdp.Target{Scope: "orders@eu"}),
+		)
+
+		for _, target := range []*v1alpha1.AuthzPdp{pdp, usPdp} {
+			found, err := search.FindAuthzPdpDependents(context.Background(), target, search.AuthzPdpDependents())
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(found).To(Equal([]search.Dependents{
+				{Kind: "AuthzPolicy", Names: []string{"orders/hotel-booking-read"}},
+			}))
+		}
 	})
 
 	It("finds an entity from either of the PDPs it targets, and leaves out a scope-only entity", func() {
