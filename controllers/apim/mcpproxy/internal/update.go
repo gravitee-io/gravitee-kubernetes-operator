@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -59,23 +58,7 @@ func CreateOrUpdate(ctx context.Context, proxy *v1alpha1.McpProxy) error {
 	proxy.Status.HRID = refs.NewNamespacedNameFromObject(proxy).HRID()
 	proxy.Status.Errors = state.Errors
 	proxy.Status.State = state.State
-	proxy.Status.Tools = toolsStatus(state.Studio)
+	proxy.Status.Tools = state.Tools
 
 	return nil
-}
-
-func toolsStatus(studio *model.McpProxyStudioDTO) []mcpproxy.StudioToolStatus {
-	if studio == nil || len(studio.Tools) == 0 {
-		return nil
-	}
-	tools := make([]mcpproxy.StudioToolStatus, 0, len(studio.Tools))
-	for _, tool := range studio.Tools {
-		tools = append(tools, mcpproxy.StudioToolStatus{
-			Server:   tool.Server,
-			Tool:     tool.Tool,
-			Alias:    tool.Alias,
-			EntityID: tool.EntityID,
-		})
-	}
-	return tools
 }
