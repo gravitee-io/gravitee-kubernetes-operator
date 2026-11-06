@@ -59,6 +59,7 @@ type CatalogMcpServerState struct {
 	OrgID                       string        `json:"organizationId,omitempty"`
 	EnvID                       string        `json:"environmentId,omitempty"`
 	Errors                      status.Errors `json:"errors,omitempty"`
+	AuthPolicyRef               string        `json:"authPolicyRef,omitempty"`
 	catalogmcpserver.Discovered `json:",inline"`
 }
 
