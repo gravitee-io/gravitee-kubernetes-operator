@@ -42,8 +42,9 @@ var (
 //
 // A missing, deleted or not yet synced AuthzPdp is a state to wait out (see IsAuthzPdpPending):
 // callers report ResolvedRefs=False and requeue, and admission warns and skips the dry run. An
-// AuthzPdp synced through another ManagementContext is an error that no event resolves: its
-// routing scope does not exist in the dependent's environment.
+// AuthzPdp of another ManagementContext is an error that no event resolves, whatever its state:
+// its routing scope does not exist in the dependent's environment. It is checked first, so a
+// deleted or unsynced AuthzPdp of another context is refused rather than waited for.
 func ResolveAuthzPdpRoutingScope(
 	ctx context.Context,
 	dependent core.ContextAwareObject,
@@ -62,19 +63,19 @@ func ResolveAuthzPdpRoutingScope(
 		return "", fmt.Errorf("unable to read authz pdp [%s]: %w", ref.String(), err)
 	}
 
+	if want, got := ContextOf(dependent), ContextOf(pdp); want != got {
+		return "", fmt.Errorf(
+			"authz pdp [%s] belongs to management context [%s], not [%s]",
+			ref.String(), got, want,
+		)
+	}
+
 	if pdp.IsBeingDeleted() {
 		return "", fmt.Errorf("%w: [%s] is being deleted", ErrAuthzPdpNotFound, ref.String())
 	}
 
 	if pdp.Status.RoutingScope == "" {
 		return "", fmt.Errorf("%w: [%s] has no routing scope yet", ErrAuthzPdpNotSynced, ref.String())
-	}
-
-	if want, got := ContextOf(dependent), ContextOf(pdp); want != got {
-		return "", fmt.Errorf(
-			"authz pdp [%s] is synced through management context [%s], not [%s]",
-			ref.String(), got, want,
-		)
 	}
 
 	return pdp.Status.RoutingScope, nil

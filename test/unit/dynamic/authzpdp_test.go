@@ -127,8 +127,25 @@ var _ = Describe("Resolving a pdpRef", func() {
 		_, err := dynamic.ResolveAuthzPdpRoutingScope(ctx, dependent(devCtx), ref)
 
 		Expect(err).To(MatchError(
-			"authz pdp [orders/orders-eu] is synced through management context [orders/prod-ctx], not [orders/dev-ctx]"))
+			"authz pdp [orders/orders-eu] belongs to management context [orders/prod-ctx], not [orders/dev-ctx]"))
 		Expect(dynamic.IsAuthzPdpPending(err)).To(BeFalse())
+	})
+
+	// Syncing or deleting the PDP would not change its context: waiting would never end.
+	It("refuses a PDP of another management context before checking its sync state", func() {
+		unsynced := pdp(refs.NamespacedName{Name: "prod-ctx"}, "")
+		deleting := pdp(refs.NamespacedName{Name: "prod-ctx"}, "orders@eu")
+		deleting.Name = "orders-us"
+		deleting.Finalizers = []string{core.AuthzPdpFinalizer}
+		deleting.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+		cluster(unsynced, deleting)
+
+		for _, name := range []string{"orders-eu", "orders-us"} {
+			_, err := dynamic.ResolveAuthzPdpRoutingScope(ctx, dependent(devCtx), refs.NamespacedName{Name: name})
+
+			Expect(err).To(MatchError(ContainSubstring("belongs to management context [orders/prod-ctx]")))
+			Expect(dynamic.IsAuthzPdpPending(err)).To(BeFalse())
+		}
 	})
 })
 

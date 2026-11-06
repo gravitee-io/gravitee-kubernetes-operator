@@ -121,7 +121,19 @@ var _ = Describe("Validating an AuthzSchema target", func() {
 		_, err := ctrl.ValidateCreate(ctx, schema(byRef(refs.NamespacedName{Name: "orders-eu"})))
 
 		Expect(err).To(MatchError(ContainSubstring(
-			"authz pdp [travel/orders-eu] is synced through management context [travel/prod-ctx], not [travel/dev-ctx]")))
+			"authz pdp [travel/orders-eu] belongs to management context [travel/prod-ctx], not [travel/dev-ctx]")))
+		Expect(platformCalls.Load()).To(BeZero())
+	})
+
+	// A warning would admit a schema that waits on ResolvedRefs=False forever: syncing the
+	// AuthzPdp does not change its context.
+	It("refuses an AuthzPdp of another management context that has not synced yet", func() {
+		cluster(pdp(refs.NamespacedName{Name: "prod-ctx"}, ""))
+
+		warnings, err := ctrl.ValidateCreate(ctx, schema(byRef(refs.NamespacedName{Name: "orders-eu"})))
+
+		Expect(err).To(MatchError(ContainSubstring("belongs to management context [travel/prod-ctx]")))
+		Expect(warnings).To(BeEmpty())
 		Expect(platformCalls.Load()).To(BeZero())
 	})
 
