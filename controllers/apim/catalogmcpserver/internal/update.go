@@ -56,6 +56,7 @@ func CreateOrUpdate(ctx context.Context, srv *v1alpha1.CatalogMcpServer) error {
 	srv.Status.EnvID = state.EnvID
 	srv.Status.HRID = refs.NewNamespacedNameFromObject(srv).HRID()
 	srv.Status.Errors = state.Errors
+	srv.Status.AuthPolicyRef = state.AuthPolicyRef
 	srv.Status.Discovered = state.Discovered
 
 	return nil

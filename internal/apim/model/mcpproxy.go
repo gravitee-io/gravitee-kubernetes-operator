@@ -142,14 +142,16 @@ type McpProxyFlowStepDTO struct {
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
 }
 
-// McpProxyState is what a PUT or a GET answers: the payload plus the platform's identifiers
-// and findings.
+// McpProxyState is what a PUT or a GET answers: the payload plus the platform's identifiers,
+// findings and, for a STUDIO, the status list of its tools. That list sits beside the payload, so
+// drift detection does not compare it; its wire shape is the CRD status shape.
 type McpProxyState struct {
 	McpProxyDTO `json:",inline"`
-	ID          string        `json:"id,omitempty"`
-	OrgID       string        `json:"organizationId,omitempty"`
-	EnvID       string        `json:"environmentId,omitempty"`
-	Errors      status.Errors `json:"errors,omitempty"`
+	ID          string                      `json:"id,omitempty"`
+	OrgID       string                      `json:"organizationId,omitempty"`
+	EnvID       string                      `json:"environmentId,omitempty"`
+	Errors      status.Errors               `json:"errors,omitempty"`
+	Tools       []mcpproxy.StudioToolStatus `json:"tools,omitempty"`
 }
 
 // ToMcpProxyDTO maps the CRD onto the wire payload. It is the single mapping used by the sync

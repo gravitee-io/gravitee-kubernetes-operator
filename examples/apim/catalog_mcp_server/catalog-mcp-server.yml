@@ -27,7 +27,8 @@ metadata:
 spec:
   contextRef:
     name: dev-ctx
-  # Declared and immutable: the identity an authorization policy names.
+  # Declared and immutable: the catalog identity. A policy names the server by
+  # status.authPolicyRef (MCPServer::"github"), and each tool by its status.tools[].authPolicyRef.
   entityId: mcp-server.github
   description: GitHub tools for coding agents
   connection:

@@ -1,0 +1,10 @@
+{
+  "metadata": {"name": "drift-minimal", "namespace": "default"},
+  "spec": {
+    "contextRef": {"name": "dev-ctx"},
+    "entityId": "policy.drift-minimal",
+    "name": "Drift minimal",
+    "policyType": "CUSTOM",
+    "policyText": "permit(principal, action, resource);"
+  }
+}

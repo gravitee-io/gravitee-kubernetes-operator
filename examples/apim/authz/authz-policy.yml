@@ -1,0 +1,35 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+
+# Agents may read the Grand Paris hotel, deployed to the orders PDP gateway of authz-pdp.yml. The
+# pdpRef resolves to that AuthzPdp's routing scope (orders@eu) once it has synced: applied first,
+# the policy waits on ResolvedRefs=False. The gateway is strict: the schema document of
+# authz-schema.yml declares Group, User, Hotel and the read action.
+apiVersion: gravitee.io/v1alpha1
+kind: AuthzPolicy
+metadata:
+  name: hotel-booking-read
+spec:
+  contextRef:
+    name: dev-ctx
+  # Immutable, and held by this policy only: another policy declaring it is refused.
+  entityId: policy.hotel-booking-read
+  name: Hotel booking — read access
+  # Immutable.
+  policyType: API
+  policyText: |
+    permit(principal in Group::"agents", action == Action::"read", resource == Hotel::"grand-paris");
+  targets:
+    - pdpRef:
+        name: orders-eu

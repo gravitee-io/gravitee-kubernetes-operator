@@ -17,6 +17,7 @@ package apim_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -33,15 +34,40 @@ func TestAPIM(t *testing.T) {
 }
 
 // refusingContextPath is where the cluster stub serves ManagementContext gravitee/refusing-ctx,
-// whose APIM refuses every PUT with the ownership finding.
+// whose APIM refuses every PUT with the ownership finding of the resource's kind.
 const refusingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/refusing-ctx"
+
+// acceptingContextPath is where the cluster stub serves ManagementContext gravitee/accepting-ctx,
+// whose APIM accepts every PUT and answers the state acceptedStates holds for its collection.
+const acceptingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/accepting-ctx"
+
+// acceptedStates are the states the accepting APIM answers, by collection path suffix.
+var acceptedStates = map[string]string{
+	"/authz/policies": `{"hrid":"gravitee-hotel-booking-read","id":"5f1c","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT","policyStatus":"DEPLOYED"}`,
+	"/aim/catalog/mcp-servers": `{"hrid":"gravitee-github","id":"7a2e","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT","authPolicyRef":"MCPServer::\"github\"","tools":[{"name":"create_issue",` +
+		`"entityId":"mcp-tool.github.create_issue","authPolicyRef":"MCPTool::\"github.create_issue\""}]}`,
+	"/aim/mcp-proxies": `{"hrid":"gravitee-support-studio","id":"9b3d","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT","tools":[{"server":"gravitee-github-mcp","tool":"search_issues",` +
+		`"alias":"gh_search","entityId":"mcp-tool.github.search_issues",` +
+		`"authPolicyRef":"MCPTool::\"github.search_issues\""}]}`,
+}
+
+func contextBody(name, baseURL string) string {
+	return `{"apiVersion":"gravitee.io/v1alpha1","kind":"ManagementContext",` +
+		`"metadata":{"name":"` + name + `","namespace":"gravitee"},` +
+		`"spec":{"baseUrl":"` + baseURL + `","organizationId":"DEFAULT","environmentId":"DEFAULT",` +
+		`"auth":{"bearerToken":"test"}}}`
+}
 
 // The dynamic client resolves ManagementContexts and falls back to the ambient kubeconfig, which
 // reaches a developer's cluster and exits where there is none (CI). Every lookup answers 404 here,
-// but gravitee/refusing-ctx.
+// but gravitee/refusing-ctx and gravitee/accepting-ctx.
 var _ = BeforeSuite(func() {
 	// The 400 the refusing APIM answers: an entityId another source holds.
 	refusingPlatformBody := `{"errors":{"severe":[` + mustJSON(ownershipFinding) + `]}}`
+	refusingPolicyBody := `{"errors":{"severe":[` + mustJSON(policyOwnershipFinding) + `]}}`
 	platform := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method != http.MethodPut {
@@ -49,17 +75,36 @@ var _ = BeforeSuite(func() {
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
+		if strings.HasSuffix(r.URL.Path, "/authz/policies") {
+			_, _ = w.Write([]byte(refusingPolicyBody))
+			return
+		}
 		_, _ = w.Write([]byte(refusingPlatformBody))
 	}))
 	DeferCleanup(platform.Close)
 
+	accepting := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPut {
+			for suffix, state := range acceptedStates {
+				if strings.HasSuffix(r.URL.Path, suffix) {
+					_, _ = w.Write([]byte(state))
+					return
+				}
+			}
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	DeferCleanup(accepting.Close)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.URL.Path == refusingContextPath {
-			_, _ = w.Write([]byte(`{"apiVersion":"gravitee.io/v1alpha1","kind":"ManagementContext",` +
-				`"metadata":{"name":"refusing-ctx","namespace":"gravitee"},` +
-				`"spec":{"baseUrl":"` + platform.URL + `","organizationId":"DEFAULT","environmentId":"DEFAULT",` +
-				`"auth":{"bearerToken":"test"}}}`))
+		switch r.URL.Path {
+		case refusingContextPath:
+			_, _ = w.Write([]byte(contextBody("refusing-ctx", platform.URL)))
+			return
+		case acceptingContextPath:
+			_, _ = w.Write([]byte(contextBody("accepting-ctx", accepting.URL)))
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)

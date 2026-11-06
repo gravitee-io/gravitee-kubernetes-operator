@@ -1,0 +1,8 @@
+{
+  "hrid": "default-drift-full",
+  "entityId": "policy.drift.full",
+  "name": "Drift full",
+  "policyType": "API",
+  "policyText": "permit(principal in Group::\"agents\", action == Action::\"read\", resource == Hotel::\"grand-paris\");\nforbid(principal, action, resource == Hotel::\"closed\");\n",
+  "targets": ["drift-full@eu", "default"]
+}

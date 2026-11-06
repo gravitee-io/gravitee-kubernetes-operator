@@ -48,6 +48,7 @@ type APIM struct {
 	AuthzPdps         *service.AuthzPdps
 	AuthzSchemas      *service.AuthzSchemas
 	AuthzEntities     *service.AuthzEntities
+	AuthzPolicies     *service.AuthzPolicies
 	Env               *service.Env
 
 	Context core.ContextModel
@@ -105,6 +106,7 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		AuthzPdps:         service.NewAuthzPdps(c),
 		AuthzSchemas:      service.NewAuthzSchemas(c),
 		AuthzEntities:     service.NewAuthzEntities(c),
+		AuthzPolicies:     service.NewAuthzPolicies(c),
 		Env:               service.NewEnv(c),
 		Context:           context,
 	}, nil

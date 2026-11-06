@@ -18,17 +18,26 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// StudioToolStatus is a tool a Studio exposes, with the catalog identity a policy names.
+// StudioToolStatus is a tool a Studio exposes, with its catalog identity and the reference a
+// policy names it by.
 type StudioToolStatus struct {
 	// HRID of the catalog server the tool comes from.
 	// +kubebuilder:validation:Optional
 	Server string `json:"server,omitempty"`
+	// Runtime name of the tool on its server.
 	// +kubebuilder:validation:Optional
 	Tool string `json:"tool,omitempty"`
+	// Name the Studio exposes the tool under, when one is declared.
 	// +kubebuilder:validation:Optional
 	Alias *string `json:"alias,omitempty"`
+	// Catalog identity of the tool, e.g. mcp-tool.github.create_issue.
 	// +kubebuilder:validation:Optional
 	EntityID string `json:"entityId,omitempty"`
+	// What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue": the resource the
+	// gateway checks on tools/call when enableFGA is set. An aliased tool keeps the reference of the
+	// tool it exposes.
+	// +kubebuilder:validation:Optional
+	AuthPolicyRef string `json:"authPolicyRef,omitempty"`
 }
 
 type Status struct {
@@ -49,7 +58,8 @@ type Status struct {
 	// The lifecycle state the platform observes.
 	// +kubebuilder:validation:Optional
 	State string `json:"state,omitempty"`
-	// The tools a Studio exposes, with their catalog identities.
+	// The tools a Studio exposes, in the order of the platform's state, with their catalog
+	// identities and the references policies name them by.
 	// +kubebuilder:validation:Optional
 	Tools []StudioToolStatus `json:"tools,omitempty"`
 	// Conditions describe the current conditions of the McpProxy.

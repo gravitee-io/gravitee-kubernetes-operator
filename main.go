@@ -61,6 +61,7 @@ import (
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	authzEntityAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzentity"
 	authzPdpAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzpdp"
+	authzPolicyAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzpolicy"
 	authzSchemaAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzschema"
 	catalogMcpServerAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/catalogmcpserver"
 	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
@@ -91,6 +92,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzpolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
@@ -472,6 +474,16 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for authz entities")
 		os.Exit(1)
 	}
+
+	if err := (&authzpolicy.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("authzpolicy-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzPolicyList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for authz policies")
+		os.Exit(1)
+	}
 }
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
@@ -800,6 +812,10 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (authzEntityAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (authzPolicyAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

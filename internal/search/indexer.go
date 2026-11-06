@@ -68,6 +68,8 @@ const (
 	AuthzEntityContextField       IndexField = "authzentity-context"
 	AuthzEntityAuthzPdpField      IndexField = "authzentity-authzpdp"
 	AuthzEntityParentField        IndexField = "authzentity-parent"
+	AuthzPolicyContextField       IndexField = "authzpolicy-context"
+	AuthzPolicyAuthzPdpField      IndexField = "authzpolicy-authzpdp"
 	AMSecurityContextField        IndexField = "am-sec-domain-context"
 	AMIdentityProviderDomainField IndexField = "am-idp-domain"
 	AMCertificateDomainField      IndexField = "am-cert-domain"
@@ -162,6 +164,10 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexAuthzEntityAuthzPdps))
 	collect(newIndexer(ctx, cache, &v1alpha1.AuthzEntity{}, AuthzEntityParentField,
 		indexAuthzEntityParents))
+	collect(newIndexer(ctx, cache, &v1alpha1.AuthzPolicy{}, AuthzPolicyContextField,
+		indexAuthzPolicyManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.AuthzPolicy{}, AuthzPolicyAuthzPdpField,
+		indexAuthzPolicyAuthzPdps))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
 		indexAMSecurityDomainContext))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityDomainFallbackCertificateField,
@@ -506,6 +512,30 @@ func indexAuthzEntityAuthzPdps(entity *v1alpha1.AuthzEntity, fields *[]string) {
 			continue
 		}
 		ref := ensureNamespacedRef(entity, target.PdpRef)
+		if _, ok := seen[ref]; !ok {
+			seen[ref] = struct{}{}
+			*fields = append(*fields, ref)
+		}
+	}
+}
+
+func indexAuthzPolicyManagementContexts(policy *v1alpha1.AuthzPolicy, fields *[]string) {
+	if policy.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(policy, policy.Spec.Context))
+}
+
+// indexAuthzPolicyAuthzPdps indexes a policy by every AuthzPdp its targets name, once each. A
+// scope target is not indexed: no AuthzPdp represents it.
+func indexAuthzPolicyAuthzPdps(policy *v1alpha1.AuthzPolicy, fields *[]string) {
+	seen := make(map[string]struct{}, len(policy.Spec.Targets))
+	for _, target := range policy.Spec.Targets {
+		if target.PdpRef == nil {
+			continue
+		}
+		ref := ensureNamespacedRef(policy, target.PdpRef)
 		if _, ok := seen[ref]; !ok {
 			seen[ref] = struct{}{}
 			*fields = append(*fields, ref)
