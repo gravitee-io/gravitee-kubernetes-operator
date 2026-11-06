@@ -72,6 +72,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoAuthzPdps(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -394,6 +398,29 @@ func assertNoMcpProxies(ctx context.Context, ctxRef refs.NamespacedName, context
 				"kubectl get mcpproxies.gravitee.io "+
 				kubectlCommand,
 			contextName, len(proxies.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func assertNoAuthzPdps(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	pdps := &v1alpha1.AuthzPdpList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		AuthzPdpContextField,
+		ctxRef,
+		pdps,
+	); err != nil {
+		return err
+	}
+
+	if len(pdps.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d authz pdps are relying on this context. "+
+				reviewMessage+
+				"kubectl get authzpdps.gravitee.io "+
+				kubectlCommand,
+			contextName, len(pdps.Items), contextName,
 		)
 	}
 	return nil

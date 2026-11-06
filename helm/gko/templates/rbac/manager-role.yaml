@@ -626,6 +626,28 @@ rules:
     verbs:
       - get
       - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - authzpdps
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - authzpdps/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - authzpdps/status
+    verbs:
+      - get
+      - update
 {{- if .Values.gatewayAPI.controller.enabled }}
   - apiGroups:
       - gravitee.io

@@ -54,6 +54,7 @@ type Interface interface {
 	WatchPortalThemes(index search.IndexField) *handler.Funcs
 	WatchApis(index search.IndexField) *handler.Funcs
 	WatchCatalogMcpServers(index search.IndexField) *handler.Funcs
+	WatchAuthzPdps(index search.IndexField) *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
 	WatchDomains(index search.IndexField) *handler.Funcs
 	WatchApplications(index search.IndexField) *handler.Funcs
@@ -221,6 +222,18 @@ func (w *Type) WatchCatalogMcpServers(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),
+	}
+}
+
+// WatchAuthzPdps enqueues the resources that target an AuthzPdp through pdpRef (schemas, entities,
+// policies) when an event on the PDP passes the controller's predicates. Those controllers pass
+// AuthzPdpRoutedPredicate: the update that gives the PDP its routing scope, the update that marks
+// it for deletion, and the delete.
+func (w *Type) WatchAuthzPdps(index search.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
+		DeleteFunc: w.DeleteFromLookup(index),
 	}
 }
 

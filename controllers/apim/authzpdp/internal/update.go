@@ -1,0 +1,61 @@
+// Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package internal
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+)
+
+func CreateOrUpdate(ctx context.Context, pdp *v1alpha1.AuthzPdp) error {
+	apimClient, err := apim.FromContextRef(ctx, pdp.ContextRef(), pdp.GetNamespace())
+	if err != nil {
+		return err
+	}
+
+	state, err := apimClient.AuthzPdps.CreateOrUpdate(model.ToAuthzPdpDTO(pdp))
+	if err != nil {
+		// A 400 is how the platform refuses an apply. Admission ran the same checks as a dry run, so a
+		// refusal here comes from a state that changed since (an endpoint path another API took, a
+		// sibling's strict): keep it recoverable (backoff) rather than terminal until the next spec
+		// change. The routing scope is left as it was: a PDP synced before still exists.
+		if gerrors.IsBadRequest(err) {
+			if findings, refused := model.AutomationRefusal(err); refused {
+				pdp.Status.Errors = findings
+			}
+			return fmt.Errorf("authz pdp [%s] was refused by the automation api: %w", pdp.GetName(), err)
+		}
+		return gerrors.NewControlPlaneError(err)
+	}
+
+	k8s.AddAutomationAPIManagedCondition(pdp)
+
+	// Setting fields by fields to keep the rest (conditions) intact
+	pdp.Status.ID = state.ID
+	pdp.Status.OrgID = state.OrgID
+	pdp.Status.EnvID = state.EnvID
+	pdp.Status.HRID = refs.NewNamespacedNameFromObject(pdp).HRID()
+	pdp.Status.Errors = state.Errors
+	pdp.Status.RoutingScope = state.RoutingScope
+	pdp.Status.WellKnownPath = state.WellKnownPath
+
+	return nil
+}
