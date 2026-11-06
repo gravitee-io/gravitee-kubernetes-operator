@@ -208,7 +208,8 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 
-	if !admissiondrift.CompileTemplates(ctx, oldCopy, newCopy, errs) {
+	secrets, ok := admissiondrift.CompileTemplates(ctx, oldCopy, newCopy, errs)
+	if !ok {
 		return
 	}
 	if err := a.resolveRefs(ctx, oldCopy); err != nil {
@@ -236,7 +237,7 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 
-	admissiondrift.CompareWithRemote(newCopy, oldDTO, newDTO, remote, errs)
+	admissiondrift.CompareWithRemote(newCopy, oldDTO, newDTO, remote, secrets, errs)
 }
 
 func (a AdmissionLifecycle[T, D, C]) resolveRefs(ctx context.Context, obj T) error {

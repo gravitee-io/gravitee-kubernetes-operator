@@ -19,7 +19,9 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // CompileTemplates resolves the templates of the copies drift compares, without recording any
@@ -27,18 +29,52 @@ import (
 // was sent. Validation compiles the new object in place, never the old one: left raw, a templated
 // old value never matches the remote and every change to it is reported as drift.
 //
-// It returns false when drift must not be checked. A template of the old object that no longer
-// resolves, its Secret deleted for instance, leaves no way to know what the old object asked for:
-// a warning says so rather than refusing the very update that repairs the reference.
-func CompileTemplates(ctx context.Context, oldCopy, newCopy client.Object, errs *errors.AdmissionErrors) bool {
-	if err := template.Compile(ctx, newCopy, false); err != nil {
+// It returns the values the secret templates of both versions resolve to, which a drift report
+// must never print, and false when drift must not be checked. A template of the old object that
+// no longer resolves, its Secret deleted for instance, leaves no way to know what the old object
+// asked for: a warning says so rather than refusing the very update that repairs the reference.
+func CompileTemplates(
+	ctx context.Context, oldCopy, newCopy client.Object, errs *errors.AdmissionErrors,
+) ([]string, bool) {
+	newSecrets, err := compileNew(ctx, newCopy)
+	if err != nil {
 		errs.AddSeveref("could not compile templates for 'new' CRD: %s", err.Error())
-		return false
+		return nil, false
 	}
-	if err := template.Compile(ctx, oldCopy, false); err != nil {
+	oldSecrets, err := template.CompileRecordingSecrets(ctx, oldCopy)
+	if err != nil {
 		errs.AddWarningf("drift detection skipped, the templates of the previous version no longer resolve: %s",
 			err.Error())
-		return false
+		return nil, false
 	}
-	return true
+	return append(newSecrets, oldSecrets...), true
+}
+
+// compileNew compiles the new copy and, since validation already compiled it in place, reads its
+// secret values from the object as the admission request submitted it.
+func compileNew(ctx context.Context, newCopy client.Object) ([]string, error) {
+	secrets, err := template.CompileRecordingSecrets(ctx, newCopy)
+	if err != nil {
+		return nil, err
+	}
+	submitted, ok := submittedObject(ctx)
+	if !ok {
+		return secrets, nil
+	}
+	submittedSecrets, err := template.CompileRecordingSecrets(ctx, submitted)
+	return append(secrets, submittedSecrets...), err
+}
+
+// submittedObject is the object under admission as the request carried it. There is none outside
+// an admission request.
+func submittedObject(ctx context.Context) (*unstructured.Unstructured, bool) {
+	req, err := admission.RequestFromContext(ctx)
+	if err != nil || len(req.Object.Raw) == 0 {
+		return nil, false
+	}
+	obj := &unstructured.Unstructured{}
+	if err := obj.UnmarshalJSON(req.Object.Raw); err != nil {
+		return nil, false
+	}
+	return obj, true
 }

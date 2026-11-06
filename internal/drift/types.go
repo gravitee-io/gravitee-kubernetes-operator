@@ -16,6 +16,7 @@ package drift
 
 import (
 	"cmp"
+	"fmt"
 	"log"
 	"reflect"
 	"slices"
@@ -128,6 +129,36 @@ func (r *Result) String() string {
 	var builder strings.Builder
 	format(r, &builder, -2)
 	return strings.TrimSpace(strings.TrimRight(builder.String(), "\n"))
+}
+
+// Redact marks every compared value holding one of the given values, on either side, as never
+// printable. It changes the report only, never the comparison: a drift stays a drift.
+func (r *Result) Redact(values []string) {
+	if len(values) == 0 {
+		return
+	}
+	for _, child := range r.children {
+		child.Redact(values)
+	}
+	if containsAny(r.CRDValue, values) || containsAny(r.RemoteValue, values) {
+		r.context.Redacted = true
+	}
+}
+
+func containsAny(v any, values []string) bool {
+	if v == nil {
+		return false
+	}
+	s, ok := v.(string)
+	if !ok {
+		s = fmt.Sprint(v)
+	}
+	for _, value := range values {
+		if value != "" && strings.Contains(s, value) {
+			return true
+		}
+	}
+	return false
 }
 
 // DriftDetected returns true if the result or any of its children is found to be inequivalent, false otherwise.
