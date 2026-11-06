@@ -36,6 +36,9 @@ type AuthzPdpDependent struct {
 	Field IndexField
 	// NewList returns an empty list of the kind.
 	NewList func() client.ObjectList
+	// NeedsTarget is set for a kind the platform does not leave without a target: a PDP delete
+	// that would is refused with a 409.
+	NeedsTarget bool
 }
 
 // AuthzPdpDependents returns the kinds that target an AuthzPdp, which deleting one warns about.
@@ -48,12 +51,20 @@ func AuthzPdpDependents() []AuthzPdpDependent {
 			Field:   AuthzSchemaAuthzPdpField,
 			NewList: func() client.ObjectList { return &v1alpha1.AuthzSchemaList{} },
 		},
+		{
+			Kind:        "AuthzEntity",
+			Field:       AuthzEntityAuthzPdpField,
+			NewList:     func() client.ObjectList { return &v1alpha1.AuthzEntityList{} },
+			NeedsTarget: true,
+		},
 	}
 }
 
 // Dependents are the resources of one kind that target an AuthzPdp.
 type Dependents struct {
 	Kind string
+	// NeedsTarget is the kind's AuthzPdpDependent.NeedsTarget.
+	NeedsTarget bool
 	// Names are namespace/name, sorted.
 	Names []string
 }
@@ -95,7 +106,7 @@ func FindAuthzPdpDependents(
 			continue
 		}
 		sort.Strings(names)
-		found = append(found, Dependents{Kind: kind.Kind, Names: names})
+		found = append(found, Dependents{Kind: kind.Kind, NeedsTarget: kind.NeedsTarget, Names: names})
 	}
 	return found, nil
 }

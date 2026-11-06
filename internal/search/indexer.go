@@ -65,6 +65,9 @@ const (
 	AuthzPdpContextField          IndexField = "authzpdp-context"
 	AuthzSchemaContextField       IndexField = "authzschema-context"
 	AuthzSchemaAuthzPdpField      IndexField = "authzschema-authzpdp"
+	AuthzEntityContextField       IndexField = "authzentity-context"
+	AuthzEntityAuthzPdpField      IndexField = "authzentity-authzpdp"
+	AuthzEntityParentField        IndexField = "authzentity-parent"
 	AMSecurityContextField        IndexField = "am-sec-domain-context"
 	AMIdentityProviderDomainField IndexField = "am-idp-domain"
 	AMCertificateDomainField      IndexField = "am-cert-domain"
@@ -153,6 +156,12 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexAuthzSchemaManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.AuthzSchema{}, AuthzSchemaAuthzPdpField,
 		indexAuthzSchemaAuthzPdps))
+	collect(newIndexer(ctx, cache, &v1alpha1.AuthzEntity{}, AuthzEntityContextField,
+		indexAuthzEntityManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.AuthzEntity{}, AuthzEntityAuthzPdpField,
+		indexAuthzEntityAuthzPdps))
+	collect(newIndexer(ctx, cache, &v1alpha1.AuthzEntity{}, AuthzEntityParentField,
+		indexAuthzEntityParents))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityContextField,
 		indexAMSecurityDomainContext))
 	collect(newIndexer(ctx, cache, &v1alpha1.AMSecurityDomain{}, AMSecurityDomainFallbackCertificateField,
@@ -478,6 +487,48 @@ func indexAuthzSchemaAuthzPdps(schema *v1alpha1.AuthzSchema, fields *[]string) {
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(schema, schema.Spec.Target.PdpRef))
+}
+
+func indexAuthzEntityManagementContexts(entity *v1alpha1.AuthzEntity, fields *[]string) {
+	if entity.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(entity, entity.Spec.Context))
+}
+
+// indexAuthzEntityAuthzPdps indexes an entity by every AuthzPdp its targets name, once each. A
+// scope target is not indexed: no AuthzPdp represents it.
+func indexAuthzEntityAuthzPdps(entity *v1alpha1.AuthzEntity, fields *[]string) {
+	seen := make(map[string]struct{}, len(entity.Spec.Targets))
+	for _, target := range entity.Spec.Targets {
+		if target.PdpRef == nil {
+			continue
+		}
+		ref := ensureNamespacedRef(entity, target.PdpRef)
+		if _, ok := seen[ref]; !ok {
+			seen[ref] = struct{}{}
+			*fields = append(*fields, ref)
+		}
+	}
+}
+
+// indexAuthzEntityParents indexes an entity by every parent it declares, once each, keyed by
+// AuthzEntityParentKey: a parent is an entity of the same environment, which a ManagementContext
+// stands for.
+func indexAuthzEntityParents(entity *v1alpha1.AuthzEntity, fields *[]string) {
+	contextOf := dynamic.ContextOf(entity)
+	if contextOf == "" {
+		return
+	}
+	seen := make(map[string]struct{}, len(entity.Spec.Parents))
+	for _, parent := range entity.Spec.Parents {
+		key := AuthzEntityParentKey(contextOf, parent.EntityType, parent.EntityID)
+		if _, ok := seen[key]; !ok {
+			seen[key] = struct{}{}
+			*fields = append(*fields, key)
+		}
+	}
 }
 
 // indexMcpProxyCatalogMcpServers indexes a Studio by every catalog server it references, through
