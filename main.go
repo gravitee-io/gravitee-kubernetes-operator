@@ -57,6 +57,7 @@ import (
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
+	authzEntityAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzentity"
 	authzPdpAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzpdp"
 	authzSchemaAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzschema"
 	catalogMcpServerAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/catalogmcpserver"
@@ -780,6 +781,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (authzSchemaAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (authzEntityAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil
