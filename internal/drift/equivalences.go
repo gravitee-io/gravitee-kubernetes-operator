@@ -40,7 +40,10 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("time", reflect.Struct, TimeStruct)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.String, IgnoreRemoteDefault)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Struct, IgnoreRemoteDefaultStruct)
-	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Bool, IgnoreRemoteDefaultBool)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Bool, IgnoreRemoteDefaultValue)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Int, IgnoreRemoteDefaultValue)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Int32, IgnoreRemoteDefaultValue)
+	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Int64, IgnoreRemoteDefaultValue)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Slice, IgnoreRemoteDefaultSlice)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
 	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
@@ -447,9 +450,10 @@ func IgnoreRemoteDefaultStruct(crd any, remote any, context DriftContext) Equiva
 	return defaultStructEquivalence(crd, remote, context)
 }
 
-// IgnoreRemoteDefaultBool is the boolean form of IgnoreRemoteDefault: a CRD that leaves the field unset accepts
-// whatever the server holds; a value it sets, false included, is compared. Tag arguments are not supported.
-func IgnoreRemoteDefaultBool(crd any, remote any, context DriftContext) Equivalence {
+// IgnoreRemoteDefaultValue is the boolean and integer form of IgnoreRemoteDefault: a CRD that leaves the field
+// unset accepts whatever the server holds; a value it sets, false or 0 included, is compared. Tag arguments are
+// not supported.
+func IgnoreRemoteDefaultValue(crd any, remote any, context DriftContext) Equivalence {
 	if crd == nil {
 		return Equivalence{Equivalent: Equivalent}
 	}

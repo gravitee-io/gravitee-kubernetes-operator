@@ -174,7 +174,7 @@ Do **not** define a DTO for drift. Reuse the resource's existing `internal/apim/
 | `time` | `time.Time` fields, compared as instants (timezone-tolerant). Required on every `time.Time`: an untagged one panics |
 | `case-insensitive` | Enums APIM may echo back in a different case |
 | `unstructured` (optionally `:masked`) | `GenericStringMap` / `unstructured.Unstructured` JSON blobs. With `:masked`, a remote value of exactly `********` is equivalent at any depth to a CRD string or absent value (AM-masked plugin secrets); a CRD object or list against it drifts |
-| `ignore-remote-default` (optionally `:A,B`) | Strings the CRD may leave unset, which APIM then resolves on its own. Bare, any remote value is accepted (cross-resource portal `visibility`); with `:A,B`, only the listed server defaults are (`flowMode`, documentation `area`) |
+| `ignore-remote-default` (optionally `:A,B`) | Strings the CRD may leave unset, which APIM then resolves on its own. Bare, any remote value is accepted (cross-resource portal `visibility`); with `:A,B`, only the listed server defaults are (`flowMode`, documentation `area`). Also on structs, booleans, integers and lists the server fills when the CRD leaves them unset (no arguments): AM domain `oidc` settings |
 | `ignore-namespace-prefix` | Strings APIM prefixes with the namespace |
 
 Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of the **spec payload**; if APIM returns a field the mapper never sets and both sides end up empty, comparison is a no-op — explicit `ignore` is optional belt-and-suspenders.
