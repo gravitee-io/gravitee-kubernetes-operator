@@ -119,8 +119,10 @@ func (r *Reconciler) mutate(ctx context.Context, events *event.Recorder, schema,
 	// Resolved on dc, which is never saved: its target becomes the scope the platform receives,
 	// while schema keeps its pdpRef. Resolved before templates compile, so a schema waiting on its
 	// AuthzPdp records no template reference. A pending AuthzPdp is waited out: the AuthzPdp watch
-	// requeues the schema once it syncs. Any other error (an AuthzPdp of another context, a cache
-	// read failure) is retried with backoff and reported on Accepted.
+	// requeues the schema once it syncs. An AuthzPdp of another context comes back as an
+	// IllegalStateError, returned as is: reported on Accepted and not requeued, since only a change
+	// to the pdpRef fixes it. Any other error (a cache read failure) is retried with backoff and
+	// reported on Accepted.
 	if err := dynamic.ResolveAuthzSchemaRefs(ctx, dc); err != nil {
 		if dynamic.IsAuthzPdpPending(err) {
 			return errors.NewResolveRefError(err)

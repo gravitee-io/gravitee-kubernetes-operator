@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -120,6 +121,29 @@ var _ = Describe("Authz schema reconcile", func() {
 		Expect(err).To(HaveOccurred())
 
 		expectWaitingOnPdp(cli, "authz pdp not synced: [gravitee/orders-eu] has no routing scope yet")
+	})
+
+	// Both contexts are immutable: only a change to the pdpRef fixes it, and that change
+	// reconciles the schema again. Requeuing would retry and log the same error forever.
+	It("reports a pdpRef to another context's AuthzPdp on Accepted, without requeuing", func() {
+		pdp := newAuthzPdp()
+		pdp.Spec.Context = &refs.NamespacedName{Name: "prod-ctx"}
+		pdp.Status.RoutingScope = "orders@eu"
+		r, cli := setup(newAuthzSchema(), pdp)
+
+		result, err := r.Reconcile(context.Background(), req)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(Equal(ctrl.Result{}))
+		s := stored(cli)
+		Expect(s.Finalizers).To(ContainElement(core.AuthzSchemaFinalizer))
+		accepted := k8s.GetCondition(s, k8s.ConditionAccepted)
+		Expect(accepted).ToNot(BeNil())
+		Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+		Expect(accepted.Reason).To(Equal("IllegalStateError"))
+		Expect(accepted.Message).To(ContainSubstring(
+			"authz pdp [gravitee/orders-eu] belongs to management context [gravitee/prod-ctx], not [gravitee/dev-ctx]"))
+		Expect(s.Status.ID).To(BeEmpty())
 	})
 
 	// A scope target needs no AuthzPdp, so the reconcile goes on to the apply, which fails here
