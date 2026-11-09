@@ -70,6 +70,14 @@ func validateUpdate(
 		return errs
 	}
 
+	// The platform refused the last apply: the stored spec is not what it holds, and this edit is how
+	// the entity gets fixed. A RESOURCE the platform deleted with its parent is one: applied again, it
+	// is refused for that parent, and the edit dropping it would read the missing remote as drift. The
+	// dry run above has checked the new spec.
+	if len(oldObj.Status.Errors.Severe) > 0 {
+		return errs
+	}
+
 	// An old target that no longer resolves is usually a deleted AuthzPdp, whose scope the platform
 	// has already removed from the entity: comparing the old targets against it would refuse the
 	// edit that retargets the entity.

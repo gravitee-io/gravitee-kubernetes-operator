@@ -31,6 +31,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzentity"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
@@ -215,5 +216,57 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
+	})
+})
+
+var _ = Describe("Detecting drift on an AuthzEntity the platform no longer holds", func() {
+	ctx := context.Background()
+	ctrl := admission.AdmissionCtrl{}
+	notFound := `{"message":"entity not found"}`
+
+	BeforeEach(func() {
+		platform.reset()
+		platform.answer(http.StatusOK, `{"hrid":"travel-ritz"}`)
+		platform.answerGet(http.StatusNotFound, notFound)
+		saved := env.Config.DriftDetection
+		env.Config.DriftDetection.Enabled = true
+		env.Config.DriftDetection.Policy = env.DriftPolicyDeny
+		env.Config.DriftDetection.OnRemoteMissing = env.DriftPolicyDeny
+		DeferCleanup(func() { env.Config.DriftDetection = saved })
+	})
+
+	// ritz was applied under Group::"agents", then deleted with it on the platform.
+	ritz := func() *v1alpha1.AuthzEntity {
+		entity := newEntity("ritz", "ritz", authzpdp.Target{Scope: "default"})
+		entity.Spec.Kind, entity.Spec.EntityType = "RESOURCE", "Hotel"
+		entity.Spec.Parents = []authzentity.Parent{{EntityType: "Group", EntityID: "agents"}}
+		entity.Status.ID = "3b9d0c2b"
+		return entity
+	}
+	withoutParents := func(entity *v1alpha1.AuthzEntity) *v1alpha1.AuthzEntity {
+		edited := entity.DeepCopy()
+		edited.Spec.Parents = nil
+		return edited
+	}
+
+	It("admits the edit that drops the deleted parent of a RESOURCE the platform refused", func() {
+		refused := ritz()
+		refused.Status.Errors.Severe = []string{`parent Group::"agents" does not exist: a RESOURCE is deleted ` +
+			`with its parent, so declare the parent first or drop it from parents`}
+		cluster(refused)
+
+		_, err := ctrl.ValidateUpdate(ctx, refused, withoutParents(refused))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(platform.requests()).To(HaveLen(1), "the new spec is dry-run")
+	})
+
+	It("refuses an edit to an entity the platform lost with no refusal recorded", func() {
+		applied := ritz()
+		cluster(applied)
+
+		_, err := ctrl.ValidateUpdate(ctx, applied, withoutParents(applied))
+
+		Expect(err).To(MatchError(ContainSubstring("[travel/ritz] not found during drift detection")))
 	})
 })
