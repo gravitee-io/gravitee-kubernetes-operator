@@ -34,6 +34,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -47,6 +48,8 @@ const (
 	rotatedSecret      = "[[ secret `client/rotated` ]]"
 	bracketsSecret     = "[[ secret `client/brackets` ]]"
 	deletedSecret      = "[[ secret `deleted/value` ]]"
+	removedKeySecret   = "[[ secret `client/removed` ]]"
+	emptiedKeySecret   = "[[ secret `client/emptied` ]]"
 	unreadableSecret   = "[[ secret `unreadable/value` ]]"
 )
 
@@ -73,6 +76,7 @@ var _ = Describe("Drift detection on templated values", func() {
 					"current":  []byte("current-value"),
 					"rotated":  []byte("rotated-value"),
 					"brackets": []byte("ab[[cd"),
+					"emptied":  {},
 				},
 			}).
 			WithInterceptorFuncs(interceptor.Funcs{Get: failToReadUnreadable}).
@@ -109,21 +113,55 @@ var _ = Describe("Drift detection on templated values", func() {
 			currentSecret, rotatedSecret, "changed-in-apim", true),
 	)
 
-	It("skips drift detection with a warning when a Secret of the old version no longer exists", func() {
-		errs := validateTemplated(deletedSecret, currentSecret, "changed-in-apim")
+	DescribeTable("skips drift detection with a warning when a secret of the old version no longer exists",
+		func(oldValue string) {
+			errs := validateTemplated(oldValue, currentSecret, "changed-in-apim")
 
-		Expect(errs.Severe).To(BeEmpty())
-		Expect(errs.Warning).To(ConsistOf(HaveField("Message",
-			ContainSubstring("drift detection skipped, the templates of the previous version no longer resolve"))))
-	})
+			Expect(errs.Severe).To(BeEmpty())
+			Expect(errs.Warning).To(ConsistOf(HaveField("Message",
+				ContainSubstring("drift detection skipped, the previous version no longer resolves"))))
+		},
+		Entry("the Secret was deleted", deletedSecret),
+		Entry("the key was removed from the Secret", removedKeySecret),
+		Entry("the key was emptied in the Secret", emptiedKeySecret),
+	)
 
 	It("refuses the update when a Secret of the old version cannot be read", func() {
 		errs := validateTemplated(unreadableSecret, currentSecret, "changed-in-apim")
 
 		Expect(errs.Warning).To(BeEmpty())
 		Expect(errs.Severe).To(ConsistOf(HaveField("Message",
-			ContainSubstring("could not compile templates for 'old' CRD"))))
+			ContainSubstring("could not resolve the previous version for drift detection"))))
 	})
+
+	DescribeTable("handles a reference of the old version that does not resolve",
+		func(failure error, expectSkipped bool) {
+			failOnOld := func(_ context.Context, dict *v1alpha1.Dictionary) error {
+				if dict.Spec.Manual.Properties["clientSecret"] == "old-ref" {
+					return failure
+				}
+				return nil
+			}
+			updated := templatedDictionary("new-ref")
+
+			errs := validate(admissionRequest(updated), templatedDictionary("old-ref"), updated,
+				"changed-in-apim", failOnOld)
+
+			if expectSkipped {
+				Expect(errs.Severe).To(BeEmpty())
+				Expect(errs.Warning).To(ConsistOf(HaveField("Message",
+					ContainSubstring("drift detection skipped, the previous version no longer resolves"))))
+			} else {
+				Expect(errs.Warning).To(BeEmpty())
+				Expect(errs.Severe).To(ConsistOf(HaveField("Message",
+					ContainSubstring("could not resolve the previous version for drift detection"))))
+			}
+		},
+		Entry("a referenced object deleted since skips drift with a warning",
+			errors.NewResolveRefError(apierrors.NewNotFound(schema.GroupResource{Resource: "apiresources"}, "gone")), true),
+		Entry("a referenced object that cannot be read refuses the update",
+			errors.NewResolveRefError(apierrors.NewTimeoutError("the API server did not answer in time", 1)), false),
+	)
 
 	It("never prints a value a secret template resolved to", func() {
 		errs := validateTemplated(currentSecret, rotatedSecret, "changed-in-apim")

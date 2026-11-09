@@ -58,13 +58,6 @@ func NewResolveRefError(err error) error {
 	return ReconcileError{err, ResolveRefError}
 }
 
-// IsResolveRefError is true when err comes from a reference that does not resolve, a Secret or
-// ConfigMap that does not exist for instance.
-func IsResolveRefError(err error) bool {
-	e := &ReconcileError{}
-	return errors.As(err, e) && e.Type == ResolveRefError
-}
-
 func NewIllegalStateError(err error) error {
 	return ReconcileError{err, IllegalStateError}
 }

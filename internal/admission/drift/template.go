@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -33,25 +34,29 @@ import (
 // secret values are recorded, and so are those of the new object, read from the admission request
 // since the object drift receives is already compiled.
 //
-// It returns false when drift must not be checked. A Secret or ConfigMap the old object referenced
-// and that no longer exists leaves no way to know what the old object asked for: a warning says so
-// rather than refusing the very update that repairs the reference. Any other failure refuses it.
+// It returns false when drift must not be checked (see ReportUnresolvedOldVersion).
 func CompileTemplates(ctx context.Context, oldCopy client.Object, errs *errors.AdmissionErrors) bool {
 	if err := compileSubmitted(ctx); err != nil {
 		errs.AddSeveref("could not compile templates for 'new' CRD: %s", err.Error())
 		return false
 	}
-	err := template.Compile(ctx, oldCopy, false)
-	switch {
-	case err == nil:
-		return true
-	case errors.IsResolveRefError(err):
-		errs.AddWarningf("drift detection skipped, the templates of the previous version no longer resolve: %s",
-			err.Error())
-	default:
-		errs.AddSeveref("could not compile templates for 'old' CRD: %s", err.Error())
+	if err := template.Compile(ctx, oldCopy, false); err != nil {
+		ReportUnresolvedOldVersion(err, errs)
+		return false
 	}
-	return false
+	return true
+}
+
+// ReportUnresolvedOldVersion adds why the old version could not be prepared for comparison. Something
+// it references that no longer exists, a Secret or an ApiResource deleted for instance, leaves no way
+// to know what the old version asked for: a warning says so rather than refusing the very update that
+// repairs the reference. Any other failure, the API server not answering for instance, refuses it.
+func ReportUnresolvedOldVersion(err error, errs *errors.AdmissionErrors) {
+	if apierrors.IsNotFound(err) {
+		errs.AddWarningf("drift detection skipped, the previous version no longer resolves: %s", err.Error())
+		return
+	}
+	errs.AddSeveref("could not resolve the previous version for drift detection: %s", err.Error())
 }
 
 // compileSubmitted compiles the object under admission as the request carried it, for the secret
