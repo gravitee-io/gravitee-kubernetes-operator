@@ -17,7 +17,6 @@ package authzschema
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
@@ -51,14 +50,14 @@ func validateUpdate(
 
 	// Resolved on every update, metadata-only ones included: drift resolves it too, and would
 	// refuse the controller's own writes while the AuthzPdp is pending.
-	target, targetErrs, resolved := resolveTarget(ctx, newObj)
+	targetErrs, resolved := resolveTarget(ctx, newObj)
 	errs.MergeWith(targetErrs)
 	if !resolved {
 		return errs
 	}
 
 	if specChanged {
-		errs.MergeWith(validateDryRun(ctx, newObj, target))
+		errs.MergeWith(validateDryRun(ctx, newObj))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -79,34 +78,17 @@ func validateUpdate(
 	}
 
 	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemoteAuthzSchema,
-		drift.MapDTO(toDriftDTO)))
+		drift.MapDTO(model.ToAuthzSchemaDTO)))
 	return errs
 }
 
-// resolveRefs compiles templates on the copy drift compares, then replaces its target with the
-// scope it resolves to, so both sides are compared with what the operator sends.
+// resolveRefs compiles templates on the copy drift compares, then resolves its refs as the
+// reconcile does, so both sides are compared with what the operator sends.
 func resolveRefs(ctx context.Context, schema *v1alpha1.AuthzSchema) error {
 	if err := template.Compile(ctx, schema, false); err != nil {
 		return err
 	}
-	target, err := dynamic.ResolveAuthzTarget(ctx, schema, schema.Spec.Target)
-	if err != nil {
-		return err
-	}
-	schema.Spec.Target = nil
-	if target != "" {
-		schema.Spec.Target = &authzpdp.Target{Scope: target}
-	}
-	return nil
-}
-
-// toDriftDTO maps a copy resolveRefs has resolved: its target is a scope, or nil.
-func toDriftDTO(schema *v1alpha1.AuthzSchema) model.AuthzSchemaDTO {
-	target := ""
-	if schema.Spec.Target != nil {
-		target = schema.Spec.Target.Scope
-	}
-	return model.ToAuthzSchemaDTO(schema, target)
+	return dynamic.ResolveAuthzSchemaRefs(ctx, schema)
 }
 
 // getRemoteAuthzSchema reads the platform's copy and returns the payload half.

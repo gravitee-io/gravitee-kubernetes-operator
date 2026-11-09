@@ -37,8 +37,8 @@ var _ = Describe("Authz schema Drift detection", func() {
 			completeAuthzSchemaDTO(),
 		),
 		Entry("minimal CRD, no target, against what the platform stores for it",
-			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD(), ""),
-			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD(), ""),
+			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD()),
+			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD()),
 		),
 		Entry("hrid is identity, not payload",
 			withAuthzSchemaHRID(completeAuthzSchemaDTO(), "default-drift-full"),
@@ -72,8 +72,8 @@ var _ = Describe("Authz schema Drift detection", func() {
 			withAuthzSchemaTarget(completeAuthzSchemaDTO(), ""),
 		),
 		Entry("target added on the platform to a schema declared without one",
-			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD(), ""),
-			withAuthzSchemaTarget(model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD(), ""), "default"),
+			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD()),
+			withAuthzSchemaTarget(model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD()), "default"),
 		),
 	)
 
