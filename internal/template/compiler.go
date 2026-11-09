@@ -68,12 +68,11 @@ func Compile(ctx context.Context, obj client.Object, updateObjectMetadata bool) 
 	)
 }
 
-// CompileRecordingSecrets compiles obj in place like Compile without updating the referenced
-// Secrets and ConfigMaps, and returns the values its secret templates resolved to.
-func CompileRecordingSecrets(ctx context.Context, obj client.Object) ([]string, error) {
+// WithSecretRecorder returns a context in which every value a secret template resolves to is
+// recorded, and a function returning the values recorded so far.
+func WithSecretRecorder(ctx context.Context) (context.Context, func() []string) {
 	secrets := new([]string)
-	err := Compile(context.WithValue(ctx, resolvedSecretsKey, secrets), obj, false)
-	return *secrets, err
+	return context.WithValue(ctx, resolvedSecretsKey, secrets), func() []string { return *secrets }
 }
 
 func recordSecret(ctx context.Context, value string) {

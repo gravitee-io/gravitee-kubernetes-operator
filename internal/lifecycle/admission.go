@@ -21,6 +21,7 @@ import (
 	admissiondrift "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
 
 func (a AdmissionLifecycle[T, D, C]) ValidateCreate(ctx context.Context, obj T) *errors.AdmissionErrors {
@@ -208,8 +209,8 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 
-	secrets, ok := admissiondrift.CompileTemplates(ctx, oldCopy, newCopy, errs)
-	if !ok {
+	ctx, secrets := template.WithSecretRecorder(ctx)
+	if !admissiondrift.CompileTemplates(ctx, oldCopy, errs) {
 		return
 	}
 	if err := a.resolveRefs(ctx, oldCopy); err != nil {
@@ -237,7 +238,7 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 
-	admissiondrift.CompareWithRemote(newCopy, oldDTO, newDTO, remote, secrets, errs)
+	admissiondrift.CompareWithRemote(newCopy, oldDTO, newDTO, remote, secrets(), errs)
 }
 
 func (a AdmissionLifecycle[T, D, C]) resolveRefs(ctx context.Context, obj T) error {
