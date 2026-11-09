@@ -130,7 +130,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if errors.IsRecoverable(err) {
+	if errors.MustRetry(err, application.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, application)
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
 	}

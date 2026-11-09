@@ -136,7 +136,7 @@ func reconcileApiDefinition(
 		return ctrl.Result{}, err
 	}
 
-	if errors.IsRecoverable(err) {
+	if errors.MustRetry(err, apiDefinition.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, apiDefinition)
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
 	}
