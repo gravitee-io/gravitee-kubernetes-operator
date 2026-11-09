@@ -214,7 +214,7 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 	if err := a.resolveRefs(ctx, oldCopy); err != nil {
-		errs.AddSeveref("could not resolve references for old CRD: %s", err.Error())
+		admissiondrift.ReportUnresolvedOldVersion(err, errs)
 		return
 	}
 	if err := a.resolveRefs(ctx, newCopy); err != nil {

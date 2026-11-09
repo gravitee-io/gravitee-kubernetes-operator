@@ -34,6 +34,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,6 +74,28 @@ func Compile(ctx context.Context, obj client.Object, updateObjectMetadata bool) 
 func WithSecretRecorder(ctx context.Context) (context.Context, func() []string) {
 	secrets := new([]string)
 	return context.WithValue(ctx, resolvedSecretsKey, secrets), func() []string { return *secrets }
+}
+
+// notFoundError keeps the short message of a missing Secret or ConfigMap and the Kubernetes error
+// behind it, so that callers can tell a missing source from a failure to read it.
+type notFoundError struct {
+	message string
+	cause   error
+}
+
+func (e notFoundError) Error() string { return e.message }
+
+func (e notFoundError) Unwrap() error { return e.cause }
+
+func notFound(kind, ns, name string, cause error) error {
+	return gerrors.NewResolveRefError(notFoundError{fmt.Sprintf("%s [%s/%s] not found", kind, ns, name), cause})
+}
+
+// missingKey reports a key absent from an existing Secret or ConfigMap as a missing source, like the
+// Secret or ConfigMap itself, so that drift can tell it apart from a failure to read it.
+func missingKey(kind, key, ns, name string) error {
+	cause := kErrors.NewNotFound(schema.GroupResource{Resource: kind + "s"}, name)
+	return notFoundError{fmt.Sprintf("key [%s] not found in %s [%s/%s]", key, kind, ns, name), cause}
 }
 
 func recordSecret(ctx context.Context, value string) {
@@ -194,7 +217,7 @@ func resolveConfigmap(ctx context.Context, ns, name string, updateObjectMetadata
 
 	err := cli.Get(ctx, nn, cm)
 	if kErrors.IsNotFound(err) {
-		return "", gerrors.NewResolveRefError(fmt.Errorf("configmap [%s/%s] not found", ns, name))
+		return "", notFound("configmap", ns, name, err)
 	}
 
 	if err != nil {
@@ -204,7 +227,7 @@ func resolveConfigmap(ctx context.Context, ns, name string, updateObjectMetadata
 	key := sp[1]
 	v := cm.Data[key]
 	if v == "" {
-		return "", fmt.Errorf("key [%s] not found in configmap [%s/%s]", key, ns, name)
+		return "", missingKey("configmap", key, ns, name)
 	}
 	if !updateObjectMetadata {
 		return v, nil
@@ -242,7 +265,7 @@ func resolveSecret(ctx context.Context, ns, name string, updateObjectMetadata bo
 
 	err := cli.Get(ctx, nn, sec)
 	if kErrors.IsNotFound(err) {
-		return "", gerrors.NewResolveRefError(fmt.Errorf("secret [%s/%s] not found", ns, name))
+		return "", notFound("secret", ns, name, err)
 	}
 
 	if err != nil {
@@ -252,7 +275,7 @@ func resolveSecret(ctx context.Context, ns, name string, updateObjectMetadata bo
 	key := sp[1]
 	v := sec.Data[key]
 	if len(v) == 0 {
-		return "", fmt.Errorf("key [%s] not found in secret [%s/%s]", key, ns, name)
+		return "", missingKey("secret", key, ns, name)
 	}
 	recordSecret(ctx, string(v))
 

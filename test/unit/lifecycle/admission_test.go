@@ -23,7 +23,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -569,6 +571,26 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 
 		Expect(errs.IsSevere()).To(BeFalse())
 		Expect(errs.Warning).To(ConsistOf(HaveField("Message",
-			ContainSubstring("drift detection skipped, the templates of the previous version no longer resolve"))))
+			ContainSubstring("drift detection skipped, the previous version no longer resolves"))))
+	})
+
+	It("skips drift with a warning when a reference of the previous version no longer exists", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		a.ResolveRefs = func(_ context.Context, g *v1alpha1.Group, _ string) error {
+			if g.Spec.Type != nil && g.Spec.Type.Name == "old-ref" {
+				return gerrors.NewResolveRefError(apierrors.NewNotFound(schema.GroupResource{Resource: "groups"}, "gone"))
+			}
+			return nil
+		}
+		g := synced(newGroup("g1", "ns"))
+		g.Spec.Type = &group.Type{Name: "old-ref"}
+		repaired := g.DeepCopy()
+		repaired.Spec.Type = &group.Type{Name: "new-ref"}
+
+		errs := a.ValidateUpdate(ctx, g, repaired)
+
+		Expect(errs.IsSevere()).To(BeFalse())
+		Expect(errs.Warning).To(ConsistOf(HaveField("Message",
+			ContainSubstring("drift detection skipped, the previous version no longer resolves"))))
 	})
 })

@@ -82,7 +82,7 @@ func ValidateDriftWithContext[T client.Object](
 	// We need to resolve all references to compare the content that sent to the remote API
 	err := resolveRefs(ctx, oldCopy)
 	if err != nil {
-		errs.AddSeveref("could not resolve references for 'old' CRD: %s", err.Error())
+		ReportUnresolvedOldVersion(err, errs)
 		return errs
 	}
 	err = resolveRefs(ctx, newCopy)
