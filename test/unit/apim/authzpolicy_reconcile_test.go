@@ -16,6 +16,7 @@ package apim_test
 
 import (
 	"context"
+	"encoding/json"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -184,6 +185,32 @@ var _ = Describe("Authz policy reconcile", func() {
 		Expect(p.Status.PolicyStatus).To(Equal("DEPLOYED"))
 		Expect(condition(cli, k8s.ConditionAccepted).Status).To(Equal(metav1.ConditionTrue))
 		Expect(k8s.IsAutomationAPIManaged(p)).To(BeTrue())
+	})
+
+	// Only the reconcile's working copy is resolved: saving the policy must not replace its pdpRefs
+	// with the scopes they resolved to.
+	It("sends each pdpRef as its AuthzPdp's routing scope, the stored spec keeping the pdpRef", func() {
+		policy := newAuthzPolicy()
+		policy.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}
+		pdp := newAuthzPdp()
+		pdp.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}
+		pdp.Status.RoutingScope = "orders@eu"
+		r, cli := setup(policy, pdp)
+		lastReceived.Delete("/authz/policies")
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+
+		received, ok := lastReceived.Load("/authz/policies")
+		Expect(ok).To(BeTrue())
+		body, isString := received.(string)
+		Expect(isString).To(BeTrue())
+		var sent struct {
+			Targets []string `json:"targets"`
+		}
+		Expect(json.Unmarshal([]byte(body), &sent)).To(Succeed())
+		Expect(sent.Targets).To(Equal([]string{"orders@eu", "default"}))
+		Expect(stored(cli).Spec.Targets).To(Equal(newAuthzPolicy().Spec.Targets))
 	})
 
 	It("deletes a policy still waiting on its AuthzPdp", func() {

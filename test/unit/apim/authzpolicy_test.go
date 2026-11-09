@@ -80,11 +80,14 @@ var _ = Describe("Authz policy", func() {
 
 	Describe("wire mapping", func() {
 		It("derives the hrid from the namespace and name", func() {
-			Expect(model.ToAuthzPolicyDTO(newAuthzPolicy(), nil).HRID).To(Equal("gravitee-hotel-booking-read"))
+			Expect(model.ToAuthzPolicyDTO(newAuthzPolicy()).HRID).To(Equal("gravitee-hotel-booking-read"))
 		})
 
-		It("sends the targets the caller resolved, in their order, not the pdpRefs", func() {
-			raw, err := json.Marshal(model.ToAuthzPolicyDTO(newAuthzPolicy(), []string{"orders@eu", "default"}))
+		// The pdpRef of newAuthzPolicy, resolved as dynamic.ResolveAuthzPolicyRefs leaves it.
+		It("sends the scope of each resolved target, in declaration order", func() {
+			resolved := newAuthzPolicy()
+			resolved.Spec.Targets = []authzpdp.Target{{Scope: "orders@eu"}, {Scope: "default"}}
+			raw, err := json.Marshal(model.ToAuthzPolicyDTO(resolved))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(raw)).To(MatchJSON(`{
 				"hrid": "gravitee-hotel-booking-read",
@@ -97,17 +100,19 @@ var _ = Describe("Authz policy", func() {
 		})
 
 		It("omits absent targets: the platform deploys to the default engine on every gateway", func() {
-			raw, err := json.Marshal(model.ToAuthzPolicyDTO(newAuthzPolicy(), nil))
+			untargeted := newAuthzPolicy()
+			untargeted.Spec.Targets = nil
+			raw, err := json.Marshal(model.ToAuthzPolicyDTO(untargeted))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(raw)).ToNot(ContainSubstring(`"targets"`))
 		})
 
 		It("sends the text verbatim, its trailing newline included", func() {
-			Expect(model.ToAuthzPolicyDTO(newAuthzPolicy(), nil).PolicyText).To(Equal(hotelBookingReadText))
+			Expect(model.ToAuthzPolicyDTO(newAuthzPolicy()).PolicyText).To(Equal(hotelBookingReadText))
 		})
 
 		It("never sends policyStatus, which the platform owns", func() {
-			raw, err := json.Marshal(model.ToAuthzPolicyDTO(newAuthzPolicy(), nil))
+			raw, err := json.Marshal(model.ToAuthzPolicyDTO(newAuthzPolicy()))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(raw)).ToNot(ContainSubstring(`policyStatus`))
 		})

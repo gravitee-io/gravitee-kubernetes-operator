@@ -50,13 +50,13 @@ func validateCreate(ctx context.Context, policy *v1alpha1.AuthzPolicy) *errors.A
 		return errs
 	}
 
-	targets, targetErrs, resolved := resolveTargets(ctx, policy)
+	targetErrs, resolved := resolveTargets(ctx, policy)
 	errs.MergeWith(targetErrs)
 	if !resolved {
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, policy, targets))
+	errs.MergeWith(validateDryRun(ctx, policy))
 	return errs
 }
 
@@ -93,26 +93,27 @@ func validateTargetKinds(policy *v1alpha1.AuthzPolicy) *errors.AdmissionErrors {
 	return errs
 }
 
-// resolveTargets returns the targets the dry run sends, and whether they resolved. An AuthzPdp
-// that does not exist or has not synced yet is a normal state when a directory is applied at once:
-// it is a warning naming every pending one, and the dry run is skipped. The controller waits for
-// them before applying. Any other error, an AuthzPdp of another context for instance, is severe.
-func resolveTargets(ctx context.Context, policy *v1alpha1.AuthzPolicy) ([]string, *errors.AdmissionErrors, bool) {
+// resolveTargets replaces the policy's targets with the scopes the dry run sends, and tells whether
+// they resolved. An AuthzPdp that does not exist or has not synced yet is a normal state when a
+// directory is applied at once: it is a warning naming every pending one, and the dry run is
+// skipped. The controller waits for them before applying. Any other error, an AuthzPdp of another
+// context for instance, is severe.
+func resolveTargets(ctx context.Context, policy *v1alpha1.AuthzPolicy) (*errors.AdmissionErrors, bool) {
 	errs := errors.NewAdmissionErrors()
 
-	targets, err := dynamic.ResolveAuthzTargets(ctx, policy, policy.Spec.Targets)
+	err := dynamic.ResolveAuthzPolicyRefs(ctx, policy)
 	switch {
 	case err == nil:
-		return targets, errs, true
+		return errs, true
 	case dynamic.IsAuthzPdpPending(err):
 		errs.AddWarningf("%s: the policy is checked against the platform once every AuthzPdp it targets has synced", err)
 	default:
 		errs.AddSevere(err.Error())
 	}
-	return nil, errs, false
+	return errs, false
 }
 
-func validateDryRun(ctx context.Context, policy *v1alpha1.AuthzPolicy, targets []string) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, policy *v1alpha1.AuthzPolicy) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	apimClient, err := apim.FromContextRef(ctx, policy.ContextRef(), policy.GetNamespace())
@@ -123,7 +124,7 @@ func validateDryRun(ctx context.Context, policy *v1alpha1.AuthzPolicy, targets [
 
 	// A dry run answers 200 with its findings; a refusal body is only expected from a real apply,
 	// but is read the same way should the platform answer one.
-	state, err := apimClient.AuthzPolicies.DryRunCreateOrUpdate(model.ToAuthzPolicyDTO(policy, targets))
+	state, err := apimClient.AuthzPolicies.DryRunCreateOrUpdate(model.ToAuthzPolicyDTO(policy))
 	if err != nil {
 		errs.MergeWith(refusalToAdmissionErrors(err))
 		return errs

@@ -26,10 +26,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-// CreateOrUpdate applies and deploys the policy with the targets the caller resolved, in
-// declaration order: each scope as written, each pdpRef as the routing scope of the AuthzPdp it
-// names.
-func CreateOrUpdate(ctx context.Context, policy *v1alpha1.AuthzPolicy, targets []string) error {
+// CreateOrUpdate applies and deploys a policy whose refs dynamic.ResolveAuthzPolicyRefs has
+// resolved.
+func CreateOrUpdate(ctx context.Context, policy *v1alpha1.AuthzPolicy) error {
 	if !policy.HasContext() {
 		return gerrors.NewIllegalStateError(
 			fmt.Errorf("authz policy [%s] has no management context", policy.GetName()),
@@ -41,7 +40,7 @@ func CreateOrUpdate(ctx context.Context, policy *v1alpha1.AuthzPolicy, targets [
 		return err
 	}
 
-	state, err := apimClient.AuthzPolicies.CreateOrUpdate(model.ToAuthzPolicyDTO(policy, targets))
+	state, err := apimClient.AuthzPolicies.CreateOrUpdate(model.ToAuthzPolicyDTO(policy))
 	if err != nil {
 		// A 400 is how the platform refuses an apply: an entityId another policy holds, a text that
 		// does not parse, a violation of a strict gateway's schema. Admission skips the dry run while

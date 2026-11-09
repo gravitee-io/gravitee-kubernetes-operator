@@ -17,7 +17,6 @@ package authzpolicy
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
@@ -51,14 +50,14 @@ func validateUpdate(
 
 	// Resolved on every update, metadata-only ones included: drift resolves them too, and would
 	// refuse the controller's own writes while an AuthzPdp is pending.
-	targets, targetErrs, resolved := resolveTargets(ctx, newObj)
+	targetErrs, resolved := resolveTargets(ctx, newObj)
 	errs.MergeWith(targetErrs)
 	if !resolved {
 		return errs
 	}
 
 	if specChanged {
-		errs.MergeWith(validateDryRun(ctx, newObj, targets))
+		errs.MergeWith(validateDryRun(ctx, newObj))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -79,34 +78,17 @@ func validateUpdate(
 	}
 
 	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemoteAuthzPolicy,
-		drift.MapDTO(toDriftDTO)))
+		drift.MapDTO(model.ToAuthzPolicyDTO)))
 	return errs
 }
 
-// resolveRefs compiles templates on the copy drift compares, then replaces its targets with the
-// scopes they resolve to, so both sides are compared with what the operator sends.
+// resolveRefs compiles templates on the copy drift compares, then resolves its refs as the
+// reconcile does, so both sides are compared with what the operator sends.
 func resolveRefs(ctx context.Context, policy *v1alpha1.AuthzPolicy) error {
 	if err := template.Compile(ctx, policy, false); err != nil {
 		return err
 	}
-	targets, err := dynamic.ResolveAuthzTargets(ctx, policy, policy.Spec.Targets)
-	if err != nil {
-		return err
-	}
-	policy.Spec.Targets = nil
-	for _, target := range targets {
-		policy.Spec.Targets = append(policy.Spec.Targets, authzpdp.Target{Scope: target})
-	}
-	return nil
-}
-
-// toDriftDTO maps a copy resolveRefs has resolved: each of its targets is a scope.
-func toDriftDTO(policy *v1alpha1.AuthzPolicy) model.AuthzPolicyDTO {
-	var targets []string
-	for _, target := range policy.Spec.Targets {
-		targets = append(targets, target.Scope)
-	}
-	return model.ToAuthzPolicyDTO(policy, targets)
+	return dynamic.ResolveAuthzPolicyRefs(ctx, policy)
 }
 
 // getRemoteAuthzPolicy reads the platform's copy and returns the payload half. policyStatus is left
