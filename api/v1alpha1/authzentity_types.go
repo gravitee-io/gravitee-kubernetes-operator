@@ -103,9 +103,10 @@ func (s *AuthzEntityStatus) SetProcessingStatus(core.ProcessingStatus) {
 // scope. A pdpRef waits on ResolvedRefs=False until the AuthzPdp has a routing scope.
 //
 // Deleting an AuthzEntity deletes its RESOURCE children and detaches its PRINCIPAL children on the
-// platform: an AuthzEntity declaring one of them differs from the platform until its spec next
-// changes. A delete that would remove more entities than the platform's cascade limit is refused
-// (413): the resource stays Terminating, its Accepted condition naming the reason.
+// platform, and each AuthzEntity declaring one of them is applied again: a PRINCIPAL as declared, a
+// RESOURCE refused, its Accepted condition naming the parent that no longer exists. A delete that
+// would remove more entities than the platform's cascade limit is refused (413): the resource stays
+// Terminating, its Accepted condition naming the reason.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Entity ID",type=string,JSONPath=`.spec.entityId`

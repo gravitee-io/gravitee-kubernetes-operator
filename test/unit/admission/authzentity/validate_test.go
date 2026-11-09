@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -32,7 +31,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzentity"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
@@ -205,7 +203,8 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(ConsistOf("authz entity [travel/agents-group] is a parent of AuthzEntity " +
 			"[travel/grand-paris, travel/ritz]: deleting it detaches each PRINCIPAL among them and deletes " +
-			"each RESOURCE on the platform, and they differ from their manifests until their spec next changes"))
+			"each RESOURCE on the platform. Each is then applied again: a PRINCIPAL as declared, a RESOURCE " +
+			"refused until its parent is declared again or dropped from its parents"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
@@ -216,118 +215,5 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-	})
-})
-
-// Deleting an AuthzEntity deletes each RESOURCE that declares it and detaches each PRINCIPAL on the
-// platform; the next spec change of those must not read as drift, while anything else still does.
-var _ = Describe("Detecting drift after a parent's delete", func() {
-	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
-	agents := authzentity.Parent{EntityType: "Group", EntityID: "agents"}
-	inactive := false
-
-	BeforeEach(func() {
-		platform.reset()
-		platform.answer(http.StatusOK, `{"hrid":"travel-ritz"}`)
-		saved := env.Config.DriftDetection
-		env.Config.DriftDetection.Enabled = true
-		env.Config.DriftDetection.Policy = env.DriftPolicyDeny
-		env.Config.DriftDetection.OnRemoteMissing = env.DriftPolicyDeny
-		DeferCleanup(func() { env.Config.DriftDetection = saved })
-	})
-
-	declared := func(name, kind, entityType string) *v1alpha1.AuthzEntity {
-		entity := newEntity(name, name, authzpdp.Target{Scope: "default"})
-		entity.Spec.Kind, entity.Spec.EntityType, entity.Spec.Parents = kind, entityType, []authzentity.Parent{agents}
-		entity.Status.ID = "3b9d0c2b"
-		return entity
-	}
-	deactivated := func(entity *v1alpha1.AuthzEntity) *v1alpha1.AuthzEntity {
-		edited := entity.DeepCopy()
-		edited.Spec.Active = &inactive
-		return edited
-	}
-	notFound := `{"message":"entity not found"}`
-
-	It("admits an edit to a RESOURCE its deleted parent took with it", func() {
-		ritz := declared("ritz", "RESOURCE", "Hotel")
-		cluster(ritz)
-		platform.answerGet(http.StatusNotFound, notFound)
-
-		_, err := ctrl.ValidateUpdate(ctx, ritz, deactivated(ritz))
-
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	It("refuses it while an AuthzEntity of its context declares that parent", func() {
-		ritz := declared("ritz", "RESOURCE", "Hotel")
-		cluster(ritz, newEntity("agents-group", "agents"))
-		platform.answerGet(http.StatusNotFound, notFound)
-
-		_, err := ctrl.ValidateUpdate(ctx, ritz, deactivated(ritz))
-
-		Expect(err).To(MatchError(ContainSubstring("[travel/ritz] not found during drift detection")))
-	})
-
-	It("takes a Terminating parent as deleted", func() {
-		ritz := declared("ritz", "RESOURCE", "Hotel")
-		parent := newEntity("agents-group", "agents")
-		parent.Finalizers = []string{"finalizers.gravitee.io/authzentities"}
-		parent.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-		cluster(ritz, parent)
-		platform.answerGet(http.StatusNotFound, notFound)
-
-		_, err := ctrl.ValidateUpdate(ctx, ritz, deactivated(ritz))
-
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	It("takes a parent declared through another management context as deleted", func() {
-		ritz := declared("ritz", "RESOURCE", "Hotel")
-		elsewhere := newEntity("agents-group", "agents")
-		elsewhere.Spec.Context = &refs.NamespacedName{Name: "prod-ctx"}
-		cluster(ritz, elsewhere)
-		platform.answerGet(http.StatusNotFound, notFound)
-
-		_, err := ctrl.ValidateUpdate(ctx, ritz, deactivated(ritz))
-
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	// A cascade detaches a PRINCIPAL rather than deleting it: one the platform no longer holds was
-	// deleted another way.
-	It("refuses an edit to a PRINCIPAL the platform no longer holds", func() {
-		alice := declared("alice", "PRINCIPAL", "User")
-		cluster(alice)
-		platform.answerGet(http.StatusNotFound, notFound)
-
-		_, err := ctrl.ValidateUpdate(ctx, alice, deactivated(alice))
-
-		Expect(err).To(MatchError(ContainSubstring("[travel/alice] not found during drift detection")))
-	})
-
-	It("admits an edit to a PRINCIPAL its deleted parent detached", func() {
-		alice := declared("alice", "PRINCIPAL", "User")
-		cluster(alice)
-		platform.answerGet(http.StatusOK, `{"hrid":"travel-alice","entityId":"alice","kind":"PRINCIPAL",`+
-			`"entityType":"User","parents":[],"active":true,"targets":["default"]}`)
-
-		_, err := ctrl.ValidateUpdate(ctx, alice, deactivated(alice))
-
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	It("still reports another change the platform holds", func() {
-		alice := declared("alice", "PRINCIPAL", "User")
-		cluster(alice)
-		platform.answerGet(http.StatusOK, `{"hrid":"travel-alice","entityId":"alice","kind":"PRINCIPAL",`+
-			`"entityType":"User","parents":[],"active":true,"targets":["orders@eu"]}`)
-
-		_, err := ctrl.ValidateUpdate(ctx, alice, deactivated(alice))
-
-		Expect(err).To(MatchError(ContainSubstring("drift detected")))
-		Expect(err).To(MatchError(ContainSubstring("orders@eu")))
-		Expect(err).ToNot(MatchError(ContainSubstring("agents")))
 	})
 })

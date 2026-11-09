@@ -60,6 +60,7 @@ type Interface interface {
 	WatchDomains(index search.IndexField) *handler.Funcs
 	WatchApplications(index search.IndexField) *handler.Funcs
 	WatchCreated(index search.IndexField) *handler.Funcs
+	WatchAuthzEntityParents() *handler.Funcs
 }
 
 type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
@@ -295,6 +296,29 @@ func (w *Type) WatchApplications(index search.IndexField) *handler.Funcs {
 // WatchCreated queues the resources indexed under an object when it is created: its existence is all they wait for.
 func (w *Type) WatchCreated(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{CreateFunc: w.CreateFromLookup(index)}
+}
+
+// WatchAuthzEntityParents queues, when an AuthzEntity is deleted, the AuthzEntity resources of its
+// ManagementContext that declare it as a parent. The platform has deleted each RESOURCE among them
+// and detached each PRINCIPAL: applied again, a PRINCIPAL is back as declared, and a RESOURCE is
+// refused, its Accepted condition naming the parent that no longer exists.
+func (w *Type) WatchAuthzEntityParents() *handler.Funcs {
+	return &handler.Funcs{
+		DeleteFunc: func(_ context.Context, e event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+			parent, ok := e.Object.(*v1alpha1.AuthzEntity)
+			if !ok {
+				return
+			}
+			children, err := search.FindAuthzEntityChildKeys(w.ctx, parent)
+			if err != nil {
+				log.Error(w.ctx, err, "Unable to find the children of a deleted AuthzEntity", log.KeyValues(parent)...)
+				return
+			}
+			for _, child := range children {
+				q.Add(reconcile.Request{NamespacedName: child})
+			}
+		},
+	}
 }
 
 func (w *Type) updateWhenDomainReady(field search.IndexField) UpdateFunc {

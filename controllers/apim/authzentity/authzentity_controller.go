@@ -166,7 +166,10 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 			&v1alpha1.AuthzPdp{},
 			r.Watcher.WatchAuthzPdps(search.AuthzEntityAuthzPdpField),
 			builder.WithPredicates(predicate.AuthzPdpRoutedPredicate{}),
-		)
+		).
+		// A parent's delete takes its RESOURCE children and detaches its PRINCIPAL children on the
+		// platform: each child is applied again once the parent is gone.
+		Watches(&v1alpha1.AuthzEntity{}, r.Watcher.WatchAuthzEntityParents())
 
 	if env.Config.EnableTemplating {
 		newController.
