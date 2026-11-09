@@ -60,6 +60,7 @@ type remote struct {
 	upserted  []testDTO
 	deleted   []testDTO
 	upsertErr error
+	deleteErr error
 }
 
 func newGroupLifecycle(r *remote) groupLifecycle {
@@ -74,7 +75,7 @@ func newGroupLifecycle(r *remote) groupLifecycle {
 		},
 		Delete: func(_ context.Context, _ *testClient, dto testDTO) error {
 			r.deleted = append(r.deleted, dto)
-			return nil
+			return r.deleteErr
 		},
 	}
 }
@@ -301,6 +302,28 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			g := fetch(cli, "g1")
 			Expect(g.Finalizers).To(ContainElement(testFinalizer))
 			Expect(condition(g, k8s.ConditionAccepted).Message).To(ContainSubstring("still referenced"))
+		})
+
+		It("requeues a delete the remote refused with a 400, keeping the finalizer", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			r.deleteErr = gerrors.ServerError{StatusCode: 400, Message: "in use"}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(reconcileErrorType(err)).To(Equal(gerrors.ControlPlaneError))
+			g := fetch(cli, "g1")
+			Expect(g.Finalizers).To(ContainElement(testFinalizer))
+			accepted := condition(g, k8s.ConditionAccepted)
+			Expect(accepted.Reason).To(Equal(string(gerrors.ControlPlaneError)))
+			Expect(accepted.Message).To(ContainSubstring("in use"))
+
+			r.deleteErr = nil
+			_, err = reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
 		})
 	})
 
