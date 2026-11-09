@@ -28,6 +28,7 @@ const (
 	emptyIsNilName          = "empty-is-nil"
 	ignoreName              = "ignore"
 	ignoreRemoteDefaultName = "ignore-remote-default"
+	caseInsensitiveName     = "case-insensitive"
 	maskedName              = "masked"
 )
 
@@ -46,10 +47,11 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Int64, IgnoreRemoteDefaultValue)
 	RegisterEquivalenceFunc(ignoreRemoteDefaultName, reflect.Slice, IgnoreRemoteDefaultSlice)
 	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
-	RegisterEquivalenceFunc("case-insensitive", reflect.String, CaseInsensitive)
+	RegisterEquivalenceFunc(caseInsensitiveName, reflect.String, CaseInsensitive)
 	RegisterEquivalenceFunc(maskedName, reflect.String, Masked)
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
 	RegisterEquivalenceFunc(ignoreName, reflect.Bool, Ignore)
+	RegisterEquivalenceFunc(ignoreName, reflect.Int, Ignore)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int, EmptyIsNilInt)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int32, EmptyIsNilInt)
@@ -439,14 +441,36 @@ func keys(items []Keyed, namespace string, stripNS bool) []string {
 // towards a value APIM was free to pick, while a CRD value that is set is always
 // compared, and — when arguments are given — a remote value they do not list is always
 // drift.
+//
+// The case-insensitive argument is an option, not a default: with it, both a set CRD value
+// and the listed defaults are compared ignoring case, for enums APIM accepts in any case
+// and stores in one.
 func IgnoreRemoteDefault(crd any, remote any, context DriftContext) Equivalence {
 	e := DefaultEquivalence(crd, remote, context)
-	if e.Equivalent == Inequivalent && asString(crd) == "" {
-		if len(context.FuncArgs) == 0 || slices.Contains(context.FuncArgs, asString(remote)) {
+	if e.Equivalent != Inequivalent {
+		return e
+	}
+	defaults, ignoreCase := withoutArg(context.FuncArgs, caseInsensitiveName)
+	remoteValue := asString(remote)
+	matchesRemote := func(value string) bool {
+		return value == remoteValue || ignoreCase && strings.EqualFold(value, remoteValue)
+	}
+	if crdValue := asString(crd); crdValue != "" {
+		if matchesRemote(crdValue) {
 			return Equivalence{Equivalent: Equivalent}
 		}
+		return e
+	}
+	if len(defaults) == 0 || slices.ContainsFunc(defaults, matchesRemote) {
+		return Equivalence{Equivalent: Equivalent}
 	}
 	return e
+}
+
+// withoutArg returns args without option, and whether option was among them.
+func withoutArg(args []string, option string) ([]string, bool) {
+	rest := slices.DeleteFunc(slices.Clone(args), func(arg string) bool { return arg == option })
+	return rest, len(rest) != len(args)
 }
 
 // IgnoreRemoteDefaultStruct is the struct form of IgnoreRemoteDefault, for an optional object
