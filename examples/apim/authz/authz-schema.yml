@@ -27,6 +27,7 @@ spec:
     pdpRef:
       name: orders-eu
   schema: |
-    entity User in Group;
+    entity User in [Group];
+    entity Group;
     entity Hotel;
-    action read appliesTo { principal: User, resource: Hotel };
+    action read appliesTo { principal: [User], resource: [Hotel] };

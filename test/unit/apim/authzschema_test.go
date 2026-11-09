@@ -28,7 +28,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
 
-const travelSchemaText = "entity User in Group;\nentity Hotel;\n"
+const travelSchemaText = "entity User in [Group];\nentity Group;\nentity Hotel;\n"
 
 func newAuthzSchema() *v1alpha1.AuthzSchema {
 	return &v1alpha1.AuthzSchema{
@@ -82,7 +82,7 @@ var _ = Describe("Authz schema", func() {
 				"hrid": "gravitee-travel-schema",
 				"name": "Travel schema",
 				"target": "orders@eu",
-				"schema": "entity User in Group;\nentity Hotel;\n"
+				"schema": "entity User in [Group];\nentity Group;\nentity Hotel;\n"
 			}`))
 		})
 
@@ -94,7 +94,7 @@ var _ = Describe("Authz schema", func() {
 			Expect(string(raw)).To(MatchJSON(`{
 				"hrid": "gravitee-travel-schema",
 				"name": "Travel schema",
-				"schema": "entity User in Group;\nentity Hotel;\n"
+				"schema": "entity User in [Group];\nentity Group;\nentity Hotel;\n"
 			}`))
 		})
 	})
@@ -105,7 +105,7 @@ var _ = Describe("Authz schema", func() {
 				"hrid": "gravitee-travel-schema",
 				"name": "Travel schema",
 				"target": "orders@eu",
-				"schema": "entity User in Group;\nentity Hotel;\n",
+				"schema": "entity User in [Group];\nentity Group;\nentity Hotel;\n",
 				"id": "7a1e0c2b", "organizationId": "DEFAULT", "environmentId": "DEFAULT",
 				"errors": {"severe": ["target [orders@eu] already holds schema document 'Orders schema'"]}
 			}`
