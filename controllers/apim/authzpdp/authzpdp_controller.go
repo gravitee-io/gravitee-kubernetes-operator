@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -139,16 +140,20 @@ func (r *Reconciler) addFinalizer(ctx context.Context, pdp *v1alpha1.AuthzPdp) e
 	return nil
 }
 
+// SetupWithManager filters events per watch rather than with a controller-wide event filter: the
+// entity and policy watches (WatchAuthzPdpReleases) need a dependent's status-only update, which
+// LastSpecHashPredicate would drop.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	lastSpecHash := builder.WithPredicates(predicate.LastSpecHashPredicate{})
+
 	newController := ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.AuthzPdp{}).
-		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.AuthzPdpContextField))
+		For(&v1alpha1.AuthzPdp{}, lastSpecHash).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.AuthzPdpContextField), lastSpecHash)
 
 	if env.Config.EnableTemplating {
 		newController.
-			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("authzpdps")).
-			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("authzpdps"))
+			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("authzpdps"), lastSpecHash).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("authzpdps"), lastSpecHash)
 	}
 	return newController.Complete(r)
 }

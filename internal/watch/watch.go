@@ -55,6 +55,7 @@ type Interface interface {
 	WatchApis(index search.IndexField) *handler.Funcs
 	WatchCatalogMcpServers(index search.IndexField) *handler.Funcs
 	WatchAuthzPdps(index search.IndexField) *handler.Funcs
+	WatchAuthzPdpReleases() *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
 	WatchDomains(index search.IndexField) *handler.Funcs
 	WatchCreated(index search.IndexField) *handler.Funcs
@@ -233,6 +234,42 @@ func (w *Type) WatchAuthzPdps(index search.IndexField) *handler.Funcs {
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),
 		DeleteFunc: w.DeleteFromLookup(index),
+	}
+}
+
+// WatchAuthzPdpReleases queues every AuthzPdp being deleted when a resource that can target one (an
+// entity, a policy) is updated or deleted. The platform refuses to delete a PDP that such a resource
+// still needs (409), and the PDP's delete reconcile then waits on its retry backoff: this retries it as
+// soon as a dependent may have let go, instead of up to the backoff's maximum.
+//
+// Register it on the AuthzPdp controller for each such kind with no LastSpecHashPredicate: the event
+// that matters is the status update a dependent writes once the platform holds its new targets, while
+// its spec update comes first, when the platform still holds the old ones. A PDP retried too early
+// meets the 409 again and goes back to its backoff.
+func (w *Type) WatchAuthzPdpReleases() *handler.Funcs {
+	return &handler.Funcs{
+		UpdateFunc: func(ctx context.Context, _ event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+			w.queueAuthzPdpsBeingDeleted(ctx, q)
+		},
+		DeleteFunc: func(ctx context.Context, _ event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+			w.queueAuthzPdpsBeingDeleted(ctx, q)
+		},
+	}
+}
+
+func (w *Type) queueAuthzPdpsBeingDeleted(
+	ctx context.Context,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
+	pdps := &v1alpha1.AuthzPdpList{}
+	if err := w.k8s.List(ctx, pdps); err != nil {
+		log.Error(ctx, err, "Unable to list AuthzPdps to retry their deletion")
+		return
+	}
+	for i := range pdps.Items {
+		if pdps.Items[i].IsBeingDeleted() {
+			q.Add(reconcile.Request{NamespacedName: client.ObjectKeyFromObject(&pdps.Items[i])})
+		}
 	}
 }
 
