@@ -40,7 +40,8 @@ func Delete(ctx context.Context, pdp *v1alpha1.AuthzPdp) error {
 	}
 
 	// A 409 (the delete would leave a policy or an entity with no target) is recoverable: the
-	// finalizer stays and the delete is retried until those are retargeted.
+	// finalizer stays and the delete is retried until those are retargeted, on backoff and whenever
+	// one of them changes or goes (watch.WatchAuthzPdpReleases).
 	if err := gerrors.IgnoreNotFound(apimClient.AuthzPdps.Delete(refs.NewNamespacedNameFromObject(pdp).HRID())); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}

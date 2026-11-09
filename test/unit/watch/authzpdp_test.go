@@ -29,13 +29,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 )
 
-// No authz kind can block a PDP delete yet: an McpProxy stands in for an entity or a policy, which
-// the handler never reads.
+// The dependent is an entity that has moved off the PDP: once the platform holds its new targets,
+// its update names the PDP no more, so the handler does not read it.
 var _ = Describe("WatchAuthzPdpReleases", func() {
 	ctx := context.Background()
 
@@ -47,7 +49,13 @@ var _ = Describe("WatchAuthzPdpReleases", func() {
 		}
 		return p
 	}
-	dependent := &v1alpha1.McpProxy{ObjectMeta: metav1.ObjectMeta{Name: "orders-policy", Namespace: "orders"}}
+	dependent := &v1alpha1.AuthzEntity{
+		ObjectMeta: metav1.ObjectMeta{Name: "agents-group", Namespace: "orders"},
+		Spec: v1alpha1.AuthzEntitySpec{Type: authzentity.Type{
+			EntityID: "agents", Kind: "PRINCIPAL", EntityType: "Group",
+			Targets: []authzpdp.Target{{Scope: "default"}},
+		}},
+	}
 
 	watcher := func(objects ...client.Object) *watch.Type {
 		scheme := runtime.NewScheme()
