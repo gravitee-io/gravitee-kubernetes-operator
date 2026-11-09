@@ -57,6 +57,17 @@ var acceptedStates = map[string]string{
 		`"authPolicyRef":"MCPTool::\"github.search_issues\""}]}`,
 }
 
+// studioOnlyContextPath is where the cluster stub serves ManagementContext gravitee/studio-only-ctx,
+// whose APIM accepts every PUT and answers studioOnlyStates: an McpProxy state with studio.tools and
+// no top-level tools list, as a platform that predates it does.
+const studioOnlyContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/studio-only-ctx"
+
+var studioOnlyStates = map[string]string{
+	"/aim/mcp-proxies": `{"hrid":"gravitee-support-studio","id":"9b3d","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT","studio":{"tools":[{"server":"gravitee-github-mcp","tool":"search_issues",` +
+		`"alias":"gh_search","entityId":"mcp-tool.github.search_issues"}],"upstreamAuth":[],"enableFGA":true}}`,
+}
+
 // lastReceived holds the last body an accepting or the cascade APIM received, by collection path
 // suffix.
 var lastReceived sync.Map
@@ -129,7 +140,7 @@ func cascadePlatform(w http.ResponseWriter, r *http.Request) {
 
 // The dynamic client resolves ManagementContexts and falls back to the ambient kubeconfig, which
 // reaches a developer's cluster and exits where there is none (CI). Every lookup answers 404 here,
-// but gravitee/refusing-ctx, gravitee/accepting-ctx and gravitee/cascade-ctx.
+// but gravitee/refusing-ctx, gravitee/accepting-ctx, gravitee/cascade-ctx and gravitee/studio-only-ctx.
 var _ = BeforeSuite(func() {
 	// The 400 the refusing APIM answers: an entityId another source holds.
 	refusingPlatformBody := `{"errors":{"severe":[` + mustJSON(ownershipFinding) + `]}}`
@@ -153,6 +164,8 @@ var _ = BeforeSuite(func() {
 
 	accepting := httptest.NewServer(answering(acceptedStates))
 	DeferCleanup(accepting.Close)
+	studioOnly := httptest.NewServer(answering(studioOnlyStates))
+	DeferCleanup(studioOnly.Close)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -165,6 +178,9 @@ var _ = BeforeSuite(func() {
 			return
 		case cascadeContextPath:
 			_, _ = w.Write([]byte(contextBody("cascade-ctx", cascade.URL)))
+			return
+		case studioOnlyContextPath:
+			_, _ = w.Write([]byte(contextBody("studio-only-ctx", studioOnly.URL)))
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)

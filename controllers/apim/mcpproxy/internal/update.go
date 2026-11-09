@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -58,7 +59,29 @@ func CreateOrUpdate(ctx context.Context, proxy *v1alpha1.McpProxy) error {
 	proxy.Status.HRID = refs.NewNamespacedNameFromObject(proxy).HRID()
 	proxy.Status.Errors = state.Errors
 	proxy.Status.State = state.State
-	proxy.Status.Tools = state.Tools
+	proxy.Status.Tools = toolsStatus(state)
 
 	return nil
+}
+
+// toolsStatus reads the state's tools list, which carries each tool's authPolicyRef. A platform
+// that does not answer that list yet still answers studio.tools: the status keeps each tool's
+// identity from it, without a reference.
+func toolsStatus(state *model.McpProxyState) []mcpproxy.StudioToolStatus {
+	if len(state.Tools) > 0 {
+		return state.Tools
+	}
+	if state.Studio == nil || len(state.Studio.Tools) == 0 {
+		return nil
+	}
+	tools := make([]mcpproxy.StudioToolStatus, 0, len(state.Studio.Tools))
+	for _, tool := range state.Studio.Tools {
+		tools = append(tools, mcpproxy.StudioToolStatus{
+			Server:   tool.Server,
+			Tool:     tool.Tool,
+			Alias:    tool.Alias,
+			EntityID: tool.EntityID,
+		})
+	}
+	return tools
 }
