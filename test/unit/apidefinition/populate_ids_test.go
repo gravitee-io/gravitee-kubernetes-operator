@@ -95,13 +95,16 @@ var _ = Describe("PopulateIDs", func() {
 		Entry("key with spaces and dots", "My Page.v1", "My-Page-v1"),
 	)
 
-	// Without spec.id, plans are addressed by HRID: the spec plan id is not sent to APIM.
-	DescribeTable("ignores the spec plan id in HRID mode with a management context",
+	// Without spec.id, plans and pages are addressed by HRID: the spec ids are not sent to APIM.
+	DescribeTable("ignores the spec plan and page ids in HRID mode with a management context",
 		func(setup func(api *v1alpha1.ApiV4Definition)) {
 			plans := map[string]*v4.Plan{
 				"k": {Plan: &base.Plan{ID: "X"}, Name: "Test Plan"},
 			}
-			api := legacyAPI(&plans, nil)
+			pages := map[string]*v4.Page{
+				"doc": {Page: &base.Page{ID: "P", Name: "doc"}},
+			}
+			api := legacyAPI(&plans, &pages)
 			api.Status = v1alpha1.ApiV4DefinitionStatus{}
 			setup(api)
 
@@ -113,6 +116,13 @@ var _ = Describe("PopulateIDs", func() {
 			Expect(ok).To(BeTrue())
 			Expect(plan.HRID).To(Equal("k"))
 			Expect(plan.ID).To(BeEmpty())
+			Expect(api.Spec.Pages).NotTo(BeNil())
+			page, ok := (*api.Spec.Pages)["doc"]
+			Expect(ok).To(BeTrue())
+			Expect(page.HRID).To(Equal("doc"))
+			Expect(page.ID).To(BeEmpty())
+			Expect(plans["k"].ID).To(Equal("X"), "the CR spec itself is not modified")
+			Expect(pages["doc"].ID).To(Equal("P"), "the CR spec itself is not modified")
 		},
 		Entry("no spec.id and an empty status", func(_ *v1alpha1.ApiV4Definition) {}),
 		Entry("AutomationAPIManaged with status.id set and no spec.id", func(api *v1alpha1.ApiV4Definition) {
@@ -120,4 +130,35 @@ var _ = Describe("PopulateIDs", func() {
 			k8s.AddAutomationAPIManagedCondition(api)
 		}),
 	)
+
+	It("keeps a plan without base fields in HRID mode with a management context", func() {
+		plans := map[string]*v4.Plan{
+			"k": {Name: "Test Plan"},
+		}
+		api := legacyAPI(&plans, nil)
+		api.Status = v1alpha1.ApiV4DefinitionStatus{}
+
+		api.PopulateIDs(&management.Context{}, k8s.IsAutomationAPIManaged(api))
+
+		Expect((*api.Spec.Plans)["k"].HRID).To(Equal("k"))
+	})
+
+	It("keeps the spec plan and page ids in HRID mode when spec.id is set", func() {
+		plans := map[string]*v4.Plan{
+			"k": {Plan: &base.Plan{ID: "X"}, Name: "Test Plan"},
+		}
+		pages := map[string]*v4.Page{
+			"doc": {Page: &base.Page{ID: "P", Name: "doc"}},
+		}
+		api := legacyAPI(&plans, &pages)
+		api.Status = v1alpha1.ApiV4DefinitionStatus{}
+		api.Spec.ID = "exported-uuid"
+		k8s.AddAutomationAPIManagedCondition(api)
+
+		api.PopulateIDs(&management.Context{}, k8s.IsAutomationAPIManaged(api))
+
+		Expect(api.Spec.ID).To(Equal("exported-uuid"))
+		Expect((*api.Spec.Plans)["k"].ID).To(Equal("X"))
+		Expect((*api.Spec.Pages)["doc"].ID).To(Equal("P"))
+	})
 })
