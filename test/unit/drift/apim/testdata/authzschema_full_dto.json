@@ -2,5 +2,5 @@
   "hrid": "default-drift-full",
   "name": "Drift full",
   "target": "drift-full@eu",
-  "schema": "entity User in Group;\nentity Group;\nentity Hotel;\naction read appliesTo { principal: User, resource: Hotel };\n"
+  "schema": "entity User in [Group];\nentity Group;\nentity Hotel;\naction read appliesTo { principal: [User], resource: [Hotel] };\n"
 }
