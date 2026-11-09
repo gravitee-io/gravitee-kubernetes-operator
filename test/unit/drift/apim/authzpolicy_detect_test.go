@@ -46,7 +46,7 @@ var _ = Describe("Authz policy Drift detection", func() {
 			completeAuthzPolicyDTO(),
 		),
 		Entry("minimal CRD against what the platform answers for it",
-			model.ToAuthzPolicyDTO(minimalAuthzPolicyCRD(), nil),
+			model.ToAuthzPolicyDTO(minimalAuthzPolicyCRD()),
 			parseJSON[model.AuthzPolicyDTO](minimalAuthzPolicyRemote),
 		),
 		Entry("hrid is identity, not payload",
@@ -84,7 +84,7 @@ var _ = Describe("Authz policy Drift detection", func() {
 			withAuthzPolicyTargets(completeAuthzPolicyDTO(), []string{"default"}),
 		),
 		Entry("a target added on the platform",
-			model.ToAuthzPolicyDTO(minimalAuthzPolicyCRD(), nil),
+			model.ToAuthzPolicyDTO(minimalAuthzPolicyCRD()),
 			withAuthzPolicyTargets(parseJSON[model.AuthzPolicyDTO](minimalAuthzPolicyRemote), []string{"default"}),
 		),
 	)

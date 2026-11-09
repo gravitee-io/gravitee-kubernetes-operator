@@ -44,11 +44,14 @@ type AuthzPolicyState struct {
 	PolicyStatus   string        `json:"policyStatus,omitempty"`
 }
 
-// ToAuthzPolicyDTO maps the CRD onto the wire payload with the targets the caller resolved, in
-// declaration order. It is the single mapping used by the sync path, the dry run and drift
-// detection. The targets are a parameter rather than read from the spec: a pdpRef has no wire
-// value until the cluster is read.
-func ToAuthzPolicyDTO(crd *v1alpha1.AuthzPolicy, targets []string) AuthzPolicyDTO {
+// ToAuthzPolicyDTO maps a policy whose refs dynamic.ResolveAuthzPolicyRefs has resolved onto the
+// wire payload: each target is a scope, sent in declaration order. It is the single mapping used
+// by the sync path, the dry run and drift detection, and reads nothing from the cluster.
+func ToAuthzPolicyDTO(crd *v1alpha1.AuthzPolicy) AuthzPolicyDTO {
+	var targets []string
+	for _, target := range crd.Spec.Targets {
+		targets = append(targets, target.Scope)
+	}
 	return AuthzPolicyDTO{
 		HRID:       refs.NewNamespacedNameFromObject(crd).HRID(),
 		EntityID:   crd.Spec.EntityID,
