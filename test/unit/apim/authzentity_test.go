@@ -82,11 +82,14 @@ var _ = Describe("Authz entity", func() {
 
 	Describe("wire mapping", func() {
 		It("derives the hrid from the namespace and name", func() {
-			Expect(model.ToAuthzEntityDTO(newAuthzEntity(), nil).HRID).To(Equal("gravitee-agents-group"))
+			Expect(model.ToAuthzEntityDTO(newAuthzEntity()).HRID).To(Equal("gravitee-agents-group"))
 		})
 
-		It("sends the targets the caller resolved, in their order, not the pdpRefs", func() {
-			raw, err := json.Marshal(model.ToAuthzEntityDTO(newAuthzEntity(), []string{"orders@eu", "default"}))
+		// dynamic.ResolveAuthzEntityRefs has replaced each pdpRef with its AuthzPdp's routing scope.
+		It("sends each target's scope, in declaration order", func() {
+			entity := newAuthzEntity()
+			entity.Spec.Targets = []authzpdp.Target{{Scope: "orders@eu"}, {Scope: "default"}}
+			raw, err := json.Marshal(model.ToAuthzEntityDTO(entity))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(raw)).To(MatchJSON(`{
 				"hrid": "gravitee-agents-group",
@@ -104,7 +107,8 @@ var _ = Describe("Authz entity", func() {
 			entity := newAuthzEntity()
 			entity.Spec.Attributes = nil
 			entity.Spec.Parents = nil
-			raw, err := json.Marshal(model.ToAuthzEntityDTO(entity, nil))
+			entity.Spec.Targets = nil
+			raw, err := json.Marshal(model.ToAuthzEntityDTO(entity))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(raw)).To(MatchJSON(`{
 				"hrid": "gravitee-agents-group",
@@ -118,20 +122,20 @@ var _ = Describe("Authz entity", func() {
 		It("sends an unset active as true", func() {
 			entity := newAuthzEntity()
 			entity.Spec.Active = nil
-			Expect(model.ToAuthzEntityDTO(entity, nil).Active).To(BeTrue())
+			Expect(model.ToAuthzEntityDTO(entity).Active).To(BeTrue())
 		})
 
 		It("sends active false", func() {
 			entity := newAuthzEntity()
 			entity.Spec.Active = new(false)
-			raw, err := json.Marshal(model.ToAuthzEntityDTO(entity, nil))
+			raw, err := json.Marshal(model.ToAuthzEntityDTO(entity))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(raw)).To(ContainSubstring(`"active":false`))
 		})
 
 		It("does not share the attributes with the resource", func() {
 			entity := newAuthzEntity()
-			dto := model.ToAuthzEntityDTO(entity, nil)
+			dto := model.ToAuthzEntityDTO(entity)
 			dto.Attributes.Put("department", "sales")
 			Expect(entity.Spec.Attributes.GetString("department")).To(Equal("travel"))
 		})
