@@ -24,57 +24,46 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// CompileTemplates resolves the templates of the copies drift compares, without recording any
-// reference on the Secrets and ConfigMaps it reads, so that both sides hold the values the remote
-// was sent. Validation compiles the new object in place, never the old one: left raw, a templated
-// old value never matches the remote and every change to it is reported as drift.
+// CompileTemplates resolves the templates of the old copy drift compares, without recording any
+// reference on the Secrets and ConfigMaps it reads, so that it holds the values the remote was sent.
+// Validation compiles the new object in place before drift runs, never the old one: left raw, a
+// templated old value never matches the remote and every change to it is reported as drift.
 //
-// It returns the values the secret templates of both versions resolve to, which a drift report
-// must never print, and false when drift must not be checked. A template of the old object that
-// no longer resolves, its Secret deleted for instance, leaves no way to know what the old object
-// asked for: a warning says so rather than refusing the very update that repairs the reference.
-func CompileTemplates(
-	ctx context.Context, oldCopy, newCopy client.Object, errs *errors.AdmissionErrors,
-) ([]string, bool) {
-	newSecrets, err := compileNew(ctx, newCopy)
-	if err != nil {
+// ctx carries the secret recorder of the drift check (template.WithSecretRecorder). The old copy's
+// secret values are recorded, and so are those of the new object, read from the admission request
+// since the object drift receives is already compiled.
+//
+// It returns false when drift must not be checked. A Secret or ConfigMap the old object referenced
+// and that no longer exists leaves no way to know what the old object asked for: a warning says so
+// rather than refusing the very update that repairs the reference. Any other failure refuses it.
+func CompileTemplates(ctx context.Context, oldCopy client.Object, errs *errors.AdmissionErrors) bool {
+	if err := compileSubmitted(ctx); err != nil {
 		errs.AddSeveref("could not compile templates for 'new' CRD: %s", err.Error())
-		return nil, false
+		return false
 	}
-	oldSecrets, err := template.CompileRecordingSecrets(ctx, oldCopy)
-	if err != nil {
+	err := template.Compile(ctx, oldCopy, false)
+	switch {
+	case err == nil:
+		return true
+	case errors.IsResolveRefError(err):
 		errs.AddWarningf("drift detection skipped, the templates of the previous version no longer resolve: %s",
 			err.Error())
-		return nil, false
+	default:
+		errs.AddSeveref("could not compile templates for 'old' CRD: %s", err.Error())
 	}
-	return append(newSecrets, oldSecrets...), true
+	return false
 }
 
-// compileNew compiles the new copy and, since validation already compiled it in place, reads its
-// secret values from the object as the admission request submitted it.
-func compileNew(ctx context.Context, newCopy client.Object) ([]string, error) {
-	secrets, err := template.CompileRecordingSecrets(ctx, newCopy)
-	if err != nil {
-		return nil, err
-	}
-	submitted, ok := submittedObject(ctx)
-	if !ok {
-		return secrets, nil
-	}
-	submittedSecrets, err := template.CompileRecordingSecrets(ctx, submitted)
-	return append(secrets, submittedSecrets...), err
-}
-
-// submittedObject is the object under admission as the request carried it. There is none outside
-// an admission request.
-func submittedObject(ctx context.Context) (*unstructured.Unstructured, bool) {
+// compileSubmitted compiles the object under admission as the request carried it, for the secret
+// values it records only. There is none outside an admission request.
+func compileSubmitted(ctx context.Context) error {
 	req, err := admission.RequestFromContext(ctx)
 	if err != nil || len(req.Object.Raw) == 0 {
-		return nil, false
+		return nil
 	}
-	obj := &unstructured.Unstructured{}
-	if err := obj.UnmarshalJSON(req.Object.Raw); err != nil {
-		return nil, false
+	submitted := &unstructured.Unstructured{}
+	if err := submitted.UnmarshalJSON(req.Object.Raw); err != nil {
+		return err
 	}
-	return obj, true
+	return template.Compile(ctx, submitted, false)
 }

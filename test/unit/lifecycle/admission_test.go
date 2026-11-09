@@ -22,8 +22,10 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -470,6 +472,29 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 		Expect(errs.IsSevere()).To(BeFalse())
 	})
 
+	It("never prints a value a secret template resolved to", func() {
+		templating := env.Config.EnableTemplating
+		env.Config.EnableTemplating = true
+		DeferCleanup(func() { env.Config.EnableTemplating = templating })
+		newCluster(&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: "client", Namespace: "ns"},
+			Data:       map[string][]byte{"token": []byte("s3cr3t")},
+		})
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		a.ToDTO = func(g *v1alpha1.Group) (testDTO, error) {
+			return testDTO{Key: g.Name, Name: g.Spec.Type.Name}, nil
+		}
+		g := synced(newGroup("g1", "ns"))
+		g.Spec.Type = &group.Type{Name: "[[ secret `client/token` ]]"}
+
+		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
+
+		Expect(errs.Severe).To(ConsistOf(HaveField("Message", And(
+			ContainSubstring("drift detected"),
+			ContainSubstring("(secret value, not shown)"),
+			Not(ContainSubstring("s3cr3t"))))))
+	})
+
 	// calls records the DryRun and GetRemote calls of a.
 	type calls struct{ dryRun, getRemote bool }
 	recording := func(a *groupAdmission, c *calls, dryRunErr string) {
@@ -527,5 +552,23 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 		Expect(errs.IsSevere()).To(BeTrue())
 		Expect(errs.Severe[0].Error()).To(ContainSubstring("drift detected"))
 		Expect(c).To(Equal(calls{getRemote: true}))
+	})
+
+	It("skips drift with a warning when a Secret of the previous version no longer exists", func() {
+		templating := env.Config.EnableTemplating
+		env.Config.EnableTemplating = true
+		DeferCleanup(func() { env.Config.EnableTemplating = templating })
+		newCluster()
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		g := synced(newGroup("g1", "ns"))
+		g.Spec.Type = &group.Type{Name: "[[ secret `deleted/value` ]]"}
+		repaired := g.DeepCopy()
+		repaired.Spec.Type = &group.Type{Name: "plain"}
+
+		errs := a.ValidateUpdate(ctx, g, repaired)
+
+		Expect(errs.IsSevere()).To(BeFalse())
+		Expect(errs.Warning).To(ConsistOf(HaveField("Message",
+			ContainSubstring("drift detection skipped, the templates of the previous version no longer resolve"))))
 	})
 })

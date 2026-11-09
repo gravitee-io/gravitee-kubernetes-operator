@@ -26,14 +26,18 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -41,7 +45,9 @@ const (
 	templatedNamespace = "default"
 	currentSecret      = "[[ secret `client/current` ]]"
 	rotatedSecret      = "[[ secret `client/rotated` ]]"
+	bracketsSecret     = "[[ secret `client/brackets` ]]"
 	deletedSecret      = "[[ secret `deleted/value` ]]"
+	unreadableSecret   = "[[ secret `unreadable/value` ]]"
 )
 
 var _ = Describe("Drift detection on templated values", func() {
@@ -64,10 +70,12 @@ var _ = Describe("Drift detection on templated values", func() {
 			WithObjects(&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{Name: "client", Namespace: templatedNamespace},
 				Data: map[string][]byte{
-					"current": []byte("current-value"),
-					"rotated": []byte("rotated-value"),
+					"current":  []byte("current-value"),
+					"rotated":  []byte("rotated-value"),
+					"brackets": []byte("ab[[cd"),
 				},
 			}).
+			WithInterceptorFuncs(interceptor.Funcs{Get: failToReadUnreadable}).
 			Build())
 	})
 
@@ -93,18 +101,28 @@ var _ = Describe("Drift detection on templated values", func() {
 			currentSecret, "plain", "current-value", false),
 		Entry("an unchanged template is no change at all",
 			currentSecret, currentSecret, "current-value", false),
+		Entry("a resolved value holding the template delimiters is not compiled again",
+			currentSecret, bracketsSecret, "ab[[cd", false),
 		Entry("a remote change behind an unchanged template is still drift",
 			currentSecret, currentSecret, "changed-in-apim", true),
 		Entry("a remote change behind a changed template is still drift",
 			currentSecret, rotatedSecret, "changed-in-apim", true),
 	)
 
-	It("skips drift detection with a warning when the old templates no longer resolve", func() {
+	It("skips drift detection with a warning when a Secret of the old version no longer exists", func() {
 		errs := validateTemplated(deletedSecret, currentSecret, "changed-in-apim")
 
 		Expect(errs.Severe).To(BeEmpty())
 		Expect(errs.Warning).To(ConsistOf(HaveField("Message",
 			ContainSubstring("drift detection skipped, the templates of the previous version no longer resolve"))))
+	})
+
+	It("refuses the update when a Secret of the old version cannot be read", func() {
+		errs := validateTemplated(unreadableSecret, currentSecret, "changed-in-apim")
+
+		Expect(errs.Warning).To(BeEmpty())
+		Expect(errs.Severe).To(ConsistOf(HaveField("Message",
+			ContainSubstring("could not compile templates for 'old' CRD"))))
 	})
 
 	It("never prints a value a secret template resolved to", func() {
@@ -117,35 +135,72 @@ var _ = Describe("Drift detection on templated values", func() {
 		Expect(errs.Severe[0].Message).NotTo(ContainSubstring("changed-in-apim"))
 	})
 
-	It("reads the secrets of a new object validation already compiled from the admission request", func() {
-		submitted := templatedDictionary(rotatedSecret)
-		compiledInPlace := templatedDictionary("rotated-value")
-		raw, err := json.Marshal(submitted)
-		Expect(err).NotTo(HaveOccurred())
-		ctx := admission.NewContextWithRequest(context.Background(), admission.Request{
-			AdmissionRequest: admissionv1.AdmissionRequest{Object: runtime.RawExtension{Raw: raw}},
-		})
+	It("never prints a value a secret template of a referenced object resolved to", func() {
+		inlineReferenced := func(ctx context.Context, dict *v1alpha1.Dictionary) error {
+			referenced := templatedDictionary(currentSecret)
+			if err := template.Compile(ctx, referenced, false); err != nil {
+				return err
+			}
+			dict.Spec.Manual = referenced.Spec.Manual
+			return nil
+		}
+		updated := templatedDictionary("from-ref")
 
-		errs := validate(ctx, templatedDictionary("plain-old"), compiledInPlace, "changed-in-apim")
+		errs := validate(admissionRequest(updated), templatedDictionary("from-ref"), updated,
+			"changed-in-apim", inlineReferenced)
 
 		Expect(errs.Severe).To(HaveLen(1))
 		Expect(errs.Severe[0].Message).To(ContainSubstring("clientSecret: (secret value, not shown)"))
-		Expect(errs.Severe[0].Message).NotTo(ContainSubstring("rotated-value"))
+		Expect(errs.Severe[0].Message).NotTo(ContainSubstring("current-value"))
 	})
 
 	It("refuses an update whose new templates do not resolve", func() {
-		errs := validateTemplated(currentSecret, deletedSecret, "current-value")
+		updated := templatedDictionary(deletedSecret)
+
+		errs := validate(admissionRequest(updated), templatedDictionary(currentSecret), updated,
+			"current-value", noRefs)
 
 		Expect(errs.Severe).To(ConsistOf(HaveField("Message",
 			ContainSubstring("could not compile templates for 'new' CRD"))))
 	})
 })
 
-func validateTemplated(oldValue, newValue, remoteValue string) *errors.AdmissionErrors {
-	return validate(context.Background(), templatedDictionary(oldValue), templatedDictionary(newValue), remoteValue)
+func failToReadUnreadable(
+	ctx context.Context, cli client.WithWatch, key client.ObjectKey, obj client.Object, opts ...client.GetOption,
+) error {
+	if key.Name == "unreadable" {
+		return apierrors.NewTimeoutError("the API server did not answer in time", 1)
+	}
+	return cli.Get(ctx, key, obj, opts...)
 }
 
-func validate(ctx context.Context, stored, updated *v1alpha1.Dictionary, remoteValue string) *errors.AdmissionErrors {
+// validateTemplated runs drift as the webhook does: the request carries the submitted object, and
+// validation compiled the new object in place before drift runs.
+func validateTemplated(oldValue, newValue, remoteValue string) *errors.AdmissionErrors {
+	updated := templatedDictionary(newValue)
+	ctx := admissionRequest(updated)
+	Expect(template.Compile(ctx, updated, false)).To(Succeed())
+	return validate(ctx, templatedDictionary(oldValue), updated, remoteValue, noRefs)
+}
+
+func admissionRequest(submitted *v1alpha1.Dictionary) context.Context {
+	raw, err := json.Marshal(submitted)
+	Expect(err).NotTo(HaveOccurred())
+	return admission.NewContextWithRequest(context.Background(), admission.Request{
+		AdmissionRequest: admissionv1.AdmissionRequest{Object: runtime.RawExtension{Raw: raw}},
+	})
+}
+
+func noRefs(context.Context, *v1alpha1.Dictionary) error {
+	return nil
+}
+
+func validate(
+	ctx context.Context,
+	stored, updated *v1alpha1.Dictionary,
+	remoteValue string,
+	resolveRefs admdrift.RefResolver[*v1alpha1.Dictionary],
+) *errors.AdmissionErrors {
 	remote := templatedDictionary(remoteValue)
 
 	toDTO := func(crd *v1alpha1.Dictionary) any {
@@ -158,9 +213,7 @@ func validate(ctx context.Context, stored, updated *v1alpha1.Dictionary, remoteV
 		func(context.Context) (*apim.APIM, error) {
 			return &apim.APIM{}, nil
 		},
-		func(context.Context, *v1alpha1.Dictionary) error {
-			return nil
-		},
+		resolveRefs,
 		func(*apim.APIM, *v1alpha1.Dictionary) (any, error) {
 			return toDTO(remote), nil
 		},

@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -73,8 +74,8 @@ func ValidateDriftWithContext[T client.Object](
 	oldCopy := oldCRD.DeepCopyObject().(T)
 	newCopy := newCRD.DeepCopyObject().(T)
 
-	secrets, ok := CompileTemplates(ctx, oldCopy, newCopy, errs)
-	if !ok {
+	ctx, secrets := template.WithSecretRecorder(ctx)
+	if !CompileTemplates(ctx, oldCopy, errs) {
 		return errs
 	}
 
@@ -104,6 +105,6 @@ func ValidateDriftWithContext[T client.Object](
 		return errs
 	}
 
-	CompareWithRemote(newCopy, mapDTO(oldCopy), mapDTO(newCopy), remoteObject, secrets, errs)
+	CompareWithRemote(newCopy, mapDTO(oldCopy), mapDTO(newCopy), remoteObject, secrets(), errs)
 	return errs
 }
