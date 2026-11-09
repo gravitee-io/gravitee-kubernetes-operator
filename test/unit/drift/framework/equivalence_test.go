@@ -361,6 +361,24 @@ var _ = Describe("IgnoreRemoteDefault on integers", func() {
 	)
 })
 
+var _ = Describe("Ignore on integers", func() {
+	type withInts struct {
+		Order   *int   `json:"order,omitempty" drift:"ignore"`
+		Expiry  int32  `json:"expiry" drift:"ignore"`
+		Version *int64 `json:"version,omitempty" drift:"ignore"`
+	}
+
+	DescribeTable("no drift",
+		func(crd, remote withInts) { expectNoDrift(drift.DetectWithNamespace(crd, remote, "")) },
+		Entry("different values", withInts{Order: new(1), Expiry: 300, Version: new(int64(1))},
+			withInts{Order: new(2), Expiry: 600, Version: new(int64(2))}),
+		Entry("unset crd values against remote values", withInts{},
+			withInts{Order: new(1), Expiry: 600, Version: new(int64(2))}),
+		Entry("crd values against missing remote values", withInts{Order: new(1), Expiry: 300, Version: new(int64(1))},
+			withInts{}),
+	)
+})
+
 var _ = Describe("IgnoreRemoteDefault on lists", func() {
 	type withList struct {
 		Tags []string `json:"tags,omitempty" drift:"ignore-remote-default"`

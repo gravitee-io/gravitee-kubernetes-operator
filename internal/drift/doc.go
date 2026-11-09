@@ -74,7 +74,7 @@
 //   - empty-is-nil (slice, map): nil or len==0 are equivalent and skip children.
 //   - empty-is-nil (struct): nil vs zero-value struct are compared; if equivalent, skip children.
 //   - empty-is-true (bool): nil or true are equivalent; otherwise deep-equal.
-//   - ignore (string, bool, int, slice, struct): always returns CannotCompare (skips for struct via ignore-skip pattern).
+//   - ignore (string, bool, int, int32, int64, slice, struct): always returns CannotCompare (skips for struct via ignore-skip pattern).
 //   - ignore-skip (struct): same as ignore but also sets Skip=true.
 //   - trimmed (string): compares strings after [strings.TrimSpace].
 //   - rfc3339 (string): compares instants; accepts RFC3339 and RFC3339Nano inputs.

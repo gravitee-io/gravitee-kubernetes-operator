@@ -52,6 +52,8 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.Slice, IgnoreSkip)
 	RegisterEquivalenceFunc(ignoreName, reflect.Bool, Ignore)
 	RegisterEquivalenceFunc(ignoreName, reflect.Int, Ignore)
+	RegisterEquivalenceFunc(ignoreName, reflect.Int32, Ignore)
+	RegisterEquivalenceFunc(ignoreName, reflect.Int64, Ignore)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int, EmptyIsNilInt)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int32, EmptyIsNilInt)
