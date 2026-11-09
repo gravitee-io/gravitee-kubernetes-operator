@@ -29,8 +29,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
+const DeprecationWarning = "ApiDefinition (v2 API) is deprecated and reaches end of life in October 2027, " +
+	"migrate to ApiV4Definition"
+
 func validateCreate(ctx context.Context, api *v1alpha1.ApiDefinition) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
+	errs.AddWarning(DeprecationWarning)
 	if api.GetAnnotations()[core.IngressTemplateAnnotation] == env.TrueString {
 		log.Global.Debugf("skipping validation for ingress template %s", api.GetName())
 		return errs
