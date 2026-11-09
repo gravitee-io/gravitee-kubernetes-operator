@@ -95,9 +95,11 @@ var _ = Describe("MCP status reconcile", func() {
 		Expect(stored.Status.Tools[0].AuthPolicyRef).To(Equal(`MCPTool::"github.create_issue"`))
 	})
 
-	It("copies the state's tools list into McpProxy status, an aliased tool keeping its reference", func() {
+	// reconcileStudio reconciles the Studio fixture against the APIM of ctxRef, its catalog servers
+	// synced, and returns what is stored.
+	reconcileStudio := func(ctxRef *refs.NamespacedName) *v1alpha1.McpProxy {
 		proxy := newMcpStudio()
-		proxy.Spec.Context = accepting
+		proxy.Spec.Context = ctxRef
 		synced := func(name, namespace string) *v1alpha1.CatalogMcpServer {
 			srv := newCatalogMcpServer(nil)
 			srv.ObjectMeta = metav1.ObjectMeta{Name: name, Namespace: namespace}
@@ -114,12 +116,27 @@ var _ = Describe("MCP status reconcile", func() {
 		stored := &v1alpha1.McpProxy{}
 		Expect(cli.Get(context.Background(), key, stored)).To(Succeed())
 		Expect(stored.Status.ID).To(Equal("9b3d"))
+		return stored
+	}
+
+	It("copies the state's tools list into McpProxy status, an aliased tool keeping its reference", func() {
+		stored := reconcileStudio(accepting)
 		Expect(stored.Status.Tools).To(Equal([]mcpproxy.StudioToolStatus{{
 			Server:        "gravitee-github-mcp",
 			Tool:          "search_issues",
 			Alias:         new("gh_search"),
 			EntityID:      "mcp-tool.github.search_issues",
 			AuthPolicyRef: `MCPTool::"github.search_issues"`,
+		}}))
+	})
+
+	It("falls back to studio.tools, with no reference, on a platform that answers no tools list", func() {
+		stored := reconcileStudio(&refs.NamespacedName{Name: "studio-only-ctx"})
+		Expect(stored.Status.Tools).To(Equal([]mcpproxy.StudioToolStatus{{
+			Server:   "gravitee-github-mcp",
+			Tool:     "search_issues",
+			Alias:    new("gh_search"),
+			EntityID: "mcp-tool.github.search_issues",
 		}}))
 	})
 })

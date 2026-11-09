@@ -48,6 +48,17 @@ var acceptedStates = map[string]string{
 		`"authPolicyRef":"MCPTool::\"github.search_issues\""}]}`,
 }
 
+// studioOnlyContextPath is where the cluster stub serves ManagementContext gravitee/studio-only-ctx,
+// whose APIM accepts every PUT and answers studioOnlyStates: an McpProxy state with studio.tools and
+// no top-level tools list, as a platform that predates it does.
+const studioOnlyContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/studio-only-ctx"
+
+var studioOnlyStates = map[string]string{
+	"/aim/mcp-proxies": `{"hrid":"gravitee-support-studio","id":"9b3d","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT","studio":{"tools":[{"server":"gravitee-github-mcp","tool":"search_issues",` +
+		`"alias":"gh_search","entityId":"mcp-tool.github.search_issues"}],"upstreamAuth":[],"enableFGA":true}}`,
+}
+
 // answering accepts every PUT and answers the state states holds for its collection path suffix.
 func answering(states map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -73,15 +84,21 @@ func contextBody(name, baseURL string) string {
 
 // The dynamic client resolves ManagementContexts and falls back to the ambient kubeconfig, which
 // reaches a developer's cluster and exits where there is none (CI). Every lookup answers 404 here,
-// but gravitee/accepting-ctx.
+// but gravitee/accepting-ctx and gravitee/studio-only-ctx.
 var _ = BeforeSuite(func() {
 	accepting := httptest.NewServer(answering(acceptedStates))
 	DeferCleanup(accepting.Close)
+	studioOnly := httptest.NewServer(answering(studioOnlyStates))
+	DeferCleanup(studioOnly.Close)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.URL.Path == acceptingContextPath {
+		switch r.URL.Path {
+		case acceptingContextPath:
 			_, _ = w.Write([]byte(contextBody("accepting-ctx", accepting.URL)))
+			return
+		case studioOnlyContextPath:
+			_, _ = w.Write([]byte(contextBody("studio-only-ctx", studioOnly.URL)))
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
