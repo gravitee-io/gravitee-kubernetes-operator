@@ -223,6 +223,9 @@ var _ = Describe("IgnoreRemoteDefault", func() {
 		Entry("unset crd vs any remote with nil FuncArgs", "", "PUBLIC", drift.DriftContext{}),
 		Entry("unset crd vs any remote with empty FuncArgs", "", "PRIVATE", args()),
 		Entry("unset named string vs any remote with no args", namedString(""), namedString("PRIVATE"), drift.DriftContext{}),
+		Entry("set crd vs remote in another case, case-insensitive", "default", "DEFAULT", args("case-insensitive", "DEFAULT")),
+		Entry("unset crd vs listed default in another case, case-insensitive", "", "default", args("case-insensitive", "DEFAULT")),
+		Entry("unset crd vs any remote with only case-insensitive", "", "PRIVATE", args("case-insensitive")),
 	)
 
 	DescribeTable("should report inequivalence",
@@ -237,6 +240,9 @@ var _ = Describe("IgnoreRemoteDefault", func() {
 		Entry("crd listed in FuncArgs is not ignored", "PUBLIC", "PRIVATE", args("PUBLIC")),
 		Entry("set crd vs different remote with no args", "PRIVATE", "PUBLIC", drift.DriftContext{}),
 		Entry("set named string vs listed default", namedString("PRIVATE"), namedString("PUBLIC"), args("PUBLIC")),
+		Entry("set crd vs remote in another case", "default", "DEFAULT", args("DEFAULT")),
+		Entry("set crd vs other remote value, case-insensitive", "default", "BEST_MATCH", args("case-insensitive", "DEFAULT")),
+		Entry("unset crd vs unlisted remote, case-insensitive", "", "BEST_MATCH", args("case-insensitive", "DEFAULT")),
 	)
 
 	It("treats an unset crd value against a listed default as equivalent through Detect", func() {

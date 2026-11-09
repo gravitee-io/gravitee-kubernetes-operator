@@ -257,7 +257,7 @@ type APIV4EndpointGroupDTO struct {
 }
 
 type APIV4FlowExecutionDTO struct {
-	Mode          v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:DEFAULT"`
+	Mode          v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:case-insensitive,DEFAULT"`
 	MatchRequired bool        `json:"matchRequired"`
 }
 
@@ -401,7 +401,7 @@ type APIV4PlanDTO struct {
 	Characteristics       []string              `json:"characteristics" drift:"empty-is-nil"`
 	Validation            base.PlanValidation   `json:"validation,omitempty"`
 	CommentRequired       *bool                 `json:"comment_required,omitempty"`
-	Order                 *int                  `json:"order,omitempty"`
+	Order                 *int                  `json:"order,omitempty" drift:"ignore"` // APIM sets it from the list position
 	Type                  base.PlanType         `json:"type,omitempty"`
 	Name                  string                `json:"name"`
 	Description           *string               `json:"description,omitempty"`

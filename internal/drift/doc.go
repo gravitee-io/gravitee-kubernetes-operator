@@ -74,7 +74,7 @@
 //   - empty-is-nil (slice, map): nil or len==0 are equivalent and skip children.
 //   - empty-is-nil (struct): nil vs zero-value struct are compared; if equivalent, skip children.
 //   - empty-is-true (bool): nil or true are equivalent; otherwise deep-equal.
-//   - ignore (string, slice, struct): always returns CannotCompare (skips for struct via ignore-skip pattern).
+//   - ignore (string, bool, int, slice, struct): always returns CannotCompare (skips for struct via ignore-skip pattern).
 //   - ignore-skip (struct): same as ignore but also sets Skip=true.
 //   - trimmed (string): compares strings after [strings.TrimSpace].
 //   - rfc3339 (string): compares instants; accepts RFC3339 and RFC3339Nano inputs.
@@ -87,7 +87,8 @@
 //     rather than inside a free-form blob.
 //   - ignore-remote-default (string): ignores a difference when the CRD value is unset;
 //     with no arguments any remote value is accepted, with arguments only a listed
-//     remote value (a server default) is.
+//     remote value (a server default) is. With case-insensitive among the arguments, a set
+//     CRD value and the listed defaults are compared ignoring case.
 //   - ignore-remote-default (struct): ignores a difference when the CRD leaves the object nil;
 //     a declared object, empty included, is compared field by field. Arguments are not supported.
 //   - ignore-remote-default (bool, int): ignores a difference when the CRD leaves the field unset;
@@ -115,19 +116,21 @@
 //
 // ### ignore-remote-default
 //
-// Syntax: `drift:"ignore-remote-default"` or `drift:"ignore-remote-default:value1,value2,..."`
+// Syntax: `drift:"ignore-remote-default"`, `drift:"ignore-remote-default:value1,value2,..."`, or
+// `drift:"ignore-remote-default:case-insensitive,value1,..."`
 //
 // Ignores a difference when the CRD leaves the field unset. With no arguments, any
 // remote value is accepted — use this when the CRD carries no information to predict
 // what APIM resolves the field to. With arguments, only a remote value listed among
 // them is accepted, and any other remote value is drift — use this when the CRD's
 // silence should only cover specific, known server defaults. Either way, a CRD value
-// that is set is always compared.
+// that is set is always compared. The case-insensitive option compares a set CRD value and
+// the listed defaults ignoring case, for an enum APIM accepts in any case and stores in one.
 //
 // Example:
 //
-//	// APIM applies DEFAULT when the payload omits the flow mode
-//	Mode v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:DEFAULT"`
+//	// APIM applies DEFAULT when the payload omits the flow mode, and stores "default" as DEFAULT
+//	Mode v4.FlowMode `json:"mode,omitempty" drift:"ignore-remote-default:case-insensitive,DEFAULT"`
 //
 //	// APIM resolves an omitted next-gen portal visibility from the parent folder, which
 //	// lives in another resource here — any value APIM may resolve to is accepted
