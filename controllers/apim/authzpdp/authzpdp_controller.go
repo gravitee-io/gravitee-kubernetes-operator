@@ -149,9 +149,10 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	newController := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.AuthzPdp{}, lastSpecHash).
 		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.AuthzPdpContextField), lastSpecHash).
-		// A delete the platform refused (409) while an entity still needed the PDP as a target is
-		// retried once an entity changes or goes.
-		Watches(&v1alpha1.AuthzEntity{}, r.Watcher.WatchAuthzPdpReleases())
+		// A delete the platform refused (409) while an entity or a policy still needed the PDP as a
+		// target is retried once one of them changes or goes.
+		Watches(&v1alpha1.AuthzEntity{}, r.Watcher.WatchAuthzPdpReleases()).
+		Watches(&v1alpha1.AuthzPolicy{}, r.Watcher.WatchAuthzPdpReleases())
 
 	if env.Config.EnableTemplating {
 		newController.
