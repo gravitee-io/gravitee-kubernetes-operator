@@ -299,9 +299,10 @@ func (w *Type) WatchCreated(index search.IndexField) *handler.Funcs {
 }
 
 // WatchAuthzEntityParents queues, when an AuthzEntity is deleted, the AuthzEntity resources of its
-// ManagementContext that declare it as a parent. The platform has deleted each RESOURCE among them
-// and detached each PRINCIPAL: applied again, a PRINCIPAL is back as declared, and a RESOURCE is
-// refused, its Accepted condition naming the parent that no longer exists.
+// ManagementContext its delete cascades to on the platform (search.FindAuthzEntityCascade): each
+// RESOURCE child deleted, transitively, and each PRINCIPAL child detached. Applied again, a PRINCIPAL
+// is back as declared, and a RESOURCE is refused, its Accepted condition naming the parent that no
+// longer exists.
 func (w *Type) WatchAuthzEntityParents() *handler.Funcs {
 	return &handler.Funcs{
 		DeleteFunc: func(_ context.Context, e event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
@@ -309,13 +310,13 @@ func (w *Type) WatchAuthzEntityParents() *handler.Funcs {
 			if !ok {
 				return
 			}
-			children, err := search.FindAuthzEntityChildKeys(w.ctx, parent)
+			cascade, err := search.FindAuthzEntityCascade(w.ctx, parent)
 			if err != nil {
-				log.Error(w.ctx, err, "Unable to find the children of a deleted AuthzEntity", log.KeyValues(parent)...)
+				log.Error(w.ctx, err, "Unable to find the entities a deleted AuthzEntity cascades to", log.KeyValues(parent)...)
 				return
 			}
-			for _, child := range children {
-				q.Add(reconcile.Request{NamespacedName: child})
+			for _, key := range cascade {
+				q.Add(reconcile.Request{NamespacedName: key})
 			}
 		},
 	}

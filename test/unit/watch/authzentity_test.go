@@ -69,6 +69,30 @@ var _ = Describe("Watching AuthzEntity parents", func() {
 		Expect(queued(q)).To(ConsistOf(request("alice"), request("ritz")))
 	})
 
+	// The platform deletes a RESOURCE child with its parent, and that child's children in turn: a
+	// RESOURCE child is deleted, a PRINCIPAL child detached. It does not go through a PRINCIPAL.
+	It("queues, on a parent's delete, the entities its RESOURCE children cascade to", func() {
+		parent := newEntity("agents", "PRINCIPAL", "Group", devCtx)
+		ritz := authzentity.Parent{EntityType: "Hotel", EntityID: "ritz"}
+		alice := authzentity.Parent{EntityType: "User", EntityID: "alice"}
+		cli := cluster(
+			newEntity("ritz", "RESOURCE", "Hotel", devCtx, agents),
+			newEntity("ritz-suite", "RESOURCE", "Room", devCtx, ritz),
+			newEntity("ritz-suite-minibar", "RESOURCE", "Minibar", devCtx, authzentity.Parent{EntityType: "Room", EntityID: "ritz-suite"}),
+			newEntity("concierge", "PRINCIPAL", "User", devCtx, ritz),
+			newEntity("alice", "PRINCIPAL", "User", devCtx, agents),
+			newEntity("alice-laptop", "RESOURCE", "Device", devCtx, alice),
+		)
+		q := newQueue()
+
+		watch.New(ctx, cli, &v1alpha1.AuthzEntityList{}).WatchAuthzEntityParents().
+			Delete(ctx, event.DeleteEvent{Object: parent}, q)
+
+		Expect(queued(q)).To(ConsistOf(
+			request("ritz"), request("ritz-suite"), request("ritz-suite-minibar"), request("concierge"), request("alice"),
+		))
+	})
+
 	It("queues nothing on a create or an update", func() {
 		parent := newEntity("agents", "PRINCIPAL", "Group", devCtx)
 		cli := cluster(newEntity("alice", "PRINCIPAL", "User", devCtx, agents))

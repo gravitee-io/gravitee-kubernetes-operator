@@ -24,28 +24,28 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
-// validateDelete names the AuthzEntity resources that declare the entity as a parent through its
-// ManagementContext: the platform deletes the RESOURCE ones and detaches the PRINCIPAL ones, and
-// no event tells their controller. It does not call the platform's delete dry run, which would
-// also name entities other sources created: APIM 4.13 ignores dryRun on a DELETE and deletes.
+// validateDelete names the AuthzEntity resources of the entity's ManagementContext its delete
+// cascades to on the platform (search.FindAuthzEntityCascade). It does not call the platform's delete
+// dry run, which would also name entities other sources created: APIM 4.13 ignores dryRun on a DELETE
+// and deletes.
 func validateDelete(ctx context.Context, entity *v1alpha1.AuthzEntity) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	ref := refs.NewNamespacedName(entity.GetNamespace(), entity.GetName())
-	children, err := search.FindAuthzEntityChildren(ctx, entity)
+	cascade, err := search.FindAuthzEntityCascadeNames(ctx, entity)
 	if err != nil {
-		errs.AddWarningf("unable to check which resources declare authz entity [%s] as a parent: %s", ref.String(), err)
+		errs.AddWarningf("unable to check which resources deleting authz entity [%s] changes: %s", ref.String(), err)
 		return errs
 	}
-	if len(children) == 0 {
+	if len(cascade) == 0 {
 		return errs
 	}
 
 	errs.AddWarningf(
-		"authz entity [%s] is a parent of AuthzEntity [%s]: deleting it detaches each PRINCIPAL among "+
-			"them and deletes each RESOURCE on the platform. Each is then applied again: a PRINCIPAL as "+
-			"declared, a RESOURCE refused until its parent is declared again or dropped from its parents",
-		ref.String(), strings.Join(children, ", "),
+		"deleting authz entity [%s] cascades on the platform to AuthzEntity [%s]: each RESOURCE among "+
+			"them is deleted and each PRINCIPAL detached. Each is then applied again: a PRINCIPAL as "+
+			"declared, a RESOURCE refused until its parent exists again or is dropped from its parents",
+		ref.String(), strings.Join(cascade, ", "),
 	)
 	return errs
 }

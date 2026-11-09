@@ -33,6 +33,9 @@ type Parent struct {
 	EntityID string `json:"entityId"`
 }
 
+// KindResource is the kind of an entity acted upon. The platform deletes it with a deleted parent.
+const KindResource = "RESOURCE"
+
 // Type defines the specification of an AuthzEntity resource: a principal or a resource of
 // Authorization Management, its parents, its attributes and the PDP gateways it is published to.
 type Type struct {
