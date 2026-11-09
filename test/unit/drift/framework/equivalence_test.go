@@ -333,6 +333,28 @@ var _ = Describe("IgnoreRemoteDefault on booleans", func() {
 	)
 })
 
+var _ = Describe("IgnoreRemoteDefault on integers", func() {
+	type withInt struct {
+		Expiry *int32 `json:"expiry,omitempty" drift:"ignore-remote-default"`
+	}
+
+	DescribeTable("no drift",
+		func(crd, remote withInt) { expectNoDrift(drift.DetectWithNamespace(crd, remote, "")) },
+		Entry("unset crd value accepts a server default", withInt{}, withInt{Expiry: new(int32(600))}),
+		Entry("equal declared values", withInt{Expiry: new(int32(0))}, withInt{Expiry: new(int32(0))}),
+	)
+
+	DescribeTable("drift",
+		func(crd, remote withInt) {
+			result := drift.DetectWithNamespace(crd, remote, "")
+			Expect(result.DriftDetected()).To(BeTrue())
+			Expect(result.String()).To(ContainSubstring("expiry"))
+		},
+		Entry("declared 0 against a server default", withInt{Expiry: new(int32(0))}, withInt{Expiry: new(int32(600))}),
+		Entry("declared value against a missing remote value", withInt{Expiry: new(int32(300))}, withInt{}),
+	)
+})
+
 var _ = Describe("IgnoreRemoteDefault on lists", func() {
 	type withList struct {
 		Tags []string `json:"tags,omitempty" drift:"ignore-remote-default"`
