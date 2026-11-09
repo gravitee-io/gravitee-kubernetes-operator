@@ -199,6 +199,27 @@ The equivalence registry lives in `internal/drift/equivalences.go` and is wired 
 
 See `internal/drift/types.go` (`Merge` comment) and `internal/drift/doc.go`.
 
+#### Where GKO wins without a drift
+
+A field tagged `ignore-remote-default` (in GKO or in the am-sdk overlay `am-sdk/overlays/drift.yaml`) is
+not protected while the CRD leaves it unset: a console change to it is not reported, and when the CRD
+then sets it, the CRD value is applied over the console change without a drift. Use the tag only where
+the server fills values the CRD did not declare and a console change cannot be told apart from them.
+Every other field still refuses the update once the console changed it.
+
+**Adding or widening such a tag is a user-visible change: list the fields in the release note of the
+version that ships it** (PR body `## Release note` section and the Jira ticket). Today:
+
+- `AMSecurityDomain` (GKO-3443): `oidc`, `oidc.clientRegistrationSettings` and its flags,
+  `oidc.redirectUriStrictMatching`, the `oidc.securityProfileSettings` (FAPI) flags,
+  `oidc.cibaSettings`, and `oidc.workloadIdentitySettings` `enabled`, `maxJwtLifetimeSeconds`,
+  `clockSkewSeconds`.
+- `AMApplication`: `clientId`, the `settings` block and its `oauth`, `login`, `account`,
+  `cookieSettings`, `advanced` blocks, and the oauth `grantTypes`, `responseTypes`,
+  `tokenEndpointAuthMethod`, `forcePKCE`, `forceS256CodeChallengeMethod`,
+  `tokenExchangeOAuthSettings`.
+- `AMSecurityDomain`: `dataPlaneId`.
+
 #### Testing
 
 Unit only, in `test/unit/drift/apim/` (`test/unit/drift/am/` for AM): table-driven `drift.Detect` tests over your DTO, covering each tag you added and `To*DTO` parity. Do not re-test the framework. Call `drift.Init()` in the suite `BeforeSuite`. Behaviour against a live APIM belongs in the e2e repo (see [Testing](#testing)).

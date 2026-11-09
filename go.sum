@@ -170,8 +170,8 @@ github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 h1:JeSE6pjso5T
 github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674/go.mod h1:r4w70xmWCQKmi1ONH4KIaBptdivuRPyosB9RmPlGEwA=
 github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.5.0 h1:Mz1o5kEOqXzx3kyTQ6h6KAzXjbyCWwuyH5e5fTvtMKU=
 github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.5.0/go.mod h1:LHfOcclw9Qkt8x7H8THnChmCZEvwWfeZjS8pncas73M=
-github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.5.0 h1:QFAy5J71vkpXzxOf9/DQBUnPhs/XLNyFmI0XsY5pGwo=
-github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.5.0/go.mod h1:Fks8U7j5iwpf7k/lWgKcE0uV3ueYg6O3L23heEfFgLU=
+github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.5.1 h1:xBYug4mry2b4Aiylk1Lj3WnnyuD7cnIIFqf46e5t8b0=
+github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.5.1/go.mod h1:Fks8U7j5iwpf7k/lWgKcE0uV3ueYg6O3L23heEfFgLU=
 github.com/gravitee-io/gravitee-automation-sdk/common v1.2.0 h1:nnKrGdWh69u+wI3n9E8plI8pL2Pgol9xtHUGDnpUkxw=
 github.com/gravitee-io/gravitee-automation-sdk/common v1.2.0/go.mod h1:pCa79yKuchkLBnMYNOASQtuHUvnPlTW7ayLrBOETRII=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 h1:5VipnvEpbqr2gA2VbM+nYVbkIF28c5ZQfqCBQ5g2xfk=
