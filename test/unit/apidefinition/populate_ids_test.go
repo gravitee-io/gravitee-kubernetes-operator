@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -159,4 +160,28 @@ var _ = Describe("PopulateIDs", func() {
 		Expect((*api.Spec.Plans)["k"].ID).To(Equal("X"))
 		Expect((*api.Spec.Pages)["doc"].ID).To(Equal("P"))
 	})
+
+	// GKO-3434. With spec.id set (an export, or a migrated V2 API), the operator sends the API by UUID and
+	// APIM matches plans by id only: a plan id it does not know replaces the existing plan and closes its
+	// subscriptions. So the plan id sent is status.plans[key], else the spec plan id, else a generated one.
+	DescribeTable("chooses the plan id when spec.id is set",
+		func(specPlanID string, statusPlans map[string]string, expectedID string) {
+			plans := map[string]*v4.Plan{
+				"k": {Plan: &base.Plan{ID: specPlanID}, Name: "Test Plan"},
+			}
+			api := legacyAPI(&plans, nil)
+			api.Spec.ID = "exported-api-uuid"
+			api.Status = v1alpha1.ApiV4DefinitionStatus{}
+			api.Status.Plans = statusPlans
+
+			api.PopulateIDs(&management.Context{}, k8s.IsAutomationAPIManaged(api))
+
+			Expect((*api.Spec.Plans)["k"].HRID).To(Equal("k"))
+			Expect((*api.Spec.Plans)["k"].ID).To(Equal(expectedID))
+		},
+		Entry("first apply: the spec plan id is kept", "X", nil, "X"),
+		Entry("later applies: the status plan id wins", "X", map[string]string{"k": "S"}, "S"),
+		Entry("no plan id anywhere: an id is generated",
+			"", nil, uuid.FromStrings("exported-api-uuid", "k")),
+	)
 })
