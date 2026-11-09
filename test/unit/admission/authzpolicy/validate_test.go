@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -272,6 +273,22 @@ var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 
 		Expect(err).To(MatchError(ContainSubstring("drift detected")))
 		Expect(err).To(MatchError(ContainSubstring("forbid(principal, action, resource);")))
+	})
+
+	// The platform holds the routing scope the old pdpRef resolves to, so moving the policy to a
+	// scope is an edit. Admission resolves the new spec only: drift resolves the old one, without
+	// which its pdpRef would compare as an empty scope and both sides would differ from the platform.
+	It("admits retargeting a pdpRef while the platform holds its routing scope", func() {
+		cluster(newPdp("orders-eu", devCtx, "orders@eu"))
+		platform.answerGet(http.StatusOK, strings.Replace(remote(policyText, "DEPLOYED"),
+			`"targets":["default"]`, `"targets":["orders@eu"]`, 1))
+		retargeted := applied()
+		routed := retargeted.DeepCopy()
+		routed.Spec.Targets = []authzpdp.Target{byRef("orders-eu")}
+
+		_, err := ctrl.ValidateUpdate(ctx, routed, retargeted)
+
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	// Comparing would apply the remote-missing policy, deny here, and refuse the very edit that
