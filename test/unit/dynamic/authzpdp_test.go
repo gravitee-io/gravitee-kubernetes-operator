@@ -16,6 +16,7 @@ package dynamic
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -24,11 +25,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
@@ -121,13 +124,54 @@ var _ = Describe("Resolving a pdpRef", func() {
 		Expect(dynamic.IsAuthzPdpPending(err)).To(BeTrue())
 	})
 
-	It("refuses a PDP synced through another management context", func() {
+	// Admission reports the message as a severe error; the reconcile reports it on Accepted and
+	// does not requeue: both contexts are immutable, so only a change to the pdpRef fixes it.
+	It("refuses a PDP synced through another management context, without retrying", func() {
 		cluster(pdp(refs.NamespacedName{Name: "prod-ctx"}, "orders@eu"))
 
 		_, err := dynamic.ResolveAuthzPdpRoutingScope(ctx, dependent(devCtx), ref)
 
 		Expect(err).To(MatchError(
-			"authz pdp [orders/orders-eu] is synced through management context [orders/prod-ctx], not [orders/dev-ctx]"))
+			"authz pdp [orders/orders-eu] belongs to management context [orders/prod-ctx], not [orders/dev-ctx]"))
 		Expect(dynamic.IsAuthzPdpPending(err)).To(BeFalse())
+		var reconcileErr gerrors.ReconcileError
+		Expect(errors.As(err, &reconcileErr)).To(BeTrue())
+		Expect(reconcileErr.Type).To(Equal(gerrors.IllegalStateError))
+		Expect(gerrors.IsRecoverable(err)).To(BeFalse())
+	})
+
+	// Syncing or deleting the PDP would not change its context: waiting would never end.
+	It("refuses a PDP of another management context before checking its sync state", func() {
+		unsynced := pdp(refs.NamespacedName{Name: "prod-ctx"}, "")
+		deleting := pdp(refs.NamespacedName{Name: "prod-ctx"}, "orders@eu")
+		deleting.Name = "orders-us"
+		deleting.Finalizers = []string{core.AuthzPdpFinalizer}
+		deleting.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+		cluster(unsynced, deleting)
+
+		for _, name := range []string{"orders-eu", "orders-us"} {
+			_, err := dynamic.ResolveAuthzPdpRoutingScope(ctx, dependent(devCtx), refs.NamespacedName{Name: name})
+
+			Expect(err).To(MatchError(ContainSubstring("belongs to management context [orders/prod-ctx]")))
+			Expect(dynamic.IsAuthzPdpPending(err)).To(BeFalse())
+			Expect(gerrors.IsRecoverable(err)).To(BeFalse())
+		}
+	})
+
+	It("retries a PDP it cannot read", func() {
+		scheme := runtime.NewScheme()
+		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
+		k8s.RegisterClient(fake.NewClientBuilder().WithScheme(scheme).
+			WithInterceptorFuncs(interceptor.Funcs{
+				Get: func(context.Context, client.WithWatch, client.ObjectKey, client.Object, ...client.GetOption) error {
+					return errors.New("cache not synced")
+				},
+			}).Build())
+
+		_, err := dynamic.ResolveAuthzPdpRoutingScope(ctx, dependent(devCtx), ref)
+
+		Expect(err).To(MatchError("unable to read authz pdp [orders/orders-eu]: cache not synced"))
+		Expect(dynamic.IsAuthzPdpPending(err)).To(BeFalse())
+		Expect(gerrors.IsRecoverable(err)).To(BeTrue())
 	})
 })
