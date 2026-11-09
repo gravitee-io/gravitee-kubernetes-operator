@@ -16,9 +16,7 @@ package authzentity
 
 import (
 	"context"
-	"slices"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -27,8 +25,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
 
@@ -82,7 +78,7 @@ func validateUpdate(
 		return errs
 	}
 
-	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemoteAuthzEntity(ctx, oldObj),
+	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemoteAuthzEntity,
 		drift.MapDTO(toDriftDTO)))
 	return errs
 }
@@ -113,76 +109,12 @@ func toDriftDTO(entity *v1alpha1.AuthzEntity) model.AuthzEntityDTO {
 	return model.ToAuthzEntityDTO(entity, targets)
 }
 
-// kindResource is the kind the platform deletes, rather than detaches, with its parent.
-const kindResource = "RESOURCE"
-
-// getRemoteAuthzEntity reads the platform's copy and returns the payload half, with the cascade of
-// a deleted parent undone. Deleting an AuthzEntity deletes each RESOURCE that declares it and
-// detaches each PRINCIPAL: they differ from their manifests until their spec next changes, and that
-// change must not read as drift. A parent of the old spec that no AuthzEntity of its context declares
-// any more is taken as deleted: the parents among those the platform no longer lists are added back,
-// and a RESOURCE the platform no longer holds reads as its old spec. Every other field is compared.
-// A parent another source created reads as deleted too: an entity detached from it, or a RESOURCE
-// deleted, outside the operator is not reported.
-func getRemoteAuthzEntity(
-	ctx context.Context,
-	oldObj *v1alpha1.AuthzEntity,
-) drift.RemoteObjectGetter[*v1alpha1.AuthzEntity] {
-	return func(apimClient *apim.APIM, entity *v1alpha1.AuthzEntity) (any, error) {
-		hrid := refs.NewNamespacedNameFromObject(entity).HRID()
-		remote, err := apimClient.AuthzEntities.GetByHRID(hrid)
-		missing := errors.IsNotFound(err)
-		if err != nil && !missing {
-			return nil, err
-		}
-		if missing && oldObj.Spec.Kind != kindResource {
-			return nil, err
-		}
-		if !missing && !lacksParent(remote.Parents, oldObj.Spec.Parents) {
-			return remote.AuthzEntityDTO, nil
-		}
-
-		old := oldObj.DeepCopy()
-		deleted, findErr := cascadedParents(ctx, old)
-		if findErr != nil {
-			log.Error(ctx, findErr, "Unable to undo a parent's cascade, comparing the platform's copy as is",
-				log.KeyValues(oldObj)...)
-		}
-		if findErr != nil || len(deleted) == 0 {
-			if missing {
-				return nil, err
-			}
-			return remote.AuthzEntityDTO, nil
-		}
-		if missing {
-			return toDriftDTO(old), nil
-		}
-
-		dto := remote.AuthzEntityDTO
-		for _, parent := range deleted {
-			if restored := model.ToAuthzEntityParentDTO(parent); !slices.Contains(dto.Parents, restored) {
-				dto.Parents = append(slices.Clone(dto.Parents), restored)
-			}
-		}
-		return dto, nil
-	}
-}
-
-// cascadedParents resolves old as drift compares it, then returns the parents no AuthzEntity of its
-// context declares any more.
-func cascadedParents(ctx context.Context, old *v1alpha1.AuthzEntity) ([]authzentity.Parent, error) {
-	if err := resolveRefs(ctx, old); err != nil {
+// getRemoteAuthzEntity reads the platform's copy and returns the payload half.
+func getRemoteAuthzEntity(apimClient *apim.APIM, entity *v1alpha1.AuthzEntity) (any, error) {
+	hrid := refs.NewNamespacedNameFromObject(entity).HRID()
+	remote, err := apimClient.AuthzEntities.GetByHRID(hrid)
+	if err != nil {
 		return nil, err
 	}
-	return search.FindUndeclaredAuthzEntityParents(ctx, old)
-}
-
-// lacksParent tells if the platform no longer lists one of the parents the old spec declares.
-func lacksParent(remote []model.AuthzEntityParentDTO, declared []authzentity.Parent) bool {
-	for _, parent := range declared {
-		if !slices.Contains(remote, model.ToAuthzEntityParentDTO(parent)) {
-			return true
-		}
-	}
-	return false
+	return remote.AuthzEntityDTO, nil
 }

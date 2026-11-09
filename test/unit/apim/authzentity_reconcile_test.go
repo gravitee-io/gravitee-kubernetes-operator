@@ -153,6 +153,42 @@ var _ = Describe("Authz entity reconcile", func() {
 		Expect(e.Status.ID).To(BeEmpty())
 	})
 
+	// The entity controller applies each child of a deleted parent again (watch.WatchAuthzEntityParents).
+	// The platform has detached a PRINCIPAL child: it takes the declaration back as it is.
+	It("applies a PRINCIPAL again after its parent's delete", func() {
+		entity := newAuthzEntity()
+		entity.Spec.Context = &refs.NamespacedName{Name: "cascade-ctx"}
+		entity.Spec.Targets = []authzpdp.Target{{Scope: "default"}}
+		r, cli := setup(entity)
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(condition(cli, k8s.ConditionAccepted).Status).To(Equal(metav1.ConditionTrue))
+		Expect(stored(cli).Status.ID).To(Equal("5e7b"))
+	})
+
+	// The platform has deleted a RESOURCE child with its parent, and refuses to declare it again
+	// under a parent that does not exist.
+	It("refuses a RESOURCE whose parent was deleted, naming that parent", func() {
+		entity := newAuthzEntity()
+		entity.Spec.Context = &refs.NamespacedName{Name: "cascade-ctx"}
+		entity.Spec.Kind, entity.Spec.EntityType = "RESOURCE", "Hotel"
+		entity.Spec.Targets = []authzpdp.Target{{Scope: "default"}}
+		r, cli := setup(entity)
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).To(HaveOccurred())
+
+		e := stored(cli)
+		Expect(e.Status.Errors.Severe).To(ConsistOf(missingParentFinding(`Group::"travel"`)))
+		accepted := condition(cli, k8s.ConditionAccepted)
+		Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+		// The message carries the platform's answer as received, its quotes escaped.
+		Expect(accepted.Message).To(ContainSubstring(`parent Group::\"travel\" does not exist`))
+		Expect(e.Status.ID).To(BeEmpty())
+	})
+
 	It("deletes an entity still waiting on its AuthzPdp", func() {
 		r, cli := setup(twoPdps())
 

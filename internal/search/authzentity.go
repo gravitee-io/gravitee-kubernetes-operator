@@ -19,12 +19,11 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -38,6 +37,21 @@ func AuthzEntityParentKey(contextOf, entityType, entityID string) string {
 // declare entity as a parent and sync through its ManagementContext. Entities created on the
 // platform by another source are not found.
 func FindAuthzEntityChildren(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]string, error) {
+	keys, err := FindAuthzEntityChildKeys(ctx, entity)
+	if err != nil {
+		return nil, err
+	}
+	names := make([]string, 0, len(keys))
+	for _, key := range keys {
+		names = append(names, key.String())
+	}
+	sort.Strings(names)
+	return names, nil
+}
+
+// FindAuthzEntityChildKeys returns the keys of the AuthzEntity resources that declare entity as a
+// parent and sync through its ManagementContext, entity itself excluded.
+func FindAuthzEntityChildKeys(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]types.NamespacedName, error) {
 	contextOf := dynamic.ContextOf(entity)
 	if contextOf == "" {
 		return nil, nil
@@ -51,50 +65,12 @@ func FindAuthzEntityChildren(ctx context.Context, entity *v1alpha1.AuthzEntity) 
 		return nil, fmt.Errorf("unable to list AuthzEntity: %w", err)
 	}
 
-	self := refs.NewNamespacedNameFromObject(entity).String()
-	names := make([]string, 0, len(children.Items))
+	self := client.ObjectKeyFromObject(entity)
+	keys := make([]types.NamespacedName, 0, len(children.Items))
 	for i := range children.Items {
-		name := refs.NewNamespacedNameFromObject(&children.Items[i]).String()
-		if name != self {
-			names = append(names, name)
+		if child := client.ObjectKeyFromObject(&children.Items[i]); child != self {
+			keys = append(keys, child)
 		}
 	}
-	sort.Strings(names)
-	return names, nil
-}
-
-// FindUndeclaredAuthzEntityParents returns the parents of entity that no AuthzEntity of its
-// ManagementContext declares, a Terminating one counting as gone: a parent the operator deleted,
-// or one another source created on the platform.
-func FindUndeclaredAuthzEntityParents(
-	ctx context.Context,
-	entity *v1alpha1.AuthzEntity,
-) ([]authzentity.Parent, error) {
-	contextOf := dynamic.ContextOf(entity)
-	if contextOf == "" || len(entity.Spec.Parents) == 0 {
-		return nil, nil
-	}
-	entities := &v1alpha1.AuthzEntityList{}
-	filter := &client.ListOptions{
-		FieldSelector: fields.SelectorFromSet(fields.Set{AuthzEntityContextField.String(): contextOf}),
-	}
-	if err := k8s.GetClient().List(ctx, entities, filter); err != nil {
-		return nil, fmt.Errorf("unable to list AuthzEntity: %w", err)
-	}
-
-	declared := make(map[authzentity.Parent]struct{}, len(entities.Items))
-	for i := range entities.Items {
-		item := &entities.Items[i]
-		if item.DeletionTimestamp.IsZero() {
-			declared[authzentity.Parent{EntityType: item.Spec.EntityType, EntityID: item.Spec.EntityID}] = struct{}{}
-		}
-	}
-
-	var undeclared []authzentity.Parent
-	for _, parent := range entity.Spec.Parents {
-		if _, ok := declared[parent]; !ok {
-			undeclared = append(undeclared, parent)
-		}
-	}
-	return undeclared, nil
+	return keys, nil
 }

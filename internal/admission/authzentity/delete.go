@@ -43,8 +43,8 @@ func validateDelete(ctx context.Context, entity *v1alpha1.AuthzEntity) *errors.A
 
 	errs.AddWarningf(
 		"authz entity [%s] is a parent of AuthzEntity [%s]: deleting it detaches each PRINCIPAL among "+
-			"them and deletes each RESOURCE on the platform, and they differ from their manifests until "+
-			"their spec next changes",
+			"them and deletes each RESOURCE on the platform. Each is then applied again: a PRINCIPAL as "+
+			"declared, a RESOURCE refused until its parent is declared again or dropped from its parents",
 		ref.String(), strings.Join(children, ", "),
 	)
 	return errs
