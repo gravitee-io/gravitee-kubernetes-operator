@@ -788,11 +788,11 @@ an entityId: an id another entity holds is refused, naming the source that decla
 A target names an AuthzPdp through pdpRef, or a routing scope no AuthzPdp declares through
 scope. A pdpRef waits on ResolvedRefs=False until the AuthzPdp has a routing scope.
 
-Deleting an AuthzEntity deletes its RESOURCE children and detaches its PRINCIPAL children on the
-platform, and each AuthzEntity declaring one of them is applied again: a PRINCIPAL as declared, a
-RESOURCE refused, its Accepted condition naming the parent that no longer exists. A delete that
-would remove more entities than the platform's cascade limit is refused (413): the resource stays
-Terminating, its Accepted condition naming the reason.
+Deleting an AuthzEntity deletes its RESOURCE children on the platform, theirs in turn, and detaches
+the PRINCIPAL children of each entity deleted. Each AuthzEntity the cascade reaches is applied
+again: a PRINCIPAL as declared, a RESOURCE refused, its Accepted condition naming the parent that
+no longer exists. A delete that would remove more entities than the platform's cascade limit is
+refused (413): the resource stays Terminating, its Accepted condition naming the reason.
 
 
 

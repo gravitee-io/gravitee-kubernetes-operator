@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -33,11 +34,9 @@ func AuthzEntityParentKey(contextOf, entityType, entityID string) string {
 	return contextOf + "/" + entityType + "/" + entityID
 }
 
-// FindAuthzEntityChildren returns, as namespace/name and sorted, the AuthzEntity resources that
-// declare entity as a parent and sync through its ManagementContext. Entities created on the
-// platform by another source are not found.
-func FindAuthzEntityChildren(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]string, error) {
-	keys, err := FindAuthzEntityChildKeys(ctx, entity)
+// FindAuthzEntityCascadeNames returns FindAuthzEntityCascade's keys as namespace/name, sorted.
+func FindAuthzEntityCascadeNames(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]string, error) {
+	keys, err := FindAuthzEntityCascade(ctx, entity)
 	if err != nil {
 		return nil, err
 	}
@@ -49,14 +48,50 @@ func FindAuthzEntityChildren(ctx context.Context, entity *v1alpha1.AuthzEntity) 
 	return names, nil
 }
 
-// FindAuthzEntityChildKeys returns the keys of the AuthzEntity resources that declare entity as a
-// parent and sync through its ManagementContext, entity itself excluded.
-func FindAuthzEntityChildKeys(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]types.NamespacedName, error) {
+// FindAuthzEntityCascade returns the keys of the AuthzEntity resources of entity's ManagementContext
+// that its delete changes on the platform, entity excluded. The platform deletes every RESOURCE child
+// of a deleted entity, transitively, and detaches every PRINCIPAL child: the search follows the
+// declared parents the same way, through RESOURCE children only. An entity another source created
+// is not found, nor what the platform cascades through it.
+func FindAuthzEntityCascade(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]types.NamespacedName, error) {
 	contextOf := dynamic.ContextOf(entity)
 	if contextOf == "" {
 		return nil, nil
 	}
-	key := AuthzEntityParentKey(contextOf, entity.Spec.EntityType, entity.Spec.EntityID)
+
+	seen := map[types.NamespacedName]bool{client.ObjectKeyFromObject(entity): true}
+	keys := make([]types.NamespacedName, 0)
+	deleted := []*v1alpha1.AuthzEntity{entity}
+	for len(deleted) > 0 {
+		parent := deleted[0]
+		deleted = deleted[1:]
+		children, err := listAuthzEntityChildren(ctx, contextOf, parent)
+		if err != nil {
+			return nil, err
+		}
+		for i := range children {
+			child := &children[i]
+			key := client.ObjectKeyFromObject(child)
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			keys = append(keys, key)
+			if child.Spec.Kind == authzentity.KindResource {
+				deleted = append(deleted, child)
+			}
+		}
+	}
+	return keys, nil
+}
+
+// listAuthzEntityChildren lists the AuthzEntity resources of a ManagementContext that declare parent.
+func listAuthzEntityChildren(
+	ctx context.Context,
+	contextOf string,
+	parent *v1alpha1.AuthzEntity,
+) ([]v1alpha1.AuthzEntity, error) {
+	key := AuthzEntityParentKey(contextOf, parent.Spec.EntityType, parent.Spec.EntityID)
 	children := &v1alpha1.AuthzEntityList{}
 	filter := &client.ListOptions{
 		FieldSelector: fields.SelectorFromSet(fields.Set{AuthzEntityParentField.String(): key}),
@@ -64,13 +99,5 @@ func FindAuthzEntityChildKeys(ctx context.Context, entity *v1alpha1.AuthzEntity)
 	if err := k8s.GetClient().List(ctx, children, filter); err != nil {
 		return nil, fmt.Errorf("unable to list AuthzEntity: %w", err)
 	}
-
-	self := client.ObjectKeyFromObject(entity)
-	keys := make([]types.NamespacedName, 0, len(children.Items))
-	for i := range children.Items {
-		if child := client.ObjectKeyFromObject(&children.Items[i]); child != self {
-			keys = append(keys, child)
-		}
-	}
-	return keys, nil
+	return children.Items, nil
 }

@@ -190,9 +190,14 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 		platform.reset()
 	})
 
-	It("warns, naming the entities of its context that declare it as a parent", func() {
+	It("warns, naming the entities of its context its delete cascades to", func() {
+		suite := child("ritz-suite", devCtx, authzentity.Parent{EntityType: "Hotel", EntityID: "ritz"})
+		concierge := child("concierge", devCtx, authzentity.Parent{EntityType: "Hotel", EntityID: "ritz"})
+		concierge.Spec.Kind, concierge.Spec.EntityType = "PRINCIPAL", "User"
 		cluster(
 			child("ritz", devCtx, agents),
+			suite,
+			concierge,
 			child("grand-paris", refs.NamespacedName{Name: "dev-ctx", Namespace: ns},
 				authzentity.Parent{EntityType: "Group", EntityID: "travel"}, agents),
 			child("savoy", refs.NamespacedName{Name: "prod-ctx"}, agents),
@@ -202,10 +207,10 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 		warnings, err := ctrl.ValidateDelete(ctx, newEntity("agents-group", "agents"))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ConsistOf("authz entity [travel/agents-group] is a parent of AuthzEntity " +
-			"[travel/grand-paris, travel/ritz]: deleting it detaches each PRINCIPAL among them and deletes " +
-			"each RESOURCE on the platform. Each is then applied again: a PRINCIPAL as declared, a RESOURCE " +
-			"refused until its parent is declared again or dropped from its parents"))
+		Expect(warnings).To(ConsistOf("deleting authz entity [travel/agents-group] cascades on the platform to " +
+			"AuthzEntity [travel/concierge, travel/grand-paris, travel/ritz, travel/ritz-suite]: each RESOURCE " +
+			"among them is deleted and each PRINCIPAL detached. Each is then applied again: a PRINCIPAL as " +
+			"declared, a RESOURCE refused until its parent exists again or is dropped from its parents"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
