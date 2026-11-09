@@ -112,7 +112,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if errors.IsRecoverable(err) {
+	if errors.MustRetry(err, subscription.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, subscription)
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
 	}

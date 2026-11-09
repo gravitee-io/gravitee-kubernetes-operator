@@ -16,7 +16,6 @@ package internal
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -51,11 +50,6 @@ func Delete(ctx context.Context, thm *v1alpha1.PortalTheme) error {
 	}
 
 	if err := gerrors.IgnoreNotFound(apimClient.PortalThemes.Delete(thm)); err != nil {
-		// A portal activated outside of GKO is invisible to the guard above,
-		// so keep APIM's refusal recoverable.
-		if gerrors.IsBadRequest(err) {
-			return fmt.Errorf("unable to delete theme [%s]: %w", thm.GetName(), err)
-		}
 		return gerrors.NewControlPlaneError(err)
 	}
 

@@ -116,7 +116,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if errors.IsRecoverable(err) {
+	if errors.MustRetry(err, proxy.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, proxy)
 		return ctrl.Result{}, err
 	}
