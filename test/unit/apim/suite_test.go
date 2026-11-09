@@ -48,6 +48,13 @@ const acceptingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/man
 var acceptedStates = map[string]string{
 	"/authz/policies": `{"hrid":"gravitee-hotel-booking-read","id":"5f1c","organizationId":"DEFAULT",` +
 		`"environmentId":"DEFAULT","policyStatus":"DEPLOYED"}`,
+	"/aim/catalog/mcp-servers": `{"hrid":"gravitee-github","id":"7a2e","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT","authPolicyRef":"MCPServer::\"github\"","tools":[{"name":"create_issue",` +
+		`"entityId":"mcp-tool.github.create_issue","authPolicyRef":"MCPTool::\"github.create_issue\""}]}`,
+	"/aim/mcp-proxies": `{"hrid":"gravitee-support-studio","id":"9b3d","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT","tools":[{"server":"gravitee-github-mcp","tool":"search_issues",` +
+		`"alias":"gh_search","entityId":"mcp-tool.github.search_issues",` +
+		`"authPolicyRef":"MCPTool::\"github.search_issues\""}]}`,
 }
 
 // lastReceived holds the last body an accepting or the cascade APIM received, by collection path
