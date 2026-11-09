@@ -16,8 +16,11 @@ package apim_test
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -48,7 +51,11 @@ func missingParentFinding(parent string) string {
 		"so declare the parent first or drop it from parents"
 }
 
-// cascadePlatform answers an AuthzEntity PUT as a platform whose parents have all been deleted.
+// lastReceived holds the last body the cascade APIM received, by collection path suffix.
+var lastReceived sync.Map
+
+// cascadePlatform answers an AuthzEntity PUT as a platform whose parents have all been deleted,
+// recording its body in lastReceived.
 func cascadePlatform(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	sent := struct {
@@ -59,9 +66,13 @@ func cascadePlatform(w http.ResponseWriter, r *http.Request) {
 			EntityID   string `json:"entityId"`
 		} `json:"parents"`
 	}{}
-	if r.Method != http.MethodPut || json.NewDecoder(r.Body).Decode(&sent) != nil {
+	body, err := io.ReadAll(r.Body)
+	if r.Method != http.MethodPut || err != nil || json.Unmarshal(body, &sent) != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
+	}
+	if strings.HasSuffix(r.URL.Path, "/authz/entities") {
+		lastReceived.Store("/authz/entities", string(body))
 	}
 	if sent.Kind == "RESOURCE" && len(sent.Parents) > 0 {
 		parent := sent.Parents[0].EntityType + `::"` + sent.Parents[0].EntityID + `"`

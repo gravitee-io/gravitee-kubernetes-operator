@@ -26,9 +26,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-// CreateOrUpdate applies the entity with the targets the caller resolved, in declaration order:
-// each scope as written, each pdpRef as the routing scope of the AuthzPdp it names.
-func CreateOrUpdate(ctx context.Context, entity *v1alpha1.AuthzEntity, targets []string) error {
+// CreateOrUpdate applies an entity whose refs dynamic.ResolveAuthzEntityRefs has resolved.
+func CreateOrUpdate(ctx context.Context, entity *v1alpha1.AuthzEntity) error {
 	if !entity.HasContext() {
 		return gerrors.NewIllegalStateError(
 			fmt.Errorf("authz entity [%s] has no management context", entity.GetName()),
@@ -40,7 +39,7 @@ func CreateOrUpdate(ctx context.Context, entity *v1alpha1.AuthzEntity, targets [
 		return err
 	}
 
-	state, err := apimClient.AuthzEntities.CreateOrUpdate(model.ToAuthzEntityDTO(entity, targets))
+	state, err := apimClient.AuthzEntities.CreateOrUpdate(model.ToAuthzEntityDTO(entity))
 	if err != nil {
 		// A 400 is how the platform refuses an apply: an entityId another source holds (AUTHZ-5), an
 		// attribute off a strict schema. Admission skips the dry run while a pdpRef is pending, and

@@ -16,6 +16,7 @@ package apim_test
 
 import (
 	"context"
+	"encoding/json"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -187,6 +188,30 @@ var _ = Describe("Authz entity reconcile", func() {
 		// The message carries the platform's answer as received, its quotes escaped.
 		Expect(accepted.Message).To(ContainSubstring(`parent Group::\"travel\" does not exist`))
 		Expect(e.Status.ID).To(BeEmpty())
+	})
+
+	It("sends each pdpRef as its AuthzPdp's routing scope, the stored spec keeping the pdpRef", func() {
+		entity := newAuthzEntity()
+		entity.Spec.Context = &refs.NamespacedName{Name: "cascade-ctx"}
+		pdp := newAuthzPdp()
+		pdp.Spec.Context = &refs.NamespacedName{Name: "cascade-ctx"}
+		pdp.Status.RoutingScope = "orders@eu"
+		r, cli := setup(entity, pdp)
+		lastReceived.Delete("/authz/entities")
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+
+		received, ok := lastReceived.Load("/authz/entities")
+		Expect(ok).To(BeTrue())
+		body, isString := received.(string)
+		Expect(isString).To(BeTrue())
+		var sent struct {
+			Targets []string `json:"targets"`
+		}
+		Expect(json.Unmarshal([]byte(body), &sent)).To(Succeed())
+		Expect(sent.Targets).To(Equal([]string{"orders@eu", "default"}))
+		Expect(stored(cli).Spec.Targets).To(Equal(newAuthzEntity().Spec.Targets))
 	})
 
 	It("deletes an entity still waiting on its AuthzPdp", func() {
