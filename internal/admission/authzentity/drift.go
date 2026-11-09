@@ -73,7 +73,10 @@ func validateUpdate(
 	// The platform refused the last apply: the stored spec is not what it holds, and this edit is how
 	// the entity gets fixed. A RESOURCE the platform deleted with its parent is one: applied again, it
 	// is refused for that parent, and the edit dropping it would read the missing remote as drift. The
-	// dry run above has checked the new spec.
+	// dry run above has checked the new spec. What this gives up: an out-of-band edit made while the
+	// entity is refused goes undetected. Drift compares the platform's copy with the stored spec, which
+	// the platform never held, so it would refuse every edit that fixes the entity rather than tell
+	// such an edit apart. The skip ends with the next successful apply, which clears status.errors.
 	if len(oldObj.Status.Errors.Severe) > 0 {
 		return errs
 	}
