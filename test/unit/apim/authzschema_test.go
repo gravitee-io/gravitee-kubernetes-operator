@@ -69,11 +69,14 @@ var _ = Describe("Authz schema", func() {
 
 	Describe("wire mapping", func() {
 		It("derives the hrid from the namespace and name", func() {
-			Expect(model.ToAuthzSchemaDTO(newAuthzSchema(), "orders@eu").HRID).To(Equal("gravitee-travel-schema"))
+			Expect(model.ToAuthzSchemaDTO(newAuthzSchema()).HRID).To(Equal("gravitee-travel-schema"))
 		})
 
-		It("sends the target the caller resolved, not the pdpRef", func() {
-			raw, err := json.Marshal(model.ToAuthzSchemaDTO(newAuthzSchema(), "orders@eu"))
+		// The pdpRef of newAuthzSchema, resolved as dynamic.ResolveAuthzSchemaRefs leaves it.
+		It("sends the scope of the resolved target", func() {
+			resolved := newAuthzSchema()
+			resolved.Spec.Target = &authzpdp.Target{Scope: "orders@eu"}
+			raw, err := json.Marshal(model.ToAuthzSchemaDTO(resolved))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(raw)).To(MatchJSON(`{
 				"hrid": "gravitee-travel-schema",
@@ -83,8 +86,10 @@ var _ = Describe("Authz schema", func() {
 			}`))
 		})
 
-		It("omits an empty target", func() {
-			raw, err := json.Marshal(model.ToAuthzSchemaDTO(newAuthzSchema(), ""))
+		It("omits an absent target", func() {
+			untargeted := newAuthzSchema()
+			untargeted.Spec.Target = nil
+			raw, err := json.Marshal(model.ToAuthzSchemaDTO(untargeted))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(raw)).To(MatchJSON(`{
 				"hrid": "gravitee-travel-schema",

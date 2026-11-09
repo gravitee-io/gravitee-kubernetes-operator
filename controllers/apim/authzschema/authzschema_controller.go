@@ -116,12 +116,12 @@ func (r *Reconciler) mutate(ctx context.Context, events *event.Recorder, schema,
 		})
 	}
 
-	// Resolved before templates compile, so a schema waiting on its AuthzPdp records no template
-	// reference. A pending AuthzPdp is waited out: the AuthzPdp watch requeues the schema once it
-	// syncs. Any other error (an AuthzPdp of another context, a cache read failure) is retried with
-	// backoff and reported on Accepted.
-	target, err := dynamic.ResolveAuthzTarget(ctx, schema, schema.Spec.Target)
-	if err != nil {
+	// Resolved on dc, which is never saved: its target becomes the scope the platform receives,
+	// while schema keeps its pdpRef. Resolved before templates compile, so a schema waiting on its
+	// AuthzPdp records no template reference. A pending AuthzPdp is waited out: the AuthzPdp watch
+	// requeues the schema once it syncs. Any other error (an AuthzPdp of another context, a cache
+	// read failure) is retried with backoff and reported on Accepted.
+	if err := dynamic.ResolveAuthzSchemaRefs(ctx, dc); err != nil {
 		if dynamic.IsAuthzPdpPending(err) {
 			return errors.NewResolveRefError(err)
 		}
@@ -133,7 +133,7 @@ func (r *Reconciler) mutate(ctx context.Context, events *event.Recorder, schema,
 		return err
 	}
 	return events.Record(event.Update, schema, func() error {
-		return internal.CreateOrUpdate(ctx, dc, target)
+		return internal.CreateOrUpdate(ctx, dc)
 	})
 }
 

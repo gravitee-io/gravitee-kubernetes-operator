@@ -38,11 +38,15 @@ type AuthzSchemaState struct {
 	Errors         status.Errors `json:"errors,omitempty"`
 }
 
-// ToAuthzSchemaDTO maps the CRD onto the wire payload with the target the caller resolved. It is
-// the single mapping used by the sync path, the dry run and drift detection. The target is a
-// parameter rather than read from the spec: a pdpRef has no wire value until the cluster is read,
-// and reading only the scope would send no target for an unresolved pdpRef.
-func ToAuthzSchemaDTO(crd *v1alpha1.AuthzSchema, target string) AuthzSchemaDTO {
+// ToAuthzSchemaDTO maps a schema whose refs dynamic.ResolveAuthzSchemaRefs has resolved onto the
+// wire payload: its target is a scope, or absent. It is the single mapping used by the sync path,
+// the dry run and drift detection, and reads nothing from the cluster. An unresolved pdpRef would
+// go out as no target: callers resolve first.
+func ToAuthzSchemaDTO(crd *v1alpha1.AuthzSchema) AuthzSchemaDTO {
+	target := ""
+	if crd.Spec.Target != nil {
+		target = crd.Spec.Target.Scope
+	}
 	return AuthzSchemaDTO{
 		HRID:   refs.NewNamespacedNameFromObject(crd).HRID(),
 		Name:   crd.Spec.Name,

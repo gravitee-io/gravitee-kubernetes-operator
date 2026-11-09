@@ -26,9 +26,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-// CreateOrUpdate applies the schema with the target the caller resolved: the scope as written, or
-// the routing scope of the AuthzPdp its pdpRef names.
-func CreateOrUpdate(ctx context.Context, schema *v1alpha1.AuthzSchema, target string) error {
+// CreateOrUpdate applies a schema whose refs dynamic.ResolveAuthzSchemaRefs has resolved.
+func CreateOrUpdate(ctx context.Context, schema *v1alpha1.AuthzSchema) error {
 	if !schema.HasContext() {
 		return gerrors.NewIllegalStateError(
 			fmt.Errorf("authz schema [%s] has no management context", schema.GetName()),
@@ -40,7 +39,7 @@ func CreateOrUpdate(ctx context.Context, schema *v1alpha1.AuthzSchema, target st
 		return err
 	}
 
-	state, err := apimClient.AuthzSchemas.CreateOrUpdate(model.ToAuthzSchemaDTO(schema, target))
+	state, err := apimClient.AuthzSchemas.CreateOrUpdate(model.ToAuthzSchemaDTO(schema))
 	if err != nil {
 		// A 400 is how the platform refuses an apply: a target another schema holds (AUTHZ-6), a
 		// document that does not parse. Admission skips the dry run while the pdpRef is pending, and
