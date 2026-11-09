@@ -85,7 +85,7 @@ func (l ResourceLifecycle[T, D, C, R]) Reconcile(
 		return ctrl.Result{}, stErr
 	}
 
-	if gerrors.IsRecoverable(err) {
+	if gerrors.MustRetry(err, obj.IsBeingDeleted()) {
 		log.WarnRequeuingReconcile(ctx, err, obj)
 		return ctrl.Result{}, err
 	}

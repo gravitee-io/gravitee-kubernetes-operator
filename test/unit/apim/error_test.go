@@ -45,6 +45,19 @@ var _ = Describe("Errors", func() {
 		Entry("With bad request reported outside of the control plane", errWrappedBadRequest, true),
 	)
 
+	DescribeTable("MustRetry",
+		func(given error, deleting bool, expected bool) {
+			Expect(xErrors.MustRetry(given, deleting)).To(Equal(expected))
+		},
+		Entry("With bad request, not deleting", errBadRequest, false, false),
+		Entry("With bad request, deleting", errBadRequest, true, true),
+		Entry("With unauthorized error, not deleting", errUnauthorized, false, false),
+		Entry("With unauthorized error, deleting", errUnauthorized, true, true),
+		Entry("With raw error, not deleting", errRaw, false, true),
+		Entry("With raw error, deleting", errRaw, true, true),
+		Entry("With illegal state error, deleting", xErrors.NewIllegalStateError(errRaw), true, true),
+	)
+
 	DescribeTable("context error",
 		func(given error, expected bool) {
 			Expect(errors.Is(given, xErrors.NewControlPlaneError(nil))).To(Equal(expected))
