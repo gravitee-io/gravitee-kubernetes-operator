@@ -17,8 +17,10 @@ package apidefinition_test
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -91,5 +93,31 @@ var _ = Describe("PopulateIDs", func() {
 		},
 		Entry("simple key", "getting-started", "getting-started"),
 		Entry("key with spaces and dots", "My Page.v1", "My-Page-v1"),
+	)
+
+	// Without spec.id, plans are addressed by HRID: the spec plan id is not sent to APIM.
+	DescribeTable("ignores the spec plan id in HRID mode with a management context",
+		func(setup func(api *v1alpha1.ApiV4Definition)) {
+			plans := map[string]*v4.Plan{
+				"k": {Plan: &base.Plan{ID: "X"}, Name: "Test Plan"},
+			}
+			api := legacyAPI(&plans, nil)
+			api.Status = v1alpha1.ApiV4DefinitionStatus{}
+			setup(api)
+
+			api.PopulateIDs(&management.Context{}, k8s.IsAutomationAPIManaged(api))
+
+			Expect(api.Spec.ID).To(BeEmpty())
+			Expect(api.Spec.Plans).NotTo(BeNil())
+			plan, ok := (*api.Spec.Plans)["k"]
+			Expect(ok).To(BeTrue())
+			Expect(plan.HRID).To(Equal("k"))
+			Expect(plan.ID).To(BeEmpty())
+		},
+		Entry("no spec.id and an empty status", func(_ *v1alpha1.ApiV4Definition) {}),
+		Entry("AutomationAPIManaged with status.id set and no spec.id", func(api *v1alpha1.ApiV4Definition) {
+			api.Status.ID = "existing-uuid"
+			k8s.AddAutomationAPIManagedCondition(api)
+		}),
 	)
 })
