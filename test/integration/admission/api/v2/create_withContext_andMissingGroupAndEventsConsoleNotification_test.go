@@ -72,6 +72,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"warning",
 				admission.Warnings{
+					v2.DeprecationWarning,
 					fmt.Sprintf(
 						"api references notification [%s] configured without any API events",
 						fixtures.API.Spec.NotificationsRefs[0].String()),

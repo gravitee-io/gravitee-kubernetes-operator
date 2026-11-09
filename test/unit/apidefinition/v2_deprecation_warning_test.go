@@ -1,0 +1,60 @@
+// Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//         http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package apidefinition_test
+
+import (
+	"context"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+var _ = Describe("v2 API deprecation warning", func() {
+	ctx := context.Background()
+	admissionCtrl := v2.AdmissionCtrl{}
+
+	// An ingress template skips every check that needs a cluster or APIM.
+	newTemplate := func() *v1alpha1.ApiDefinition {
+		return &v1alpha1.ApiDefinition{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        "template",
+				Namespace:   "default",
+				Annotations: map[string]string{core.IngressTemplateAnnotation: "true"},
+			},
+		}
+	}
+
+	It("warns on create", func() {
+		warnings, err := admissionCtrl.ValidateCreate(ctx, newTemplate())
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf(v2.DeprecationWarning))
+	})
+
+	It("does not warn on an update of an API being deleted", func() {
+		deleted := newTemplate()
+		now := metav1.Now()
+		deleted.DeletionTimestamp = &now
+
+		warnings, err := admissionCtrl.ValidateUpdate(ctx, newTemplate(), deleted)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(BeEmpty())
+	})
+})

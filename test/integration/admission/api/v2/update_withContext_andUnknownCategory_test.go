@@ -65,7 +65,10 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 			if err != nil {
 				return err
 			}
-			if err = assert.SliceOfSize("warnings", warnings, 1); err != nil {
+			if err = assert.SliceOfSize("warnings", warnings, 2); err != nil {
+				return err
+			}
+			if err = assert.Equals("deprecation warning", v2.DeprecationWarning, warnings[0]); err != nil {
 				return err
 			}
 			return assert.Equals(
@@ -74,7 +77,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 					"category [%s] is not defined in environment [DEFAULT]",
 					unknownCategory,
 				).Error(),
-				warnings[0],
+				warnings[1],
 			)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
