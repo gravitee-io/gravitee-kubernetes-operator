@@ -147,8 +147,8 @@
 // or `drift:"ignore-only:crd,expired,scheduled"`
 //
 // Filters slice items that exist only on the named side before item comparison.
-// Items must implement [Keyed], or be strings (including named string types), which are
-// their own key.
+// Items must implement [Keyed], or store.Identifiable (the generated SDK models, keyed by
+// their Identity), or be strings (including named string types), which are their own key.
 // With `strip-ns`, keys are compared after stripping the namespace prefix
 // and remaining membership is compared as a set (Skip).
 // With `expired`, items implementing [Expiring] whose [Expiring.Expired] is true are
