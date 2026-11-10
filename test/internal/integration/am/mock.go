@@ -29,6 +29,8 @@ import (
 const (
 	Port     = 30093
 	BasePath = server.BasePath
+	OrgID    = "DEFAULT"
+	EnvID    = "DEFAULT"
 )
 
 type MockServer struct {
@@ -60,8 +62,8 @@ func NewSDKClient() *pkg.AMClient {
 	token := "admin-token"
 	ac := apicontext.APIContext{
 		BaseURL: fmt.Sprintf("http://localhost:%d%s", Port, BasePath),
-		OrgID:   "DEFAULT",
-		EnvID:   "DEFAULT",
+		OrgID:   OrgID,
+		EnvID:   EnvID,
 		Auth: apicontext.Auth{
 			BearerToken: &token,
 		},
@@ -71,6 +73,12 @@ func NewSDKClient() *pkg.AMClient {
 		panic(fmt.Sprintf("failed to create AM SDK client: %v", err))
 	}
 	return client
+}
+
+// RequestPath is the path the operator calls for an org/env-relative Automation API path,
+// as the mock matches it in a Fault.
+func RequestPath(path string) string {
+	return BasePath + "/organizations/" + OrgID + "/environments/" + EnvID + path
 }
 
 func AuthConfig() auth.Config {
