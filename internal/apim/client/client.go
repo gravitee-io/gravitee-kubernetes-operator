@@ -15,8 +15,15 @@
 package client
 
 import (
+	"errors"
+	"sync"
+
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
+
+// ErrNoSDKClient is returned by SDK when the client was built without an SDK builder.
+var ErrNoSDKClient = errors.New("no APIM SDK client configured")
 
 const (
 	envPath = "/environments"
@@ -31,6 +38,30 @@ type Client struct {
 	HTTP *http.Client
 	// URLs contains URLs targeting the organization and environment of the client
 	URLs *URLs
+
+	sdkOnce    sync.Once
+	sdkBuilder func() (*sdk.APIMClient, error)
+	sdkClient  *sdk.APIMClient
+	sdkErr     error
+}
+
+// SetSDKBuilder sets how the APIM SDK client is built. It is called at most once, on the first SDK call:
+// the SDK rejects a context without usable authentication when the client is built, so building it
+// eagerly would fail every resource sharing this client, including those that do not use the SDK.
+func (client *Client) SetSDKBuilder(builder func() (*sdk.APIMClient, error)) {
+	client.sdkBuilder = builder
+}
+
+// SDK returns the APIM Automation API SDK client, built on first use.
+func (client *Client) SDK() (*sdk.APIMClient, error) {
+	client.sdkOnce.Do(func() {
+		if client.sdkBuilder == nil {
+			client.sdkErr = ErrNoSDKClient
+			return
+		}
+		client.sdkClient, client.sdkErr = client.sdkBuilder()
+	})
+	return client.sdkClient, client.sdkErr
 }
 
 // URLs contains URLs targeting the organization and environment of the client.
