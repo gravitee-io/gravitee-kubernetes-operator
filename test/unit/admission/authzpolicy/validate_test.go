@@ -304,6 +304,22 @@ var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 		Expect(platform.requests()).To(HaveLen(1))
 	})
 
+	// The platform kept the text it held before the refused apply: the stored text and the fix both
+	// differ from it, which drift would take for a remote change.
+	It("admits the edit that fixes a policy whose last apply the platform refused", func() {
+		cluster()
+		platform.answerGet(http.StatusOK, remote(policyText, "DEPLOYED"))
+		refused := applied()
+		refused.Spec.PolicyText = `permit(principal, action == Action::"book", resource);`
+		refused.Status.Errors.Severe = []string{`unknown action Action::"book"`}
+		fixed := refused.DeepCopy()
+		fixed.Spec.PolicyText = `permit(principal, action == Action::"read", resource);`
+
+		_, err := ctrl.ValidateUpdate(ctx, refused, fixed)
+
+		Expect(err).ToNot(HaveOccurred())
+	})
+
 	// The usual cause is a deleted AuthzPdp, whose scope the platform has already removed from the
 	// policy: comparing the old targets would refuse the edit that retargets it.
 	It("compares nothing while an old pdpRef no longer resolves", func() {
