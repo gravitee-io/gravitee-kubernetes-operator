@@ -106,7 +106,7 @@ func resolveTargets(ctx context.Context, policy *v1alpha1.AuthzPolicy) (*errors.
 	case err == nil:
 		return errs, true
 	case dynamic.IsAuthzPdpPending(err):
-		errs.AddWarningf("%s: the policy is checked against the platform once every AuthzPdp it targets has synced", err)
+		errs.AddWarningf("platform checks deferred (%s)", err)
 	default:
 		errs.AddSevere(err.Error())
 	}

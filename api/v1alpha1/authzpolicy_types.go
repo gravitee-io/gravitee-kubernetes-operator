@@ -33,8 +33,8 @@ var _ core.ConditionAware = &AuthzPolicy{}
 
 // AuthzPolicySpec defines the desired state of an AuthzPolicy.
 // +kubebuilder:object:generate=true
-// +kubebuilder:validation:XValidation:rule="self.entityId == oldSelf.entityId",messageExpression="'entityId is immutable: [' + oldSelf.entityId + '] cannot become [' + self.entityId + ']; delete and recreate the AuthzPolicy'"
-// +kubebuilder:validation:XValidation:rule="self.policyType == oldSelf.policyType",messageExpression="'policyType is immutable: [' + oldSelf.policyType + '] cannot become [' + self.policyType + ']; delete and recreate the AuthzPolicy'"
+// +kubebuilder:validation:XValidation:rule="self.entityId == oldSelf.entityId",messageExpression="'entityId is immutable: was [' + oldSelf.entityId + ']'"
+// +kubebuilder:validation:XValidation:rule="self.policyType == oldSelf.policyType",messageExpression="'policyType is immutable: was [' + oldSelf.policyType + ']'"
 type AuthzPolicySpec struct {
 	authzpolicy.Type `json:",inline"`
 	// Reference to a ManagementContext that determines which APIM instance this policy is created
@@ -44,7 +44,7 @@ type AuthzPolicySpec struct {
 	// both values exceeds the API server's CEL cost budget and the CRD is refused. Required, so the
 	// rule also holds without the admission webhook: CEL compares the field only when both sides have it.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable; delete and recreate the AuthzPolicy"
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable"
 	Context *refs.NamespacedName `json:"contextRef"`
 }
 

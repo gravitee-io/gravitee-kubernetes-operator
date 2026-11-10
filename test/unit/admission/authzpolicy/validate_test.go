@@ -112,9 +112,8 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 			byRef("orders-eu"), authzpdp.Target{Scope: "default"}, byRef("orders-us")))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ConsistOf("authz pdp not found: [travel/orders-eu]; " +
-			"authz pdp not synced: [travel/orders-us] has no routing scope yet: " +
-			"the policy is checked against the platform once every AuthzPdp it targets has synced"))
+		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu]; " +
+			"authz pdp not synced: [travel/orders-us])"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
