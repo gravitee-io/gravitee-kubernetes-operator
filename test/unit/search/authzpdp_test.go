@@ -174,6 +174,25 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 		}}))
 	})
 
+	// A policy that also targets another PDP keeps a target once this one goes: the platform lets the
+	// delete through.
+	It("names apart the policies whose every target is the PDP, not one that also targets another PDP", func() {
+		usRef := refs.NamespacedName{Name: "orders-us", Namespace: ns}
+		cluster(
+			policyTargeting("solo", authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu"}}),
+			policyTargeting("split", authzpdp.Target{PdpRef: &pdpRef}, authzpdp.Target{PdpRef: &usRef}),
+		)
+
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp, search.AuthzPdpDependents())
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(found).To(Equal([]search.Dependents{{
+			Kind:  "AuthzPolicy",
+			Names: []string{"orders/solo", "orders/split"},
+			Sole:  []string{"orders/solo"},
+		}}))
+	})
+
 	It("names the schemas whose pdpRef names the PDP, sorted, its namespace defaulted", func() {
 		cluster(
 			targeting("orders-schema", refs.NamespacedName{Name: "orders-eu"}),
