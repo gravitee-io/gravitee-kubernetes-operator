@@ -18,6 +18,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 )
@@ -105,4 +106,28 @@ var _ = Describe("IgnoreOnlyArgs strip-ns groups", func() {
 		result := drift.DetectWithNamespace(crd, remote, "test-namespace")
 		Expect(result.DriftDetected()).To(BeTrue())
 	})
+})
+
+var _ = Describe("IgnoreOnlyArgs over store.Identifiable items", func() {
+	DescribeTable("pairs generated SDK items through their identity",
+		func(side string, crd, remote any) {
+			e := drift.IgnoreOnlyArgs(crd, remote, drift.DriftContext{FuncArgs: []string{side}})
+			filter, items := e.CRDItemsFilterFunc, crd
+			if side == "remote" {
+				filter, items = e.RemoteItemsFilterFunc, remote
+			}
+			Expect(filter).ToNot(BeNil(), "the one-sided item must be filtered out by its identity")
+			Expect(filter(items)).To(HaveLen(1))
+		},
+		Entry("crd-only group member",
+			"crd",
+			[]sdk.GroupMember{{Source: "gravitee", SourceId: "admin"}, {Source: "memory", SourceId: "local-only"}},
+			[]sdk.GroupMember{{Source: "gravitee", SourceId: "admin"}},
+		),
+		Entry("remote-only metadata",
+			"remote",
+			[]sdk.Metadata{{Key: new("team"), Name: "team"}},
+			[]sdk.Metadata{{Key: new("team"), Name: "team"}, {Key: new("owner"), Name: "owner"}},
+		),
+	)
 })
