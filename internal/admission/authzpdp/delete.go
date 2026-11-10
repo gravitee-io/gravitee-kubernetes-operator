@@ -33,19 +33,14 @@ func validateDelete(ctx context.Context, pdp *v1alpha1.AuthzPdp) *errors.Admissi
 	ref := refs.NewNamespacedName(pdp.GetNamespace(), pdp.GetName())
 	dependents, err := search.FindAuthzPdpDependents(ctx, pdp, search.AuthzPdpDependents())
 	if err != nil {
-		errs.AddWarningf("unable to check which resources target authz pdp [%s]: %s", ref.String(), err)
+		errs.AddWarningf("could not list the resources targeting authz pdp [%s]: %s", ref.String(), err)
 		return errs
 	}
 
-	scope := pdp.Status.RoutingScope
-	if scope == "" {
-		scope = "its routing scope"
-	}
 	for _, d := range dependents {
 		errs.AddWarningf(
-			"authz pdp [%s] is still targeted by %s [%s]: deleting it removes %s from their targets, "+
-				"and each waits on ResolvedRefs=False until its pdpRef names another AuthzPdp",
-			ref.String(), d.Kind, strings.Join(d.Names, ", "), scope,
+			"authz pdp [%s] is targeted by %s [%s]: each turns ResolvedRefs=False until its pdpRef changes",
+			ref.String(), d.Kind, strings.Join(d.Names, ", "),
 		)
 	}
 
