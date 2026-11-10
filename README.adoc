@@ -27,6 +27,29 @@ You can find detailed information about the Gravitee Kubernetes Operator in the 
 
 The GKO API reference documentation is available https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/docs/api/reference.md[here^].
 
+== Deprecations
+
+[cols="1,2,1,1",options="header"]
+|===
+| Feature | Replace with | Off by default | Removed
+
+| `ApiDefinition` (v2 APIs)
+| `ApiV4Definition`
+| —
+| October 2027
+
+| Ingress controller (it generates v2 APIs)
+| Gateway API (`HTTPRoute`), see the link:docs/guides/ingress-migration/README.md[migration guide]
+| 4.15 (`ingress.controller.enabled: false`)
+| October 2027
+|===
+
+GKO warns about both: an admission warning when you apply an `ApiDefinition`, and a `Deprecated` warning event on each
+v2 API and Gravitee Ingress at every operator startup (`kubectl describe`).
+
+From 4.15, the Ingress controller is disabled by default. To keep it running until you have migrated, set
+`ingress.controller.enabled: true` in your Helm values.
+
 == Contributing
 
 Details about how you can contribute to this repository are available in our contributing link:https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/CONTRIBUTING.adoc[guide].
