@@ -233,7 +233,7 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 	})
 })
 
-var _ = Describe("Detecting drift on an AuthzEntity the platform no longer holds", func() {
+var _ = Describe("Detecting drift on an AuthzEntity the platform does not hold", func() {
 	ctx := context.Background()
 	ctrl := admission.AdmissionCtrl{}
 	notFound := `{"message":"entity not found"}`
@@ -282,5 +282,29 @@ var _ = Describe("Detecting drift on an AuthzEntity the platform no longer holds
 		_, err := ctrl.ValidateUpdate(ctx, applied, withoutParents(applied))
 
 		Expect(err).To(MatchError(ContainSubstring("[travel/ritz] not found during drift detection")))
+	})
+
+	It("admits an edit to an entity the platform never received", func() {
+		pending := ritz()
+		pending.Status.ID = ""
+		cluster(pending)
+
+		_, err := ctrl.ValidateUpdate(ctx, pending, withoutParents(pending))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(platform.requests()).To(HaveLen(1), "the new spec is dry-run")
+	})
+
+	It("admits the edit that retargets an entity whose AuthzPdp is gone", func() {
+		applied := ritz()
+		applied.Spec.Targets = []authzpdp.Target{byRef("orders-eu")}
+		cluster(applied)
+		retargeted := applied.DeepCopy()
+		retargeted.Spec.Targets = []authzpdp.Target{{Scope: "default"}}
+
+		_, err := ctrl.ValidateUpdate(ctx, applied, retargeted)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(platform.requests()).To(HaveLen(1), "the new spec is dry-run")
 	})
 })

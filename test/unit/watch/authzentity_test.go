@@ -93,6 +93,28 @@ var _ = Describe("Watching AuthzEntity parents", func() {
 		))
 	})
 
+	// The platform refuses a cycle, but the dry run that would say so is skipped while an AuthzPdp is
+	// pending: the cluster can hold one.
+	It("queues each entity once when RESOURCE parents loop", func() {
+		parent := newEntity("agents", "PRINCIPAL", "Group", devCtx)
+		cli := cluster(
+			newEntity("ritz", "RESOURCE", "Hotel", devCtx, agents, authzentity.Parent{EntityType: "Room", EntityID: "ritz-suite"}),
+			newEntity("ritz-suite", "RESOURCE", "Room", devCtx, authzentity.Parent{EntityType: "Hotel", EntityID: "ritz"}),
+		)
+		q := newQueue()
+		done := make(chan struct{})
+
+		go func() {
+			defer GinkgoRecover()
+			defer close(done)
+			watch.New(ctx, cli, &v1alpha1.AuthzEntityList{}).WatchAuthzEntityParents().
+				Delete(ctx, event.DeleteEvent{Object: parent}, q)
+		}()
+
+		Eventually(done).Should(BeClosed(), "the cascade search ends")
+		Expect(queued(q)).To(ConsistOf(request("ritz"), request("ritz-suite")))
+	})
+
 	It("queues nothing on a create or an update", func() {
 		parent := newEntity("agents", "PRINCIPAL", "Group", devCtx)
 		cli := cluster(newEntity("alice", "PRINCIPAL", "User", devCtx, agents))
