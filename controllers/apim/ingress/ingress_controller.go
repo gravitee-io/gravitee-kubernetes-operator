@@ -28,6 +28,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/deprecation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	corev1 "k8s.io/api/core/v1"
@@ -45,11 +46,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-// DeprecationWarning is recorded as a Warning event on every reconciled Ingress
-// and logged once at startup when the Ingress controller is enabled.
-const DeprecationWarning = "The Gravitee Ingress controller is deprecated: it generates v2 APIs, " +
-	"which will be removed in October 2027. Please migrate to the Gateway API (HTTPRoute)."
 
 // Reconciler watches and reconciles Ingress objects.
 type Reconciler struct {
@@ -71,8 +67,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if ingress.DeletionTimestamp.IsZero() {
-		r.Recorder.Event(ingress, corev1.EventTypeWarning, "Deprecated", DeprecationWarning)
+	if ingress.DeletionTimestamp.IsZero() && k8s.IsGraviteeIngress(ingress) {
+		r.Recorder.Event(ingress, corev1.EventTypeWarning, deprecation.Reason, deprecation.IngressNotice)
 	}
 
 	events := e.NewRecorder(r.Recorder)
