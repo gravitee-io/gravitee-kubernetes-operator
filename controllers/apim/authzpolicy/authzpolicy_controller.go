@@ -119,9 +119,10 @@ func (r *Reconciler) mutate(ctx context.Context, events *event.Recorder, policy,
 	// Resolved on dc, which is never saved: its targets become the scopes the platform receives,
 	// while policy keeps its pdpRefs. Resolved before templates compile, so a policy waiting on an
 	// AuthzPdp records no template reference. A pending AuthzPdp is waited out: the AuthzPdp watch
-	// requeues the policy once it syncs, and ResolvedRefs names every pending one. Any other error
-	// (an AuthzPdp of another context, a cache read failure) is retried with backoff and reported
-	// on Accepted.
+	// requeues the policy once it syncs, and ResolvedRefs names every pending one. An AuthzPdp of
+	// another context comes back as an IllegalStateError, returned as is: reported on Accepted and
+	// not requeued, since only a change to the pdpRef fixes it. Any other error (a cache read
+	// failure) is retried with backoff and reported on Accepted.
 	if err := dynamic.ResolveAuthzPolicyRefs(ctx, dc); err != nil {
 		if dynamic.IsAuthzPdpPending(err) {
 			return errors.NewResolveRefError(err)
