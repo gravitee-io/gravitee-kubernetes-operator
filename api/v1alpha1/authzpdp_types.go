@@ -33,8 +33,8 @@ var _ core.ConditionAware = &AuthzPdp{}
 
 // AuthzPdpSpec defines the desired state of an AuthzPdp.
 // +kubebuilder:object:generate=true
-// +kubebuilder:validation:XValidation:rule="self.targetPdpId == oldSelf.targetPdpId",messageExpression="'targetPdpId is immutable: [' + oldSelf.targetPdpId + '] cannot become [' + self.targetPdpId + ']; delete and recreate the AuthzPdp'"
-// +kubebuilder:validation:XValidation:rule="(has(self.tag) ? self.tag : '') == (has(oldSelf.tag) ? oldSelf.tag : '')",messageExpression="'tag is immutable: [' + (has(oldSelf.tag) ? oldSelf.tag : '') + '] cannot become [' + (has(self.tag) ? self.tag : '') + ']; delete and recreate the AuthzPdp'"
+// +kubebuilder:validation:XValidation:rule="self.targetPdpId == oldSelf.targetPdpId",messageExpression="'targetPdpId is immutable: was [' + oldSelf.targetPdpId + ']'"
+// +kubebuilder:validation:XValidation:rule="(has(self.tag) ? self.tag : '') == (has(oldSelf.tag) ? oldSelf.tag : '')",messageExpression="'tag is immutable: was [' + (has(oldSelf.tag) ? oldSelf.tag : '') + ']'"
 type AuthzPdpSpec struct {
 	authzpdp.Type `json:",inline"`
 	// Reference to a ManagementContext that determines which APIM instance this PDP gateway is
@@ -44,7 +44,7 @@ type AuthzPdpSpec struct {
 	// both values exceeds the API server's CEL cost budget and the CRD is refused. Required, so the
 	// rule also holds without the admission webhook: CEL compares the field only when both sides have it.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable; delete and recreate the AuthzPdp"
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable"
 	Context *refs.NamespacedName `json:"contextRef"`
 }
 

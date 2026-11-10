@@ -29,9 +29,12 @@ import (
 )
 
 var (
-	// ErrAuthzPdpNotFound is returned when the AuthzPdp a pdpRef names does not exist or is being
-	// deleted. A resource referencing it waits for it.
+	// ErrAuthzPdpNotFound is returned when the AuthzPdp a pdpRef names does not exist. A resource
+	// referencing it waits for it.
 	ErrAuthzPdpNotFound = errors.New("authz pdp not found")
+	// ErrAuthzPdpDeleting is returned when the AuthzPdp a pdpRef names is being deleted. A resource
+	// referencing it waits for another one.
+	ErrAuthzPdpDeleting = errors.New("authz pdp being deleted")
 	// ErrAuthzPdpNotSynced is returned when the AuthzPdp a pdpRef names has no routing scope yet:
 	// the platform does not have it. A resource referencing it waits for it.
 	ErrAuthzPdpNotSynced = errors.New("authz pdp not synced")
@@ -73,11 +76,11 @@ func ResolveAuthzPdpRoutingScope(
 	}
 
 	if pdp.IsBeingDeleted() {
-		return "", fmt.Errorf("%w: [%s] is being deleted", ErrAuthzPdpNotFound, ref.String())
+		return "", fmt.Errorf("%w: [%s]", ErrAuthzPdpDeleting, ref.String())
 	}
 
 	if pdp.Status.RoutingScope == "" {
-		return "", fmt.Errorf("%w: [%s] has no routing scope yet", ErrAuthzPdpNotSynced, ref.String())
+		return "", fmt.Errorf("%w: [%s]", ErrAuthzPdpNotSynced, ref.String())
 	}
 
 	return pdp.Status.RoutingScope, nil
@@ -86,7 +89,8 @@ func ResolveAuthzPdpRoutingScope(
 // IsAuthzPdpPending tells whether err is a pdpRef to wait out: an AuthzPdp missing, being
 // deleted or not synced yet.
 func IsAuthzPdpPending(err error) bool {
-	return errors.Is(err, ErrAuthzPdpNotFound) || errors.Is(err, ErrAuthzPdpNotSynced)
+	return errors.Is(err, ErrAuthzPdpNotFound) || errors.Is(err, ErrAuthzPdpDeleting) ||
+		errors.Is(err, ErrAuthzPdpNotSynced)
 }
 
 // ContextOf returns the namespaced name of obj's ManagementContext, its namespace defaulted to

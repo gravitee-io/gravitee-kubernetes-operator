@@ -79,7 +79,7 @@ spec:
                     - name
                   type: object
                   x-kubernetes-validations:
-                    - message: contextRef is immutable; delete and recreate the AuthzPdp
+                    - message: contextRef is immutable
                       rule: self == oldSelf
                 endpoint:
                   description: The AuthZEN endpoint of the PDP. Omitted, the PDP has none, and an
@@ -122,13 +122,11 @@ spec:
                 - targetPdpId
               type: object
               x-kubernetes-validations:
-                - messageExpression: "'targetPdpId is immutable: [' + oldSelf.targetPdpId + ']
-                    cannot become [' + self.targetPdpId + ']; delete and
-                    recreate the AuthzPdp'"
+                - messageExpression: "'targetPdpId is immutable: was [' + oldSelf.targetPdpId +
+                    ']'"
                   rule: self.targetPdpId == oldSelf.targetPdpId
-                - messageExpression: "'tag is immutable: [' + (has(oldSelf.tag) ? oldSelf.tag :
-                    '') + '] cannot become [' + (has(self.tag) ? self.tag : '')
-                    + ']; delete and recreate the AuthzPdp'"
+                - messageExpression: "'tag is immutable: was [' + (has(oldSelf.tag) ? oldSelf.tag
+                    : '') + ']'"
                   rule: "(has(self.tag) ? self.tag : '') == (has(oldSelf.tag) ? oldSelf.tag : '')"
             status:
               description: AuthzPdpStatus defines the observed state of an AuthzPdp.

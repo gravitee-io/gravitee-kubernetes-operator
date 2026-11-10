@@ -102,7 +102,7 @@ var _ = Describe("Resolving a pdpRef", func() {
 		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotFound))
 	})
 
-	It("treats a PDP being deleted as missing", func() {
+	It("waits for another PDP when the one named is being deleted", func() {
 		deleting := pdp(devCtx, "orders@eu")
 		deleting.Finalizers = []string{core.AuthzPdpFinalizer}
 		deleting.DeletionTimestamp = &metav1.Time{Time: time.Now()}
@@ -110,8 +110,8 @@ var _ = Describe("Resolving a pdpRef", func() {
 
 		_, err := dynamic.ResolveAuthzPdpRoutingScope(ctx, dependent(devCtx), ref)
 
-		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotFound))
-		Expect(err).To(MatchError(ContainSubstring("is being deleted")))
+		Expect(err).To(MatchError("authz pdp being deleted: [orders/orders-eu]"))
+		Expect(err).To(MatchError(dynamic.ErrAuthzPdpDeleting))
 		Expect(dynamic.IsAuthzPdpPending(err)).To(BeTrue())
 	})
 
@@ -120,7 +120,7 @@ var _ = Describe("Resolving a pdpRef", func() {
 
 		_, err := dynamic.ResolveAuthzPdpRoutingScope(ctx, dependent(devCtx), ref)
 
-		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotSynced))
+		Expect(err).To(MatchError("authz pdp not synced: [orders/orders-eu]"))
 		Expect(dynamic.IsAuthzPdpPending(err)).To(BeTrue())
 	})
 
