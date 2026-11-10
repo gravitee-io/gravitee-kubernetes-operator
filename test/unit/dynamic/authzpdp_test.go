@@ -312,7 +312,7 @@ var _ = Describe("Resolving a list of authz targets", func() {
 		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotFound))
 		Expect(err).To(MatchError(dynamic.ErrAuthzPdpNotSynced))
 		Expect(err).To(MatchError("authz pdp not found: [travel/orders-eu]; " +
-			"authz pdp not synced: [travel/orders-us] has no routing scope yet"))
+			"authz pdp not synced: [travel/orders-us]"))
 	})
 
 	It("returns an AuthzPdp of another context, even beside a pending one", func() {

@@ -115,25 +115,32 @@ var _ = Describe("Authz entity reconcile", func() {
 		resolved := condition(cli, k8s.ConditionResolvedRefs)
 		Expect(resolved.Status).To(Equal(metav1.ConditionFalse))
 		Expect(resolved.Message).To(ContainSubstring("authz pdp not found: [gravitee/orders-eu]; " +
-			"authz pdp not synced: [gravitee/orders-us] has no routing scope yet"))
+			"authz pdp not synced: [gravitee/orders-us]"))
 		Expect(e.Status.ID).To(BeEmpty())
 	})
 
-	It("reports an AuthzPdp of another context on Accepted, even beside a pending one", func() {
+	// Both contexts are immutable: only a change to the pdpRef fixes it, and that change reconciles
+	// the entity again. Requeuing would retry and log the same error forever.
+	It("reports an AuthzPdp of another context on Accepted without requeuing, even beside a pending one", func() {
 		prod := newAuthzPdp()
 		prod.Name = "orders-us"
 		prod.Spec.Context = &refs.NamespacedName{Name: "prod-ctx"}
 		prod.Status.RoutingScope = "orders@us"
 		r, cli := setup(twoPdps(), prod)
 
-		_, err := r.Reconcile(context.Background(), req)
-		Expect(err).To(HaveOccurred())
+		result, err := r.Reconcile(context.Background(), req)
 
+		Expect(err).ToNot(HaveOccurred())
+		Expect(result).To(Equal(ctrl.Result{}))
+		e := stored(cli)
+		Expect(e.Finalizers).To(ContainElement(core.AuthzEntityFinalizer))
 		accepted := condition(cli, k8s.ConditionAccepted)
 		Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+		Expect(accepted.Reason).To(Equal("IllegalStateError"))
 		Expect(accepted.Message).To(ContainSubstring(
 			"authz pdp [gravitee/orders-us] belongs to management context [gravitee/prod-ctx], not [gravitee/dev-ctx]"))
-		Expect(k8s.GetCondition(stored(cli), k8s.ConditionResolvedRefs).Status).ToNot(Equal(metav1.ConditionFalse))
+		Expect(k8s.GetCondition(e, k8s.ConditionResolvedRefs).Status).ToNot(Equal(metav1.ConditionFalse))
+		Expect(e.Status.ID).To(BeEmpty())
 	})
 
 	// Admission had no say, a pdpRef pending at apply time for instance: the reconcile's 400 is
