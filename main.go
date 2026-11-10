@@ -290,6 +290,7 @@ func registerAPIMControllers(mgr manager.Manager) {
 	}
 
 	if env.Config.EnableIngress {
+		log.Global.Warn(ingress.DeprecationWarning)
 		if err := (&ingress.Reconciler{
 			Client:   k8s.GetClient(),
 			Scheme:   mgr.GetScheme(),

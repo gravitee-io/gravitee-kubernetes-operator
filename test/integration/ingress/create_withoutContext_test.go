@@ -19,11 +19,14 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	ingressctrl "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
@@ -56,6 +59,19 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 				Name:      fixtures.Ingress.Name,
 			}, apiDef)
 		}, timeout, interval).Should(Succeed())
+
+		By("expecting a deprecation warning event on the ingress")
+
+		Eventually(func() []corev1.Event {
+			events := new(corev1.EventList)
+			Expect(manager.Client().List(ctx, events, client.InNamespace(fixtures.Ingress.Namespace))).To(Succeed())
+			return events.Items
+		}, timeout, interval).Should(ContainElement(SatisfyAll(
+			HaveField("InvolvedObject.Name", fixtures.Ingress.Name),
+			HaveField("Type", corev1.EventTypeWarning),
+			HaveField("Reason", "Deprecated"),
+			HaveField("Message", ingressctrl.DeprecationWarning),
+		)))
 
 		By("expecting API proxy to match ingress rule")
 
