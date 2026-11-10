@@ -42,7 +42,7 @@ type AuthzSchemaSpec struct {
 	// both values exceeds the API server's CEL cost budget and the CRD is refused. Required, so the
 	// rule also holds without the admission webhook: CEL compares the field only when both sides have it.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable; delete and recreate the AuthzSchema"
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable"
 	Context *refs.NamespacedName `json:"contextRef"`
 }
 

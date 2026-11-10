@@ -18,7 +18,7 @@ import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 
 // Target names the PDP gateway a resource is published to: an AuthzPdp through pdpRef, or a
 // routing scope no AuthzPdp declares (default, a gateway created in the Console).
-// +kubebuilder:validation:XValidation:rule="has(self.pdpRef) != has(self.scope)",message="a target is a pdpRef or a scope, never both"
+// +kubebuilder:validation:XValidation:rule="has(self.pdpRef) != has(self.scope)",message="set pdpRef or scope, not both"
 type Target struct {
 	// The AuthzPdp whose status.routingScope is the target, its namespace defaulted to the
 	// resource's. It must sync through the same ManagementContext. The resource waits on

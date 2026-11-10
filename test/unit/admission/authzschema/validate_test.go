@@ -77,7 +77,7 @@ var _ = Describe("Validating an AuthzSchema target", func() {
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(ConsistOf(
-			"authz pdp not found: [travel/orders-eu]: the schema is checked against the platform once it is"))
+			"platform checks deferred (authz pdp not found: [travel/orders-eu])"))
 		Expect(platformCalls.Load()).To(BeZero())
 	})
 

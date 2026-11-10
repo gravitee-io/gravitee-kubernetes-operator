@@ -104,7 +104,7 @@ func resolveTarget(ctx context.Context, schema *v1alpha1.AuthzSchema) (*errors.A
 	case err == nil:
 		return errs, true
 	case dynamic.IsAuthzPdpPending(err):
-		errs.AddWarningf("%s: the schema is checked against the platform once it is", err)
+		errs.AddWarningf("platform checks deferred (%s)", err)
 	default:
 		errs.AddSevere(err.Error())
 	}

@@ -120,7 +120,7 @@ var _ = Describe("Authz schema reconcile", func() {
 		_, err := r.Reconcile(context.Background(), req)
 		Expect(err).To(HaveOccurred())
 
-		expectWaitingOnPdp(cli, "authz pdp not synced: [gravitee/orders-eu] has no routing scope yet")
+		expectWaitingOnPdp(cli, "authz pdp not synced: [gravitee/orders-eu]")
 	})
 
 	// Both contexts are immutable: only a change to the pdpRef fixes it, and that change
