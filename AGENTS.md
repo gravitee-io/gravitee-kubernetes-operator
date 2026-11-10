@@ -29,7 +29,7 @@ npx --yes -p @commitlint/cli -p @commitlint/config-conventional \
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
 make it                        # Run integration tests (Ginkgo, requires cluster) — test/integration/...
-make envtest                   # Run envtest suites (Ginkgo, no cluster: kube-apiserver + etcd, AM only) — test/envtest/...
+make envtest                   # Run envtest suites (Ginkgo, no cluster: kube-apiserver + etcd, AM and APIM SDK resources) — test/envtest/...
 
 # Run a single unit test suite
 go tool ginkgo test/unit/apim/...
@@ -83,11 +83,22 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | Package | Role |
 |---------|------|
 | `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
-| `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
-| `internal/apim/service/` | One file per resource: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
-| `internal/apim/model/` | The **wire payloads** (`*DTO`) sent to and received from APIM, plus their `To*DTO` mappers |
+| `internal/apim/client/` | `Client` (HTTP + `URLs` + the lazy APIM SDK client `SDK()`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
+| `internal/apim/sdk.go` | The APIM SDK client factory: `NewSDKClient` / `SDKFromContextRef`, same URL, auth, org/env and cloud rules as `FromContext` |
+| `internal/apim/service/` | One file per resource: the HTTP or SDK calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
+| `internal/apim/model/` | The **wire payloads** (`*DTO`, or generated `sdk.*` types for migrated resources) sent to and received from APIM, plus their mappers |
 
 Controllers and webhooks never build a URL or a payload themselves. They obtain a client with `apim.FromContextRef(ctx, obj.ContextRef(), obj.GetNamespace())` and call a service method.
+
+#### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
+
+Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**.
+
+- A service gets the SDK client with `svc.SDK()` (embedded `*client.Client`). It is built on first use, not in `FromContext`: the SDK rejects a context without usable auth when the client is built, which would otherwise fail resources that do not use the SDK.
+- Wrap every SDK call in `errors.FromSDKResponse(err, func() (*http.Response, []byte) { return resp.HTTPResponse, resp.Body })` (keep the closure: the SDK returns no response on a transport error) and treat a nil `JSON200` as `errors.UnexpectedSDKResponse`.
+- Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). **Never call `WithDefaults()` on the CRD side.**
+- Drift compares the PUT type on both sides: decode the GET state into it first (`model.GroupFromState`); comparing `GroupState` with `Group` panics. The SDK types carry their own `drift:` tags; list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
+- Keep GKO's HTTP client only for calls the SDK spec does not declare yet (e.g. a `hridContainsUUID` it lacks).
 
 ### AM client (internal/am/)
 
@@ -98,7 +109,7 @@ Sibling of `internal/apim`, not a fork. Bearer-only, no cloud. Talks to AM's Aut
 | `internal/am/am.go` | `am.Client`: the am-sdk client (`gravitee-automation-sdk/am-sdk`) built from an `AMContext` by `NewSDKClient`, plus `Probe` and `HasErrors` |
 | `internal/am/<resource>/` | One package per resource: DTO mapping, SDK calls (`Upsert`, `DryRun`, `GetRemote`, `Delete`), client factory, checks. Today: `securitydomain/` |
 
-The SDK builds `{baseUrl}{path, default /automation}/organizations/{org}/environments/{env}` and sends requests through `internal/http.NewStdClient`, so the operator's proxy, TLS and trust store settings apply. Auth is `bearerToken` / `secretRef` only — no `credentials` field. A resource's client factory resolves its AMContext with `dynamic.ResolveAMContext` (templates compiled) and calls `am.NewSDKClient`; see `securitydomain.CreateAMClient`. Wrap every SDK call in `am.HasErrors`, which keeps AM's error message. New AM resources stay Automation API only and are wired through `internal/lifecycle`.
+The SDK builds `{baseUrl}{path, default /automation}/organizations/{org}/environments/{env}` and sends requests through `internal/http.NewStdClient`, so the operator's proxy, TLS and trust store settings apply. Auth is `bearerToken` / `secretRef` only — no `credentials` field. A resource's client factory resolves its AMContext with `dynamic.ResolveAMContext` (templates compiled) and calls `am.NewSDKClient`; see `securitydomain.CreateAMClient`. Wrap every SDK call in `am.HasErrors` (a wrapper of `errors.FromSDKResponse`), which keeps AM's error message. New AM resources stay Automation API only and are wired through `internal/lifecycle`.
 
 #### Management API vs Automation API
 
@@ -121,7 +132,7 @@ Resources created before APIM 4.12 are still UUID-addressed. The service branche
 
 `internal/apim/model/` types are the **Automation API request and response bodies**, not comparison helpers. `SharedPolicyGroup.createOrUpdate` builds `model.ToSharePolicyGroupDTO(...)` and `PUT`s it; `GetByHRID` unmarshals the response into the same `SharedPolicyGroupDTO`. Drift detection is a *second consumer* of these types — that is the only reason `drift:` struct tags live on them.
 
-Mappers are plain functions in `internal/apim/model/` (`ToApplicationDTO`, `ToAPIV4DTO`, `ToSharePolicyGroupDTO`, `ToGroupDTO`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
+Mappers are plain functions in `internal/apim/model/` (`ToApplicationDTO`, `ToAPIV4DTO`, `ToSharePolicyGroupDTO`, `ToGroup`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
 
 Two deviations worth knowing before copying a pattern:
 
@@ -241,7 +252,7 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 | Layer | Where | What belongs there |
 |-------|-------|--------------------|
 | Unit | `test/unit/<area>/` in this repo | Pure logic: DTO mapping, drift tags, validation predicates, templating, helpers. Ginkgo v2; dot-imports for `ginkgo/v2` and `gomega` are allowed |
-| Envtest (AM only) | `test/envtest/<area>/` in this repo | AM controllers and admission against a real kube-apiserver + etcd with the in-process AM mock. No cluster needed; run with `make envtest`. There is no APIM mock: APIM suites do not go here |
+| Envtest | `test/envtest/<area>/` in this repo | AM controllers, and APIM resources migrated to the SDK (`test/envtest/apim/`), with admission, against a real kube-apiserver + etcd and the in-process AM or APIM mock (`am-mock-server`, `apim-mock-server`). No cluster needed; run with `make envtest`. Suites using drift call `drift.Init()` (`internal/admission/drift`). APIM resources still on the HTTP client keep their integration tests |
 | Integration (APIM) | `test/integration/<area>/` in this repo | APIM controllers and admission against a kind cluster running APIM (`make start-cluster`), run with `make it`. Reconciliation, admission checks that need the manager cache or APIM, finalizer-driven deletion |
 | Critical user journey | [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e) | Platform behaviour end to end (reconciliation, `.status`, admission rejection, drift, deletion). One journey per **epic**, one body run through every provisioner (UI, GKO, TF), written from the PRD by a separate agent with no knowledge of this code |
 | Helm | `helm/gko/tests/` | helm-unittest YAML tests |
