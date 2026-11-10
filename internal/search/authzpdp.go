@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -36,9 +37,9 @@ type AuthzPdpDependent struct {
 	Field IndexField
 	// NewList returns an empty list of the kind.
 	NewList func() client.ObjectList
-	// NeedsTarget is set for a kind the platform does not leave without a target: a PDP delete
-	// that would is refused with a 409.
-	NeedsTarget bool
+	// Targets returns the targets of a resource of the kind. Set for a kind the platform does not
+	// leave without a target: a PDP delete that would is refused with a 409.
+	Targets func(client.Object) []authzpdp.Target
 }
 
 // AuthzPdpDependents returns the kinds that target an AuthzPdp, which deleting one warns about.
@@ -52,10 +53,10 @@ func AuthzPdpDependents() []AuthzPdpDependent {
 			NewList: func() client.ObjectList { return &v1alpha1.AuthzSchemaList{} },
 		},
 		{
-			Kind:        "AuthzEntity",
-			Field:       AuthzEntityAuthzPdpField,
-			NewList:     func() client.ObjectList { return &v1alpha1.AuthzEntityList{} },
-			NeedsTarget: true,
+			Kind:    "AuthzEntity",
+			Field:   AuthzEntityAuthzPdpField,
+			NewList: func() client.ObjectList { return &v1alpha1.AuthzEntityList{} },
+			Targets: func(obj client.Object) []authzpdp.Target { return obj.(*v1alpha1.AuthzEntity).Spec.Targets },
 		},
 	}
 }
@@ -63,10 +64,11 @@ func AuthzPdpDependents() []AuthzPdpDependent {
 // Dependents are the resources of one kind that target an AuthzPdp.
 type Dependents struct {
 	Kind string
-	// NeedsTarget is the kind's AuthzPdpDependent.NeedsTarget.
-	NeedsTarget bool
 	// Names are namespace/name, sorted.
 	Names []string
+	// Sole are the Names whose every target is the AuthzPdp, for a kind with Targets: the platform
+	// refuses the AuthzPdp's delete while one of them does. Sorted, nil when none.
+	Sole []string
 }
 
 // FindAuthzPdpDependents returns, for each kind in order, the resources whose pdpRef names pdp and
@@ -93,20 +95,38 @@ func FindAuthzPdpDependents(
 			return nil, fmt.Errorf("unable to read %s: %w", kind.Kind, err)
 		}
 		names := make([]string, 0, len(items))
+		var sole []string
 		for _, item := range items {
 			obj, ok := item.(core.ContextAwareObject)
 			if !ok {
 				return nil, fmt.Errorf("unable to read the contextRef of %s: %T is not context aware", kind.Kind, item)
 			}
-			if dynamic.ContextOf(obj) == pdpContext {
-				names = append(names, refs.NewNamespacedNameFromObject(obj).String())
+			if dynamic.ContextOf(obj) != pdpContext {
+				continue
+			}
+			name := refs.NewNamespacedNameFromObject(obj).String()
+			names = append(names, name)
+			if kind.Targets != nil && targetsOnly(obj, kind.Targets(obj), ref.String()) {
+				sole = append(sole, name)
 			}
 		}
 		if len(names) == 0 {
 			continue
 		}
 		sort.Strings(names)
-		found = append(found, Dependents{Kind: kind.Kind, NeedsTarget: kind.NeedsTarget, Names: names})
+		sort.Strings(sole)
+		found = append(found, Dependents{Kind: kind.Kind, Names: names, Sole: sole})
 	}
 	return found, nil
+}
+
+// targetsOnly tells whether every target of obj is a pdpRef to pdp, a namespace/name: obj then has
+// no other gateway once pdp is deleted.
+func targetsOnly(obj client.Object, targets []authzpdp.Target, pdp string) bool {
+	for _, target := range targets {
+		if target.PdpRef == nil || ensureNamespacedRef(obj, target.PdpRef) != pdp {
+			return false
+		}
+	}
+	return len(targets) > 0
 }
