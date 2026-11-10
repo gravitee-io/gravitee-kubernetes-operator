@@ -105,7 +105,7 @@ func resolveTargets(ctx context.Context, entity *v1alpha1.AuthzEntity) (*errors.
 	case err == nil:
 		return errs, true
 	case dynamic.IsAuthzPdpPending(err):
-		errs.AddWarningf("%s: the entity is checked against the platform once every AuthzPdp it targets has synced", err)
+		errs.AddWarningf("platform checks deferred (%s)", err)
 	default:
 		errs.AddSevere(err.Error())
 	}

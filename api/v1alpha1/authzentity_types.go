@@ -33,9 +33,9 @@ var _ core.ConditionAware = &AuthzEntity{}
 
 // AuthzEntitySpec defines the desired state of an AuthzEntity.
 // +kubebuilder:object:generate=true
-// +kubebuilder:validation:XValidation:rule="self.entityId == oldSelf.entityId",messageExpression="'entityId is immutable: [' + oldSelf.entityId + '] cannot become [' + self.entityId + ']; delete and recreate the AuthzEntity'"
-// +kubebuilder:validation:XValidation:rule="self.kind == oldSelf.kind",messageExpression="'kind is immutable: [' + oldSelf.kind + '] cannot become [' + self.kind + ']; delete and recreate the AuthzEntity'"
-// +kubebuilder:validation:XValidation:rule="self.entityType == oldSelf.entityType",messageExpression="'entityType is immutable: [' + oldSelf.entityType + '] cannot become [' + self.entityType + ']; delete and recreate the AuthzEntity'"
+// +kubebuilder:validation:XValidation:rule="self.entityId == oldSelf.entityId",messageExpression="'entityId is immutable: was [' + oldSelf.entityId + ']'"
+// +kubebuilder:validation:XValidation:rule="self.kind == oldSelf.kind",messageExpression="'kind is immutable: was [' + oldSelf.kind + ']'"
+// +kubebuilder:validation:XValidation:rule="self.entityType == oldSelf.entityType",messageExpression="'entityType is immutable: was [' + oldSelf.entityType + ']'"
 type AuthzEntitySpec struct {
 	authzentity.Type `json:",inline"`
 	// Reference to a ManagementContext that determines which APIM instance this entity is created
@@ -45,7 +45,7 @@ type AuthzEntitySpec struct {
 	// both values exceeds the API server's CEL cost budget and the CRD is refused. Required, so the
 	// rule also holds without the admission webhook: CEL compares the field only when both sides have it.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable; delete and recreate the AuthzEntity"
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="contextRef is immutable"
 	Context *refs.NamespacedName `json:"contextRef"`
 }
 

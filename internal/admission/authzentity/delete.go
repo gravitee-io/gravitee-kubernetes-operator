@@ -24,28 +24,28 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
-// validateDelete names the AuthzEntity resources of the entity's ManagementContext its delete
-// cascades to on the platform (search.FindAuthzEntityCascade). It does not call the platform's delete
-// dry run, which would also name entities other sources created: APIM 4.13 ignores dryRun on a DELETE
-// and deletes.
+// validateDelete names the RESOURCE entities of the entity's ManagementContext its delete deletes on
+// the platform (search.FindAuthzEntityCascadeDeletes). The PRINCIPAL ones it detaches are applied
+// again as declared: nothing the user sees changes, so they are not named. It does not call the
+// platform's delete dry run, which would also name entities other sources created: APIM 4.13
+// ignores dryRun on a DELETE and deletes.
 func validateDelete(ctx context.Context, entity *v1alpha1.AuthzEntity) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	ref := refs.NewNamespacedName(entity.GetNamespace(), entity.GetName())
-	cascade, err := search.FindAuthzEntityCascadeNames(ctx, entity)
+	deletes, err := search.FindAuthzEntityCascadeDeletes(ctx, entity)
 	if err != nil {
-		errs.AddWarningf("unable to check which resources deleting authz entity [%s] changes: %s", ref.String(), err)
+		errs.AddWarningf("could not list the children of authz entity [%s]: %s", ref.String(), err)
 		return errs
 	}
-	if len(cascade) == 0 {
+	if len(deletes) == 0 {
 		return errs
 	}
 
 	errs.AddWarningf(
-		"deleting authz entity [%s] cascades on the platform to AuthzEntity [%s]: each RESOURCE among "+
-			"them is deleted and each PRINCIPAL detached. Each is then applied again: a PRINCIPAL as "+
-			"declared, a RESOURCE refused until its parent exists again or is dropped from its parents",
-		ref.String(), strings.Join(cascade, ", "),
+		"deleting authz entity [%s] also deletes AuthzEntity [%s] on the platform, "+
+			"which refuses them while their parent is missing",
+		ref.String(), strings.Join(deletes, ", "),
 	)
 	return errs
 }
