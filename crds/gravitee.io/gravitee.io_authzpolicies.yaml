@@ -73,7 +73,7 @@ spec:
                     - name
                   type: object
                   x-kubernetes-validations:
-                    - message: contextRef is immutable; delete and recreate the AuthzPolicy
+                    - message: contextRef is immutable
                       rule: self == oldSelf
                 entityId:
                   description: "Id of the policy in the engine and in the Console: policy."
@@ -146,13 +146,9 @@ spec:
                 - policyType
               type: object
               x-kubernetes-validations:
-                - messageExpression: "'entityId is immutable: [' + oldSelf.entityId + '] cannot
-                    become [' + self.entityId + ']; delete and recreate the
-                    AuthzPolicy'"
+                - messageExpression: "'entityId is immutable: was [' + oldSelf.entityId + ']'"
                   rule: self.entityId == oldSelf.entityId
-                - messageExpression: "'policyType is immutable: [' + oldSelf.policyType + ']
-                    cannot become [' + self.policyType + ']; delete and recreate
-                    the AuthzPolicy'"
+                - messageExpression: "'policyType is immutable: was [' + oldSelf.policyType + ']'"
                   rule: self.policyType == oldSelf.policyType
             status:
               description: AuthzPolicyStatus defines the observed state of an AuthzPolicy.
