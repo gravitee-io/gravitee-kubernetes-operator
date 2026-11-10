@@ -34,15 +34,19 @@ func AuthzEntityParentKey(contextOf, entityType, entityID string) string {
 	return contextOf + "/" + entityType + "/" + entityID
 }
 
-// FindAuthzEntityCascadeNames returns FindAuthzEntityCascade's keys as namespace/name, sorted.
-func FindAuthzEntityCascadeNames(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]string, error) {
-	keys, err := FindAuthzEntityCascade(ctx, entity)
+// FindAuthzEntityCascadeDeletes returns, as namespace/name sorted, the RESOURCE entities among
+// FindAuthzEntityCascade's: those the platform deletes with entity. The PRINCIPAL ones are only
+// detached, and applied again as declared.
+func FindAuthzEntityCascadeDeletes(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]string, error) {
+	cascade, err := findAuthzEntityCascade(ctx, entity)
 	if err != nil {
 		return nil, err
 	}
-	names := make([]string, 0, len(keys))
-	for _, key := range keys {
-		names = append(names, key.String())
+	names := make([]string, 0, len(cascade))
+	for _, child := range cascade {
+		if child.Spec.Kind == authzentity.KindResource {
+			names = append(names, client.ObjectKeyFromObject(child).String())
+		}
 	}
 	sort.Strings(names)
 	return names, nil
@@ -54,13 +58,27 @@ func FindAuthzEntityCascadeNames(ctx context.Context, entity *v1alpha1.AuthzEnti
 // declared parents the same way, through RESOURCE children only. An entity another source created
 // is not found, nor what the platform cascades through it.
 func FindAuthzEntityCascade(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]types.NamespacedName, error) {
+	cascade, err := findAuthzEntityCascade(ctx, entity)
+	if err != nil {
+		return nil, err
+	}
+	keys := make([]types.NamespacedName, 0, len(cascade))
+	for _, child := range cascade {
+		keys = append(keys, client.ObjectKeyFromObject(child))
+	}
+	return keys, nil
+}
+
+// findAuthzEntityCascade returns the entities FindAuthzEntityCascade returns the keys of, in the
+// order the search finds them.
+func findAuthzEntityCascade(ctx context.Context, entity *v1alpha1.AuthzEntity) ([]*v1alpha1.AuthzEntity, error) {
 	contextOf := dynamic.ContextOf(entity)
 	if contextOf == "" {
 		return nil, nil
 	}
 
 	seen := map[types.NamespacedName]bool{client.ObjectKeyFromObject(entity): true}
-	keys := make([]types.NamespacedName, 0)
+	found := make([]*v1alpha1.AuthzEntity, 0)
 	deleted := []*v1alpha1.AuthzEntity{entity}
 	for len(deleted) > 0 {
 		parent := deleted[0]
@@ -76,13 +94,13 @@ func FindAuthzEntityCascade(ctx context.Context, entity *v1alpha1.AuthzEntity) (
 				continue
 			}
 			seen[key] = true
-			keys = append(keys, key)
+			found = append(found, child)
 			if child.Spec.Kind == authzentity.KindResource {
 				deleted = append(deleted, child)
 			}
 		}
 	}
-	return keys, nil
+	return found, nil
 }
 
 // listAuthzEntityChildren lists the AuthzEntity resources of a ManagementContext that declare parent.

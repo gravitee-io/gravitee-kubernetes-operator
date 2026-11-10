@@ -101,9 +101,8 @@ var _ = Describe("Validating an AuthzEntity", func() {
 			newEntity("agents-group", "agents", byRef("orders-eu"), authzpdp.Target{Scope: "default"}, byRef("orders-us")))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ConsistOf("authz pdp not found: [travel/orders-eu]; " +
-			"authz pdp not synced: [travel/orders-us] has no routing scope yet: " +
-			"the entity is checked against the platform once every AuthzPdp it targets has synced"))
+		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu]; " +
+			"authz pdp not synced: [travel/orders-us])"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
@@ -207,11 +206,21 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 		warnings, err := ctrl.ValidateDelete(ctx, newEntity("agents-group", "agents"))
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ConsistOf("deleting authz entity [travel/agents-group] cascades on the platform to " +
-			"AuthzEntity [travel/concierge, travel/grand-paris, travel/ritz, travel/ritz-suite]: each RESOURCE " +
-			"among them is deleted and each PRINCIPAL detached. Each is then applied again: a PRINCIPAL as " +
-			"declared, a RESOURCE refused until its parent exists again or is dropped from its parents"))
+		Expect(warnings).To(ConsistOf("deleting authz entity [travel/agents-group] also deletes AuthzEntity " +
+			"[travel/grand-paris, travel/ritz, travel/ritz-suite] on the platform, " +
+			"which refuses them while their parent is missing"))
 		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	It("admits the delete of an entity only principals declare as a parent, with no warning", func() {
+		concierge := child("concierge", devCtx, agents)
+		concierge.Spec.Kind, concierge.Spec.EntityType = "PRINCIPAL", "User"
+		cluster(concierge)
+
+		warnings, err := ctrl.ValidateDelete(ctx, newEntity("agents-group", "agents"))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(BeEmpty())
 	})
 
 	It("admits the delete of an entity no other declares as a parent, with no warning", func() {

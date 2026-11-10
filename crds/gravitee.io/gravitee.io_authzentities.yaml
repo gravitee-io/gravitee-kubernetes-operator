@@ -81,7 +81,7 @@ spec:
                     - name
                   type: object
                   x-kubernetes-validations:
-                    - message: contextRef is immutable; delete and recreate the AuthzEntity
+                    - message: contextRef is immutable
                       rule: self == oldSelf
                 entityId:
                   description: 'Id of the entity in policies, without its type: agents, not
@@ -171,16 +171,11 @@ spec:
                 - kind
               type: object
               x-kubernetes-validations:
-                - messageExpression: "'entityId is immutable: [' + oldSelf.entityId + '] cannot
-                    become [' + self.entityId + ']; delete and recreate the
-                    AuthzEntity'"
+                - messageExpression: "'entityId is immutable: was [' + oldSelf.entityId + ']'"
                   rule: self.entityId == oldSelf.entityId
-                - messageExpression: "'kind is immutable: [' + oldSelf.kind + '] cannot become ['
-                    + self.kind + ']; delete and recreate the AuthzEntity'"
+                - messageExpression: "'kind is immutable: was [' + oldSelf.kind + ']'"
                   rule: self.kind == oldSelf.kind
-                - messageExpression: "'entityType is immutable: [' + oldSelf.entityType + ']
-                    cannot become [' + self.entityType + ']; delete and recreate
-                    the AuthzEntity'"
+                - messageExpression: "'entityType is immutable: was [' + oldSelf.entityType + ']'"
                   rule: self.entityType == oldSelf.entityType
             status:
               description: AuthzEntityStatus defines the observed state of an AuthzEntity.
