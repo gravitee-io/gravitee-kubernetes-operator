@@ -161,7 +161,7 @@ spec:
                         type: string
                     type: object
                     x-kubernetes-validations:
-                      - message: a target is a pdpRef or a scope, never both
+                      - message: set pdpRef or scope, not both
                         rule: has(self.pdpRef) != has(self.scope)
                   type: array
               required:
