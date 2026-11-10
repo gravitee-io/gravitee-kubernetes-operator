@@ -59,10 +59,15 @@ func AuthzPdpDependents() []AuthzPdpDependent {
 			Targets: func(obj client.Object) []authzpdp.Target { return obj.(*v1alpha1.AuthzEntity).Spec.Targets },
 		},
 		{
-			Kind:        "AuthzPolicy",
-			Field:       AuthzPolicyAuthzPdpField,
-			NewList:     func() client.ObjectList { return &v1alpha1.AuthzPolicyList{} },
-			NeedsTarget: true,
+			Kind:    "AuthzPolicy",
+			Field:   AuthzPolicyAuthzPdpField,
+			NewList: func() client.ObjectList { return &v1alpha1.AuthzPolicyList{} },
+			Targets: func(obj client.Object) []authzpdp.Target {
+				if policy, ok := obj.(*v1alpha1.AuthzPolicy); ok {
+					return policy.Spec.Targets
+				}
+				return nil
+			},
 		},
 	}
 }
