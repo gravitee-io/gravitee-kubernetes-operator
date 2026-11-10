@@ -28,7 +28,7 @@ type Type struct {
 	// schema holds is refused. Omitted, the document is stored and published nowhere. Deleting
 	// the AuthzPdp a pdpRef names removes the target on the platform.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:XValidation:rule="!has(self.scope) || self.scope != '*'",message="a schema cannot target *: name one PDP gateway, or default"
+	// +kubebuilder:validation:XValidation:rule="!has(self.scope) || self.scope != '*'",message="scope cannot be '*'"
 	Target *authzpdp.Target `json:"target,omitempty"`
 	// The GAPL schema text, replaced whole on every apply.
 	// +kubebuilder:validation:Required

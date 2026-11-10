@@ -70,7 +70,7 @@ spec:
                     - name
                   type: object
                   x-kubernetes-validations:
-                    - message: contextRef is immutable; delete and recreate the AuthzSchema
+                    - message: contextRef is immutable
                       rule: self == oldSelf
                 name:
                   description: Display name of the schema document.
@@ -111,9 +111,9 @@ spec:
                       type: string
                   type: object
                   x-kubernetes-validations:
-                    - message: "a schema cannot target *: name one PDP gateway, or default"
+                    - message: scope cannot be '*'
                       rule: "!has(self.scope) || self.scope != '*'"
-                    - message: a target is a pdpRef or a scope, never both
+                    - message: set pdpRef or scope, not both
                       rule: has(self.pdpRef) != has(self.scope)
               required:
                 - contextRef
