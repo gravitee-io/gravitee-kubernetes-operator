@@ -36,8 +36,8 @@ import (
 
 var _ = Describe("Deleting an AuthzPdp", func() {
 	const ns = "travel-team"
-	const refused = "The platform refuses the delete (409) while one of them targets no other gateway: " +
-		"the AuthzPdp stays Terminating until it is retargeted"
+	const targeted = ": each turns ResolvedRefs=False until its pdpRef changes"
+	const sole = ": it stays Terminating until each has another target"
 
 	ctx := context.Background()
 	ctrl := admission.AdmissionCtrl{}
@@ -66,6 +66,16 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 			},
 		},
 	}
+	alice := &v1alpha1.AuthzEntity{
+		ObjectMeta: metav1.ObjectMeta{Name: "alice", Namespace: ns},
+		Spec: v1alpha1.AuthzEntitySpec{
+			Context: &devCtx,
+			Type: authzentity.Type{
+				EntityID: "alice", Kind: "PRINCIPAL", EntityType: "User",
+				Targets: []authzpdp.Target{target},
+			},
+		},
+	}
 
 	// cluster indexes the dependents with the functions InitCache registers, as the manager's
 	// cache does.
@@ -83,38 +93,49 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 			Build())
 	}
 
-	It("warns about a schema without the 409 sentence: the platform lets a schema go untargeted", func() {
+	It("warns about a schema without the Terminating warning: the platform lets a schema go untargeted", func() {
 		cluster(schema)
 
 		warnings, err := ctrl.ValidateDelete(ctx, pdp)
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ConsistOf("authz pdp [travel-team/orders-eu] is still targeted by AuthzSchema " +
-			"[travel-team/travel-schema]: deleting it removes orders@eu from their targets, and each waits on " +
-			"ResolvedRefs=False until its pdpRef names another AuthzPdp"))
+		Expect(warnings).To(ConsistOf(
+			"authz pdp [travel-team/orders-eu] is targeted by AuthzSchema [travel-team/travel-schema]" + targeted))
 	})
 
-	It("warns about an entity with the 409 sentence", func() {
+	It("warns about an entity that keeps another target without the Terminating warning", func() {
 		cluster(entity)
 
 		warnings, err := ctrl.ValidateDelete(ctx, pdp)
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ConsistOf("authz pdp [travel-team/orders-eu] is still targeted by AuthzEntity " +
-			"[travel-team/agents-group]: deleting it removes orders@eu from their targets, and each waits on " +
-			"ResolvedRefs=False until its pdpRef names another AuthzPdp. " + refused))
+		Expect(warnings).To(ConsistOf(
+			"authz pdp [travel-team/orders-eu] is targeted by AuthzEntity [travel-team/agents-group]" + targeted))
 	})
 
-	It("warns once per kind, the schema first", func() {
-		cluster(schema, entity)
+	It("adds the Terminating warning for an entity the PDP is the only target of", func() {
+		cluster(alice)
 
 		warnings, err := ctrl.ValidateDelete(ctx, pdp)
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(HaveLen(2))
-		Expect(warnings[0]).To(ContainSubstring("AuthzSchema [travel-team/travel-schema]"))
-		Expect(warnings[0]).ToNot(ContainSubstring("409"))
-		Expect(warnings[1]).To(ContainSubstring("AuthzEntity [travel-team/agents-group]"))
-		Expect(warnings[1]).To(HaveSuffix(refused))
+		Expect(warnings).To(HaveExactElements(
+			"authz pdp [travel-team/orders-eu] is targeted by AuthzEntity [travel-team/alice]"+targeted,
+			"authz pdp [travel-team/orders-eu] is the only target of AuthzEntity [travel-team/alice]"+sole,
+		))
+	})
+
+	It("warns per kind, the schema first, and names only the sole targets in the Terminating warning", func() {
+		cluster(schema, entity, alice)
+
+		warnings, err := ctrl.ValidateDelete(ctx, pdp)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(HaveExactElements(
+			"authz pdp [travel-team/orders-eu] is targeted by AuthzSchema [travel-team/travel-schema]"+targeted,
+			"authz pdp [travel-team/orders-eu] is targeted by AuthzEntity [travel-team/agents-group, travel-team/alice]"+
+				targeted,
+			"authz pdp [travel-team/orders-eu] is the only target of AuthzEntity [travel-team/alice]"+sole,
+		))
 	})
 })

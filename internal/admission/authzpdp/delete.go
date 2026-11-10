@@ -16,7 +16,6 @@ package authzpdp
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -39,17 +38,18 @@ func validateDelete(ctx context.Context, pdp *v1alpha1.AuthzPdp) *errors.Admissi
 	}
 
 	for _, d := range dependents {
-		warning := fmt.Sprintf(
+		errs.AddWarningf(
 			"authz pdp [%s] is targeted by %s [%s]: each turns ResolvedRefs=False until its pdpRef changes",
 			ref.String(), d.Kind, strings.Join(d.Names, ", "),
 		)
-		if d.NeedsTarget {
-			// A resource of this kind left with no target would fall back to the default engine on
-			// every gateway: the platform refuses the delete instead, and the finalizer keeps it.
-			warning += ". The platform refuses the delete (409) while one of them targets no other gateway: " +
-				"the AuthzPdp stays Terminating until it is retargeted"
+		if len(d.Sole) > 0 {
+			// A resource left with no target would fall back to the default engine on every gateway:
+			// the platform refuses the delete (409) instead, and the finalizer keeps the AuthzPdp.
+			errs.AddWarningf(
+				"authz pdp [%s] is the only target of %s [%s]: it stays Terminating until each has another target",
+				ref.String(), d.Kind, strings.Join(d.Sole, ", "),
+			)
 		}
-		errs.AddWarning(warning)
 	}
 
 	return errs

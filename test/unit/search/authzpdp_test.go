@@ -87,11 +87,11 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 		Expect(kinds[0].Kind).To(Equal("AuthzSchema"))
 		Expect(kinds[0].Field).To(Equal(search.AuthzSchemaAuthzPdpField))
 		Expect(kinds[0].NewList()).To(BeAssignableToTypeOf(&v1alpha1.AuthzSchemaList{}))
-		Expect(kinds[0].NeedsTarget).To(BeFalse())
+		Expect(kinds[0].Targets).To(BeNil())
 		Expect(kinds[1].Kind).To(Equal("AuthzEntity"))
 		Expect(kinds[1].Field).To(Equal(search.AuthzEntityAuthzPdpField))
 		Expect(kinds[1].NewList()).To(BeAssignableToTypeOf(&v1alpha1.AuthzEntityList{}))
-		Expect(kinds[1].NeedsTarget).To(BeTrue())
+		Expect(kinds[1].Targets).ToNot(BeNil())
 	})
 
 	It("finds an entity from either of the PDPs it targets, and leaves out a scope-only entity", func() {
@@ -111,9 +111,26 @@ var _ = Describe("FindAuthzPdpDependents", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(found).To(Equal([]search.Dependents{
-				{Kind: "AuthzEntity", NeedsTarget: true, Names: []string{"orders/agents"}},
+				{Kind: "AuthzEntity", Names: []string{"orders/agents"}},
 			}))
 		}
+	})
+
+	It("names apart the entities whose every target is the PDP, its namespace defaulted", func() {
+		cluster(
+			entityTargeting("alice", authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu"}}),
+			entityTargeting("bob", authzpdp.Target{PdpRef: &pdpRef}, authzpdp.Target{PdpRef: &pdpRef}),
+			entityTargeting("agents", authzpdp.Target{PdpRef: &pdpRef}, authzpdp.Target{Scope: "default"}),
+		)
+
+		found, err := search.FindAuthzPdpDependents(context.Background(), pdp, search.AuthzPdpDependents())
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(found).To(Equal([]search.Dependents{{
+			Kind:  "AuthzEntity",
+			Names: []string{"orders/agents", "orders/alice", "orders/bob"},
+			Sole:  []string{"orders/alice", "orders/bob"},
+		}}))
 	})
 
 	It("names the schemas whose pdpRef names the PDP, sorted, its namespace defaulted", func() {
