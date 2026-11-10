@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.20.0
-    gravitee.io/operator.version: 4.13.2
+    gravitee.io/operator.version: 4.13.3
   name: dictionaries.gravitee.io
 spec:
   group: gravitee.io
@@ -77,6 +77,13 @@ spec:
                   description: Dynamic dictionary specification. Required when type is DYNAMIC,
                     forbidden when type is MANUAL.
                   properties:
+                    encryption:
+                      description: Encryption policy applied to the values the provider fetches.
+                      properties:
+                        encryptOnFetch:
+                          description: Store every fetched value encrypted, from the first fetch.
+                          type: boolean
+                      type: object
                     provider:
                       description: HTTP provider configuration for fetching dictionary data.
                       properties:
@@ -162,14 +169,33 @@ spec:
                   description: Manual dictionary specification. Required when type is MANUAL,
                     forbidden when type is DYNAMIC.
                   properties:
+                    encryptedProperties:
+                      additionalProperties:
+                        description: EncryptableValue is the value of a secret dictionary property.
+                        properties:
+                          value:
+                            description: Plaintext value to encrypt on save.
+                            minLength: 1
+                            type: string
+                        required:
+                          - value
+                        type: object
+                      description: Secret key/value pairs. Values are sent to APIM as plaintext and
+                        stored encrypted.
+                      type: object
                     properties:
                       additionalProperties:
                         type: string
                       description: Key/value pairs that constitute the dictionary data.
                       type: object
-                  required:
-                    - properties
                   type: object
+                  x-kubernetes-validations:
+                    - message: a manual dictionary must declare properties or encryptedProperties
+                      rule: has(self.properties) || has(self.encryptedProperties)
+                    - message: a key must not appear in both properties and encryptedProperties
+                      rule: "!has(self.properties) || !has(self.encryptedProperties) ||
+                        !self.properties.exists(k, k in
+                        self.encryptedProperties)"
                 name:
                   description: Display name of the dictionary.
                   type: string
