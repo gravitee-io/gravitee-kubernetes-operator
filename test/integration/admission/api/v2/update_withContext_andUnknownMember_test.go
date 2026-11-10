@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	apiv2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/deprecation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -70,7 +71,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 			if err = assert.SliceOfSize("warnings", warnings, 2); err != nil {
 				return err
 			}
-			if err = assert.Equals("deprecation warning", v2.DeprecationWarning, warnings[0]); err != nil {
+			if err = assert.Equals("deprecation warning", deprecation.ApiV2Notice, warnings[0]); err != nil {
 				return err
 			}
 			return assert.Equals(
