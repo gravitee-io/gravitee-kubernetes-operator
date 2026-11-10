@@ -224,7 +224,8 @@ manager:
 ## @descriptionEnd
 ingress:
   controller:
-    ## @param ingress.controller.enabled indicates if GKO ingress controller is enabled or not. Deprecated: the Ingress controller generates v2 APIs, which will be removed in October 2027; use the Gateway API instead.
+    ## Deprecation text: same as deprecation.IngressNotice in internal/deprecation/deprecation.go
+    ## @param ingress.controller.enabled indicates if GKO ingress controller is enabled or not. Deprecated: the Ingress controller generates v2 APIs, which will be removed in October 2027. Please migrate to the Gateway API (HTTPRoute), enabled with gatewayAPI.controller.enabled=true.
     enabled: true
   ## @param ingress.ingressClasses list of ingress classes that the gateway will handle.
   ingressClasses:

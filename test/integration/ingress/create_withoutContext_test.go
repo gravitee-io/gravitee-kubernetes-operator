@@ -26,12 +26,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	ingressctrl "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/deprecation"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
@@ -62,16 +62,17 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 		By("expecting a deprecation warning event on the ingress")
 
-		Eventually(func() []corev1.Event {
+		Eventually(func(g Gomega) {
 			events := new(corev1.EventList)
-			Expect(manager.Client().List(ctx, events, client.InNamespace(fixtures.Ingress.Namespace))).To(Succeed())
-			return events.Items
-		}, timeout, interval).Should(ContainElement(SatisfyAll(
-			HaveField("InvolvedObject.Name", fixtures.Ingress.Name),
-			HaveField("Type", corev1.EventTypeWarning),
-			HaveField("Reason", "Deprecated"),
-			HaveField("Message", ingressctrl.DeprecationWarning),
-		)))
+			g.Expect(manager.Client().List(ctx, events, client.InNamespace(fixtures.Ingress.Namespace))).To(Succeed())
+			g.Expect(events.Items).To(ContainElement(SatisfyAll(
+				HaveField("InvolvedObject.Kind", "Ingress"),
+				HaveField("InvolvedObject.Name", fixtures.Ingress.Name),
+				HaveField("Type", corev1.EventTypeWarning),
+				HaveField("Reason", deprecation.Reason),
+				HaveField("Message", deprecation.IngressNotice),
+			)))
+		}, timeout, interval).Should(Succeed())
 
 		By("expecting API proxy to match ingress rule")
 

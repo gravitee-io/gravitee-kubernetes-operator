@@ -125,12 +125,12 @@ When storing templates stored in config maps, the config map should contain a co
   contentType: application/json
 ```
 
-| Name                              | Description                                                                                                                                                                      | Value            |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| `ingress.controller.enabled`      | indicates if GKO ingress controller is enabled or not. Deprecated: the Ingress controller generates v2 APIs, which will be removed in October 2027; use the Gateway API instead. | `true`           |
-| `ingress.ingressClasses`          | list of ingress classes that the gateway will handle.                                                                                                                            | `["graviteeio"]` |
-| `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.                                                                                                           | `""`             |
-| `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.                                                                                                      | `""`             |
+| Name                              | Description                                                                                                                                                                                                                                         | Value            |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `ingress.controller.enabled`      | indicates if GKO ingress controller is enabled or not. Deprecated: the Ingress controller generates v2 APIs, which will be removed in October 2027. Please migrate to the Gateway API (HTTPRoute), enabled with gatewayAPI.controller.enabled=true. | `true`           |
+| `ingress.ingressClasses`          | list of ingress classes that the gateway will handle.                                                                                                                                                                                               | `["graviteeio"]` |
+| `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.                                                                                                                                                                              | `""`             |
+| `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.                                                                                                                                                                         | `""`             |
 
 ### Gateway API
 
