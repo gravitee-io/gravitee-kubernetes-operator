@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/deprecation"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
 
@@ -72,7 +73,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"warning",
 				admission.Warnings{
-					v2.DeprecationWarning,
+					deprecation.ApiV2Notice,
 					fmt.Sprintf(
 						"api references notification [%s] configured without any API events",
 						fixtures.API.Spec.NotificationsRefs[0].String()),

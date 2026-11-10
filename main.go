@@ -73,6 +73,7 @@ import (
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/deprecation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -197,6 +198,14 @@ func main() {
 
 	registerAPIMControllers(mgr)
 	registerAMControllers(mgr)
+
+	if err = mgr.Add(deprecation.StartupNotice{
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("deprecation-notice"),
+	}); err != nil {
+		log.Global.Error(err, cannotStartError)
+		os.Exit(1)
+	}
 
 	if env.Config.EnableGatewayAPI {
 		registerGatewayAPIsControllers(mgr)
