@@ -15,11 +15,18 @@ package amcertificate
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/gravitee-io/gravitee-automation-sdk/am-mock-server/server"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	internal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/am/certificate"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/am"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -61,5 +68,56 @@ var _ = Describe("Delete", func() {
 		Eventually(ctx, func() error {
 			return assert.Deleted(ctx, "AMCertificate", cert)
 		}, timeout, interval).Should(Succeed(), cert.Name)
+	})
+
+	It("should retry a delete AM refused once the refusal clears (X-02)", func() {
+		cert := fixtures().Apply().AMCertificate
+		dto, err := internal.ToCertificateDTO(cert)
+		Expect(err).ToNot(HaveOccurred())
+		path := am.RequestPath("/domains/" + dto.DomainKey + "/certificates/" + dto.Key)
+
+		By("making AM refuse the delete, as it does while applications use the certificate")
+
+		mockServer.MockAM.Faults.Set(server.Fault{
+			Method:  http.MethodDelete,
+			Path:    path,
+			Status:  http.StatusBadRequest,
+			Message: "You can't delete a certificate with existing applications.",
+		})
+		DeferCleanup(mockServer.MockAM.Faults.Clear, http.MethodDelete, path)
+
+		Expect(manager.Client().Delete(ctx, cert.DeepCopy())).To(Succeed())
+
+		Eventually(ctx, func() error {
+			if err := manager.GetLatest(ctx, cert); err != nil {
+				return err
+			}
+			accepted := k8s.MapConditions(cert.Status.Conditions)[k8s.ConditionAccepted]
+			if err := assert.Equals("Accepted reason", string(gerrors.ControlPlaneError), accepted.Reason); err != nil {
+				return err
+			}
+			if !strings.Contains(accepted.Message, "existing applications") {
+				return fmt.Errorf("Accepted message %q does not carry AM's refusal", accepted.Message)
+			}
+			return nil
+		}, timeout, interval).Should(Succeed(), cert.Name)
+
+		Consistently(ctx, func() error {
+			if err := manager.GetLatest(ctx, cert); err != nil {
+				return err
+			}
+			status, _ := remoteCertificate(ctx, cert)
+			return assert.Equals("remote status", http.StatusOK, status)
+		}, constants.ConsistentTimeout, interval).Should(Succeed(), cert.Name)
+
+		By("lifting the refusal: the next retry deletes the certificate")
+
+		mockServer.MockAM.Faults.Clear(http.MethodDelete, path)
+
+		Eventually(ctx, func() error {
+			return assert.Deleted(ctx, "AMCertificate", cert)
+		}, timeout, interval).Should(Succeed(), cert.Name)
+		status, _ := remoteCertificate(ctx, cert)
+		Expect(status).To(Equal(http.StatusNotFound))
 	})
 })
