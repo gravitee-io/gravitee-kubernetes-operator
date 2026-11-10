@@ -98,9 +98,9 @@ type Connection struct {
 // registered in the AI Catalog. Tools, prompts and resources are discovered by the platform
 // and reported in the status only.
 type Type struct {
-	// Stable catalog identity of the server, the name authorization policies reference:
-	// lowercase, dot-separated segments, first segment `mcp-server`. Validated, never
-	// repaired, and immutable once the server exists.
+	// Stable catalog identity of the server: lowercase, dot-separated segments, first segment
+	// `mcp-server`. Validated, never repaired, and immutable once the server exists. A policy names
+	// the server by status.authPolicyRef, not by this id.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern=`^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$`
 	// +kubebuilder:validation:MaxLength=255

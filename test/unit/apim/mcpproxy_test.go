@@ -394,7 +394,9 @@ var _ = Describe("MCP proxy", func() {
 				},
 				"plans": [{"name": "gold", "security": {"type": "API_KEY", "source": "HEADER"}}],
 				"id": "1f3c", "organizationId": "DEFAULT", "environmentId": "DEFAULT",
-				"errors": {"warning": ["tool added after creation"]}
+				"errors": {"warning": ["tool added after creation"]},
+				"tools": [{"server": "gravitee-github-mcp", "tool": "create_issue", "alias": "open_ticket",
+					"entityId": "mcp-tool.github.create_issue", "authPolicyRef": "MCPTool::\"github.create_issue\""}]
 			}`
 			state := new(model.McpProxyState)
 			Expect(json.Unmarshal([]byte(body), state)).To(Succeed())
@@ -406,6 +408,30 @@ var _ = Describe("MCP proxy", func() {
 			Expect(state.Errors.Warning).To(ConsistOf("tool added after creation"))
 			Expect(state.Studio.Tools[0].EntityID).To(Equal("mcp-tool.github.create_issue"))
 			Expect(state.Studio.UpstreamAuth[0].Auth.Token).To(BeNil())
+		})
+
+		// The status list, not studio.tools[], carries the policy reference: studio.tools[] is the
+		// payload drift compares.
+		It("decodes the tools status list with the reference a policy names each tool by", func() {
+			body := `{
+				"hrid": "gravitee-support-studio",
+				"studio": {"tools": [{"server": "gravitee-github-mcp", "tool": "create_issue", "alias": "open_ticket"}]},
+				"tools": [{"server": "gravitee-github-mcp", "tool": "create_issue", "alias": "open_ticket",
+					"entityId": "mcp-tool.github.create_issue", "authPolicyRef": "MCPTool::\"github.create_issue\""}]
+			}`
+			state := new(model.McpProxyState)
+			Expect(json.Unmarshal([]byte(body), state)).To(Succeed())
+
+			Expect(state.Tools).To(HaveLen(1))
+			Expect(state.Tools[0].Server).To(Equal("gravitee-github-mcp"))
+			Expect(state.Tools[0].Tool).To(Equal("create_issue"))
+			Expect(*state.Tools[0].Alias).To(Equal("open_ticket"))
+			Expect(state.Tools[0].EntityID).To(Equal("mcp-tool.github.create_issue"))
+			Expect(state.Tools[0].AuthPolicyRef).To(Equal(`MCPTool::"github.create_issue"`))
+
+			raw, err := json.Marshal(state.McpProxyDTO)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(raw)).ToNot(ContainSubstring("authPolicyRef"))
 		})
 	})
 

@@ -157,11 +157,8 @@ spec:
                 description:
                   type: string
                 entityId:
-                  description: >-
-                    Stable catalog identity of the server, the name
-                    authorization policies reference:
-
-                    lowercase,...
+                  description: "Stable catalog identity of the server: lowercase, dot-separated
+                    segments, first segment..."
                   maxLength: 255
                   pattern: ^mcp-server\.[a-z0-9_-]+(\.[a-z0-9_-]+)*$
                   type: string
@@ -176,6 +173,10 @@ spec:
               description: CatalogMcpServerStatus defines the observed state of a
                 CatalogMcpServer.
               properties:
+                authPolicyRef:
+                  description: "What an AuthzPolicy names the server by, derived from entityId:
+                    its engine type and the slug of..."
+                  type: string
                 conditions:
                   default: []
                   description: Conditions describe the current conditions of the CatalogMcpServer.
@@ -277,8 +278,8 @@ spec:
                   type: string
                 prompts:
                   items:
-                    description: Prompt is a prompt the upstream server exposes, with the catalog
-                      identity a policy names.
+                    description: Prompt is a prompt the upstream server exposes, with its catalog
+                      identity.
                     properties:
                       entityId:
                         type: string
@@ -291,8 +292,8 @@ spec:
                   type: string
                 resources:
                   items:
-                    description: Resource is a resource the upstream server exposes, with the
-                      catalog identity a policy names.
+                    description: Resource is a resource the upstream server exposes, with its
+                      catalog identity.
                     properties:
                       entityId:
                         type: string
@@ -312,10 +313,14 @@ spec:
                   type: object
                 tools:
                   items:
-                    description: Tool is a tool the upstream server exposes, with the catalog
-                      identity a policy names.
+                    description: Tool is a tool the upstream server exposes, with its catalog
+                      identity and the reference a policy...
                     properties:
+                      authPolicyRef:
+                        description: What an AuthzPolicy names the tool by, e.g. MCPTool::"github.
+                        type: string
                       entityId:
+                        description: Catalog identity of the tool, e.g. mcp-tool.github.create_issue.
                         type: string
                       name:
                         type: string
