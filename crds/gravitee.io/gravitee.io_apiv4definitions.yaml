@@ -1553,7 +1553,7 @@ spec:
                           if a management context is used to...
                         type: string
                       order:
-                        description: Plan order
+                        description: Plan order.
                         type: integer
                       security:
                         description: Plan security

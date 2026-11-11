@@ -701,7 +701,7 @@ spec:
                         description: Plan name
                         type: string
                       order:
-                        description: Plan order
+                        description: Plan order.
                         type: integer
                       paths:
                         additionalProperties:
