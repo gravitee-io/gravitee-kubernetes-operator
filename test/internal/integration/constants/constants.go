@@ -144,6 +144,7 @@ const (
 	ApiV4MessageDriftMinimalFile       = "apim/api_definition/v4/api-v4-message-drift-minimal.yml"
 	ApiV4MessageDriftFullFile          = "apim/api_definition/v4/api-v4-message-drift-full.yml"
 	ApiV4NativeDriftFullFile           = "apim/api_definition/v4/api-v4-native-drift-full.yml"
+	ApiV4MessageWebhookPushPlanFile    = "apim/api_definition/v4/api-v4-message-webhook-push-plan.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"
@@ -163,6 +164,7 @@ const (
 	ClientCertConfigMapFile        = "apim/application/client-cert-configmap.yml"
 	CACertSecretFile               = "apim/application/ca-cert-secret.yml"
 	SubscriptionFile               = "apim/subscription/subscription.yml"
+	SubscriptionPushPlanFile       = "apim/subscription/subscription-push-plan.yml"
 
 	SharedPolicyGroupsFile = "apim/shared_policy_groups/shared_policy_groups.yml"
 
