@@ -277,11 +277,16 @@ func (api *Api) HasPlans() bool {
 	return api.Plans != nil && len(*api.Plans) > 0
 }
 
+// GetPlan returns an untyped nil for an unknown key, so callers can compare the result to nil:
+// a nil *Plan wrapped in core.PlanModel would not be equal to nil.
 func (api *Api) GetPlan(key string) core.PlanModel {
 	if api.Plans == nil {
 		return nil
 	}
-	return (*api.Plans)[key]
+	if plan, ok := (*api.Plans)[key]; ok && plan != nil {
+		return plan
+	}
+	return nil
 }
 
 func (api *Api) IsStopped() bool {
