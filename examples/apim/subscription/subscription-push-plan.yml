@@ -30,7 +30,7 @@ spec:
       auth:
         type: none
       ssl:
-        hostnameVerifier: false
+        hostnameVerifier: true
         trustAll: false
       retry:
         retryOption: "No Retry"
