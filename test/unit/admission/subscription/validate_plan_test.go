@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const pushPlanKey = "Default-PUSH-plan"
+const planKey = "Default-PUSH-plan"
 
 func pushPlan() *v4.Plan {
 	plan := v4.NewPlan()
@@ -49,12 +49,12 @@ func apiWithPlan(key string, plan *v4.Plan) *v1alpha1.ApiV4Definition {
 	}
 }
 
-func subscriptionTo(planKey string, consumer *submodel.ConsumerConfiguration) *v1alpha1.Subscription {
+func subscriptionTo(key string, consumer *submodel.ConsumerConfiguration) *v1alpha1.Subscription {
 	return &v1alpha1.Subscription{
 		Spec: v1alpha1.SubscriptionSpec{Type: submodel.Type{
 			API:                   refs.NamespacedName{Namespace: "default", Name: "webhook-api"},
 			App:                   refs.NamespacedName{Namespace: "default", Name: "webhook-application"},
-			Plan:                  planKey,
+			Plan:                  key,
 			ConsumerConfiguration: consumer,
 		}},
 	}
@@ -69,7 +69,7 @@ func webhookConsumer(entrypointID string) *submodel.ConsumerConfiguration {
 var _ = Describe("Validating the subscribed plan", func() {
 	DescribeTable("subscribing to a v4 plan",
 		func(plan *v4.Plan, subscribedKey string, consumer *submodel.ConsumerConfiguration, expected string) {
-			api := apiWithPlan(pushPlanKey, plan)
+			api := apiWithPlan(planKey, plan)
 			sub := subscriptionTo(subscribedKey, consumer)
 
 			err := subscription.ValidatePlan(sub, api)
@@ -82,17 +82,17 @@ var _ = Describe("Validating the subscribed plan", func() {
 			Expect(err.Message).To(ContainSubstring(expected))
 		},
 		Entry("is admitted on a PUSH plan with a webhook entrypoint",
-			pushPlan(), pushPlanKey, webhookConsumer("webhook"), ""),
+			pushPlan(), planKey, webhookConsumer("webhook"), ""),
 		Entry("is rejected on a PUSH plan without consumerConfiguration",
-			pushPlan(), pushPlanKey, nil, "consumerConfiguration.entrypointId is required"),
+			pushPlan(), planKey, nil, "consumerConfiguration.entrypointId is required"),
 		Entry("is rejected on a PUSH plan with an empty entrypointId",
-			pushPlan(), pushPlanKey, webhookConsumer(""), "consumerConfiguration.entrypointId is required"),
+			pushPlan(), planKey, webhookConsumer(""), "consumerConfiguration.entrypointId is required"),
 		Entry("is rejected on a STANDARD plan without security",
-			standardPlan(""), pushPlanKey, nil, "security type is not one of"),
+			standardPlan(""), planKey, nil, "security type is not one of"),
 		Entry("is rejected on a KEY_LESS plan",
-			standardPlan("KEY_LESS"), pushPlanKey, nil, "security type is not one of"),
+			standardPlan("KEY_LESS"), planKey, nil, "security type is not one of"),
 		Entry("is admitted on an API_KEY plan",
-			standardPlan("API_KEY"), pushPlanKey, nil, ""),
+			standardPlan("API_KEY"), planKey, nil, ""),
 		Entry("is rejected when the plan does not exist",
 			pushPlan(), "unknown-plan", webhookConsumer("webhook"), "cannot be found"),
 	)

@@ -204,7 +204,7 @@ func ValidatePlan(sub *v1alpha1.Subscription, api core.ApiDefinitionModel) *erro
 	}
 
 	plan := api.GetPlan(sub.GetPlan())
-	if plan == nil || reflect.ValueOf(plan).IsNil() {
+	if isNilPlan(plan) {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because plan [%s] cannot be found",
 			sub.GetApiRef(), sub.GetPlan(),
@@ -219,7 +219,7 @@ func ValidatePlan(sub *v1alpha1.Subscription, api core.ApiDefinitionModel) *erro
 // validateConsumerConfiguration mirrors APIM: a PUSH subscription needs the entrypoint
 // that delivers its messages.
 func validateConsumerConfiguration(plan core.PlanModel, sub *v1alpha1.Subscription) *errors.AdmissionError {
-	if plan == nil || reflect.ValueOf(plan).IsNil() || !plan.IsPush() {
+	if isNilPlan(plan) || !plan.IsPush() {
 		return nil
 	}
 	consumer := sub.Spec.ConsumerConfiguration
@@ -230,6 +230,11 @@ func validateConsumerConfiguration(plan core.PlanModel, sub *v1alpha1.Subscripti
 		)
 	}
 	return nil
+}
+
+// isNilPlan also catches a typed nil: v4 APIs return a nil *Plan for an unknown plan key.
+func isNilPlan(plan core.PlanModel) bool {
+	return plan == nil || reflect.ValueOf(plan).IsNil()
 }
 
 func validateMTLS(
@@ -283,15 +288,12 @@ func validateApiKeys(plan core.PlanModel, apiKeys []core.ApiKeyModel) *errors.Ad
 		return nil
 	}
 
-	if plan.IsPush() {
-		return errors.NewSevere("apiKeys can only be set when subscribing to an API_KEY plan, got PUSH plan")
-	}
-
 	if plan.GetSecurityType() != "API_KEY" {
-		return errors.NewSeveref(
-			"apiKeys can only be set when subscribing to an API_KEY plan, got [%s]",
-			plan.GetSecurityType(),
-		)
+		got := fmt.Sprintf("[%s]", plan.GetSecurityType())
+		if plan.IsPush() {
+			got = "PUSH plan"
+		}
+		return errors.NewSeveref("apiKeys can only be set when subscribing to an API_KEY plan, got %s", got)
 	}
 
 	seen := make(map[string]bool, len(apiKeys))
