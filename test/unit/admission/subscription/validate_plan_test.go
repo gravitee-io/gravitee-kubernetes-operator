@@ -106,4 +106,10 @@ var _ = Describe("Validating the subscribed plan", func() {
 		Expect(plan.GetSecurityType()).To(BeEmpty())
 		Expect(plan.IsPush()).To(BeFalse())
 	})
+
+	// BeNil also matches a nil *Plan inside the interface; callers compare with == nil.
+	It("returns an untyped nil for an unknown plan key", func() {
+		api := apiWithPlan(planKey, pushPlan())
+		Expect(api.GetPlan("unknown-plan") == nil).To(BeTrue())
+	})
 })
