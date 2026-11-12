@@ -60,21 +60,22 @@ func normalizeV4SpecForAutomation(spec *v1alpha1.ApiV4DefinitionSpec) {
 func normalizeHTTPListenerPaths(api *v4.Api) {
 	listeners := make([]*v4.GenericListener, len(api.Listeners))
 	for i, listener := range api.Listeners {
-		if listener == nil || listener.ListenerType() != v4.HTTPListenerType {
+		if listener == nil || listener.GenericStringMap == nil || listener.ListenerType() != v4.HTTPListenerType {
 			listeners[i] = listener
 			continue
 		}
-		httpListener, ok := listener.ToListener().(*v4.HttpListener)
-		if !ok {
-			listeners[i] = listener
-			continue
-		}
-		for _, path := range httpListener.Paths {
-			if path.Path != "" && !strings.HasSuffix(path.Path, "/") {
-				path.Path += "/"
+		// Edit the generic map: HttpListener does not model every listener field (cors, for one).
+		normalized := listener.DeepCopy()
+		for _, item := range normalized.GetSlice("paths") {
+			path, ok := item.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			if p, ok := path["path"].(string); ok && p != "" && !strings.HasSuffix(p, "/") {
+				path["path"] = p + "/"
 			}
 		}
-		listeners[i] = v4.ToGenericListener(httpListener)
+		listeners[i] = normalized
 	}
 	api.Listeners = listeners
 }
