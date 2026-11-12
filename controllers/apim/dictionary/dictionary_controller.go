@@ -105,7 +105,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if errors.MustRetry(err, dict.IsBeingDeleted()) {
+	if errors.ShouldRetry(err, dict.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, dict)
 		return ctrl.Result{}, err
 	}

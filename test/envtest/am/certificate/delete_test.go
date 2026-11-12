@@ -70,7 +70,7 @@ var _ = Describe("Delete", func() {
 		}, timeout, interval).Should(Succeed(), cert.Name)
 	})
 
-	It("should retry a delete AM refused once the refusal clears (X-02)", func() {
+	It("should retry a delete AM refused once the refusal clears", func() {
 		cert := fixtures().Apply().AMCertificate
 		dto, err := internal.ToCertificateDTO(cert)
 		Expect(err).ToNot(HaveOccurred())
