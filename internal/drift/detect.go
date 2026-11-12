@@ -327,7 +327,10 @@ func detectItem(property string, i int, crdItem reflect.Value, remoteItem reflec
 		detectIndexedMapItems(property, &i, driftFunc{}, crdItem, remoteItem, parent)
 	default:
 		runEquivalence := true
-		if crdItem.Kind() == reflect.Interface {
+		// An item only the remote has is compared whole. Introspected, a map item would lose its index
+		// and read like keys missing from an item the CRD declares.
+		remoteOnly := crdItem.Kind() == reflect.Interface && crdItem.IsNil() && !remoteItem.IsNil()
+		if crdItem.Kind() == reflect.Interface && !remoteOnly {
 			// if we are dealing with an interface, we need to introspect first
 			runEquivalence = detectAny(property, driftFunc{},
 				valuePair{crdItem, asInterface(crdItem)},

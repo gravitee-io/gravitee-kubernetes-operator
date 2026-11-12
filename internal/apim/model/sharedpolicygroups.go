@@ -35,7 +35,7 @@ type StepDTO struct {
 	Policy        *string                 `json:"policy,omitempty"`
 	Name          *string                 `json:"name,omitempty"`
 	Description   *string                 `json:"description,omitempty"`
-	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured:ignore-remote-default"`
 	Condition     *string                 `json:"condition,omitempty"`
 }
 

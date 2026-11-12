@@ -39,7 +39,7 @@ func (k ApiKeyDTO) MatchKey() string {
 type ConsumerConfigurationDTO struct {
 	EntrypointID            string                  `json:"entrypointId"`
 	Channel                 string                  `json:"channel,omitempty"`
-	EntrypointConfiguration *utils.GenericStringMap `json:"entrypointConfiguration,omitempty" drift:"unstructured"`
+	EntrypointConfiguration *utils.GenericStringMap `json:"entrypointConfiguration,omitempty" drift:"unstructured:ignore-remote-default"`
 }
 
 type SubscriptionDTO struct {
