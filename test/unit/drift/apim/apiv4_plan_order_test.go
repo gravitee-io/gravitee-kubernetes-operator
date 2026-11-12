@@ -117,7 +117,7 @@ func detectPlanOrderDrift(crd, remote string) drift.Result {
 // crdDriftAPIV4DTO maps a CRD spec the way the admission drift check does.
 func crdDriftAPIV4DTO(crd string) model.APIV4DTO {
 	GinkgoHelper()
-	return model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
+	return model.ToAPIV4DriftDTO(parseJSON[*v4.Api](crd))
 }
 
 func plan(hrid string) string {

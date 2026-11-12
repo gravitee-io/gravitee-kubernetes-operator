@@ -59,7 +59,7 @@ type APIV4DTO struct {
 	PortalNavigation                 []*APIV4NavigationPathDTO                       `json:"portalNavigation,omitempty" drift:"empty-is-nil"`
 	ConsoleNotification              *APIV4ConsoleNotificationDTO                    `json:"consoleNotification,omitempty"`
 	Pages                            []*APIV4PageDTO                                 `json:"pages" drift:"empty-is-nil"`
-	Plans                            []*APIV4PlanDTO                                 `json:"plans" drift:"empty-is-nil"`
+	Plans                            APIV4PlansDTO                                   `json:"plans" drift:"empty-is-nil"`
 }
 
 type APIV4PropertyDTO struct {
@@ -392,6 +392,21 @@ type APIV4ApiServicesDTO struct {
 	DynamicProperty *APIV4ServiceDTO `json:"dynamicProperty,omitempty"`
 }
 
+// APIV4PlansDTO is an API's plan list. APIM stores each plan's order from its position in the list
+// it receives and returns the plans in that order, without the field, so decoding sets each plan's
+// order from its position.
+type APIV4PlansDTO []*APIV4PlanDTO
+
+func (plans *APIV4PlansDTO) UnmarshalJSON(data []byte) error {
+	var decoded []*APIV4PlanDTO
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	setOrderFromPosition(decoded)
+	*plans = decoded
+	return nil
+}
+
 type APIV4PlanDTO struct {
 	ID                    string                `json:"id,omitempty" drift:"ignore"`
 	HRID                  string                `json:"hrid,omitempty"`
@@ -401,7 +416,7 @@ type APIV4PlanDTO struct {
 	Characteristics       []string              `json:"characteristics" drift:"empty-is-nil"`
 	Validation            base.PlanValidation   `json:"validation,omitempty"`
 	CommentRequired       *bool                 `json:"comment_required,omitempty"`
-	Order                 *int                  `json:"order,omitempty" drift:"ignore"` // APIM sets it from the list position
+	Order                 *int                  `json:"order,omitempty" drift:"ignore-remote-default"` // unset: not compared
 	Type                  base.PlanType         `json:"type,omitempty"`
 	Name                  string                `json:"name"`
 	Description           *string               `json:"description,omitempty"`
