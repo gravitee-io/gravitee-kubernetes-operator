@@ -59,7 +59,7 @@ func resolveApiV4Refs(ctx context.Context, api *v1alpha1.ApiV4Definition) error 
 }
 
 func toAPIV4DTO(api *v1alpha1.ApiV4Definition) model.APIV4DTO {
-	dto := model.ToAPIV4DTO(&api.Spec.Api).WithResolvedVisibility().WithoutOverrideAccess()
+	dto := model.ToAPIV4DriftDTO(&api.Spec.Api).WithResolvedVisibility().WithoutOverrideAccess()
 	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) {
 		dto.Groups = nil
 	}

@@ -701,8 +701,7 @@ spec:
                         description: Plan name
                         type: string
                       order:
-                        description: "Plan order, ignored for an ApiV4Definition with a contextRef: APIM
-                          sets it from the position in..."
+                        description: Plan order.
                         type: integer
                       paths:
                         additionalProperties:

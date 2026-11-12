@@ -15,7 +15,6 @@
 package apim
 
 import (
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
@@ -25,7 +24,7 @@ import (
 var _ = Describe("API v4 Drift detection on what APIM normalises", func() {
 	DescribeTable("no drift",
 		func(crd, remote string) {
-			crdDTO := model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
+			crdDTO := crdDriftAPIV4DTO(crd)
 			remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
 			expectNoDrift(drift.DetectWithNamespace(crdDTO, remoteDTO, ""))
 		},
@@ -37,7 +36,7 @@ var _ = Describe("API v4 Drift detection on what APIM normalises", func() {
 			`{"name": "api", "flowExecution": {"mode": "best_match"}}`,
 			`{"name": "api", "flowExecution": {"mode": "BEST_MATCH"}}`,
 		),
-		Entry("plan order the Automation API neither stores nor returns",
+		Entry("plan order 1 against the only plan APIM lists",
 			`{"name": "api", "plans": {"JWTPlan": `+apiV4JWTPlanWithOrder+`}}`,
 			`{"name": "api", "plans": [`+apiV4JWTPlan+`]}`,
 		),

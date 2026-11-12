@@ -42,7 +42,7 @@ var _ = Describe("API v4 Drift detection", func() {
 		),
 		Entry("equal struct from CRD mapping",
 			completeAPIV4DTO(),
-			model.ToAPIV4DTO(completeAPIV4Spec()),
+			model.ToAPIV4DriftDTO(completeAPIV4Spec()),
 		),
 		Entry("empty collections equivalent to nil",
 			model.APIV4DTO{
@@ -285,7 +285,7 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	DescribeTable("plans and pages are compared by HRID",
 		func(crd, remote string) {
-			crdDTO := model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
+			crdDTO := crdDriftAPIV4DTO(crd)
 			remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
 			expectNoDrift(drift.DetectWithNamespace(crdDTO, remoteDTO, ""))
 		},
@@ -300,9 +300,9 @@ var _ = Describe("API v4 Drift detection", func() {
 	)
 
 	It("still detects a change on a plan returned out of order", func() {
-		crd := model.ToAPIV4DTO(parseJSON[*v4.Api](
+		crd := crdDriftAPIV4DTO(
 			`{"name": "api", "plans": {"JWTPlan": ` + apiV4JWTPlan + `, "OAuth2Plan": ` + apiV4OAuth2Plan + `}}`,
-		))
+		)
 		renamed := strings.Replace(apiV4OAuth2Plan, `"OAuth2 plan"`, `"OAuth2 plan v2"`, 1)
 		remote := parseJSON[model.APIV4DTO](
 			`{"name": "api", "plans": [` + renamed + `, ` + apiV4JWTPlan + `]}`,
@@ -317,7 +317,7 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	DescribeTable("still detects drift on plans and pages returned out of order",
 		func(crd, remote string) {
-			crdDTO := model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
+			crdDTO := crdDriftAPIV4DTO(crd)
 			remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
 			result := drift.DetectWithNamespace(crdDTO, remoteDTO, "")
 			Expect(result.DriftDetected()).To(BeTrue())
