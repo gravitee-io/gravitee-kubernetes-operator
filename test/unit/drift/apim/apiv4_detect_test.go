@@ -237,6 +237,41 @@ var _ = Describe("API v4 Drift detection", func() {
 		Expect(result.String()).To(ContainSubstring(`path: "/a" != "/b"`))
 	})
 
+	It("admits the cors defaults APIM adds to the part of a listener cors the CRD sets", func() {
+		crd := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"], "allowMethods": ["GET", "POST"]}`)
+		remote := apiV4WithListenerCors(`{
+			"enabled": true,
+			"allowOrigin": ["https://app.example.com"],
+			"allowMethods": ["GET", "POST"],
+			"allowHeaders": [],
+			"exposeHeaders": [],
+			"allowCredentials": false,
+			"maxAge": -1,
+			"runPolicies": false
+		}`)
+
+		merged := drift.Merge(
+			drift.DetectWithNamespace(crd, remote, ""),
+			drift.DetectWithNamespace(crd, remote, ""),
+		)
+
+		expectNoDrift(merged)
+	})
+
+	It("detects a listener cors value changed in APIM", func() {
+		crd := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"]}`)
+		remote := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://other.example.com"], "maxAge": -1}`)
+
+		merged := drift.Merge(
+			drift.DetectWithNamespace(crd, remote, ""),
+			drift.DetectWithNamespace(crd, remote, ""),
+		)
+
+		Expect(merged.DriftDetected()).To(BeTrue())
+		Expect(merged.String()).To(ContainSubstring("https://other.example.com"))
+		Expect(merged.String()).NotTo(ContainSubstring("maxAge"))
+	})
+
 	DescribeTable("plans and pages are compared by HRID",
 		func(crd, remote string) {
 			crdDTO := model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
@@ -306,6 +341,11 @@ func completeAPIV4Spec() *v4.Api {
 func apiV4WithListenerPaths(paths string) model.APIV4DTO {
 	GinkgoHelper()
 	return parseJSON[model.APIV4DTO](`{"listeners": [{"type": "HTTP", "paths": ` + paths + `}]}`)
+}
+
+func apiV4WithListenerCors(cors string) model.APIV4DTO {
+	GinkgoHelper()
+	return parseJSON[model.APIV4DTO](`{"listeners": [{"type": "HTTP", "paths": [{"path": "/a/"}], "cors": ` + cors + `}]}`)
 }
 
 func completeAPIV4DTO() model.APIV4DTO {
