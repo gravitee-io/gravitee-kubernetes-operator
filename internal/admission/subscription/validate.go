@@ -17,7 +17,6 @@ package subscription
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"slices"
 	"strings"
 	"time"
@@ -55,6 +54,14 @@ func validateUpdate(
 
 		_, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
 		if errs.IsSevere() {
+			return errs
+		}
+
+		if plan == nil {
+			errs.AddSeveref(
+				"unable to subscribe to API [%s] because plan [%s] cannot be found",
+				newSub.GetApiRef(), newSub.GetPlan(),
+			)
 			return errs
 		}
 
@@ -204,7 +211,7 @@ func ValidatePlan(sub *v1alpha1.Subscription, api core.ApiDefinitionModel) *erro
 	}
 
 	plan := api.GetPlan(sub.GetPlan())
-	if isNilPlan(plan) {
+	if plan == nil {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because plan [%s] cannot be found",
 			sub.GetApiRef(), sub.GetPlan(),
@@ -219,7 +226,7 @@ func ValidatePlan(sub *v1alpha1.Subscription, api core.ApiDefinitionModel) *erro
 // validateConsumerConfiguration mirrors APIM: a PUSH subscription needs the entrypoint
 // that delivers its messages.
 func validateConsumerConfiguration(plan core.PlanModel, sub *v1alpha1.Subscription) *errors.AdmissionError {
-	if isNilPlan(plan) || !plan.IsPush() {
+	if !plan.IsPush() {
 		return nil
 	}
 	consumer := sub.Spec.ConsumerConfiguration
@@ -230,11 +237,6 @@ func validateConsumerConfiguration(plan core.PlanModel, sub *v1alpha1.Subscripti
 		)
 	}
 	return nil
-}
-
-// isNilPlan also catches a typed nil: v4 APIs return a nil *Plan for an unknown plan key.
-func isNilPlan(plan core.PlanModel) bool {
-	return plan == nil || reflect.ValueOf(plan).IsNil()
 }
 
 func validateMTLS(
