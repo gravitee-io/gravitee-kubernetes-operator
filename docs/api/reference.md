@@ -3951,7 +3951,7 @@ _Appears in:_
 | `characteristics` _string array_ | List of plan characteristics |  | Optional: \{\} <br /> |
 | `validation` _[PlanValidation](#planvalidation)_ | Plan validation strategy | AUTO | Enum: [AUTO MANUAL] <br /> |
 | `comment_required` _boolean_ | Indicate of comment is required for this plan or not |  | Optional: \{\} <br /> |
-| `order` _integer_ | Plan order. For an ApiV4Definition with a contextRef, APIM sets each plan's order<br />from its position in spec.plans and ignores this value. |  | Optional: \{\} <br /> |
+| `order` _integer_ | Plan order, ignored for an ApiV4Definition with a contextRef: APIM sets it from the position in spec.plans. |  | Optional: \{\} <br /> |
 | `type` _[PlanType](#plantype)_ | Plan type | API | Enum: [API CATALOG] <br /> |
 
 
