@@ -16,16 +16,50 @@ package application
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"math/big"
+	"time"
 
+	appmodel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+// newClientCertificate returns a self-signed, non-CA client certificate in PEM.
+// APIM refuses a certificate another active application already holds, so the spec
+// cannot reuse the fixture certificates other specs register.
+func newClientCertificate() string {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	Expect(err).ToNot(HaveOccurred())
+
+	serial, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 62))
+	Expect(err).ToNot(HaveOccurred())
+
+	template := x509.Certificate{
+		SerialNumber: serial,
+		Subject:      pkix.Name{CommonName: random.GetName()},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().AddDate(20, 0, 0),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	}
+	der, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
+	Expect(err).ToNot(HaveOccurred())
+
+	return string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}))
+}
 
 var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
@@ -38,20 +72,20 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4MessageWebhookPushPlanFile).
-			WithApplication(constants.ApplicationWithClientCertsRefs).
+			WithApplication(constants.ApplicationWithClientIDFile).
 			WithSubscription(constants.SubscriptionPushPlanFile).
 			WithContext(constants.ContextWithCredentialsFile).
-			AddSecret(constants.ClientCertSecretFile).
-			AddConfigMap(constants.ClientCertConfigMapFile).
 			Build()
 
-		certsEndAt := "2030-01-01T00:00:00Z"
-		for i := range fixtures.Application.Spec.Settings.TLS.ClientCertificates {
-			fixtures.Application.Spec.Settings.TLS.ClientCertificates[i].EndsAt = certsEndAt
+		clientID := random.GetName()
+		fixtures.Application.Spec.Settings.App.ClientID = &clientID
+		fixtures.Application.Spec.Settings.TLS = &appmodel.TLSSettings{
+			ClientCertificates: []appmodel.ClientCertificate{
+				{Name: "client", Content: newClientCertificate(), EndsAt: "2030-01-01T00:00:00Z"},
+			},
 		}
 
 		subEndsAt := "2035-01-01T00:00:00Z"
-		fixtures.Subscription.Spec.App.Name = fixtures.Application.Name
 		fixtures.Subscription.Spec.EndingAt = &subEndsAt
 
 		fixtures.Apply()
