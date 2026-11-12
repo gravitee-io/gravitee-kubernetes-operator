@@ -28,6 +28,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/deprecation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	corev1 "k8s.io/api/core/v1"
@@ -64,6 +65,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	ingress := &netV1.Ingress{}
 	if err := r.Get(ctx, req.NamespacedName, ingress); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if ingress.DeletionTimestamp.IsZero() && k8s.IsGraviteeIngress(ingress) {
+		r.Recorder.Event(ingress, corev1.EventTypeWarning, deprecation.Reason, deprecation.IngressNotice)
 	}
 
 	events := e.NewRecorder(r.Recorder)

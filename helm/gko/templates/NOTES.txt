@@ -19,6 +19,13 @@ And access them using the following endpoint:
 http://localhost:9090
 {{- end }}
 
+{{/* Same text as deprecation.IngressNotice in internal/deprecation/deprecation.go */ -}}
+{{ if .Values.ingress.controller.enabled -}}
+WARNING: The Gravitee Ingress controller is deprecated: it generates v2 APIs, which will be removed in October 2027.
+Please migrate to the Gateway API (HTTPRoute), enabled with the Helm value gatewayAPI.controller.enabled=true,
+or set ingress.controller.enabled=false if you do not use the Ingress controller.
+
+{{ end -}}
 Please visit our documentation to learn about custom resources managed by the operator:
 
 https://documentation.gravitee.io/gravitee-kubernetes-operator-gko

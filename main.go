@@ -208,8 +208,9 @@ func main() {
 	registerAMControllers(mgr)
 
 	if err = mgr.Add(deprecation.StartupNotice{
-		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("deprecation-notice"),
+		Client:    mgr.GetClient(),
+		Recorder:  mgr.GetEventRecorderFor("deprecation-notice"),
+		Ingresses: env.Config.EnableIngress,
 	}); err != nil {
 		log.Global.Error(err, cannotStartError)
 		os.Exit(1)
@@ -290,6 +291,7 @@ func registerAPIMControllers(mgr manager.Manager) {
 	}
 
 	if env.Config.EnableIngress {
+		log.Global.Warn(deprecation.IngressNotice)
 		if err := (&ingress.Reconciler{
 			Client:   k8s.GetClient(),
 			Scheme:   mgr.GetScheme(),

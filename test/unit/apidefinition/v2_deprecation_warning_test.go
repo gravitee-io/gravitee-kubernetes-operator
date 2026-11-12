@@ -41,10 +41,10 @@ var _ = Describe("v2 API deprecation warning", func() {
 		}
 	}
 
-	It("warns on create", func() {
+	It("warns an Ingress template that the Ingress controller is deprecated", func() {
 		warnings, err := admissionCtrl.ValidateCreate(ctx, newTemplate())
 
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ConsistOf(deprecation.ApiV2Notice))
+		Expect(warnings).To(ConsistOf(deprecation.IngressNotice))
 	})
 })
