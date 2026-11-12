@@ -59,6 +59,18 @@ var _ = Describe("API v4 plan order", func() {
 		Expect(remote.Plans[1].Order).To(HaveValue(Equal(2)))
 	})
 
+	It("reads a null plan list from the GET as no plans", func() {
+		remote := parseJSON[model.APIV4DTO](`{"name": "api", "plans": null}`)
+
+		Expect(remote.Plans).To(BeNil())
+	})
+
+	It("reads an empty plan list from the GET as no plans", func() {
+		remote := parseJSON[model.APIV4DTO](`{"name": "api", "plans": []}`)
+
+		Expect(remote.Plans).To(BeEmpty())
+	})
+
 	DescribeTable("no drift when APIM keeps the order GKO sent",
 		func(crd, remote string) {
 			expectNoDrift(detectPlanOrderDrift(crd, remote))
@@ -106,6 +118,11 @@ var _ = Describe("API v4 plan order", func() {
 			`{"name": "api", "plans": {"a": `+planWithOrder("a", 1)+`, "b": `+
 				planWithOrderAndStatus("b", 2, "DEPRECATED")+`, "c": `+planWithOrder("c", 3)+`}}`,
 			`{"name": "api", "plans": [`+plan("a")+`, `+plan("c")+`, `+planWithStatus("b", "DEPRECATED")+`]}`,
+		),
+		Entry("a staging plan in the middle",
+			`{"name": "api", "plans": {"a": `+planWithOrder("a", 1)+`, "b": `+
+				planWithOrderAndStatus("b", 2, "STAGING")+`, "c": `+planWithOrder("c", 3)+`}}`,
+			`{"name": "api", "plans": [`+plan("a")+`, `+plan("c")+`, `+planWithStatus("b", "STAGING")+`]}`,
 		),
 	)
 
