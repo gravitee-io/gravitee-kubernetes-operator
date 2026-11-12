@@ -19,22 +19,20 @@ import v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 // ForDrift applies the normalisations the ApiV4Definition drift comparison needs, to the CR and the
 // remote side alike. Drift path only: the payload sent to APIM is unchanged.
 func (dto APIV4DTO) ForDrift() APIV4DTO {
-	return dto.WithResolvedVisibility().WithoutOverrideAccess().WithoutDefaultQos()
+	return dto.WithResolvedVisibility().WithoutOverrideAccess().WithoutNativeQos()
 }
 
-// WithoutDefaultQos removes a qos equal to the AUTO default from every listener entrypoint, so that
-// drift detection treats it as absent. APIM stores AUTO for an entrypoint without qos, and stores
-// no qos at all on a native (KAFKA) entrypoint, whatever was sent: there any qos is removed.
+// WithoutNativeQos removes the qos from every KAFKA listener entrypoint. APIM stores a native
+// entrypoint without qos whatever was sent, and the gateway ignores it there. Other listeners keep
+// their qos: APIM stores AUTO when it is absent, so a console change to it stays a drift.
 // Drift path only: the payload sent to APIM is unchanged.
-func (dto APIV4DTO) WithoutDefaultQos() APIV4DTO {
+func (dto APIV4DTO) WithoutNativeQos() APIV4DTO {
 	for _, listener := range dto.Listeners {
-		if listener == nil || listener.GenericStringMap == nil {
+		if listener == nil || listener.GenericStringMap == nil || listener.GetString("type") != string(v4.KafkaType) {
 			continue
 		}
-		native := listener.GetString("type") == string(v4.KafkaType)
 		for _, item := range listener.GetSlice("entrypoints") {
-			entrypoint, ok := item.(map[string]any)
-			if ok && (native || entrypoint["qos"] == string(v4.AutoQOS)) {
+			if entrypoint, ok := item.(map[string]any); ok {
 				delete(entrypoint, "qos")
 			}
 		}

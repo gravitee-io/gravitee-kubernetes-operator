@@ -237,6 +237,37 @@ var _ = Describe("API v4 Drift detection", func() {
 		Expect(result.String()).To(ContainSubstring(`path: "/a" != "/b"`))
 	})
 
+	// What APIM stores for an entrypoint without qos (GKO-3431): AUTO, except on a native
+	// entrypoint, which it stores without qos whatever was sent.
+	DescribeTable("admits the entrypoint qos APIM stores",
+		func(listener, entrypointType, crdQos, remoteQos string) {
+			crd := apiV4WithEntrypoint(listener, entrypointType, crdQos).ForDrift()
+			remote := apiV4WithEntrypoint(listener, entrypointType, remoteQos).ForDrift()
+			expectNoDrift(admissionDriftAPIV4(crd, remote))
+		},
+		Entry("PROXY unset against AUTO", httpListener, "http-proxy", "", "AUTO"),
+		Entry("PROXY AUTO against AUTO", httpListener, "http-proxy", "AUTO", "AUTO"),
+		Entry("PROXY TCP unset against AUTO", `{"type": "TCP", "hosts": ["a"]}`, "tcp-proxy", "", "AUTO"),
+		Entry("MESSAGE unset against AUTO", httpListener, "sse", "", "AUTO"),
+		Entry("MESSAGE subscription unset against AUTO", `{"type": "SUBSCRIPTION"}`, "webhook", "", "AUTO"),
+		Entry("NATIVE AUTO against unset", kafkaListener, "native-kafka", "AUTO", ""),
+		Entry("NATIVE NONE against unset", kafkaListener, "native-kafka", "NONE", ""),
+		Entry("NATIVE unset against unset", kafkaListener, "native-kafka", "", ""),
+	)
+
+	DescribeTable("detects a qos that differs from the one APIM stores",
+		func(entrypointType, crdQos, remoteQos string) {
+			crd := apiV4WithEntrypoint(httpListener, entrypointType, crdQos).ForDrift()
+			remote := apiV4WithEntrypoint(httpListener, entrypointType, remoteQos).ForDrift()
+			merged := admissionDriftAPIV4(crd, remote)
+			Expect(merged.DriftDetected()).To(BeTrue())
+			Expect(merged.String()).To(ContainSubstring(`qos: "` + crdQos + `" != "` + remoteQos + `"`))
+		},
+		Entry("PROXY AUTO changed to NONE in APIM", "http-proxy", "AUTO", "NONE"),
+		Entry("MESSAGE AUTO changed to AT_LEAST_ONCE in APIM", "sse", "AUTO", "AT_LEAST_ONCE"),
+		Entry("PROXY NONE against AUTO", "http-proxy", "NONE", "AUTO"),
+	)
+
 	It("admits the cors defaults APIM adds to the part of a listener cors the CRD sets", func() {
 		crd := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"], "allowMethods": ["GET", "POST"]}`)
 		remote := apiV4WithListenerCors(`{
@@ -281,32 +312,6 @@ var _ = Describe("API v4 Drift detection", func() {
 
 		Expect(merged.DriftDetected()).To(BeTrue())
 		Expect(merged.String()).To(ContainSubstring(`allowOrigin[0]: "https://app.example.com" != <nil>`))
-	})
-
-	// What APIM stores for an entrypoint without qos (GKO-3431): AUTO, except on a native
-	// entrypoint, which it stores without qos whatever was sent.
-	DescribeTable("the default entrypoint qos compares as absent",
-		func(listener, entrypointType, crdQos, remoteQos string) {
-			crd := apiV4WithEntrypoint(listener, entrypointType, crdQos).ForDrift()
-			remote := apiV4WithEntrypoint(listener, entrypointType, remoteQos).ForDrift()
-			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
-		},
-		Entry("PROXY unset against AUTO", httpListener, "http-proxy", "", "AUTO"),
-		Entry("PROXY AUTO against unset", httpListener, "http-proxy", "AUTO", ""),
-		Entry("PROXY TCP unset against AUTO", `{"type": "TCP", "hosts": ["a"]}`, "tcp-proxy", "", "AUTO"),
-		Entry("MESSAGE unset against AUTO", httpListener, "sse", "", "AUTO"),
-		Entry("MESSAGE subscription unset against AUTO", `{"type": "SUBSCRIPTION"}`, "webhook", "", "AUTO"),
-		Entry("NATIVE AUTO against unset", kafkaListener, "native-kafka", "AUTO", ""),
-		Entry("NATIVE unset against unset", kafkaListener, "native-kafka", "", ""),
-		Entry("NATIVE NONE against unset", kafkaListener, "native-kafka", "NONE", ""),
-	)
-
-	It("still detects drift on a qos other than the default", func() {
-		crd := apiV4WithEntrypoint(httpListener, "sse", "NONE").ForDrift()
-		remote := apiV4WithEntrypoint(httpListener, "sse", "AUTO").ForDrift()
-		result := drift.DetectWithNamespace(crd, remote, "")
-		Expect(result.DriftDetected()).To(BeTrue())
-		Expect(result.String()).To(ContainSubstring(`qos: "NONE" != <nil>`))
 	})
 
 	DescribeTable("plans and pages are compared by HRID",
