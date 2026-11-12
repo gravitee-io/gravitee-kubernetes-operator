@@ -57,7 +57,7 @@ type Plan struct {
 	// Plan order. For an ApiV4Definition with a contextRef, plans are sent to APIM sorted by
 	// this value (plans without one last, then by key), and APIM numbers them 1, 2, 3… in that
 	// order: orders 10 and 20 are stored as 1 and 2. Drift detection compares the plan order
-	// only when every plan sets one.
+	// only when every plan sets one and every plan is PUBLISHED.
 	// +kubebuilder:validation:Optional
 	Order *int `json:"order,omitempty"`
 	// +kubebuilder:default:=API

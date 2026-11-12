@@ -43,6 +43,10 @@ var _ = Describe("API v4 plan order", func() {
 			`{"name": "api", "plans": {"c": `+plan("c")+`, "b": `+plan("b")+`, "z": `+planWithOrder("z", 5)+`}}`,
 			[]string{"z", "b", "c"},
 		),
+		Entry("the same order, by key",
+			`{"name": "api", "plans": {"b": `+planWithOrder("b", 1)+`, "a": `+planWithOrder("a", 1)+`}}`,
+			[]string{"a", "b"},
+		),
 	)
 
 	It("reads a remote plan's order from its position in the GET list", func() {
@@ -67,6 +71,10 @@ var _ = Describe("API v4 plan order", func() {
 			`{"name": "api", "plans": {"foo": `+planWithOrder("foo", 10)+`, "bar": `+planWithOrder("bar", 20)+`}}`,
 			`{"name": "api", "plans": [`+plan("foo")+`, `+plan("bar")+`]}`,
 		),
+		Entry("the same order, ranked by key",
+			`{"name": "api", "plans": {"b": `+planWithOrder("b", 1)+`, "a": `+planWithOrder("a", 1)+`}}`,
+			`{"name": "api", "plans": [`+plan("a")+`, `+plan("b")+`]}`,
+		),
 	)
 
 	DescribeTable("no drift on the plan order when a plan has no order, whatever order APIM lists",
@@ -80,6 +88,19 @@ var _ = Describe("API v4 plan order", func() {
 		Entry("one plan without an order",
 			`{"name": "api", "plans": {"foo": `+planWithOrder("foo", 1)+`, "bar": `+planWithOrder("bar", 2)+`, "zed": `+plan("zed")+`}}`,
 			`{"name": "api", "plans": [`+plan("zed")+`, `+plan("bar")+`, `+plan("foo")+`]}`,
+		),
+	)
+
+	// APIM renumbers published plans only, so a deprecated plan can tie with another and the GET then
+	// lists it after the published plans.
+	DescribeTable("no drift on the plan order when a plan is not published, whatever order APIM lists",
+		func(crd, remote string) {
+			expectNoDrift(detectPlanOrderDrift(crd, remote))
+		},
+		Entry("a deprecated plan in the middle",
+			`{"name": "api", "plans": {"a": `+planWithOrder("a", 1)+`, "b": `+
+				planWithOrderAndStatus("b", 2, "DEPRECATED")+`, "c": `+planWithOrder("c", 3)+`}}`,
+			`{"name": "api", "plans": [`+plan("a")+`, `+plan("c")+`, `+planWithStatus("b", "DEPRECATED")+`]}`,
 		),
 	)
 
@@ -121,10 +142,19 @@ func crdDriftAPIV4DTO(crd string) model.APIV4DTO {
 }
 
 func plan(hrid string) string {
-	return `{"hrid": "` + hrid + `", "name": "` + hrid + ` plan", "status": "PUBLISHED", "security": {"type": "KEY_LESS"}}`
+	return planWithStatus(hrid, "PUBLISHED")
+}
+
+func planWithStatus(hrid, status string) string {
+	return `{"hrid": "` + hrid + `", "name": "` + hrid + ` plan", "status": "` + status +
+		`", "security": {"type": "KEY_LESS"}}`
 }
 
 func planWithOrder(hrid string, order int) string {
-	return `{"hrid": "` + hrid + `", "name": "` + hrid + ` plan", "status": "PUBLISHED", "order": ` +
+	return planWithOrderAndStatus(hrid, order, "PUBLISHED")
+}
+
+func planWithOrderAndStatus(hrid string, order int, status string) string {
+	return `{"hrid": "` + hrid + `", "name": "` + hrid + ` plan", "status": "` + status + `", "order": ` +
 		strconv.Itoa(order) + `, "security": {"type": "KEY_LESS"}}`
 }
