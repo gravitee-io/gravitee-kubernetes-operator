@@ -55,7 +55,6 @@ type Plan struct {
 	// +kubebuilder:validation:Optional
 	CommentRequired *bool `json:"comment_required,omitempty"`
 	// Plan order, ignored for an ApiV4Definition with a contextRef: APIM sets it from the position in spec.plans.
-	// from its position in spec.plans and ignores this value.
 	// +kubebuilder:validation:Optional
 	Order *int `json:"order,omitempty"`
 	// +kubebuilder:default:=API

@@ -1553,7 +1553,8 @@ spec:
                           if a management context is used to...
                         type: string
                       order:
-                        description: Plan order.
+                        description: "Plan order, ignored for an ApiV4Definition with a contextRef: APIM
+                          sets it from the position in..."
                         type: integer
                       security:
                         description: Plan security
