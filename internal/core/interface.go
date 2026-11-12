@@ -65,6 +65,7 @@ type DefinitionContext interface {
 type PlanModel interface {
 	GetSecurityType() string
 	GetID() string
+	IsPush() bool
 }
 
 // +k8s:deepcopy-gen=false

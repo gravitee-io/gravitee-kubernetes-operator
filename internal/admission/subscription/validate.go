@@ -59,6 +59,11 @@ func validateUpdate(
 		return errs
 	}
 
+	errs.Add(validateConsumerConfiguration(plan, newSub))
+	if errs.IsSevere() {
+		return errs
+	}
+
 	validateMTLS(newSub, plan, app, errs)
 
 	mergeDriftValidation(ctx, oldSub, newSub, api, app, errs)
@@ -122,7 +127,7 @@ func validateCreate(ctx context.Context, sub *v1alpha1.Subscription) *errors.Adm
 		return errs
 	}
 
-	errs.Add(validatePlan(sub, api))
+	errs.Add(ValidatePlan(sub, api))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -183,7 +188,8 @@ func resolveDependencies(
 	return api, app, plan
 }
 
-func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *errors.AdmissionError {
+// ValidatePlan checks that the subscribed plan exists and that GKO can subscribe to it.
+func ValidatePlan(sub *v1alpha1.Subscription, api core.ApiDefinitionModel) *errors.AdmissionError {
 	if !api.HasPlans() {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because it has no plan", sub.GetApiRef(),
@@ -197,7 +203,26 @@ func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *erro
 			sub.GetApiRef(), sub.GetPlan(),
 		)
 	}
-	return validatePlanSecurityType(plan, sub.GetPlan())
+	if err := validatePlanSecurityType(plan, sub.GetPlan()); err != nil {
+		return err
+	}
+	return validateConsumerConfiguration(plan, sub)
+}
+
+// validateConsumerConfiguration mirrors APIM: a PUSH subscription needs the entrypoint
+// that delivers its messages.
+func validateConsumerConfiguration(plan core.PlanModel, sub *v1alpha1.Subscription) *errors.AdmissionError {
+	if plan == nil || reflect.ValueOf(plan).IsNil() || !plan.IsPush() {
+		return nil
+	}
+	consumer := sub.Spec.ConsumerConfiguration
+	if consumer == nil || consumer.EntrypointID == "" {
+		return errors.NewSeveref(
+			"consumerConfiguration.entrypointId is required to subscribe to PUSH plan [%s]",
+			sub.GetPlan(),
+		)
+	}
+	return nil
 }
 
 func validateMTLS(
@@ -234,6 +259,9 @@ func validateApplicationState(app core.ApplicationObject) *errors.AdmissionError
 }
 
 func validatePlanSecurityType(plan core.PlanModel, planName string) *errors.AdmissionError {
+	if plan.IsPush() {
+		return nil
+	}
 	if !slices.Contains(allowedPlanSecurities, plan.GetSecurityType()) {
 		return errors.NewSeveref(
 			"unable to subscribe to plan [%s] because security type is not one of [%s]",
@@ -246,6 +274,10 @@ func validatePlanSecurityType(plan core.PlanModel, planName string) *errors.Admi
 func validateApiKeys(plan core.PlanModel, apiKeys []core.ApiKeyModel) *errors.AdmissionError {
 	if len(apiKeys) == 0 {
 		return nil
+	}
+
+	if plan.IsPush() {
+		return errors.NewSevere("apiKeys can only be set when subscribing to an API_KEY plan, got PUSH plan")
 	}
 
 	if plan.GetSecurityType() != "API_KEY" {
