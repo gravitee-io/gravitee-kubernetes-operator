@@ -213,10 +213,10 @@ func IsRecoverable(err error) bool {
 	return false
 }
 
-// MustRetry reports whether a failed reconcile is requeued. A deletion always is: no spec change will
+// ShouldRetry reports whether a failed reconcile is requeued. A deletion always is: no spec change will
 // reconcile a terminating object again, and a refusal such as AM's "certificate still in use" clears
 // once its blocker goes.
-func MustRetry(err error, deleting bool) bool {
+func ShouldRetry(err error, deleting bool) bool {
 	return deleting || IsRecoverable(err)
 }
 

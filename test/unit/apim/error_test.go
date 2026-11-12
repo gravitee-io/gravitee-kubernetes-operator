@@ -45,9 +45,9 @@ var _ = Describe("Errors", func() {
 		Entry("With bad request reported outside of the control plane", errWrappedBadRequest, true),
 	)
 
-	DescribeTable("MustRetry",
+	DescribeTable("ShouldRetry",
 		func(given error, deleting bool, expected bool) {
-			Expect(xErrors.MustRetry(given, deleting)).To(Equal(expected))
+			Expect(xErrors.ShouldRetry(given, deleting)).To(Equal(expected))
 		},
 		Entry("With bad request, not deleting", errBadRequest, false, false),
 		Entry("With bad request, deleting", errBadRequest, true, true),
