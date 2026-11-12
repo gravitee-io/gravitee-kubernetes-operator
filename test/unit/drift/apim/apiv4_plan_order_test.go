@@ -75,6 +75,11 @@ var _ = Describe("API v4 plan order", func() {
 			`{"name": "api", "plans": {"b": `+planWithOrder("b", 1)+`, "a": `+planWithOrder("a", 1)+`}}`,
 			`{"name": "api", "plans": [`+plan("a")+`, `+plan("b")+`]}`,
 		),
+		Entry("plans without a status, published by default",
+			`{"name": "api", "plans": {"foo": `+planWithOrderNoStatus("foo", 1)+`, "bar": `+
+				planWithOrderNoStatus("bar", 2)+`}}`,
+			`{"name": "api", "plans": [`+planNoStatus("foo")+`, `+planNoStatus("bar")+`]}`,
+		),
 	)
 
 	DescribeTable("no drift on the plan order when a plan has no order, whatever order APIM lists",
@@ -115,6 +120,17 @@ var _ = Describe("API v4 plan order", func() {
 		Expect(result.String()).To(ContainSubstring("order: 2 != 1"))
 		Expect(result.String()).NotTo(ContainSubstring("name:"))
 		Expect(result.String()).NotTo(ContainSubstring("hrid:"))
+	})
+
+	It("drifts on the plan orders of plans without a status, published by default", func() {
+		result := detectPlanOrderDrift(
+			`{"name": "api", "plans": {"foo": `+planWithOrderNoStatus("foo", 1)+`, "bar": `+
+				planWithOrderNoStatus("bar", 2)+`}}`,
+			`{"name": "api", "plans": [`+planNoStatus("bar")+`, `+planNoStatus("foo")+`]}`,
+		)
+
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring("order: 1 != 2"))
 	})
 })
 
@@ -157,4 +173,13 @@ func planWithOrder(hrid string, order int) string {
 func planWithOrderAndStatus(hrid string, order int, status string) string {
 	return `{"hrid": "` + hrid + `", "name": "` + hrid + ` plan", "status": "` + status + `", "order": ` +
 		strconv.Itoa(order) + `, "security": {"type": "KEY_LESS"}}`
+}
+
+func planNoStatus(hrid string) string {
+	return `{"hrid": "` + hrid + `", "name": "` + hrid + ` plan", "security": {"type": "KEY_LESS"}}`
+}
+
+func planWithOrderNoStatus(hrid string, order int) string {
+	return `{"hrid": "` + hrid + `", "name": "` + hrid + ` plan", "order": ` + strconv.Itoa(order) +
+		`, "security": {"type": "KEY_LESS"}}`
 }
