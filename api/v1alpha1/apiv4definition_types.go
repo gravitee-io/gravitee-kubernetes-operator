@@ -160,7 +160,7 @@ func (api *ApiV4Definition) pickPlanHRIDs(useStatusPlanIDs bool) *map[string]*v4
 		p := plan.DeepCopy()
 		p.HRID = hrid.NameToValidHRID(key)
 		if useStatusPlanIDs && p.Plan != nil {
-			p.ID = api.Status.Plans[key]
+			p.ID = api.Status.Plans[p.HRID]
 		}
 		if p.GeneralConditions != nil {
 			p.GeneralConditionsHRID = hrid.NameToValidHRIDPointer(p.GeneralConditions)
