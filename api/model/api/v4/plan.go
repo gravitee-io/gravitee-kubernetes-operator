@@ -31,6 +31,11 @@ const (
 	PlanDefinitionVersion DefinitionVersion = "V4"
 )
 
+const (
+	PlanModeStandard PlanMode = "STANDARD"
+	PlanModePush     PlanMode = "PUSH"
+)
+
 type Plan struct {
 	*base.Plan `json:",inline"`
 
@@ -94,15 +99,23 @@ type GatewayDefinitionPlan struct {
 	Name  string `json:"name"`
 }
 
+// GetSecurityType returns an empty string for a plan without security (PUSH plans).
 func (plan *Plan) GetSecurityType() string {
+	if plan == nil || plan.Security == nil {
+		return ""
+	}
 	return plan.Security.Type
+}
+
+func (plan *Plan) IsPush() bool {
+	return plan != nil && plan.Mode == PlanModePush
 }
 
 func NewPlan() *Plan {
 	return &Plan{
 		Plan:              base.NewPlan(),
 		DefinitionVersion: PlanDefinitionVersion,
-		Mode:              "STANDARD",
+		Mode:              PlanModeStandard,
 		Flows:             []*Flow{},
 		ExcludedGroups:    []string{},
 	}

@@ -7474,6 +7474,10 @@ _Validation:_
 _Appears in:_
 - [Plan](#plan)
 
+| Field | Description |
+| --- | --- |
+| `STANDARD` |  |
+| `PUSH` |  |
 
 
 #### PlanSecurity
