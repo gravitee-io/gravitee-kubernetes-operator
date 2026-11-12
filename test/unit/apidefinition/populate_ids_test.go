@@ -97,9 +97,9 @@ var _ = Describe("PopulateIDs", func() {
 
 	// Without spec.id, a plan id comes from status.plans, never from the spec.
 	DescribeTable("sends the status plan id in HRID mode with a management context",
-		func(statusPlans map[string]string, automationAPIManaged bool, expectedID string) {
+		func(key string, statusPlans map[string]string, automationAPIManaged bool, expectedID string) {
 			plans := map[string]*v4.Plan{
-				"k": {Plan: &base.Plan{ID: "X"}, Name: "Test Plan"},
+				key: {Plan: &base.Plan{ID: "X"}, Name: "Test Plan"},
 			}
 			api := legacyAPI(&plans, nil)
 			api.Status = v1alpha1.ApiV4DefinitionStatus{}
@@ -113,17 +113,19 @@ var _ = Describe("PopulateIDs", func() {
 
 			Expect(api.Spec.ID).To(BeEmpty())
 			Expect(api.Spec.Plans).NotTo(BeNil())
-			plan, ok := (*api.Spec.Plans)["k"]
+			plan, ok := (*api.Spec.Plans)[key]
 			Expect(ok).To(BeTrue())
-			Expect(plan.HRID).To(Equal("k"))
+			Expect(plan.HRID).To(Equal(hrid.NameToValidHRID(key)))
 			Expect(plan.ID).To(Equal(expectedID))
-			Expect(plans["k"].ID).To(Equal("X"), "the CR spec itself is not modified")
+			Expect(plans[key].ID).To(Equal("X"), "the CR spec itself is not modified")
 		},
-		Entry("status id differs from the spec id", map[string]string{"k": "S"}, false, "S"),
+		Entry("status id differs from the spec id", "k", map[string]string{"k": "S"}, false, "S"),
 		Entry("status id differs from the spec id, AutomationAPIManaged",
-			map[string]string{"k": "S"}, true, "S"),
-		Entry("no status entry for the plan", map[string]string{"other": "S"}, false, ""),
-		Entry("no status plans, AutomationAPIManaged", nil, true, ""),
+			"k", map[string]string{"k": "S"}, true, "S"),
+		Entry("status keyed by the plan HRID for a key with spaces and dots",
+			"My Plan.v1", map[string]string{"My-Plan-v1": "S"}, false, "S"),
+		Entry("no status entry for the plan", "k", map[string]string{"other": "S"}, false, ""),
+		Entry("no status plans, AutomationAPIManaged", "k", nil, true, ""),
 	)
 
 	It("keeps a plan without base fields in HRID mode with a management context", func() {
