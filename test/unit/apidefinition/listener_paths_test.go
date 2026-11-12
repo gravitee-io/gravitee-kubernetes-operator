@@ -106,7 +106,20 @@ var _ = Describe("PrepareV4SpecForAutomation listener path normalisation", func(
 			httpListener("/contracts/"), httpListener("/contracts/")),
 		Entry("non-HTTP listener is left as is",
 			subscriptionListener, subscriptionListener),
+		Entry("HTTP listener with an empty path keeps it empty",
+			httpListener(""), httpListener("")),
 	)
+
+	It("passes a listener with no content through and normalises the others", func() {
+		empty := &v4.GenericListener{}
+		api := newAPI(empty, toListener(httpListener("/contracts")))
+
+		Expect(apidefinition.PrepareV4SpecForAutomation(ctx, api, false)).To(Succeed())
+
+		Expect(api.Spec.Api.Listeners).To(HaveLen(2))
+		Expect(api.Spec.Api.Listeners[0]).To(BeIdenticalTo(empty))
+		Expect(json.Marshal(api.Spec.Api.Listeners[1])).To(MatchJSON(httpListener("/contracts/")))
+	})
 
 	It("skips a nil listener and normalises the others", func() {
 		api := newAPI(nil, toListener(httpListener("/contracts")))
