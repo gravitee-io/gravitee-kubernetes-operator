@@ -247,7 +247,7 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 
 ## Testing
 
-**A story ships unit tests, plus envtest suites for AM or integration tests for APIM. It does not write e2e tests.**
+**A story ships unit tests, plus envtest suites (AM, and APIM resources on the SDK) or integration tests (APIM resources still on the HTTP client). It does not write e2e tests.**
 
 | Layer | Where | What belongs there |
 |-------|-------|--------------------|

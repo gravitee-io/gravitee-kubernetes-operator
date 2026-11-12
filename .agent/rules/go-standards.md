@@ -25,8 +25,8 @@
 - Use Ginkgo v2 and Gomega (not raw `testing.T` with `t.Errorf`/`t.Fatal`)
 - Dot-imports for `github.com/onsi/ginkgo/v2` and `github.com/onsi/gomega` are allowed in test files
 - Prefer testing through importable packages (`internal/...`, `api/...`); do not place `_test.go` under nested `controllers/**/internal`
-- Envtest suites live under `test/envtest/<area>/` and are for AM only: controllers and admission against a real kube-apiserver + etcd with the in-process AM mock, run with `make envtest`. There is no APIM mock
-- APIM controllers and admission that need the manager cache or a live APIM are tested in `test/integration/<area>/` against kind, run with `make it`
+- Envtest suites live under `test/envtest/<area>/` and cover AM resources and the APIM resources migrated to the SDK (`test/envtest/apim/`): controllers and admission against a real kube-apiserver + etcd with the in-process AM or APIM mock (`am-mock-server`, `apim-mock-server`), run with `make envtest`
+- APIM resources still on the HTTP client keep their controller and admission tests in `test/integration/<area>/` against kind, run with `make it`
 - Do not write e2e tests: platform behaviour end to end is covered by the epic's critical user journey in the platform e2e repo, written separately from the story (see AGENTS.md, Testing)
 
 ## Forbidden Patterns

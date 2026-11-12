@@ -447,12 +447,12 @@ MyResourceFinalizer = "finalizers.gravitee.io/myresources"
 
 ## 9. Tests
 
-**Unit tests, plus envtest (AM) or integration (APIM) in this repo.** Put unit tests in `test/unit/<area>/` (Ginkgo v2) and
+**Unit tests, plus envtest (AM, APIM on the SDK) or integration (APIM on the HTTP client) in this repo.** Put unit tests in `test/unit/<area>/` (Ginkgo v2) and
 cover the parts that are pure logic — the `To*DTO` mapping, drift tags (`test/unit/drift/apim/`), any
 predicate or helper you added. Never place `_test.go` under `controllers/**/internal`. AM reconcile
 flows go in `test/envtest/<area>/` against the in-process AM mock, run with `make envtest`. APIM
-reconcile flows go in `test/integration/<area>/` against kind and APIM, run with `make it`: there is
-no APIM mock.
+reconcile flows for resources on the SDK go in `test/envtest/apim/` against the in-process APIM mock;
+those still on the HTTP client go in `test/integration/<area>/` against kind and APIM, run with `make it`.
 
 **Do not write e2e tests.** Platform behaviour end to end (reconciliation,
 `.status`, conditions, finalizer-driven deletion, templating and watch-triggered re-reconciles) is
