@@ -711,10 +711,14 @@ func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any, ctx DriftCo
 		e = defaultStructEquivalence(crd, remote, ctx)
 	}
 	isMaskedDataIgnored := slices.Contains(ctx.FuncArgs, maskedArg)
+	areRemoteDefaultsIgnored := slices.Contains(ctx.FuncArgs, ignoreRemoteDefaultName)
 	e.PostFunc = func(r *Result) {
 		pullUpObjectChildren(r)
 		if isMaskedDataIgnored {
 			ignoreMaskedData(r)
+		}
+		if areRemoteDefaultsIgnored {
+			ignoreRemoteDefaults(r)
 		}
 	}
 	return e
@@ -745,6 +749,19 @@ func ignoreMaskedData(r *Result) {
 			ignoreMaskedData(c)
 		} else if isMasked(c.RemoteValue) && c.Equivalent == Inequivalent &&
 			(c.CRDValue == nil || isString(c.CRDValue)) {
+			c.Equivalent = Equivalent
+		}
+	}
+}
+
+// ignoreRemoteDefaults makes a key the CRD leaves out equivalent, whatever the remote holds there:
+// the defaults a server saves for keys a payload omits. A key the CRD sets, and a list item only the
+// remote has, are still compared: a default never adds an item to a list.
+func ignoreRemoteDefaults(r *Result) {
+	for _, c := range r.children {
+		if len(c.children) > 0 {
+			ignoreRemoteDefaults(c)
+		} else if c.CRDValue == nil && c.Index == nil && c.Equivalent == Inequivalent {
 			c.Equivalent = Equivalent
 		}
 	}

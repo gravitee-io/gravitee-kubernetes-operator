@@ -105,6 +105,8 @@ type McpProxyPlanSecurityDTO struct {
 	Scopes          []string `json:"scopes,omitempty" drift:"empty-is-nil"`
 }
 
+// McpProxyIdentityProviderDTO is an identity provider on the wire. APIM saves /userinfo as the userInfoEndpoint a
+// payload leaves out, and an empty one counts as none: both are remote defaults for drift.
 type McpProxyIdentityProviderDTO struct {
 	Name                        string  `json:"name"`
 	Type                        string  `json:"type"`
@@ -112,7 +114,7 @@ type McpProxyIdentityProviderDTO struct {
 	IntrospectionEndpoint       *string `json:"introspectionEndpoint,omitempty"`
 	IntrospectionEndpointMethod *string `json:"introspectionEndpointMethod,omitempty"`
 	ClientID                    *string `json:"clientId,omitempty" drift:"empty-is-nil"`
-	UserInfoEndpoint            *string `json:"userInfoEndpoint,omitempty" drift:"empty-is-nil"`
+	UserInfoEndpoint            *string `json:"userInfoEndpoint,omitempty" drift:"ignore-remote-default:,/userinfo"`
 	ClientSecret                *string `json:"clientSecret,omitempty" drift:"ignore"`
 	Domain                      *string `json:"domain,omitempty"`
 	Audience                    *string `json:"audience,omitempty"`
@@ -139,7 +141,7 @@ type McpProxyFlowStepDTO struct {
 	Description   *string                 `json:"description,omitempty" drift:"empty-is-nil"`
 	Enabled       bool                    `json:"enabled"`
 	Condition     *string                 `json:"condition,omitempty" drift:"empty-is-nil"`
-	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured:ignore-remote-default"`
 }
 
 // McpProxyState is what a PUT or a GET answers: the payload plus the platform's identifiers

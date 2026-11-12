@@ -16,6 +16,7 @@ package apim
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
@@ -250,7 +251,7 @@ var _ = Describe("API v4 Drift detection", func() {
 			"runPolicies": false
 		}`)
 
-		expectNoDrift(admissionDriftAPIV4(crd, remote))
+		expectNoDrift(admissionDrift(crd, remote))
 	})
 
 	// The CRD cannot tell a console edit from an APIM default on a key it leaves out. The next
@@ -259,14 +260,14 @@ var _ = Describe("API v4 Drift detection", func() {
 		crd := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"]}`)
 		remote := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"], "allowCredentials": true, "maxAge": 600}`)
 
-		expectNoDrift(admissionDriftAPIV4(crd, remote))
+		expectNoDrift(admissionDrift(crd, remote))
 	})
 
 	It("detects a listener cors value changed in APIM", func() {
 		crd := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"]}`)
 		remote := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://other.example.com"], "maxAge": -1}`)
 
-		merged := admissionDriftAPIV4(crd, remote)
+		merged := admissionDrift(crd, remote)
 
 		Expect(merged.DriftDetected()).To(BeTrue())
 		Expect(merged.String()).To(ContainSubstring("https://other.example.com"))
@@ -277,11 +278,80 @@ var _ = Describe("API v4 Drift detection", func() {
 		crd := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"]}`)
 		remote := apiV4WithListenerPaths(`[{"path": "/a/"}]`)
 
-		merged := admissionDriftAPIV4(crd, remote)
+		merged := admissionDrift(crd, remote)
 
 		Expect(merged.DriftDetected()).To(BeTrue())
 		Expect(merged.String()).To(ContainSubstring(`allowOrigin[0]: "https://app.example.com" != <nil>`))
 	})
+
+	It("admits the http defaults APIM saves in an endpoint group shared configuration", func() {
+		crd := apiV4WithSharedConfiguration(`{"http": {"readTimeout": 5000}}`)
+		remote := apiV4WithSharedConfiguration(`{"http": {
+			"readTimeout": 5000,
+			"maxConnectionLifetime": 0,
+			"maxWaitQueueSize": -1,
+			"propagateClientHost": false,
+			"propagateClientAcceptEncoding": false
+		}}`)
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("admits the defaults APIM saves in a flow step configuration", func() {
+		crd := apiV4WithRequestStep(`{"name": "Quota", "policy": "quota", "enabled": true, ` +
+			`"configuration": {"quota": {"limit": 100, "periodTime": 1, "periodTimeUnit": "HOURS"}}}`)
+		remote := apiV4WithRequestStep(`{"name": "Quota", "policy": "quota", "enabled": true, ` +
+			`"configuration": {"quota": {"limit": 100, "periodTime": 1, "periodTimeUnit": "HOURS"}, "addHeaders": false, "async": false}}`)
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("admits a default APIM saves in a list item of a plugin configuration", func() {
+		crd := apiV4WithSharedConfiguration(`{"items": [{"name": "a"}]}`)
+		remote := apiV4WithSharedConfiguration(`{"items": [{"name": "a", "enabled": true}]}`)
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	It("detects a shared configuration value changed in APIM, without the saved defaults", func() {
+		crd := apiV4WithSharedConfiguration(`{"http": {"readTimeout": 5000}}`)
+		remote := apiV4WithSharedConfiguration(`{"http": {
+			"readTimeout": 1000,
+			"maxConnectionLifetime": 0,
+			"maxWaitQueueSize": -1,
+			"propagateClientHost": false,
+			"propagateClientAcceptEncoding": false
+		}}`)
+
+		result := drift.DetectWithNamespace(crd, remote, "")
+
+		Expect(result.DriftDetected()).To(BeTrue())
+		Expect(result.String()).To(ContainSubstring("readTimeout"))
+		for _, key := range []string{"maxConnectionLifetime", "maxWaitQueueSize", "propagateClientHost", "propagateClientAcceptEncoding"} {
+			Expect(result.String()).NotTo(ContainSubstring(key))
+		}
+	})
+
+	DescribeTable("admits the defaults APIM saves in every plugin configuration",
+		func(apiWithConfiguration string) {
+			crd := parseJSON[model.APIV4DTO](fmt.Sprintf(apiWithConfiguration, `{"url": "https://example.com"}`))
+			remote := parseJSON[model.APIV4DTO](fmt.Sprintf(apiWithConfiguration, `{"url": "https://example.com", "useSystemProxy": false}`))
+
+			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+		},
+		Entry("endpoint configuration",
+			`{"endpointGroups": [{"name": "default", "endpoints": [{"name": "e", "type": "http-proxy", "configuration": %s}]}]}`),
+		Entry("endpoint shared configuration override",
+			`{"endpointGroups": [{"name": "default", "endpoints": [{"name": "e", "type": "http-proxy", "sharedConfigurationOverride": %s}]}]}`),
+		Entry("endpoint group service configuration",
+			`{"endpointGroups": [{"name": "default", "endpoints": [], "services": {"healthCheck": {"enabled": true, "configuration": %s}}}]}`),
+		Entry("resource configuration",
+			`{"resources": [{"enabled": true, "name": "cache", "type": "cache", "configuration": %s}]}`),
+		Entry("plan security configuration",
+			`{"plans": [{"hrid": "jwt", "name": "JWT", "security": {"type": "JWT", "configuration": %s}}]}`),
+		Entry("page source configuration",
+			`{"pages": [{"hrid": "spec", "name": "Spec", "type": "SWAGGER", "source": {"type": "http-fetcher", "configuration": %s}}]}`),
+	)
 
 	DescribeTable("plans and pages are compared by HRID",
 		func(crd, remote string) {
@@ -354,13 +424,15 @@ func apiV4WithListenerPaths(paths string) model.APIV4DTO {
 	return parseJSON[model.APIV4DTO](`{"listeners": [{"type": "HTTP", "paths": ` + paths + `}]}`)
 }
 
-// admissionDriftAPIV4 runs the comparison admission runs for a spec left unchanged: the old and the
-// new CRD against the remote, merged.
-func admissionDriftAPIV4(crd, remote model.APIV4DTO) drift.Result {
-	return drift.Merge(
-		drift.DetectWithNamespace(crd, remote, ""),
-		drift.DetectWithNamespace(crd, remote, ""),
-	)
+func apiV4WithSharedConfiguration(configuration string) model.APIV4DTO {
+	GinkgoHelper()
+	return parseJSON[model.APIV4DTO](`{"endpointGroups": [{"name": "default", "type": "http-proxy", "endpoints": [], ` +
+		`"sharedConfiguration": ` + configuration + `}]}`)
+}
+
+func apiV4WithRequestStep(step string) model.APIV4DTO {
+	GinkgoHelper()
+	return parseJSON[model.APIV4DTO](`{"flows": [{"name": "default", "enabled": true, "request": [` + step + `]}]}`)
 }
 
 func apiV4WithListenerCors(cors string) model.APIV4DTO {

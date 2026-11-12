@@ -16,6 +16,7 @@ package apim
 
 import (
 	"slices"
+	"strings"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/mcpproxy"
@@ -92,6 +93,47 @@ var _ = Describe("MCP proxy Drift detection", func() {
 			withState(mcpProxyRemote(model.ToMcpProxyDTO(proxyMcpProxyCRD())), "STOPPED"),
 		),
 	)
+
+	It("admits the defaults APIM saves in a flow step configuration", func() {
+		crd := mcpProxyWithRequestStep(`{"rate": {"limit": 100}}`)
+		remote := mcpProxyWithRequestStep(`{"rate": {"limit": 100}, "addHeaders": false, "async": false}`)
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
+	DescribeTable("user info endpoint of an identity provider",
+		func(crdEndpoint, remoteEndpoint *string, report string) {
+			crd := model.ToMcpProxyDTO(withGenericIdentityProvider(proxyMcpProxyCRD(), crdEndpoint))
+			remote := withUserInfoEndpoint(mcpProxyRemote(crd), remoteEndpoint)
+
+			merged := admissionDrift(crd, remote)
+
+			if report == "" {
+				expectNoDrift(merged)
+				return
+			}
+			Expect(merged.DriftDetected()).To(BeTrue())
+			Expect(merged.String()).To(ContainSubstring(report))
+		},
+		Entry("left out, APIM saves /userinfo", nil, new("/userinfo"), ""),
+		Entry("left out, APIM stores it empty", nil, new(""), ""),
+		Entry("empty, APIM omits it", new(""), nil, ""),
+		Entry("empty, APIM saves /userinfo", new(""), new("/userinfo"), ""),
+		Entry("left out, changed to /me in APIM", nil, new("/me"), `userInfoEndpoint: <nil> != "/me"`),
+		Entry("declared /me, APIM has /userinfo", new("/me"), new("/userinfo"), `userInfoEndpoint: "/me" != "/userinfo"`),
+	)
+
+	It("detects an identity provider only APIM has", func() {
+		crd := mcpProxyWithIdentityProviders(keycloakIdentityProvider(""))
+		remote := mcpProxyWithIdentityProviders(
+			keycloakIdentityProvider(""),
+			`{"name": "console", "type": "OAUTH2_GENERIC", "issuerUrl": "https://console.example.com"}`,
+		)
+
+		merged := admissionDrift(crd, remote)
+
+		Expect(merged.DriftDetected()).To(BeTrue())
+	})
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
@@ -222,5 +264,48 @@ func withState(dto model.McpProxyDTO, state string) model.McpProxyDTO {
 
 func withMcpProxyHRID(dto model.McpProxyDTO, hrid string) model.McpProxyDTO {
 	dto.HRID = hrid
+	return dto
+}
+
+func mcpProxyWithRequestStep(configuration string) model.McpProxyDTO {
+	GinkgoHelper()
+	return parseJSON[model.McpProxyDTO](`{"name": "mcp", "flows": [{"name": "Log tool calls", "enabled": true, "request": [` +
+		`{"name": "Quota", "policy": "rate-limit", "enabled": true, "configuration": ` + configuration + `}]}]}`)
+}
+
+func mcpProxyWithIdentityProviders(providers ...string) model.McpProxyDTO {
+	GinkgoHelper()
+	return parseJSON[model.McpProxyDTO](`{"name": "mcp", "identityProviders": [` + strings.Join(providers, ", ") + `]}`)
+}
+
+// keycloakIdentityProvider is an OAUTH2_GENERIC identity provider; extra holds more fields, each
+// with a leading comma.
+func keycloakIdentityProvider(extra string) string {
+	return `{"name": "keycloak", "type": "OAUTH2_GENERIC", "issuerUrl": "https://kc.example.com/realms/acme"` + extra + `}`
+}
+
+// withGenericIdentityProvider adds an OAUTH2_GENERIC identity provider with the given user info endpoint.
+func withGenericIdentityProvider(crd *v1alpha1.McpProxy, userInfoEndpoint *string) *v1alpha1.McpProxy {
+	crd.Spec.IdentityProviders = append(crd.Spec.IdentityProviders, mcpproxy.IdentityProvider{
+		Name: "keycloak",
+		Type: mcpproxy.IdentityProviderOAuth2Generic,
+		OAuth2Generic: &mcpproxy.OAuth2GenericProvider{
+			IssuerURL:                   "https://kc.example.com/realms/acme",
+			IntrospectionEndpoint:       "/protocol/openid-connect/token/introspect",
+			IntrospectionEndpointMethod: "POST",
+			UserInfoEndpoint:            userInfoEndpoint,
+		},
+	})
+	return crd
+}
+
+// withUserInfoEndpoint sets the user info endpoint of the keycloak identity provider.
+func withUserInfoEndpoint(dto model.McpProxyDTO, userInfoEndpoint *string) model.McpProxyDTO {
+	dto.IdentityProviders = slices.Clone(dto.IdentityProviders)
+	for i := range dto.IdentityProviders {
+		if dto.IdentityProviders[i].Name == "keycloak" {
+			dto.IdentityProviders[i].UserInfoEndpoint = userInfoEndpoint
+		}
+	}
 	return dto
 }
