@@ -111,11 +111,11 @@ func (api *ApiV4Definition) IsSyncFromManagement() bool {
 
 func (api *ApiV4Definition) PopulateIDs(mgmtContext core.ContextModel, automationAPIManaged bool) {
 	if api.GetID() == "" || automationAPIManaged {
-		// with a management context and no spec.id, APIM addresses plans and pages by HRID only
-		keepIDs := mgmtContext == nil || api.Spec.ID != ""
+		// with a management context and no spec.id, the plan ids sent are the ones APIM gave back
+		useStatusPlanIDs := mgmtContext != nil && api.Spec.ID == ""
 		api.Spec.HRID = api.GetNamespacedName().HRID()
-		api.Spec.Pages = api.pickPageHRIDs(keepIDs)
-		api.Spec.Plans = api.pickPlanHRIDs(keepIDs)
+		api.Spec.Pages = api.pickPageHRIDs()
+		api.Spec.Plans = api.pickPlanHRIDs(useStatusPlanIDs)
 		// without management context => we still need an ID
 		// for the API definition that is required for the sync process
 		if mgmtContext == nil {
@@ -150,7 +150,7 @@ func (api *ApiV4Definition) SetConsoleNotification(consoleNotification core.Cons
 	}
 }
 
-func (api *ApiV4Definition) pickPlanHRIDs(keepIDs bool) *map[string]*v4.Plan {
+func (api *ApiV4Definition) pickPlanHRIDs(useStatusPlanIDs bool) *map[string]*v4.Plan {
 	if !api.HasPlans() {
 		return nil
 	}
@@ -159,8 +159,8 @@ func (api *ApiV4Definition) pickPlanHRIDs(keepIDs bool) *map[string]*v4.Plan {
 	for key, plan := range *api.Spec.Plans {
 		p := plan.DeepCopy()
 		p.HRID = hrid.NameToValidHRID(key)
-		if !keepIDs && p.Plan != nil {
-			p.ID = ""
+		if useStatusPlanIDs && p.Plan != nil {
+			p.ID = api.Status.Plans[key]
 		}
 		if p.GeneralConditions != nil {
 			p.GeneralConditionsHRID = hrid.NameToValidHRIDPointer(p.GeneralConditions)
@@ -171,16 +171,13 @@ func (api *ApiV4Definition) pickPlanHRIDs(keepIDs bool) *map[string]*v4.Plan {
 	return &plans
 }
 
-func (api *ApiV4Definition) pickPageHRIDs(keepIDs bool) *map[string]*v4.Page {
+func (api *ApiV4Definition) pickPageHRIDs() *map[string]*v4.Page {
 	if api.Spec.Pages == nil {
 		return nil
 	}
 	pages := make(map[string]*v4.Page, len(*api.Spec.Pages))
 	for key, page := range *api.Spec.Pages {
 		p := page.DeepCopy()
-		if !keepIDs {
-			p.ID = ""
-		}
 
 		p.API = &api.Spec.HRID
 		p.HRID = hrid.NameToValidHRID(key)
