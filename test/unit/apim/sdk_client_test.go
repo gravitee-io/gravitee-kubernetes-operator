@@ -49,10 +49,11 @@ type recordedRequest struct {
 // fakeAutomationAPI answers group calls with a fixed state, or a fixed status code.
 type fakeAutomationAPI struct {
 	*httptest.Server
-	mu       sync.Mutex
-	last     recordedRequest
-	status   int
-	response string
+	mu          sync.Mutex
+	last        recordedRequest
+	status      int
+	response    string
+	contentType string
 }
 
 const groupState = `{
@@ -64,7 +65,7 @@ const groupState = `{
 }`
 
 func newFakeAutomationAPI() *fakeAutomationAPI {
-	f := &fakeAutomationAPI{status: http.StatusOK, response: groupState}
+	f := &fakeAutomationAPI{status: http.StatusOK, response: groupState, contentType: "application/json"}
 	f.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
@@ -77,7 +78,7 @@ func newFakeAutomationAPI() *fakeAutomationAPI {
 		if data, _ := io.ReadAll(r.Body); len(data) > 0 {
 			_ = json.Unmarshal(data, &f.last.Body)
 		}
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", f.contentType)
 		w.WriteHeader(f.status)
 		if f.status == http.StatusOK {
 			_, _ = w.Write([]byte(f.response))
@@ -280,6 +281,37 @@ var _ = Describe("APIM SDK client factory", func() {
 		Expect(req.Method).To(Equal(http.MethodDelete))
 		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/" + grp.Spec.ID))
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
+	})
+
+	It("gets a group by HRID, or a legacy one by UUID", func() {
+		client, err := apim.FromContext(ctx, managementContext(fake.URL, bearer("token")), "default")
+		Expect(err).ToNot(HaveOccurred())
+
+		state, err := client.Env.GetGroupByHRID(ctx, "default-developers")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(state.Name).To(Equal("Developers"))
+		req := fake.lastRequest()
+		Expect(req.Method).To(Equal(http.MethodGet))
+		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/default-developers"))
+		Expect(req.Query.Get("hridContainsUUID")).To(Equal("false"))
+
+		_, err = client.Env.GetGroupWithUUID(ctx, "4d1c5f0a-0000-0000-0000-000000000001")
+		Expect(err).ToNot(HaveOccurred())
+		req = fake.lastRequest()
+		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/4d1c5f0a-0000-0000-0000-000000000001"))
+		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
+	})
+
+	It("reports a successful response without a JSON body as unexpected", func() {
+		fake.contentType = "text/plain"
+		client, err := apim.FromContext(ctx, managementContext(fake.URL, bearer("token")), "default")
+		Expect(err).ToNot(HaveOccurred())
+
+		_, err = client.Env.ImportGroup(ctx, developers())
+		Expect(err).To(MatchError(ContainSubstring(`unexpected response: status 200, content type "text/plain"`)))
+
+		_, err = client.Env.GetGroupByHRID(ctx, "default-developers")
+		Expect(err).To(MatchError(ContainSubstring("unexpected response: status 200")))
 	})
 
 	It("deletes a group by HRID", func() {

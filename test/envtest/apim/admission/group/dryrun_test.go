@@ -36,7 +36,8 @@ var _ = Describe("Group dry run", func() {
 		grp.Spec.Context = objects.Context.GetNamespacedName()
 
 		_, err := admission.AdmissionCtrl{}.ValidateCreate(ctx, grp)
-		Expect(err).To(HaveOccurred())
+		// the severe error the mock puts in the dry run State, not a transport or context failure
+		Expect(err).To(MatchError(ContainSubstring("dry-run-reject mode")))
 
 		status, _ := remoteGroup(ctx, grp)
 		Expect(status).To(Equal(http.StatusNotFound))
