@@ -79,9 +79,8 @@ nothing.
 ## 8. Tests
 
 Unit tests in `test/unit/<area>/` for the pure logic. For AM resources, envtest suites in
-`test/envtest/<area>/` against the in-process AM mock. For APIM resources on the SDK, envtest suites in
-`test/envtest/apim/` against the in-process APIM mock (`apim-mock-server`); APIM resources still on the
-HTTP client use integration tests in `test/integration/<area>/` against kind and APIM. Do not write e2e tests:
+`test/envtest/<area>/` against the in-process AM mock. For APIM resources, integration tests in
+`test/integration/<area>/` against kind and APIM: there is no APIM mock. Do not write e2e tests:
 platform behaviour end to end belongs to the epic's critical user journey in `gravitee-platform-e2e`,
 written by a separate agent from the PRD.
 What that agent needs from you is an example manifest under `examples/` and a regenerated

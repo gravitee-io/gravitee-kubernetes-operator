@@ -29,7 +29,7 @@ npx --yes -p @commitlint/cli -p @commitlint/config-conventional \
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
 make it                        # Run integration tests (Ginkgo, requires cluster) — test/integration/...
-make envtest                   # Run envtest suites (Ginkgo, no cluster: kube-apiserver + etcd, AM and APIM SDK resources) — test/envtest/...
+make envtest                   # Run envtest suites (Ginkgo, no cluster: kube-apiserver + etcd, AM only) — test/envtest/...
 
 # Run a single unit test suite
 go tool ginkgo test/unit/apim/...
@@ -247,12 +247,12 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 
 ## Testing
 
-**A story ships unit tests, plus envtest suites (AM, and APIM resources on the SDK) or integration tests (APIM resources still on the HTTP client). It does not write e2e tests.**
+**A story ships unit tests, plus envtest suites for AM or integration tests for APIM. It does not write e2e tests.**
 
 | Layer | Where | What belongs there |
 |-------|-------|--------------------|
 | Unit | `test/unit/<area>/` in this repo | Pure logic: DTO mapping, drift tags, validation predicates, templating, helpers. Ginkgo v2; dot-imports for `ginkgo/v2` and `gomega` are allowed |
-| Envtest | `test/envtest/<area>/` in this repo | AM controllers, and APIM resources migrated to the SDK (`test/envtest/apim/`), with admission, against a real kube-apiserver + etcd and the in-process AM or APIM mock (`am-mock-server`, `apim-mock-server`). No cluster needed; run with `make envtest`. Suites using drift call `drift.Init()` (`internal/admission/drift`). APIM resources still on the HTTP client keep their integration tests |
+| Envtest (AM only) | `test/envtest/<area>/` in this repo | AM controllers and admission against a real kube-apiserver + etcd with the in-process AM mock. No cluster needed; run with `make envtest`. There is no APIM mock: APIM suites do not go here |
 | Integration (APIM) | `test/integration/<area>/` in this repo | APIM controllers and admission against a kind cluster running APIM (`make start-cluster`), run with `make it`. Reconciliation, admission checks that need the manager cache or APIM, finalizer-driven deletion |
 | Critical user journey | [`gravitee-io/gravitee-platform-e2e`](https://github.com/gravitee-io/gravitee-platform-e2e) | Platform behaviour end to end (reconciliation, `.status`, admission rejection, drift, deletion). One journey per **epic**, one body run through every provisioner (UI, GKO, TF), written from the PRD by a separate agent with no knowledge of this code |
 | Helm | `helm/gko/tests/` | helm-unittest YAML tests |

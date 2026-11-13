@@ -423,14 +423,12 @@ and tag reference: [AGENTS.md](../../AGENTS.md#drift-detection).
 
 ## 7. Tests
 
-**Unit tests, plus envtest (AM, APIM on the SDK) or integration (APIM on the HTTP client) in this repo.** Unit tests go under `test/unit/admission/` and
+**Unit tests, plus envtest (AM) or integration (APIM) in this repo.** Unit tests go under `test/unit/admission/` and
 `test/unit/drift/apim/` — the pure parts: field validation predicates, defaulting, immutability
 comparisons, DTO drift tags. Call `drift.Init()` in `BeforeSuite` for any suite touching drift.
 AM admission checks that need real Secrets or the in-process AM mock go in
-`test/envtest/<area>/admission/`, run with `make envtest`; so do APIM admission checks for resources
-on the SDK, against the in-process APIM mock (`test/envtest/apim/admission/<area>/`). APIM admission
-checks for resources still on the HTTP client go in `test/integration/admission/<area>/`, run against
-kind with `make it`.
+`test/envtest/<area>/admission/`, run with `make envtest`. APIM admission checks that need the
+manager cache or APIM go in `test/integration/admission/<area>/`, run against kind with `make it`.
 
 **Do not write e2e tests.** Rejection messages as a user sees them, dry-run behaviour, drift
 against a mutated APIM and deletion guards are exercised by the epic's critical user journey in

@@ -41,9 +41,6 @@ const (
 	ContextWithCredentialsFile              = "management_context/dev/management-context-with-credentials.yml"
 	ContextWithBadCredentialsFile           = "management_context/dev/management-context-with-bearer-token.yml"
 	ContextWithBadURLFile                   = "management_context/debug/management-context-with-credentials.yml"
-	// Contexts targeting the in-process APIM mock of the envtest suites.
-	MockContextFile       = "management_context/mock/management-context.yml"
-	MockContextSecretFile = "management_context/mock/management-context-secret.yml"
 	ContextCloudWithSecretRefFile           = "management_context/cloud/cloud-mctx-with-secret-ref.yml"
 	ContextCloudWithUnknownSecretRefFile    = "management_context/cloud/cloud-mctx-with-unknown-secret-ref.yml"
 	ContextCloudWithBearerSecretRefFile     = "management_context/cloud/cloud-mctx-with-bearer-secret-ref.yml"
