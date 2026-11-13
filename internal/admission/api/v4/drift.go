@@ -59,7 +59,7 @@ func resolveApiV4Refs(ctx context.Context, api *v1alpha1.ApiV4Definition) error 
 }
 
 func toAPIV4DTO(api *v1alpha1.ApiV4Definition) model.APIV4DTO {
-	dto := model.ToAPIV4DriftDTO(&api.Spec.Api).WithResolvedVisibility().WithoutOverrideAccess()
+	dto := model.ToAPIV4DriftDTO(&api.Spec.Api).ForDrift()
 	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) {
 		dto.Groups = nil
 	}
@@ -84,14 +84,14 @@ func fetchRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (mod
 		if err != nil {
 			return model.APIV4DTO{}, err
 		}
-		return remote.Canonicalize().WithResolvedVisibility().WithoutOverrideAccess(), nil
+		return remote.Canonicalize().ForDrift(), nil
 	}
 	hrid := apiHRID(api)
 	remote, err := apimClient.APIs.GetV4ByHRID(hrid)
 	if err != nil {
 		return model.APIV4DTO{}, err
 	}
-	return remote.Canonicalize().WithResolvedVisibility().WithoutOverrideAccess(), nil
+	return remote.Canonicalize().ForDrift(), nil
 }
 
 func apiHRID(api *v1alpha1.ApiV4Definition) string {

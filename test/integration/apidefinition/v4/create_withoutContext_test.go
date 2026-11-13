@@ -97,4 +97,28 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 			200,
 		),
 	)
+
+	// GKO-3431: the native entrypoint of this fixture has no qos.
+	It("should accept a native api whose entrypoint has no qos", func() {
+		fixtures := fixture.Builder().WithAPIv4(constants.NativeApiV4).Build()
+		fixtures.APIv4.Spec.DefinitionContext = v4.NewDefaultKubernetesContext()
+		fixtures.APIv4.Spec.DefinitionContext.SyncFrom = v4.OriginKubernetes
+		fixtures.Apply()
+
+		By("expecting API status to be accepted")
+
+		Expect(assert.ApiV4Completed(fixtures.APIv4)).To(Succeed())
+		Expect(assert.ApiV4Accepted(fixtures.APIv4)).To(Succeed())
+
+		By("expecting to find config map")
+
+		Eventually(func() error {
+			return manager.Client().Get(ctx, types.NamespacedName{
+				Name:      fixtures.APIv4.Name,
+				Namespace: fixtures.APIv4.Namespace,
+			}, &v1.ConfigMap{})
+		}, timeout, interval).Should(Succeed())
+
+		assert.EventsEmitted(fixtures.APIv4, "UpdateStarted", "UpdateSucceeded")
+	})
 })

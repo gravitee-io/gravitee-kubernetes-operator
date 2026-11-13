@@ -237,6 +237,37 @@ var _ = Describe("API v4 Drift detection", func() {
 		Expect(result.String()).To(ContainSubstring(`path: "/a" != "/b"`))
 	})
 
+	// What APIM stores for an entrypoint without qos (GKO-3431): AUTO, except on a native
+	// entrypoint, which it stores without qos whatever was sent.
+	DescribeTable("admits the entrypoint qos APIM stores",
+		func(listener, entrypointType, crdQos, remoteQos string) {
+			crd := apiV4WithEntrypoint(listener, entrypointType, crdQos).ForDrift()
+			remote := apiV4WithEntrypoint(listener, entrypointType, remoteQos).ForDrift()
+			expectNoDrift(admissionDriftAPIV4(crd, remote))
+		},
+		Entry("PROXY unset against AUTO", httpListener, "http-proxy", "", "AUTO"),
+		Entry("PROXY AUTO against AUTO", httpListener, "http-proxy", "AUTO", "AUTO"),
+		Entry("PROXY TCP unset against AUTO", `{"type": "TCP", "hosts": ["a"]}`, "tcp-proxy", "", "AUTO"),
+		Entry("MESSAGE unset against AUTO", httpListener, "sse", "", "AUTO"),
+		Entry("MESSAGE subscription unset against AUTO", `{"type": "SUBSCRIPTION"}`, "webhook", "", "AUTO"),
+		Entry("NATIVE AUTO against unset", kafkaListener, "native-kafka", "AUTO", ""),
+		Entry("NATIVE NONE against unset", kafkaListener, "native-kafka", "NONE", ""),
+		Entry("NATIVE unset against unset", kafkaListener, "native-kafka", "", ""),
+	)
+
+	DescribeTable("detects a qos that differs from the one APIM stores",
+		func(entrypointType, crdQos, remoteQos string) {
+			crd := apiV4WithEntrypoint(httpListener, entrypointType, crdQos).ForDrift()
+			remote := apiV4WithEntrypoint(httpListener, entrypointType, remoteQos).ForDrift()
+			merged := admissionDriftAPIV4(crd, remote)
+			Expect(merged.DriftDetected()).To(BeTrue())
+			Expect(merged.String()).To(ContainSubstring(`qos: "` + crdQos + `" != "` + remoteQos + `"`))
+		},
+		Entry("PROXY AUTO changed to NONE in APIM", "http-proxy", "AUTO", "NONE"),
+		Entry("MESSAGE AUTO changed to AT_LEAST_ONCE in APIM", "sse", "AUTO", "AT_LEAST_ONCE"),
+		Entry("PROXY NONE against AUTO", "http-proxy", "NONE", "AUTO"),
+	)
+
 	It("admits the cors defaults APIM adds to the part of a listener cors the CRD sets", func() {
 		crd := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"], "allowMethods": ["GET", "POST"]}`)
 		remote := apiV4WithListenerCors(`{
@@ -368,6 +399,17 @@ func apiV4WithListenerCors(cors string) model.APIV4DTO {
 	return parseJSON[model.APIV4DTO](`{"listeners": [{"type": "HTTP", "paths": [{"path": "/a/"}], "cors": ` + cors + `}]}`)
 }
 
+// apiV4WithEntrypoint adds one entrypoint to the listener, with the given qos unless it is empty.
+func apiV4WithEntrypoint(listener, entrypointType, qos string) model.APIV4DTO {
+	GinkgoHelper()
+	entrypoint := `{"type": "` + entrypointType + `"`
+	if qos != "" {
+		entrypoint += `, "qos": "` + qos + `"`
+	}
+	withEntrypoint := strings.TrimSuffix(listener, "}") + `, "entrypoints": [` + entrypoint + `}]}`
+	return parseJSON[model.APIV4DTO](`{"listeners": [` + withEntrypoint + `]}`)
+}
+
 func completeAPIV4DTO() model.APIV4DTO {
 	GinkgoHelper()
 	return loadFixture[model.APIV4DTO]("api_v4_dto.json")
@@ -379,4 +421,6 @@ const (
 	apiV4KeylessPlan = `{"hrid": "KeylessPlan", "name": "Keyless plan", "status": "PUBLISHED", "security": {"type": "KEY_LESS"}}`
 	apiV4PageA       = `{"hrid": "a-page", "name": "A", "type": "MARKDOWN", "content": "a"}`
 	apiV4PageB       = `{"hrid": "b-page", "name": "B", "type": "MARKDOWN", "content": "b"}`
+	httpListener     = `{"type": "HTTP", "paths": [{"path": "/a"}]}`
+	kafkaListener    = `{"type": "KAFKA", "host": "a", "port": 9092}`
 )
