@@ -45,6 +45,18 @@ var _ = Describe("unstructured:ignore-remote-default", func() {
 			remoteDefaults(map[string]any{"items": []any{map[string]any{"name": "a"}}}),
 			remoteDefaults(map[string]any{"items": []any{map[string]any{"name": "a", "enabled": true}}}),
 		),
+		Entry("list of strings under a key",
+			remoteDefaults(map[string]any{"timeout": 5000}),
+			remoteDefaults(map[string]any{"timeout": 5000, "allowMethods": []any{"GET", "POST"}}),
+		),
+		Entry("list of objects under a key",
+			remoteDefaults(map[string]any{"timeout": 5000}),
+			remoteDefaults(map[string]any{"timeout": 5000, "headers": []any{map[string]any{"name": "x"}}}),
+		),
+		Entry("list under a nested key",
+			remoteDefaults(map[string]any{"timeout": 5000}),
+			remoteDefaults(map[string]any{"timeout": 5000, "http": map[string]any{"methods": []any{"GET"}}}),
+		),
 	)
 
 	DescribeTable("drift on a list item only the remote has",

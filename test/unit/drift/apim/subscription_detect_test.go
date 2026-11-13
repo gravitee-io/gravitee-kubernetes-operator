@@ -72,6 +72,7 @@ var _ = Describe("Subscription Drift detection", func() {
 			},
 		),
 	)
+
 	It("admits the defaults APIM saves in an entrypoint configuration", func() {
 		crd := subscriptionWithEntrypointConfiguration(`{"callbackUrl": "https://example.com/hook", "ssl": {"hostnameVerifier": true}}`)
 		remote := subscriptionWithEntrypointConfiguration(
