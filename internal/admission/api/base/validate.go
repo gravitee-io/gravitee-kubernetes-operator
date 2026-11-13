@@ -16,7 +16,6 @@ package base
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
@@ -103,7 +102,7 @@ func ValidateSubscribedPlans(
 
 	for _, sub := range subs.Items {
 		plan := newApi.GetPlan(sub.Spec.Plan)
-		if plan == nil || reflect.ValueOf(plan).IsNil() {
+		if plan == nil {
 			return errors.NewSeveref(
 				"Plan [%s] could not be found in API [%s] "+
 					"but there is a subscription referencing it. "+

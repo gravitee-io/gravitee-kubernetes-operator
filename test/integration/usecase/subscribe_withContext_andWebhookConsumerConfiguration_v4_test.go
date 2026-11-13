@@ -40,16 +40,16 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 	It("should create and update subscription consumer configuration for a webhook push plan", func() {
 		fixtures := fixture.Builder().
 			WithContext(constants.ContextWithCredentialsFile).
-			WithAPIv4(constants.ApiV4WithApiKeyPlanFile).
+			WithAPIv4(constants.ApiV4MessageWebhookPushPlanFile).
 			WithApplication(constants.ApplicationWithClientIDFile).
-			WithSubscription(constants.SubscriptionFile).
+			WithSubscription(constants.SubscriptionPushPlanFile).
 			Build()
 
 		clientID := random.GetName()
 		fixtures.Application.Spec.Settings.App.ClientID = &clientID
 		fixtures.Subscription.Spec.API.Name = fixtures.APIv4.Name
 		fixtures.Subscription.Spec.App.Name = fixtures.Application.Name
-		fixtures.Subscription.Spec.Plan = "API_KEY"
+		fixtures.Subscription.Spec.Plan = "Default-PUSH-plan"
 		fixtures.Subscription.Spec.ConsumerConfiguration = &submodel.ConsumerConfiguration{
 			EntrypointID: "webhook",
 			Channel:      "orders",

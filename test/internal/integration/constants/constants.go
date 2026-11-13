@@ -139,6 +139,7 @@ const (
 	ApiV4MCPProxy                      = "apim/api_definition/v4/api-v4-mcp-proxy.yml"
 	ApiV4A2AProxy                      = "apim/api_definition/v4/api-v4-a2a-proxy.yml"
 	ApiV4WithPlanPagesNonHridNames     = "apim/api_definition/v4/api-v4-with-jwt-plan-pages-non-hrid-names.yml"
+	ApiV4MessageWebhookPushPlanFile    = "apim/api_definition/v4/api-v4-message-webhook-push-plan.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"
@@ -157,6 +158,7 @@ const (
 	ClientCertConfigMapFile        = "apim/application/client-cert-configmap.yml"
 	CACertSecretFile               = "apim/application/ca-cert-secret.yml"
 	SubscriptionFile               = "apim/subscription/subscription.yml"
+	SubscriptionPushPlanFile       = "apim/subscription/subscription-push-plan.yml"
 
 	SharedPolicyGroupsFile = "apim/shared_policy_groups/shared_policy_groups.yml"
 

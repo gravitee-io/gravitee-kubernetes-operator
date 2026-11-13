@@ -79,6 +79,11 @@ func (plan *Plan) GetSecurityType() string {
 	return plan.Security
 }
 
+// IsPush is always false: v2 APIs have no PUSH plans.
+func (plan *Plan) IsPush() bool {
+	return false
+}
+
 func (plan *Plan) WithName(name string) *Plan {
 	plan.Name = name
 	return plan
