@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
@@ -81,7 +82,8 @@ var _ = Describe("Update", labels.WithContext, func() {
 		}, timeout, interval).Should(Succeed())
 
 		existing := fixtures.APIv4.DeepCopy()
-		Expect(apidefinition.PrepareV4SpecForAutomation(ctx, existing, false)).To(Succeed())
+		Expect(apidefinition.ResolveV4Refs(ctx, existing, false)).To(Succeed())
+		existing.Spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(existing.Spec.DefinitionContext)
 		existing.PopulateIDs(client.Context, true)
 		plan := (*existing.Spec.Plans)[planKey]
 		if plan.Plan == nil {
