@@ -75,7 +75,7 @@ func DryRun(ctx context.Context, client *am.Client, dto Reporter) (*gerrors.Admi
 	resp, err := client.UpsertReporterWithResponse(ctx, dto.DomainKey,
 		&amsdk.UpsertReporterParams{DryRun: new(true)}, dto.Reporter)
 
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func GetRemote(ctx context.Context, client *am.Client, dto Reporter) (Reporter, 
 		return dto, nil
 	}
 	resp, err := client.GetReporterWithResponse(ctx, dto.DomainKey, dto.Key)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return Reporter{}, err

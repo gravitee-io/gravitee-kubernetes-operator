@@ -28,7 +28,7 @@ import (
 // not an error.
 func Delete(ctx context.Context, amClient *am.Client, dto amsdk.Domain) error {
 	resp, err := amClient.DeleteDomainWithResponse(ctx, dto.Identity())
-	err = am.HasErrors(err, func() (*http.Response, []byte) {
+	err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	})
 	if errors.IsNotFound(err) {
@@ -42,7 +42,7 @@ func Delete(ctx context.Context, amClient *am.Client, dto amsdk.Domain) error {
 func Upsert(ctx context.Context, client *am.Client, dto amsdk.Domain) (am.BaseResponse, error) {
 	resp, err := client.UpsertDomainWithResponse(ctx, nil, dto)
 
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return am.BaseResponse{}, err

@@ -110,7 +110,7 @@ func DryRun(ctx context.Context, client *am.Client, dto Application) (*gerrors.A
 	resp, err := client.UpsertApplicationWithResponse(ctx, dto.DomainKey,
 		&amsdk.UpsertApplicationParams{DryRun: new(true)}, dto.Application)
 
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func GetRemote(ctx context.Context, client *am.Client, dto Application) (Applica
 		return dto, nil
 	}
 	resp, err := client.GetApplicationWithResponse(ctx, dto.DomainKey, dto.Key)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return Application{}, err

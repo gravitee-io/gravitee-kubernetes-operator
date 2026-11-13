@@ -30,7 +30,7 @@ import (
 // keeps AM's message and points to rotation (AC6).
 func Upsert(ctx context.Context, client *am.Client, dto ClientSecret) (Response, error) {
 	resp, err := client.UpsertClientSecretWithResponse(ctx, dto.DomainKey, dto.ApplicationKey, nil, dto.ClientSecret)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		if dto.Accepted && errors.IsBadRequest(err) {
@@ -62,7 +62,7 @@ func Upsert(ctx context.Context, client *am.Client, dto ClientSecret) (Response,
 // an application or domain already gone is not an error either.
 func Delete(ctx context.Context, client *am.Client, dto ClientSecret) error {
 	resp, err := client.DeleteClientSecretWithResponse(ctx, dto.DomainKey, dto.ApplicationKey, dto.Key)
-	err = am.HasErrors(err, func() (*http.Response, []byte) {
+	err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	})
 	if errors.IsNotFound(err) {

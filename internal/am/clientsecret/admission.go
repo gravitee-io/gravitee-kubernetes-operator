@@ -77,7 +77,7 @@ func DryRun(ctx context.Context, client *am.Client, dto ClientSecret) (*gerrors.
 	resp, err := client.UpsertClientSecretWithResponse(ctx, dto.DomainKey, dto.ApplicationKey,
 		&amsdk.UpsertClientSecretParams{DryRun: new(true)}, dto.ClientSecret)
 
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func GetRemote(ctx context.Context, client *am.Client, dto ClientSecret) (Client
 		return dto, nil
 	}
 	resp, err := client.GetClientSecretWithResponse(ctx, dto.DomainKey, dto.ApplicationKey, dto.Key)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return ClientSecret{}, err

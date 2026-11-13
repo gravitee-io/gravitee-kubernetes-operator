@@ -62,7 +62,7 @@ func DryRun(ctx context.Context, client *am.Client, dto IdentityProvider) (*gerr
 	resp, err := client.UpsertIdentityProviderWithResponse(ctx, dto.DomainKey,
 		&amsdk.UpsertIdentityProviderParams{DryRun: new(true)}, dto.IdentityProvider)
 
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func GetRemote(ctx context.Context, client *am.Client, dto IdentityProvider) (Id
 		return dto, nil
 	}
 	resp, err := client.GetIdentityProviderWithResponse(ctx, dto.DomainKey, dto.Key)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return IdentityProvider{}, err
