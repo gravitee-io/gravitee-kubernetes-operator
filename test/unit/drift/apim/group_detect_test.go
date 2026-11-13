@@ -179,7 +179,7 @@ var _ = Describe("Group Drift detection", func() {
 		),
 	)
 
-	Describe("State decoded into the payload type", func() {
+	Describe("State turned into the payload type by Spec()", func() {
 		It("matches the CRD it was synced from, state-only fields dropped", func() {
 			crd, err := model.ToGroup(&v1alpha1.Group{
 				ObjectMeta: metav1.ObjectMeta{Name: "developers", Namespace: "default"},
@@ -207,10 +207,7 @@ var _ = Describe("Group Drift detection", func() {
 				"defaultMemberRoles": {},
 				"members": [{"source": "memory", "sourceId": "api1", "roles": {"API": "OWNER"}}]
 			}`)
-			remote, err := model.GroupFromState(state)
-			Expect(err).ToNot(HaveOccurred())
-
-			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+			expectNoDrift(drift.DetectWithNamespace(crd, state.Spec(), ""))
 		})
 	})
 

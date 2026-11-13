@@ -29,12 +29,6 @@ func ToGroup(grp *v1alpha1.Group) (sdk.Group, error) {
 	return mapper.MapViaJSON[sdk.Group](grp.Spec.Type)
 }
 
-// GroupFromState decodes a group state, as returned by a GET or a PUT, into the payload type,
-// so that drift compares two values of the same type. State-only fields are dropped.
-func GroupFromState(state sdk.GroupState) (sdk.Group, error) {
-	return mapper.MapViaJSON[sdk.Group](state)
-}
-
 // ToGroupStatus maps the group state APIM answers to the CR status fields it sets.
 func ToGroupStatus(state sdk.GroupState) *group.Status {
 	result := &group.Status{}

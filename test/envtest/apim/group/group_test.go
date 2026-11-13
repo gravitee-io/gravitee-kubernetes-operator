@@ -24,6 +24,7 @@ import (
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
@@ -113,5 +114,41 @@ var _ = Describe("Group on the APIM SDK", func() {
 		_, err = admission.AdmissionCtrl{}.ValidateUpdate(ctx, grp, updated)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("renamed-in-apim"))
+	})
+
+	It("leaves members to APIM when the ignore-members annotation is set", func() {
+		objects := groupFixtures(constants.GroupFile)
+		objects.Group.SetAnnotations(map[string]string{core.IgnoreMembersAnnotation: "true"})
+		grp := objects.Apply().Group
+		Expect(assert.GroupCompleted(grp)).To(Succeed())
+
+		By("expecting the new group to get none of the CRD members")
+		status, remote := remoteGroup(ctx, grp)
+		Expect(status).To(Equal(http.StatusOK))
+		Expect(remote.Members).To(BeEmpty())
+
+		By("adding a member in APIM, outside the operator")
+		outside := remote.Spec()
+		outside.Members = []sdk.GroupMember{{
+			Source: "memory", SourceId: "added-in-apim", Roles: map[string]string{"API": "USER"},
+		}}
+		resp, err := apim.NewMockSDKClient().UpsertGroupWithResponse(ctx, nil, outside)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(resp.StatusCode()).To(Equal(http.StatusOK))
+
+		By("expecting an update to be admitted although the members differ")
+		updated := grp.DeepCopy()
+		updated.Spec.Name = grp.Spec.Name + "-renamed"
+		_, err = admission.AdmissionCtrl{}.ValidateUpdate(ctx, grp, updated)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(manager.Client().Update(ctx, updated)).To(Succeed())
+
+		By("expecting the reconcile to rename the group and keep the members set in APIM")
+		Eventually(ctx, func(g Gomega) {
+			status, remote := remoteGroup(ctx, grp)
+			g.Expect(status).To(Equal(http.StatusOK))
+			g.Expect(remote.Name).To(Equal(updated.Spec.Name))
+			g.Expect(remote.Members).To(Equal(outside.Members))
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
 	})
 })

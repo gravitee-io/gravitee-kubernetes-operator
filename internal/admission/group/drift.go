@@ -75,10 +75,9 @@ func getRemoteGroup(ctx context.Context, apimClient *apim.APIM, grp *v1alpha1.Gr
 	if err != nil {
 		return nil, err
 	}
-	remote, err := model.GroupFromState(state)
-	if err != nil {
-		return nil, err
-	}
+	// Spec is the payload a PUT would send, so drift compares two values of the same type.
+	// It is a shallow copy: only reassign its fields here, never mutate shared slices or maps.
+	remote := state.Spec()
 	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
 		remote.Members = nil
 	}

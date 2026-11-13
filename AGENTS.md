@@ -97,7 +97,7 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
 - A service gets the SDK client with `svc.SDK()` (embedded `*client.Client`). It is built on first use, not in `FromContext`: the SDK rejects a context without usable auth when the client is built, which would otherwise fail resources that do not use the SDK.
 - Wrap every SDK call in `errors.FromSDKResponse(err, func() (*http.Response, []byte) { return resp.HTTPResponse, resp.Body })` (keep the closure: the SDK returns no response on a transport error) and treat a nil `JSON200` as `errors.UnexpectedSDKResponse`.
 - Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). **Never call `WithDefaults()` on the CRD side.**
-- Drift compares the PUT type on both sides: decode the GET state into it first (`model.GroupFromState`); comparing `GroupState` with `Group` panics. The SDK types carry their own `drift:` tags; list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
+- Drift compares the PUT type on both sides: turn the GET state into it first with its `Spec()` (`GroupState.Spec()` returns the `sdk.Group` a PUT sends; every `XxxState` has one). Comparing `GroupState` with `Group` panics. `Spec()` is a shallow copy: reassign its fields, never mutate shared slices or maps. The SDK types carry their own `drift:` tags; resource types and list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
 - Keep GKO's HTTP client only for calls the SDK spec does not declare yet (e.g. a `hridContainsUUID` it lacks).
 
 ### AM client (internal/am/)
