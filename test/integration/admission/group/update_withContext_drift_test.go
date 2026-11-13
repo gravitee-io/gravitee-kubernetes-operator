@@ -68,7 +68,7 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 
 		apim := apim.NewClient(ctx)
 
-		_, err := apim.Env.ImportGroup(newGroup)
+		_, err := apim.Env.ImportGroup(ctx, newGroup)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("changing the CRD group name")

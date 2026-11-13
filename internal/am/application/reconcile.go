@@ -27,7 +27,7 @@ import (
 // Upsert creates or updates the application under its domain in AM.
 func Upsert(ctx context.Context, client *am.Client, dto Application) (Response, error) {
 	resp, err := client.UpsertApplicationWithResponse(ctx, dto.DomainKey, nil, dto.Application)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return Response{}, err
@@ -55,7 +55,7 @@ func Upsert(ctx context.Context, client *am.Client, dto Application) (Response, 
 // operator or with its domain, is not an error.
 func Delete(ctx context.Context, client *am.Client, dto Application) error {
 	resp, err := client.DeleteApplicationWithResponse(ctx, dto.DomainKey, dto.Key)
-	err = am.HasErrors(err, func() (*http.Response, []byte) {
+	err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	})
 	if errors.IsNotFound(err) {

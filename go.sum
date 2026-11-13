@@ -172,8 +172,10 @@ github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.7.0 h1:zTItKqkf
 github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.7.0/go.mod h1:CHVac8YMvCU5IkxJUyVsdFR0UniUYYRrQjiN7biiIdk=
 github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.6.0 h1:itCJSzzglsp7cGoBz6JpMt+3CimvNV/KQ62ZUG6mKBA=
 github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.6.0/go.mod h1:pwC9aSjGIVmzgrUHKLU2l9nQ7oWuaP29zjJuJ+J1NCE=
-github.com/gravitee-io/gravitee-automation-sdk/common v1.3.0 h1:M2sWiMu5zaMs7bHAyhzTbjN3xgaqgjftfLF42FtR/TI=
-github.com/gravitee-io/gravitee-automation-sdk/common v1.3.0/go.mod h1:pCa79yKuchkLBnMYNOASQtuHUvnPlTW7ayLrBOETRII=
+github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.0 h1:cGgBK3UmthSsRAn5gcR/7VNDaNKkZbKwBfGuImdIHtg=
+github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.0/go.mod h1:x2sx2TUEMzO/zrE16SLKtalmalupDYlPXNkMoub6+oU=
+github.com/gravitee-io/gravitee-automation-sdk/common v1.4.0 h1:vYxaFezYKNcYry3s38JWpLOpgXkh+D7imn7TeTgVBGY=
+github.com/gravitee-io/gravitee-automation-sdk/common v1.4.0/go.mod h1:pCa79yKuchkLBnMYNOASQtuHUvnPlTW7ayLrBOETRII=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 h1:5VipnvEpbqr2gA2VbM+nYVbkIF28c5ZQfqCBQ5g2xfk=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0/go.mod h1:Hyl3n6Twe1hvtd9XUXDec4pTvgMSEixRuQKPTMH2bNs=
 github.com/hashicorp/go-version v1.8.0 h1:KAkNb1HAiZd1ukkxDFGmokVZe1Xy9HG6NUp+bPle2i4=

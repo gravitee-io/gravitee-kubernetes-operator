@@ -39,7 +39,7 @@ func DryRun(ctx context.Context, client *am.Client, dto amsdk.Domain) (*errors.A
 		DryRun: new(true),
 	}), dto)
 
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func DryRun(ctx context.Context, client *am.Client, dto amsdk.Domain) (*errors.A
 // GetRemote fetches the domain from AM, for drift detection.
 func GetRemote(ctx context.Context, client *am.Client, dto amsdk.Domain) (amsdk.Domain, error) {
 	resp, err := client.GetDomainWithResponse(ctx, dto.Key)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return amsdk.Domain{}, err

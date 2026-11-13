@@ -27,7 +27,7 @@ import (
 // Upsert creates or updates the identity provider under its domain in AM.
 func Upsert(ctx context.Context, client *am.Client, dto IdentityProvider) (Response, error) {
 	resp, err := client.UpsertIdentityProviderWithResponse(ctx, dto.DomainKey, nil, dto.IdentityProvider)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return Response{}, err
@@ -56,7 +56,7 @@ func Upsert(ctx context.Context, client *am.Client, dto IdentityProvider) (Respo
 // deleted outside the operator or with its domain, is not an error.
 func Delete(ctx context.Context, client *am.Client, dto IdentityProvider) error {
 	resp, err := client.DeleteIdentityProviderWithResponse(ctx, dto.DomainKey, dto.Key)
-	err = am.HasErrors(err, func() (*http.Response, []byte) {
+	err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	})
 	if errors.IsNotFound(err) {

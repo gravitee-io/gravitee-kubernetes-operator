@@ -15,37 +15,34 @@
 package model
 
 import (
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
 )
 
-// GroupState is the automation API representation of a group returned by GET.
-type GroupState struct {
-	GroupDTO    `json:",inline"`
-	MemberCount uint          `json:"memberCount,omitempty"`
-	Errors      status.Errors `json:"errors,omitempty"`
+// ToGroup maps a Group CRD to the Automation API group payload. SDK defaults are not applied:
+// they differ from the CRD's and would defeat the drift equivalences. The CRD id is not part of
+// the payload; a legacy group sends it as its hrid (see the Env service).
+func ToGroup(grp *v1alpha1.Group) (sdk.Group, error) {
+	return mapper.MapViaJSON[sdk.Group](grp.Spec.Type)
 }
 
-type GroupDTO struct {
-	ID            string   `json:"id,omitempty" drift:"ignore"`
-	HRID          string   `json:"hrid,omitempty" drift:"ignore"`
-	Name          string   `json:"name"`
-	NotifyMembers bool     `json:"notifyMembers" drift:"ignore"` // send empty returns true, so need to ignore
-	Members       []Member `json:"members" drift:"ignore-only:crd"`
-	// Absent from the CRD means "not managed": any remote default is accepted.
-	DefaultMemberRoles *group.DefaultMemberRoles `json:"defaultMemberRoles,omitempty" drift:"ignore-remote-default"`
-}
-
-type Member struct {
-	Source   string                     `json:"source"`
-	SourceID string                     `json:"sourceId"`
-	Roles    map[group.RoleScope]string `json:"roles"`
-}
-
-func (m Member) MatchKey() string {
-	return m.Source + ":" + m.SourceID
-}
-
-func ToGroupDTO(grp group.Type) GroupDTO {
-	return mapViaJSON[GroupDTO](grp)
+// ToGroupStatus maps the group state APIM answers to the CR status fields it sets.
+func ToGroupStatus(state sdk.GroupState) *group.Status {
+	result := &group.Status{}
+	if state.Id != nil {
+		result.ID = *state.Id
+	}
+	if state.MemberCount != nil && *state.MemberCount > 0 {
+		result.Members = uint(*state.MemberCount)
+	}
+	if state.Errors != nil {
+		result.Errors = status.Errors{
+			Severe:  state.Errors.Severe,
+			Warning: state.Errors.Warning,
+		}
+	}
+	return result
 }

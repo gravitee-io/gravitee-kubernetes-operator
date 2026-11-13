@@ -27,7 +27,7 @@ import (
 // Upsert creates or updates the reporter under its domain in AM.
 func Upsert(ctx context.Context, client *am.Client, dto Reporter) (Response, error) {
 	resp, err := client.UpsertReporterWithResponse(ctx, dto.DomainKey, nil, dto.Reporter)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return Response{}, err
@@ -56,7 +56,7 @@ func Upsert(ctx context.Context, client *am.Client, dto Reporter) (Response, err
 // operator or with its domain, is not an error.
 func Delete(ctx context.Context, client *am.Client, dto Reporter) error {
 	resp, err := client.DeleteReporterWithResponse(ctx, dto.DomainKey, dto.Key)
-	err = am.HasErrors(err, func() (*http.Response, []byte) {
+	err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	})
 	if errors.IsNotFound(err) {

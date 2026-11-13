@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -208,18 +209,87 @@ func NewClient(ctx context.Context, auth *Auth) (*Client, error) {
 
 // NewStdClient returns a net/http client configured from the operator settings: HTTP proxy,
 // TLS verification, trust store and timeout. Use it for any client the operator does not build
-// itself, such as the AM SDK.
+// itself, such as the AM SDK. Every client shares one transport, so connections to APIM and AM
+// are reused across reconciles instead of being opened again for each client.
 func NewStdClient() (*http.Client, error) {
+	transport, err := getTransport()
+	if err != nil {
+		return nil, err
+	}
+	timeout := time.Duration(env.Config.HTTPClientTimeoutSeconds) * time.Second
+	return &http.Client{Timeout: timeout, Transport: transport}, nil
+}
+
+// transportSettings are the operator settings a transport is built from, plus the trust store
+// file's size and modification time, so that a rotated trust store is loaded again.
+type transportSettings struct {
+	proxy              env.HttpProxy
+	insecureSkipVerify bool
+	trustStorePath     string
+	trustStoreSize     int64
+	trustStoreModTime  int64
+}
+
+var sharedTransport struct {
+	sync.Mutex
+	settings  transportSettings
+	transport *http.Transport
+}
+
+// getTransport returns the transport built from the current settings. It is built on first use,
+// and again when a setting or the trust store file changes; the previous one then closes its idle
+// connections, and requests already running on it finish normally.
+func getTransport() (*http.Transport, error) {
+	settings, err := currentTransportSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	sharedTransport.Lock()
+	defer sharedTransport.Unlock()
+	if sharedTransport.transport != nil && sharedTransport.settings == settings {
+		return sharedTransport.transport, nil
+	}
+
+	transport, err := newTransport(settings)
+	if err != nil {
+		return nil, err
+	}
+	if sharedTransport.transport != nil {
+		sharedTransport.transport.CloseIdleConnections()
+	}
+	sharedTransport.settings, sharedTransport.transport = settings, transport
+	return transport, nil
+}
+
+func currentTransportSettings() (transportSettings, error) {
+	settings := transportSettings{
+		proxy:              env.Config.HttpProxy,
+		insecureSkipVerify: env.Config.HTTPClientInsecureSkipVerify,
+		trustStorePath:     env.Config.HttpClientTrustStorePath,
+	}
+	if settings.trustStorePath == "" {
+		return settings, nil
+	}
+	info, err := os.Stat(settings.trustStorePath)
+	if err != nil {
+		return transportSettings{}, fmt.Errorf("failed to read trust store file %s: %w", settings.trustStorePath, err)
+	}
+	settings.trustStoreSize, settings.trustStoreModTime = info.Size(), info.ModTime().UnixNano()
+	return settings, nil
+}
+
+func newTransport(settings transportSettings) (*http.Transport, error) {
 	defaultTransport, _ := http.DefaultTransport.(*http.Transport)
 	transport := defaultTransport.Clone()
-	if env.Config.HttpProxy.Enabled {
-		if env.Config.HttpProxy.UseSystemProxy {
+	if settings.proxy.Enabled {
+		if settings.proxy.UseSystemProxy {
 			transport.Proxy = http.ProxyFromEnvironment
 		} else {
-			index := strings.Index(env.Config.HttpProxy.URL, "://")
-			rawUrl := env.Config.HttpProxy.URL
-			username := env.Config.HttpProxy.Username
-			password := env.Config.HttpProxy.Password
+			index := strings.Index(settings.proxy.URL, "://")
+			rawUrl := settings.proxy.URL
+			username := settings.proxy.Username
+			password := settings.proxy.Password
 			if username != "" {
 				rawUrl = rawUrl[:index+3] + username + ":" + password + "@" + rawUrl[index+3:]
 			}
@@ -233,28 +303,27 @@ func NewStdClient() (*http.Client, error) {
 
 	transport.TLSClientConfig = &tls.Config{
 		// #nosec G402
-		InsecureSkipVerify: env.Config.HTTPClientInsecureSkipVerify,
+		InsecureSkipVerify: settings.insecureSkipVerify,
 	}
 
 	// Load your trust store (CA certificates)
-	if env.Config.HttpClientTrustStorePath != "" {
+	if settings.trustStorePath != "" {
 		rootCAs, _ := x509.SystemCertPool()
 		if rootCAs == nil {
 			rootCAs = x509.NewCertPool()
 		}
 
-		caCert, err := os.ReadFile(env.Config.HttpClientTrustStorePath)
+		caCert, err := os.ReadFile(settings.trustStorePath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read trust store file %s: %w", env.Config.HttpClientTrustStorePath, err)
+			return nil, fmt.Errorf("failed to read trust store file %s: %w", settings.trustStorePath, err)
 		}
 
 		if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
-			return nil, fmt.Errorf("failed to append CA certs from %s to pool", env.Config.HttpClientTrustStorePath)
+			return nil, fmt.Errorf("failed to append CA certs from %s to pool", settings.trustStorePath)
 		}
 
 		transport.TLSClientConfig.RootCAs = rootCAs
 	}
 
-	timeout := time.Duration(env.Config.HTTPClientTimeoutSeconds) * time.Second
-	return &http.Client{Timeout: timeout, Transport: transport}, nil
+	return transport, nil
 }

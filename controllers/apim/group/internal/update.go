@@ -33,7 +33,7 @@ func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
 
 	group.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(group))
 
-	status, err := apim.Env.ImportGroup(group)
+	status, err := apim.Env.ImportGroup(ctx, group)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}

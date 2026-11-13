@@ -15,10 +15,8 @@
 package am
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -89,7 +87,7 @@ func (c *Client) Probe(ctx context.Context) error {
 		return nil
 	})
 
-	return HasErrors(err, func() (*http.Response, []byte) {
+	return gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	})
 }
@@ -132,17 +130,6 @@ func ToAdmissionErrors(errors []amsdk.DryRunError) *gerrors.AdmissionErrors {
 		}
 	}
 	return errs
-}
-
-// HasErrors returns err, or a server error for a 4xx/5xx response. The SDK has already read
-// the response body, so it is passed in and put back for the error to report AM's message.
-func HasErrors(err error, response func() (*http.Response, []byte)) error {
-	if err != nil {
-		return err
-	}
-	resp, body := response()
-	resp.Body = io.NopCloser(bytes.NewReader(body))
-	return gerrors.FromResponse(resp)
 }
 
 // GetDomain returns the AMSecurityDomain a domain sub-resource references, looked up in the

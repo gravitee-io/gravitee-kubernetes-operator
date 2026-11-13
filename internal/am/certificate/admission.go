@@ -61,7 +61,7 @@ func DryRun(ctx context.Context, client *am.Client, dto Certificate) (*gerrors.A
 	resp, err := client.UpsertCertificateWithResponse(ctx, dto.DomainKey,
 		&amsdk.UpsertCertificateParams{DryRun: new(true)}, dto.Certificate)
 
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func GetRemote(ctx context.Context, client *am.Client, dto Certificate) (Certifi
 		return dto, nil
 	}
 	resp, err := client.GetCertificateWithResponse(ctx, dto.DomainKey, dto.Key)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = gerrors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return Certificate{}, err

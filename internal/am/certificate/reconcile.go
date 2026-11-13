@@ -28,7 +28,7 @@ import (
 // Upsert creates or updates the certificate under its domain in AM.
 func Upsert(ctx context.Context, client *am.Client, dto Certificate) (Response, error) {
 	resp, err := client.UpsertCertificateWithResponse(ctx, dto.DomainKey, nil, dto.Certificate)
-	if err = am.HasErrors(err, func() (*http.Response, []byte) {
+	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
 		return Response{}, err
@@ -58,7 +58,7 @@ func Upsert(ctx context.Context, client *am.Client, dto Certificate) (Response, 
 // operator or with its domain, is not an error. AM refusing the delete (certificate still in use) is.
 func Delete(ctx context.Context, client *am.Client, dto Certificate) error {
 	resp, err := client.DeleteCertificateWithResponse(ctx, dto.DomainKey, dto.Key)
-	err = am.HasErrors(err, func() (*http.Response, []byte) {
+	err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	})
 	if errors.IsNotFound(err) {

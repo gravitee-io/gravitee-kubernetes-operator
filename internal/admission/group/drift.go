@@ -17,6 +17,7 @@ package group
 import (
 	"context"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
@@ -32,7 +33,11 @@ func validateUpdate(ctx context.Context, oldObj *v1alpha1.Group, newObj *v1alpha
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemoteGroup,
+	// The shared remote getter has no context: close over the admission one.
+	getRemote := func(apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
+		return getRemoteGroup(ctx, apimClient, grp)
+	}
+	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemote,
 		drift.MapDTO(toGroupPayload)))
 	return errs
 }
@@ -41,33 +46,42 @@ func resolveRefs(context.Context, *v1alpha1.Group) error {
 	return nil
 }
 
-func toGroupPayload(grp *v1alpha1.Group) model.GroupDTO {
-	dto := model.ToGroupDTO(*grp.Spec.Type)
-	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
-		dto.Members = nil
+// toGroupPayload maps the CRD to the payload compared with the remote. The same spec already went
+// through the dry run in validateCreate, so a mapping error is not expected here; should one occur,
+// the empty payload is reported as drift rather than silently admitted.
+func toGroupPayload(grp *v1alpha1.Group) sdk.Group {
+	payload, err := model.ToGroup(grp)
+	if err != nil {
+		return sdk.Group{}
 	}
-	return dto
+	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
+		payload.Members = nil
+	}
+	return payload
 }
 
-func getRemoteGroup(apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
+func getRemoteGroup(ctx context.Context, apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
 	automation := k8s.IsAutomationAPIManaged(grp)
 	grp.PopulateIDs(apimClient.Context, automation)
 	var (
-		remote model.GroupState
-		err    error
+		state sdk.GroupState
+		err   error
 	)
 	if !automation && grp.GetID() != "" {
-		remote, err = apimClient.Env.GetGroupWithUUID(grp.GetID())
+		state, err = apimClient.Env.GetGroupWithUUID(ctx, grp.GetID())
 	} else {
-		remote, err = apimClient.Env.GetGroupByHRID(groupHRID(grp))
+		state, err = apimClient.Env.GetGroupByHRID(ctx, groupHRID(grp))
 	}
 	if err != nil {
 		return nil, err
 	}
+	// Spec is the payload a PUT would send, so drift compares two values of the same type.
+	// It is a shallow copy: only reassign its fields here, never mutate shared slices or maps.
+	remote := state.Spec()
 	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
 		remote.Members = nil
 	}
-	return remote.GroupDTO, nil
+	return remote, nil
 }
 
 func groupHRID(grp *v1alpha1.Group) string {
