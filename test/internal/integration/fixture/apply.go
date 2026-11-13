@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/gomega"
+	coreV1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -32,11 +33,13 @@ func (o *Objects) Apply() *Objects {
 	for _, sec := range o.Secrets {
 		err := cli.Create(ctx, sec)
 		Expect(client.IgnoreAlreadyExists(err)).ToNot(HaveOccurred(), sec.Name)
+		awaitCached(ctx, cli, sec, &coreV1.Secret{})
 	}
 
 	for _, cm := range o.ConfigMaps {
 		err := cli.Create(ctx, cm)
 		Expect(client.IgnoreAlreadyExists(err)).ToNot(HaveOccurred(), cm.Name)
+		awaitCached(ctx, cli, cm, &coreV1.ConfigMap{})
 	}
 
 	if o.AMContext != nil {
@@ -132,6 +135,15 @@ func (o *Objects) Apply() *Objects {
 	}
 
 	return o
+}
+
+// awaitCached returns once cli, the manager's cached client, serves obj. Create answers before
+// the informer has seen the object, and templating reads Secrets and ConfigMaps through this
+// client, so a spec that validates right after Apply could otherwise get "not found".
+func awaitCached(ctx context.Context, cli client.Client, obj, into client.Object) {
+	Eventually(ctx, func() error {
+		return cli.Get(ctx, client.ObjectKeyFromObject(obj), into)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), obj.GetName())
 }
 
 func (o *Objects) applyIngress(cli client.Client, ctx context.Context) {
