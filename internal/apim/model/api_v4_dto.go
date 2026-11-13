@@ -59,7 +59,7 @@ type APIV4DTO struct {
 	PortalNavigation                 []*APIV4NavigationPathDTO                       `json:"portalNavigation,omitempty" drift:"empty-is-nil"`
 	ConsoleNotification              *APIV4ConsoleNotificationDTO                    `json:"consoleNotification,omitempty"`
 	Pages                            []*APIV4PageDTO                                 `json:"pages" drift:"empty-is-nil"`
-	Plans                            []*APIV4PlanDTO                                 `json:"plans" drift:"empty-is-nil"`
+	Plans                            APIV4PlansDTO                                   `json:"plans" drift:"empty-is-nil"`
 }
 
 type APIV4PropertyDTO struct {
@@ -96,7 +96,7 @@ type APIV4ResourceDTO struct {
 	Enabled       bool                    `json:"enabled"`
 	Name          *string                 `json:"name,omitempty"`
 	Type          *string                 `json:"type,omitempty"`
-	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured:ignore-remote-default"`
 }
 
 type APIV4ResponseTemplateDTO struct {
@@ -167,8 +167,8 @@ type APIV4EndpointDTO struct {
 	Type           string                    `json:"type,omitempty"`
 	Weight         *int32                    `json:"weight,omitempty" drift:"empty-is-nil"`
 	Inherit        bool                      `json:"inheritConfiguration"`
-	Config         *utils.GenericStringMap   `json:"configuration,omitempty" drift:"unstructured"`
-	ConfigOverride *utils.GenericStringMap   `json:"sharedConfigurationOverride,omitempty" drift:"unstructured"`
+	Config         *utils.GenericStringMap   `json:"configuration,omitempty" drift:"unstructured:ignore-remote-default"`
+	ConfigOverride *utils.GenericStringMap   `json:"sharedConfigurationOverride,omitempty" drift:"unstructured:ignore-remote-default"`
 	Services       *APIV4EndpointServicesDTO `json:"services,omitempty"`
 	Secondary      *bool                     `json:"secondary,omitempty"`
 	Tenants        []string                  `json:"tenants" drift:"empty-is-nil"`
@@ -191,7 +191,7 @@ type APIV4ServiceDTO struct {
 	Enabled        bool                    `json:"enabled"`
 	Type           *string                 `json:"type,omitempty"`
 	OverrideConfig bool                    `json:"overrideConfiguration"`
-	Config         *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
+	Config         *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured:ignore-remote-default"`
 }
 
 type APIV4HttpClientOptionsDTO struct {
@@ -248,7 +248,7 @@ type APIV4EndpointGroupDTO struct {
 	Name                 string                         `json:"name"`
 	Type                 *string                        `json:"type,omitempty"`
 	LoadBalancer         *APIV4LoadBalancerDTO          `json:"loadBalancer,omitempty"`
-	SharedConfig         *utils.GenericStringMap        `json:"sharedConfiguration,omitempty" drift:"unstructured"`
+	SharedConfig         *utils.GenericStringMap        `json:"sharedConfiguration,omitempty" drift:"unstructured:ignore-remote-default"`
 	Endpoints            []*APIV4EndpointDTO            `json:"endpoints"`
 	Services             *APIV4EndpointGroupServicesDTO `json:"services,omitempty"`
 	HttpClientOptions    *APIV4HttpClientOptionsDTO     `json:"http,omitempty"`
@@ -280,7 +280,7 @@ type APIV4FlowStepDTO struct {
 	Policy           *string                 `json:"policy,omitempty"`
 	Name             *string                 `json:"name,omitempty"`
 	Description      *string                 `json:"description,omitempty"`
-	Configuration    *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
+	Configuration    *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured:ignore-remote-default"`
 	Condition        *string                 `json:"condition,omitempty"`
 	MessageCondition *string                 `json:"messageCondition,omitempty"`
 }
@@ -392,6 +392,21 @@ type APIV4ApiServicesDTO struct {
 	DynamicProperty *APIV4ServiceDTO `json:"dynamicProperty,omitempty"`
 }
 
+// APIV4PlansDTO is an API's plan list. APIM stores each plan's order from its position in the list
+// it receives and returns the plans in that order, without the field, so decoding sets each plan's
+// order from its position.
+type APIV4PlansDTO []*APIV4PlanDTO
+
+func (plans *APIV4PlansDTO) UnmarshalJSON(data []byte) error {
+	var decoded []*APIV4PlanDTO
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	setOrderFromPosition(decoded)
+	*plans = decoded
+	return nil
+}
+
 type APIV4PlanDTO struct {
 	ID                    string                `json:"id,omitempty" drift:"ignore"`
 	HRID                  string                `json:"hrid,omitempty"`
@@ -401,7 +416,7 @@ type APIV4PlanDTO struct {
 	Characteristics       []string              `json:"characteristics" drift:"empty-is-nil"`
 	Validation            base.PlanValidation   `json:"validation,omitempty"`
 	CommentRequired       *bool                 `json:"comment_required,omitempty"`
-	Order                 *int                  `json:"order,omitempty" drift:"ignore"` // APIM sets it from the list position
+	Order                 *int                  `json:"order,omitempty" drift:"ignore-remote-default"` // unset: not compared
 	Type                  base.PlanType         `json:"type,omitempty"`
 	Name                  string                `json:"name"`
 	Description           *string               `json:"description,omitempty"`
@@ -419,12 +434,12 @@ type APIV4PlanDTO struct {
 
 type APIV4PlanSecurityDTO struct {
 	Type   string                  `json:"type" drift:"case-insensitive"`
-	Config *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
+	Config *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured:ignore-remote-default"`
 }
 
 type APIV4PageSourceDTO struct {
 	Type          string                  `json:"type"`
-	Configuration *utils.GenericStringMap `json:"configuration" drift:"unstructured"`
+	Configuration *utils.GenericStringMap `json:"configuration" drift:"unstructured:ignore-remote-default"`
 }
 
 type APIV4PageDTO struct {

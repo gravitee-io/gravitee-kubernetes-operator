@@ -327,7 +327,10 @@ func detectItem(property string, i int, crdItem reflect.Value, remoteItem reflec
 		detectIndexedMapItems(property, &i, driftFunc{}, crdItem, remoteItem, parent)
 	default:
 		runEquivalence := true
-		if crdItem.Kind() == reflect.Interface {
+		// An item only the remote has is compared whole. Introspected, a map item would lose its index
+		// and read like keys missing from an item the CRD declares.
+		remoteOnly := crdItem.Kind() == reflect.Interface && crdItem.IsNil() && !remoteItem.IsNil()
+		if crdItem.Kind() == reflect.Interface && !remoteOnly {
 			// if we are dealing with an interface, we need to introspect first
 			runEquivalence = detectAny(property, driftFunc{},
 				valuePair{crdItem, asInterface(crdItem)},
@@ -490,6 +493,16 @@ func detectAny(key string, driftFunc driftFunc, crd valuePair, remote valuePair,
 		return false
 	}
 	if crdElem.Kind() == reflect.Slice || remoteElem.Kind() == reflect.Slice {
+		// A list only the remote has is compared whole, under its key: item by item, it would read like
+		// items added to a list the CRD declares.
+		if crdElem.Kind() == reflect.Invalid && remoteElem.Len() > 0 {
+			parent.AppendChild(&Result{
+				Equivalence: Equivalence{Equivalent: Inequivalent},
+				Property:    key,
+				RemoteValue: remote.Interface,
+			}, true)
+			return false
+		}
 		// create a slice with the same type so it can be introspected
 		if remoteElem.Kind() == reflect.Invalid {
 			remoteElem = reflect.MakeSlice(crdElem.Type(), 0, 0)

@@ -141,7 +141,7 @@ var _ = Describe("Dictionary Drift detection", func() {
 
 	Describe("A key the manifest never declared", func() {
 		It("is tolerated under properties", func() {
-			merged := mergedDrift(
+			merged := admissionDrift(
 				model.DictionaryDTO{Manual: &model.ManualSpec{Properties: map[string]string{"env": "test"}}},
 				model.DictionaryDTO{Manual: &model.ManualSpec{
 					Properties: map[string]string{"env": "test", "addedInConsole": "hello"},
@@ -152,7 +152,7 @@ var _ = Describe("Dictionary Drift detection", func() {
 		})
 
 		It("is tolerated under encryptedProperties", func() {
-			merged := mergedDrift(
+			merged := admissionDrift(
 				model.DictionaryDTO{Manual: &model.ManualSpec{Properties: map[string]string{"env": "test"}}},
 				model.DictionaryDTO{Manual: &model.ManualSpec{
 					Properties:          map[string]string{"env": "test"},
@@ -218,14 +218,6 @@ func completeManualDictionaryDTO() model.DictionaryDTO {
 }
 
 const apimMask = "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
-
-// mergedDrift runs the comparison the admission path runs: old and new CRD against the remote.
-func mergedDrift(crd, remote model.DictionaryDTO) drift.Result {
-	return drift.Merge(
-		drift.DetectWithNamespace(crd, remote, ""),
-		drift.DetectWithNamespace(crd, remote, ""),
-	)
-}
 
 func manualDictionaryWithSecret(value string) model.DictionaryDTO {
 	return model.DictionaryDTO{

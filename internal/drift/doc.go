@@ -102,6 +102,8 @@
 //     (APIM omits those client certificates from GET responses).
 //   - unstructured (struct): for unstructured types; hoists "object" child fields to root via PostFunc.
 //     With masked, a remote value of "********" is equivalent to a CRD string or absent value (see below).
+//     With ignore-remote-default, a key the CRD leaves out is equivalent to any remote value; a list item
+//     only the remote has still drifts (see below).
 //
 // # Drift Tag Function Arguments
 //
@@ -177,13 +179,18 @@
 //
 // ### unstructured
 //
-// Syntax: `drift:"unstructured"` or `drift:"unstructured:masked"`
+// Syntax: `drift:"unstructured"`, `drift:"unstructured:masked"`, `drift:"unstructured:ignore-remote-default"`,
+// or both arguments
 //
 // Compares a free-form object tree leaf by leaf, hoisting the "object" children to the root.
 // With `masked`, a leaf the remote returns as `********` is equivalent when the CRD holds a
 // string or nothing there, nested maps and slice items included: AM masks plugin-sensitive
 // configuration values in every response, so the stored value cannot be compared. A CRD object
-// or list against `********` is a type change and drifts. Other leaves are compared as usual.
+// or list against `********` is a type change and drifts. With `ignore-remote-default`, a key the CRD
+// leaves out is equivalent whatever the remote holds there, in nested maps and slice items too: APIM
+// saves the schema default of every plugin field a payload omits. A key the CRD sets is still compared,
+// and so is a list item only the remote has: a default never adds an item to a list.
+// Other leaves are compared as usual.
 // Ignored on an embedded (inline) field, whose equivalence is never called.
 //
 // Example:

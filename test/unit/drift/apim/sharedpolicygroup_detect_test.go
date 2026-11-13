@@ -54,6 +54,13 @@ var _ = Describe("SharedPolicyGroup Drift detection", func() {
 		),
 	)
 
+	It("admits the defaults APIM saves in a step configuration", func() {
+		crd := sharedPolicyGroupWithStep(`{"addHeaders": true, "rate": {"limit": 10}}`)
+		remote := sharedPolicyGroupWithStep(`{"addHeaders": true, "rate": {"limit": 10}, "async": false}`)
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(model.ToSharePolicyGroupDTO(completeSharedPolicyGroupSpec()), completeSharedPolicyGroupDTO())
@@ -69,4 +76,10 @@ func completeSharedPolicyGroupSpec() sharedpolicygroups.SharedPolicyGroup {
 func completeSharedPolicyGroupDTO() model.SharedPolicyGroupDTO {
 	GinkgoHelper()
 	return loadFixture[model.SharedPolicyGroupDTO]("shared_policy_group_dto.json")
+}
+
+func sharedPolicyGroupWithStep(configuration string) model.SharedPolicyGroupDTO {
+	GinkgoHelper()
+	return parseJSON[model.SharedPolicyGroupDTO](`{"name": "spg", "apiType": "PROXY", "phase": "REQUEST", "steps": [` +
+		`{"enabled": true, "policy": "rate-limit", "name": "Rate Limit", "configuration": ` + configuration + `}]}`)
 }

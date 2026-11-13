@@ -3951,7 +3951,7 @@ _Appears in:_
 | `characteristics` _string array_ | List of plan characteristics |  | Optional: \{\} <br /> |
 | `validation` _[PlanValidation](#planvalidation)_ | Plan validation strategy | AUTO | Enum: [AUTO MANUAL] <br /> |
 | `comment_required` _boolean_ | Indicate of comment is required for this plan or not |  | Optional: \{\} <br /> |
-| `order` _integer_ | Plan order, ignored for an ApiV4Definition with a contextRef: APIM sets it from the position in spec.plans. |  | Optional: \{\} <br /> |
+| `order` _integer_ | Plan order. For an ApiV4Definition with a contextRef, plans are sent to APIM sorted by<br />this value (plans without one last, then by key), and APIM numbers them 1, 2, 3… in that<br />order: orders 10 and 20 are stored as 1 and 2. Drift detection compares the plan order<br />only when every plan sets one and every plan is PUBLISHED. |  | Optional: \{\} <br /> |
 | `type` _[PlanType](#plantype)_ | Plan type | API | Enum: [API CATALOG] <br /> |
 
 

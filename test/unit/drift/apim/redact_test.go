@@ -17,7 +17,6 @@ package apim
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -25,7 +24,7 @@ import (
 var _ = Describe("Redacting secret values from a drift report", func() {
 	DescribeTable("hides the values of a drifted field holding a secret, on either side",
 		func(crdSecret, remoteSecret string, secrets []string, hidden, shown []string) {
-			merged := mergedAPIDrift(apiWithClientSecret(crdSecret), apiWithClientSecret(remoteSecret))
+			merged := admissionDrift(apiWithClientSecret(crdSecret), apiWithClientSecret(remoteSecret))
 			merged.Redact(secrets)
 			report := merged.String()
 
@@ -61,7 +60,7 @@ var _ = Describe("Redacting secret values from a drift report", func() {
 		remote := apiWithClientSecret("stored-in-apim")
 		remote.Description = new("described in APIM")
 
-		merged := mergedAPIDrift(crd, remote)
+		merged := admissionDrift(crd, remote)
 		merged.Redact([]string{"rotated-secret"})
 		report := merged.String()
 
@@ -70,20 +69,12 @@ var _ = Describe("Redacting secret values from a drift report", func() {
 	})
 
 	It("does not turn equivalent values into a drift", func() {
-		merged := mergedAPIDrift(apiWithClientSecret("same-secret"), apiWithClientSecret("same-secret"))
+		merged := admissionDrift(apiWithClientSecret("same-secret"), apiWithClientSecret("same-secret"))
 		merged.Redact([]string{"same-secret"})
 
 		Expect(merged.DriftDetected()).To(BeFalse())
 	})
 })
-
-// mergedAPIDrift runs the comparison the admission path runs: old and new CRD against the remote.
-func mergedAPIDrift(crd, remote model.APIV4DTO) drift.Result {
-	return drift.Merge(
-		drift.DetectWithNamespace(crd, remote, ""),
-		drift.DetectWithNamespace(crd, remote, ""),
-	)
-}
 
 func apiWithClientSecret(secret string) model.APIV4DTO {
 	return model.APIV4DTO{

@@ -48,7 +48,7 @@ var _ = Describe("Validate drift on values APIM normalises", labels.WithContext,
 		Expect(err).ToNot(HaveOccurred())
 	})
 
-	It("should not drift on a plan order the Automation API does not keep", func() {
+	It("should not drift on a plan order APIM renumbers from 1", func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4WithContextFile).
 			WithContext(constants.ContextWithCredentialsFile).

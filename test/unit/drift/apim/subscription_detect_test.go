@@ -72,6 +72,16 @@ var _ = Describe("Subscription Drift detection", func() {
 			},
 		),
 	)
+
+	It("admits the defaults APIM saves in an entrypoint configuration", func() {
+		crd := subscriptionWithEntrypointConfiguration(`{"callbackUrl": "https://example.com/hook", "ssl": {"hostnameVerifier": true}}`)
+		remote := subscriptionWithEntrypointConfiguration(
+			`{"callbackUrl": "https://example.com/hook", "ssl": {"hostnameVerifier": true, "trustAll": false}}`,
+		)
+
+		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
+	})
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(completeSubscriptionDTO(), completeSubscriptionDTO())
@@ -82,4 +92,11 @@ var _ = Describe("Subscription Drift detection", func() {
 func completeSubscriptionDTO() model.SubscriptionDTO {
 	GinkgoHelper()
 	return loadFixture[model.SubscriptionDTO]("subscription_dto.json")
+}
+
+func subscriptionWithEntrypointConfiguration(configuration string) model.SubscriptionDTO {
+	GinkgoHelper()
+	return parseJSON[model.SubscriptionDTO](
+		`{"consumerConfiguration": {"entrypointId": "webhook", "entrypointConfiguration": ` + configuration + `}}`,
+	)
 }

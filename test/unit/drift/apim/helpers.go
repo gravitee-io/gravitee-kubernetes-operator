@@ -14,9 +14,21 @@
 
 package apim
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/driftassert"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/driftassert"
+)
 
 var (
 	expectNoDrift                           = driftassert.NoDrift
 	expectedEquivalentNotHavingAnyZeroValue = driftassert.EquivalentNotHavingAnyZeroValue
 )
+
+// admissionDrift runs the comparison admission runs for a spec left unchanged: the old and the
+// new CRD against the remote, merged.
+func admissionDrift(crd, remote any) drift.Result {
+	return drift.Merge(
+		drift.DetectWithNamespace(crd, remote, ""),
+		drift.DetectWithNamespace(crd, remote, ""),
+	)
+}
