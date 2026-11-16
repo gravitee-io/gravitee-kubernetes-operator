@@ -244,6 +244,16 @@ var _ = Describe("Application Drift detection", func() {
 			expectedEquivalentNotHavingAnyZeroValue(completeApplicationDTO(), completeApplicationDTO())
 		})
 	})
+
+	It("refuses a group APIM added when neither version of the application sets groups", func() {
+		remote := model.ApplicationDTO{Description: "before", Groups: []model.ApplicationGroup{"dev"}}
+		merged := drift.Merge(
+			drift.DetectWithNamespace(model.ApplicationDTO{Description: "before"}, remote, "namespace"),
+			drift.DetectWithNamespace(model.ApplicationDTO{Description: "after"}, remote, "namespace"),
+		)
+
+		Expect(merged.DriftDetected()).To(BeTrue(), merged.String())
+	})
 })
 
 func completeApplicationDTO() model.ApplicationDTO {

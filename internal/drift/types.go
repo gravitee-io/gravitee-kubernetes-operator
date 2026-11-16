@@ -313,7 +313,7 @@ func evaluateDrift(or Result, nr Result, parentIndex *int) Result {
 }
 
 // remoteOnlyDriftUnchanged is true when old and new CRD are both absent for a remote-only
-// map entry and the remote value did not change between comparisons.
+// field, map entry or set list (see Set) and the remote value did not change between comparisons.
 func remoteOnlyDriftUnchanged(or Result, nr Result) bool {
 	return or.CRDValue == nil && nr.CRDValue == nil && reflect.DeepEqual(or.RemoteValue, nr.RemoteValue)
 }

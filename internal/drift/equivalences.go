@@ -90,6 +90,10 @@ func Set(crd any, remote any, context DriftContext) Equivalence {
 		PostFunc: func(r *Result) {
 			r.Index = new(-1)
 			r.CRDValue = uniqueInCRD
+			if isNilSlice(crd) {
+				// A list the CRD omits is reported absent, so Merge admits values only the remote holds.
+				r.CRDValue = nil
+			}
 			r.RemoteValue = uniqueInRemote
 			if unchangedCount := len(crdItems) - len(uniqueInCRD); unchangedCount > 0 {
 				r.Reason = fmt.Sprintf("%d unchanged", unchangedCount)
@@ -125,6 +129,10 @@ func isFlatStruct(t reflect.Type) bool {
 		}
 	}
 	return true
+}
+
+func isNilSlice(v any) bool {
+	return v == nil || reflect.ValueOf(v).IsNil()
 }
 
 // uniqueItems returns the dereferenced items of the slice v, without duplicates, in declaration order.

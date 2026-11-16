@@ -216,7 +216,9 @@ A field tagged `ignore-remote-default` (in GKO or in the am-sdk overlay `am-sdk/
 not protected while the CRD leaves it unset: a console change to it is not reported, and when the CRD
 then sets it, the CRD value is applied over the console change without a drift. Use the tag only where
 the server fills values the CRD did not declare and a console change cannot be told apart from them.
-Every other field still refuses the update once the console changed it.
+The same goes for a list tagged `set` that both CRD versions leave out (GKO-3447): values the console
+added to it do not refuse an unrelated update. Every other field still refuses the update once the console
+changed it.
 
 **Adding or widening such a tag is a user-visible change: list the fields in the release note of the
 version that ships it** (PR body `## Release note` section and the Jira ticket). Today:
@@ -230,6 +232,10 @@ version that ships it** (PR body `## Release note` section and the Jira ticket).
   `tokenEndpointAuthMethod`, `forcePKCE`, `forceS256CodeChallengeMethod`,
   `tokenExchangeOAuthSettings`.
 - `AMSecurityDomain`: `dataPlaneId`.
+- Lists tagged `set`, when the CRD leaves them out (GKO-3447): `AMSecurityDomain` `tags` and
+  `corsSettings` `allowedOrigins`, `allowedHeaders`, `allowedMethods`; `AMApplication` lightweight JWT
+  `allowedAccessTokenClaims`, `allowedIdTokenClaims`; `AMReporter` `attributeMappingEventTypes`; APIM
+  authorization entity `parents`, `targets` and authorization policy `targets`.
 
 #### Testing
 
