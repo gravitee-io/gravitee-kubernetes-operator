@@ -95,6 +95,27 @@ var _ = Describe("Security domain drift detection", func() {
 		Entry("an untagged field set over a console change is drift", noChange, withDescription, true),
 	)
 
+	DescribeTable("compares a list value AM holds when the resource only changes its description",
+		func(declared, console func(*sdk.Domain), expectDrift bool) {
+			remote := domainSpec(with(declared, describedAs("before"), console))
+			merged := drift.Merge(
+				drift.DetectWithNamespace(domainSpec(with(declared, describedAs("before"))), remote, ""),
+				drift.DetectWithNamespace(domainSpec(with(declared, describedAs("after"))), remote, ""),
+			)
+
+			Expect(merged.DriftDetected()).To(Equal(expectDrift), merged.String())
+		},
+		Entry("an origin AM added to CORS settings neither version sets is no drift",
+			noChange, withAllowedOrigins("https://qa-vf2.example.com"), false),
+		Entry("CORS values AM holds with an empty origin list are no drift", noChange, withCorsValuesOnly, false),
+		Entry("an origin AM added to origins the resource declares is drift",
+			withAllowedOrigins("https://app.example.com"),
+			withAllowedOrigins("https://app.example.com", "https://qa-vf2.example.com"), true),
+		// Issue 15 of the bug sweep: the drift docs exempt list items from the "neither version sets it" rule.
+		PEntry("a scope AM added to client registration settings the resource declares is no drift (pending: Issue 15)",
+			withDynamicRegistration(true), withAllowedScopes("openid"), false),
+	)
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(securityDomainForDrift(), remoteSecurityDomain())
@@ -199,4 +220,31 @@ func withAuthReqExpiry(seconds int32) func(*sdk.Domain) {
 
 func withDescription(domain *sdk.Domain) {
 	domain.Description = new("set in the resource")
+}
+
+func describedAs(description string) func(*sdk.Domain) {
+	return func(domain *sdk.Domain) {
+		domain.Description = new(description)
+	}
+}
+
+func withAllowedOrigins(origins ...string) func(*sdk.Domain) {
+	return func(domain *sdk.Domain) {
+		domain.CorsSettings = &sdk.CorsSettings{AllowedOrigins: origins}
+	}
+}
+
+func withCorsValuesOnly(domain *sdk.Domain) {
+	domain.CorsSettings = &sdk.CorsSettings{
+		Enabled:          new(false),
+		MaxAge:           new(int32(600)),
+		AllowCredentials: new(true),
+		AllowedOrigins:   []string{},
+	}
+}
+
+func withAllowedScopes(scopes ...string) func(*sdk.Domain) {
+	return func(domain *sdk.Domain) {
+		oidc(domain).ClientRegistrationSettings.AllowedScopes = scopes
+	}
 }
