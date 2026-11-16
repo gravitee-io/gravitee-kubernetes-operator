@@ -31,8 +31,15 @@ spec:
       specification: |
         [
           {
-            "operation": "default",
-            "spec": {}
+            "operation": "shift",
+            "spec": {
+              "headers": {
+                "*": {
+                  "$": "[#2].key",
+                  "@": "[#2].value"
+                }
+              }
+            }
           }
         ]
     trigger:
