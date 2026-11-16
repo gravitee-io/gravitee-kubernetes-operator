@@ -113,6 +113,7 @@ var _ = Describe("Security domain drift detection", func() {
 		Entry("an origin AM added to origins the resource declares is drift",
 			withAllowedOrigins("https://app.example.com"),
 			withAllowedOrigins("https://app.example.com", "https://qa-vf2.example.com"), true),
+		Entry("a sharding tag AM added to a domain that sets no tags is drift", noChange, withTags("eu-gw"), true),
 		// Scopes compare item by item, not as a set: a value only AM holds there is still refused.
 		Entry("a scope AM added to client registration settings the resource declares is drift",
 			withDynamicRegistration(true), withAllowedScopes("openid"), true),
@@ -233,6 +234,12 @@ func describedAs(description string) func(*sdk.Domain) {
 func withAllowedOrigins(origins ...string) func(*sdk.Domain) {
 	return func(domain *sdk.Domain) {
 		domain.CorsSettings = &sdk.CorsSettings{AllowedOrigins: origins}
+	}
+}
+
+func withTags(tags ...string) func(*sdk.Domain) {
+	return func(domain *sdk.Domain) {
+		domain.Tags = tags
 	}
 }
 

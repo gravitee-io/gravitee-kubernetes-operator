@@ -232,9 +232,11 @@ version that ships it** (PR body `## Release note` section and the Jira ticket).
   `tokenEndpointAuthMethod`, `forcePKCE`, `forceS256CodeChallengeMethod`,
   `tokenExchangeOAuthSettings`.
 - `AMSecurityDomain`: `dataPlaneId`.
-- Lists tagged `set`, when the CRD leaves them out (GKO-3447): `AMSecurityDomain` `tags` and
-  `corsSettings` `allowedOrigins`, `allowedHeaders`, `allowedMethods`; `AMApplication` lightweight JWT
+- Lists tagged `set`, when the CRD leaves them out (GKO-3447): `AMSecurityDomain` `corsSettings`
+  `allowedOrigins`, `allowedHeaders`, `allowedMethods`; `AMApplication` lightweight JWT
   `allowedAccessTokenClaims`, `allowedIdTokenClaims`; `AMReporter` `attributeMappingEventTypes`.
+  `AMSecurityDomain` `tags` (sharding, am-sdk overlay) and the APIM authorization lists are
+  `set:omitted-is-empty` and still refuse.
 
 #### Testing
 
