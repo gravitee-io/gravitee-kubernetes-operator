@@ -17,27 +17,63 @@ package apim
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-automation-sdk/common/pkg/apicontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	ghttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
+// probeHRID is a group hrid that no resource can have: a namespace-name HRID always contains the namespace.
+const probeHRID = "gko-probe-not-found"
+
+// SDKClient is the APIM Automation API SDK client for one management context.
+type SDKClient struct {
+	*sdk.APIMClient
+	Context core.ContextModel
+}
+
+func (c *SDKClient) GetOrgID() string {
+	return c.Context.GetOrgID()
+}
+
+func (c *SDKClient) GetEnvID() string {
+	return c.Context.GetEnvID()
+}
+
+// Probe checks that the Automation API is reachable and accepts the context's credentials at its org/env.
+// The SDK has no list endpoint, so it gets a group that cannot exist: a 404 is as good as a 200.
+func (c *SDKClient) Probe(ctx context.Context) error {
+	resp, err := c.GetGroupWithResponse(ctx, probeHRID, &sdk.GetGroupParams{HridContainsUUID: new(false)})
+	err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
+		return resp.HTTPResponse, resp.Body
+	})
+	if errors.IsNotFound(err) {
+		return nil
+	}
+	return err
+}
+
 // NewSDKClient builds the APIM Automation API SDK client for a management context: its secret-held
 // credentials injected, the operator's HTTP client (proxy, TLS, trust store), and the same base URL,
 // organization, environment and cloud rules as FromContext.
-func NewSDKClient(ctx context.Context, mctx core.ContextObject) (*sdk.APIMClient, error) {
+func NewSDKClient(ctx context.Context, mctx core.ContextObject) (*SDKClient, error) {
 	if _, err := dynamic.InjectSecretIfAny(ctx, mctx); err != nil {
 		return nil, err
 	}
-	return newSDKClient(mctx)
+	client, err := newSDKClient(mctx)
+	if err != nil {
+		return nil, err
+	}
+	return &SDKClient{APIMClient: client, Context: mctx}, nil
 }
 
 // SDKFromContextRef resolves a management context reference and builds its SDK client.
-func SDKFromContextRef(ctx context.Context, ref core.ObjectRef, parentNs string) (*sdk.APIMClient, error) {
+func SDKFromContextRef(ctx context.Context, ref core.ObjectRef, parentNs string) (*SDKClient, error) {
 	mctx, err := dynamic.ResolveContext(ctx, ref, parentNs)
 	if err != nil {
 		return nil, err

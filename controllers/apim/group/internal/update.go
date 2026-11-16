@@ -18,30 +18,29 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
-	ns := group.Namespace
-
-	apim, err := apim.FromContextRef(ctx, group.ContextRef(), ns)
+	client, err := apimgroup.CreateAPIMClient(ctx, group)
 	if err != nil {
 		return err
 	}
 
-	group.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(group))
+	// Keep the ids on the CR the controller saves, as ToDTO only sets them on its copy.
+	group.PopulateIDs(client.Context, k8s.IsAutomationAPIManaged(group))
 
-	status, err := apim.Env.ImportGroup(ctx, group)
+	dto, err := apimgroup.ToDTO(group)
+	if err != nil {
+		return err
+	}
+
+	resp, err := apimgroup.Upsert(ctx, client, dto)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	group.Status.ID = status.ID
-	group.Status.OrgID = apim.Context.GetOrgID()
-	group.Status.EnvID = apim.Context.GetEnvID()
-	group.Status.Members = status.Members
-
-	return nil
+	return apimgroup.UpdateStatus(ctx, group, resp)
 }

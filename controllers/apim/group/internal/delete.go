@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -28,12 +28,15 @@ func Delete(ctx context.Context, group *v1alpha1.Group) error {
 		return nil
 	}
 
-	ns := group.Namespace
-
-	apim, err := apim.FromContextRef(ctx, group.ContextRef(), ns)
+	client, err := apimgroup.CreateAPIMClient(ctx, group)
 	if err != nil {
 		return err
 	}
 
-	return apim.Env.DeleteGroup(ctx, group)
+	dto, err := apimgroup.ToDTO(group)
+	if err != nil {
+		return err
+	}
+
+	return apimgroup.Delete(ctx, client, dto)
 }

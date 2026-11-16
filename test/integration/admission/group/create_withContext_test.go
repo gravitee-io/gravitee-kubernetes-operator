@@ -52,7 +52,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		By("calling the Automation API, expecting the dry run to have created nothing")
 
-		_, err := apim.NewClient(ctx).Env.GetGroupByHRID(ctx, refs.NewNamespacedNameFromObject(grp).HRID())
+		_, err := apim.NewClient(ctx).GetGroup(ctx, refs.NewNamespacedNameFromObject(grp).HRID())
 		Expect(assert.NotFoundError(err)).To(Succeed())
 	})
 })

@@ -18,7 +18,7 @@ import (
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -181,7 +181,7 @@ var _ = Describe("Group Drift detection", func() {
 
 	Describe("State turned into the payload type by Spec()", func() {
 		It("matches the CRD it was synced from, state-only fields dropped", func() {
-			crd, err := model.ToGroup(&v1alpha1.Group{
+			crd, err := apimgroup.ToDTO(&v1alpha1.Group{
 				ObjectMeta: metav1.ObjectMeta{Name: "developers", Namespace: "default"},
 				Spec: v1alpha1.GroupSpec{Type: &group.Type{
 					HRID:          "default-developers",
@@ -207,7 +207,41 @@ var _ = Describe("Group Drift detection", func() {
 				"defaultMemberRoles": {},
 				"members": [{"source": "memory", "sourceId": "api1", "roles": {"API": "OWNER"}}]
 			}`)
-			expectNoDrift(drift.DetectWithNamespace(crd, state.Spec(), ""))
+			expectNoDrift(drift.DetectWithNamespace(crd, apimgroup.DTO{Group: state.Spec()}, ""))
+		})
+	})
+
+	Describe("DTO flags", func() {
+		developers := func() *v1alpha1.Group {
+			return &v1alpha1.Group{
+				ObjectMeta: metav1.ObjectMeta{Name: "developers", Namespace: "default"},
+				Spec:       v1alpha1.GroupSpec{Type: &group.Type{Name: "Developers"}},
+			}
+		}
+
+		It("are not compared: a legacy and an hrid DTO of the same group do not drift", func() {
+			legacy := developers()
+			legacy.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+
+			byUUID, err := apimgroup.ToDTO(legacy)
+			Expect(err).ToNot(HaveOccurred())
+			byHRID, err := apimgroup.ToDTO(developers())
+			Expect(err).ToNot(HaveOccurred())
+
+			expectNoDrift(drift.DetectWithNamespace(byUUID, byHRID, ""))
+		})
+
+		It("leave the embedded payload compared", func() {
+			renamed := developers()
+			renamed.Spec.Name = "Renamed"
+
+			crd, err := apimgroup.ToDTO(renamed)
+			Expect(err).ToNot(HaveOccurred())
+			remote, err := apimgroup.ToDTO(developers())
+			Expect(err).ToNot(HaveOccurred())
+
+			result := drift.DetectWithNamespace(crd, remote, "")
+			Expect(result.DriftDetected()).To(BeTrue())
 		})
 	})
 
