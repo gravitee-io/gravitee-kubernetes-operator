@@ -100,6 +100,9 @@
 //     With strip-ns, remaining keys are compared as a set after stripping the namespace prefix.
 //     With expired and/or scheduled, items implementing [Expiring] / [Schedulable] are dropped first
 //     (APIM omits those client certificates from GET responses).
+//   - set (slice): compares a list of scalars or flat structs as a set, ignoring order and duplicates.
+//     A list the CRD omits is absent, so Merge admits values only the remote holds there. With
+//     omitted-is-empty, it is an empty list and those values still drift.
 //   - unstructured (struct): for unstructured types; hoists "object" child fields to root via PostFunc.
 //     With masked, a remote value of "********" is equivalent to a CRD string or absent value (see below).
 //     With ignore-remote-default, a key the CRD leaves out is equivalent to any remote value; a list item

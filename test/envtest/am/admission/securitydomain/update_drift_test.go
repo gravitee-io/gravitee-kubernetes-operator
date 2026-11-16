@@ -17,6 +17,7 @@ package amsecuritydomain
 import (
 	"context"
 
+	amsdk "github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/am/domain"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/amsecuritydomain"
@@ -165,6 +166,46 @@ var _ = Describe("Validate drift - lists AM stores as sets", func() {
                  + "prod"`, err)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
 	})
+})
+
+var _ = Describe("Validate drift - a list the resource leaves out", func() {
+	ctx := context.Background()
+	admissionCtrl := amsecuritydomain.NewAdmissionCtrl()
+
+	// applyThenAddOrigin applies a domain with the given CORS settings, then adds an origin in AM only.
+	applyThenAddOrigin := func(cors *domain.CorsSettings) *fixture.Objects {
+		fixtures := fixture.Builder().
+			WithAMContext(constants.AMContextFile).
+			WithAMSecurityDomain(constants.AMSecurityDomainBasicFile).
+			Build()
+		fixtures.AMSecurityDomain.Spec.CorsSettings = cors
+		fixtures.Apply()
+
+		By("adding an allowed origin in AM")
+		dto, err := internal.ToDomainDTO(fixtures.AMSecurityDomain)
+		Expect(err).ToNot(HaveOccurred())
+		if dto.CorsSettings == nil {
+			dto.CorsSettings = &amsdk.CorsSettings{}
+		}
+		dto.CorsSettings.AllowedOrigins = []string{"https://qa-vf2.example.com"}
+		_, err = am.NewSDKClient().UpsertDomainWithResponse(ctx, nil, dto)
+		Expect(err).ToNot(HaveOccurred())
+		return fixtures
+	}
+
+	DescribeTable("should not drift on a description change when AM holds origins the resource never set",
+		func(cors *domain.CorsSettings) {
+			fixtures := applyThenAddOrigin(cors)
+
+			newSD := fixtures.AMSecurityDomain.DeepCopy()
+			newSD.Spec.Description = new("updated description")
+
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.AMSecurityDomain, newSD)
+			Expect(err).ToNot(HaveOccurred())
+		},
+		Entry("without CORS settings", nil),
+		Entry("with CORS settings that leave out the origins", &domain.CorsSettings{AllowCredentials: new(true)}),
+	)
 })
 
 var _ = Describe("Validate drift - remote fetch failure", func() {

@@ -30,10 +30,10 @@ type AuthzEntityDTO struct {
 	Kind       string                  `json:"kind"`
 	EntityType string                  `json:"entityType"`
 	Attributes *utils.GenericStringMap `json:"attributes,omitempty" drift:"unstructured"`
-	Parents    []AuthzEntityParentDTO  `json:"parents,omitempty" drift:"set"`
+	Parents    []AuthzEntityParentDTO  `json:"parents,omitempty" drift:"set:omitted-is-empty"`
 	// Active is always sent, so that false is never dropped on the wire or in drift.
 	Active  bool     `json:"active"`
-	Targets []string `json:"targets,omitempty" drift:"set"`
+	Targets []string `json:"targets,omitempty" drift:"set:omitted-is-empty"`
 }
 
 // AuthzEntityParentDTO names a parent the way the engine spells it.
