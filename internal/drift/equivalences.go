@@ -93,9 +93,9 @@ func Set(crd any, remote any, context DriftContext) Equivalence {
 		Skip:       true,
 		PostFunc: func(r *Result) {
 			r.Index = new(-1)
+			// A list the CRD omits is reported absent, so Merge admits values only the remote holds there.
+			// Tagged set:omitted-is-empty, it is an empty list and those values still drift.
 			if isNilSlice(crd) && !slices.Contains(context.FuncArgs, setOmittedIsEmpty) {
-				// A list the CRD omits is reported absent, so Merge admits values only the remote holds
-				// there, unless the list sits in a list item.
 				r.CRDValue = nil
 			} else {
 				r.CRDValue = uniqueInCRD
