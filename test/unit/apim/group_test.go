@@ -101,15 +101,33 @@ var _ = Describe("Group payload", func() {
 		Expect(toDTO(grp).Identity()).To(Equal("default-developers"))
 	})
 
-	It("drops the members only on request, for drift with ignore-members", func() {
+	It("keeps the members in the payload under ignore-members, and flags it", func() {
 		grp := developers()
 		grp.Spec.Members = []group.Member{{Source: "memory", SourceID: "api1"}}
-		Expect(toDTO(grp).WithoutIgnoredMembers().Members).To(HaveLen(1))
-
 		grp.Annotations = map[string]string{core.IgnoreMembersAnnotation: "true"}
 		dto := toDTO(grp)
 		Expect(dto.Members).To(HaveLen(1))
-		Expect(dto.WithoutIgnoredMembers().Members).To(BeNil())
+		Expect(dto.IgnoreMembers).To(BeTrue())
+	})
+
+	It("flags a legacy group known only by its spec id as unadopted", func() {
+		grp := developers()
+		grp.Spec.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+		Expect(toDTO(grp).Unadopted).To(BeTrue())
+	})
+
+	It("does not flag a group synced by UUID or by hrid as unadopted", func() {
+		synced := developers()
+		synced.Spec.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+		synced.Status.ID = synced.Spec.ID
+		Expect(toDTO(synced).Unadopted).To(BeFalse())
+
+		managed := developers()
+		managed.Spec.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+		k8s.AddAutomationAPIManagedCondition(managed)
+		Expect(toDTO(managed).Unadopted).To(BeFalse())
+
+		Expect(toDTO(developers()).Unadopted).To(BeFalse())
 	})
 })
 

@@ -12,53 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 package group
 
 import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func validateCreate(ctx context.Context, group *v1alpha1.Group) *errors.AdmissionErrors {
+// warnIgnoredMembers warns that spec.members is not applied while the ignore-members annotation is set.
+func warnIgnoredMembers(_ context.Context, group *v1alpha1.Group) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	errs.Add(ctxref.Validate(ctx, group))
-	if errs.IsSevere() {
-		return errs
-	}
 	if k8s.HasTrueAnnotation(group, core.IgnoreMembersAnnotation) && len(group.Spec.Members) > 0 {
 		errs.AddWarningf("spec.members is not applied while %s is true", core.IgnoreMembersAnnotation)
 	}
-	errs.MergeWith(validateDryRun(ctx, group))
-	return errs
-}
-
-func validateDryRun(ctx context.Context, group *v1alpha1.Group) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	client, err := apimgroup.CreateAPIMClient(ctx, group)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	dto, err := apimgroup.ToDTO(group)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	findings, err := apimgroup.DryRun(ctx, client, dto)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	errs.MergeWith(findings)
 	return errs
 }
