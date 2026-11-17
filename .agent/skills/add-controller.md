@@ -8,6 +8,10 @@ Read [`.agent/rules/operator-standards.md`](../rules/operator-standards.md) firs
 reconcile, status and codegen invariants. This skill is the ordered procedure and the shapes to
 copy.
 
+> **APIM resource on the SDK?** Do not build the HTTP service and hand-written loop below. Add an
+> `internal/apim/<resource>/` package and wire it through `internal/lifecycle` instead: see
+> `internal/apim/group/`, `controllers/apim/group/` and AGENTS.md (APIM SDK).
+
 ## The shape of the work
 
 Every APIM controller is the same four layers, and they must be built bottom-up. Most of the real
