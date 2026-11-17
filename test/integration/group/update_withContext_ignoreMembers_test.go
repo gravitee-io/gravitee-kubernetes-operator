@@ -78,7 +78,7 @@ var _ = Describe("Update with ignore-members", labels.WithContext, func() {
 		updated.Spec.Name += "-renamed"
 
 		Eventually(func() error {
-			_, err := adm.AdmissionCtrl{}.ValidateUpdate(ctx, fixtures.Group, updated)
+			_, err := adm.NewAdmissionCtrl().ValidateUpdate(ctx, fixtures.Group, updated)
 			return err
 		}, timeout, interval).Should(Succeed(), fixtures.Group.Name)
 

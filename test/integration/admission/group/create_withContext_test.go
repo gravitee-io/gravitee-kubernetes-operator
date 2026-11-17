@@ -46,7 +46,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		grp.Spec.Context = fixtures.Context.GetNamespacedName()
 
 		Eventually(func() error {
-			_, err := adm.AdmissionCtrl{}.ValidateCreate(ctx, grp)
+			_, err := adm.NewAdmissionCtrl().ValidateCreate(ctx, grp)
 			return err
 		}, timeout, interval).Should(Succeed(), grp.Name)
 
