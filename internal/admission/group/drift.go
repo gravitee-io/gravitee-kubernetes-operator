@@ -17,15 +17,11 @@ package group
 import (
 	"context"
 
-	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func validateUpdate(ctx context.Context, oldObj *v1alpha1.Group, newObj *v1alpha1.Group) *errors.AdmissionErrors {
@@ -33,12 +29,24 @@ func validateUpdate(ctx context.Context, oldObj *v1alpha1.Group, newObj *v1alpha
 	if errs.IsSevere() {
 		return errs
 	}
-	// The shared remote getter has no context: close over the admission one.
-	getRemote := func(apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
-		return getRemoteGroup(ctx, apimClient, grp)
+
+	// Group talks to APIM through its SDK client, not the APIM facade: the resolver builds that client,
+	// only once drift is known to be enabled, and hands no facade to the getter.
+	var client *apim.SDKClient
+	resolveContext := func(ctx context.Context) (*apim.APIM, error) {
+		var err error
+		client, err = apimgroup.CreateAPIMClient(ctx, newObj)
+		return nil, err
 	}
-	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemote,
-		drift.MapDTO(toGroupPayload)))
+	getRemote := func(_ *apim.APIM, grp *v1alpha1.Group) (any, error) {
+		dto, err := apimgroup.ToDTO(grp)
+		if err != nil {
+			return nil, err
+		}
+		return apimgroup.GetRemote(ctx, client, dto)
+	}
+	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldObj, newObj, resolveContext, resolveRefs, getRemote,
+		drift.MapDTO(toDTO)))
 	return errs
 }
 
@@ -46,47 +54,13 @@ func resolveRefs(context.Context, *v1alpha1.Group) error {
 	return nil
 }
 
-// toGroupPayload maps the CRD to the payload compared with the remote. The same spec already went
-// through the dry run in validateCreate, so a mapping error is not expected here; should one occur,
-// the empty payload is reported as drift rather than silently admitted.
-func toGroupPayload(grp *v1alpha1.Group) sdk.Group {
-	payload, err := model.ToGroup(grp)
+// toDTO maps the CRD to the payload compared with the remote. The same spec already went through the
+// dry run in validateCreate, so a mapping error is not expected here; should one occur, the empty
+// payload is reported as drift rather than silently admitted.
+func toDTO(grp *v1alpha1.Group) apimgroup.DTO {
+	dto, err := apimgroup.ToDTO(grp)
 	if err != nil {
-		return sdk.Group{}
+		return apimgroup.DTO{}
 	}
-	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
-		payload.Members = nil
-	}
-	return payload
-}
-
-func getRemoteGroup(ctx context.Context, apimClient *apim.APIM, grp *v1alpha1.Group) (any, error) {
-	automation := k8s.IsAutomationAPIManaged(grp)
-	grp.PopulateIDs(apimClient.Context, automation)
-	var (
-		state sdk.GroupState
-		err   error
-	)
-	if !automation && grp.GetID() != "" {
-		state, err = apimClient.Env.GetGroupWithUUID(ctx, grp.GetID())
-	} else {
-		state, err = apimClient.Env.GetGroupByHRID(ctx, groupHRID(grp))
-	}
-	if err != nil {
-		return nil, err
-	}
-	// Spec is the payload a PUT would send, so drift compares two values of the same type.
-	// It is a shallow copy: only reassign its fields here, never mutate shared slices or maps.
-	remote := state.Spec()
-	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
-		remote.Members = nil
-	}
-	return remote, nil
-}
-
-func groupHRID(grp *v1alpha1.Group) string {
-	if grp.Spec.HRID != "" {
-		return grp.Spec.HRID
-	}
-	return refs.NewNamespacedNameFromObject(grp).HRID()
+	return dto.WithoutIgnoredMembers()
 }

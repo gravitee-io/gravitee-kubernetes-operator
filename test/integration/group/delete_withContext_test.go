@@ -60,7 +60,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		By("calling the Automation API, expecting not to find the group")
 
 		Eventually(func() error {
-			_, err := apim.Env.GetGroupByHRID(ctx, hrid)
+			_, err := apim.GetGroup(ctx, hrid)
 			return assert.NotFoundError(err)
 		}, timeout, interval).Should(Succeed(), fixtures.Group.Name)
 	})

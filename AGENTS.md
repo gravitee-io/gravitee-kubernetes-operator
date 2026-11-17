@@ -83,18 +83,27 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | Package | Role |
 |---------|------|
 | `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
-| `internal/apim/client/` | `Client` (HTTP + `URLs` + the lazy APIM SDK client `SDK()`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
-| `internal/apim/sdk.go` | The APIM SDK client factory: `NewSDKClient` / `SDKFromContextRef`, same URL, auth, org/env and cloud rules as `FromContext` |
-| `internal/apim/service/` | One file per resource: the HTTP or SDK calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
+| `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
+| `internal/apim/sdk.go` | The APIM SDK client `apim.SDKClient` (`*sdk.APIMClient` + its context, `Probe`), built by `NewSDKClient` / `SDKFromContextRef` with the same URL, auth, org/env and cloud rules as `FromContext` |
+| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/` |
+| `internal/apim/service/` | One file per resource not yet on the SDK: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
 | `internal/apim/model/` | The **wire payloads** (`*DTO`, or generated `sdk.*` types for migrated resources) sent to and received from APIM, plus their mappers |
 
-Controllers and webhooks never build a URL or a payload themselves. They obtain a client with `apim.FromContextRef(ctx, obj.ContextRef(), obj.GetNamespace())` and call a service method.
+Controllers and webhooks never build a URL or a payload themselves. For a resource still on the HTTP client they obtain a client with `apim.FromContextRef(ctx, obj.ContextRef(), obj.GetNamespace())` and call a service method; for a resource on the SDK they call its `internal/apim/<resource>/` package.
 
 #### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
 
 Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**.
 
-- A service gets the SDK client with `svc.SDK()` (embedded `*client.Client`). It is built on first use, not in `FromContext`: the SDK rejects a context without usable auth when the client is built, which would otherwise fail resources that do not use the SDK.
+- Each migrated resource gets an `internal/apim/<resource>/` package laid out like `internal/am/<resource>/`, with the `internal/lifecycle` signatures (see `internal/apim/group/`):
+  - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields;
+  - `Upsert`, `DryRun`, `GetRemote`, `Delete` taking `(ctx, client *apim.SDKClient, dto)`, and `UpdateStatus(ctx, obj, response)`;
+  - `CreateAPIMClient(ctx, obj)`, which calls `apim.SDKFromContextRef`. The SDK rejects a context without usable auth when the client is built, so build it only for resources on the SDK.
+- Steps per resource, one resource per PR:
+  1. the `internal/apim/<resource>/` package on the SDK, called by the controller and webhook;
+  2. the controller and webhook moved onto `internal/lifecycle` (Group: next);
+  3. tests: unit in `test/unit/`, APIM behaviour in `test/integration/`. APIM stays off envtest until every resource is migrated;
+  4. the hand-written DTO, mapper and service methods deleted.
 - Wrap every SDK call in `errors.FromSDKResponse(err, func() (*http.Response, []byte) { return resp.HTTPResponse, resp.Body })` (keep the closure: the SDK returns no response on a transport error) and treat a nil `JSON200` as `errors.UnexpectedSDKResponse`.
 - Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). **Never call `WithDefaults()` on the CRD side.**
 - Drift compares the PUT type on both sides: turn the GET state into it first with its `Spec()` (`GroupState.Spec()` returns the `sdk.Group` a PUT sends; every `XxxState` has one). Comparing `GroupState` with `Group` panics. `Spec()` is a shallow copy: reassign its fields, never mutate shared slices or maps. The SDK types carry their own `drift:` tags; resource types and list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
@@ -126,13 +135,13 @@ Cloud contexts swap the base paths (`/apim/automation`, `/apim/rest`); a `spec.p
 
 The Automation API is HRID-addressed: `PUT` on the collection with the payload carrying `hrid`, `DELETE`/`GET` on `{collection}/{hrid}`, and `?dryRun=true|false` on writes. HRIDs come from `refs.NewNamespacedNameFromObject(obj).HRID()` (namespace + name).
 
-Resources created before APIM 4.12 are still UUID-addressed. The service branches on the `AutomationAPIManaged` condition, sends the UUID in the HRID slot and sets `?hridContainsUUID=true`; on the first successful HRID-based write it calls `k8s.AddAutomationAPIManagedCondition(obj)` so subsequent reconciles use the HRID. Every service that supports the migration carries the same `get<Resource>ID` helper returning `(identifier, hridContainsUUID)`.
+Resources created before APIM 4.12 are still UUID-addressed. The service branches on the `AutomationAPIManaged` condition, sends the UUID in the HRID slot and sets `?hridContainsUUID=true`; on the first successful HRID-based write it calls `k8s.AddAutomationAPIManagedCondition(obj)` so subsequent reconciles use the HRID. Every HTTP service that supports the migration carries the same `get<Resource>ID` helper returning `(identifier, hridContainsUUID)`. An SDK package decides it once, in `ToDTO`, and carries it on the DTO (`group.DTO.HridContainsUUID`); `UpdateStatus` reads it back from the upsert `Response` before adding the condition.
 
 #### DTOs are the API payload
 
 `internal/apim/model/` types are the **Automation API request and response bodies**, not comparison helpers. `SharedPolicyGroup.createOrUpdate` builds `model.ToSharePolicyGroupDTO(...)` and `PUT`s it; `GetByHRID` unmarshals the response into the same `SharedPolicyGroupDTO`. Drift detection is a *second consumer* of these types — that is the only reason `drift:` struct tags live on them.
 
-Mappers are plain functions in `internal/apim/model/` (`ToApplicationDTO`, `ToAPIV4DTO`, `ToSharePolicyGroupDTO`, `ToGroup`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
+Mappers are plain functions in `internal/apim/model/` (`ToApplicationDTO`, `ToAPIV4DTO`, `ToSharePolicyGroupDTO`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
 
 Two deviations worth knowing before copying a pattern:
 

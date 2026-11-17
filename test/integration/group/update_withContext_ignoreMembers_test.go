@@ -54,7 +54,7 @@ var _ = Describe("Update with ignore-members", labels.WithContext, func() {
 		By("expecting the new group to get none of the CRD members")
 
 		Eventually(func(g Gomega) {
-			remote, err := apim.Env.GetGroupByHRID(ctx, hrid)
+			remote, err := apim.GetGroup(ctx, hrid)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(remote.Members).To(BeEmpty())
 		}, timeout, interval).Should(Succeed(), fixtures.Group.Name)
@@ -69,7 +69,7 @@ var _ = Describe("Update with ignore-members", labels.WithContext, func() {
 			SourceID: "application1",
 			Roles:    map[group.RoleScope]string{group.APIRoleScope: "USER"},
 		}}
-		_, err := apim.Env.ImportGroup(ctx, outside)
+		err := apim.ImportGroup(ctx, outside)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("expecting an update to be admitted although the members differ")
@@ -89,7 +89,7 @@ var _ = Describe("Update with ignore-members", labels.WithContext, func() {
 		By("expecting the reconcile to rename the group and keep the members set in APIM")
 
 		Eventually(func(g Gomega) {
-			remote, err := apim.Env.GetGroupByHRID(ctx, hrid)
+			remote, err := apim.GetGroup(ctx, hrid)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(remote.Name).To(Equal(updated.Spec.Name))
 			g.Expect(remote.Members).To(HaveLen(1))
