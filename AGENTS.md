@@ -135,7 +135,7 @@ Cloud contexts swap the base paths (`/apim/automation`, `/apim/rest`); a `spec.p
 
 The Automation API is HRID-addressed: `PUT` on the collection with the payload carrying `hrid`, `DELETE`/`GET` on `{collection}/{hrid}`, and `?dryRun=true|false` on writes. HRIDs come from `refs.NewNamespacedNameFromObject(obj).HRID()` (namespace + name).
 
-Resources created before APIM 4.12 are still UUID-addressed. The service branches on the `AutomationAPIManaged` condition, sends the UUID in the HRID slot and sets `?hridContainsUUID=true`; on the first successful HRID-based write it calls `k8s.AddAutomationAPIManagedCondition(obj)` so subsequent reconciles use the HRID. Every service that supports the migration carries the same `get<Resource>ID` helper returning `(identifier, hridContainsUUID)`.
+Resources created before APIM 4.12 are still UUID-addressed. The service branches on the `AutomationAPIManaged` condition, sends the UUID in the HRID slot and sets `?hridContainsUUID=true`; on the first successful HRID-based write it calls `k8s.AddAutomationAPIManagedCondition(obj)` so subsequent reconciles use the HRID. Every HTTP service that supports the migration carries the same `get<Resource>ID` helper returning `(identifier, hridContainsUUID)`. An SDK package decides it once, in `ToDTO`, and carries it on the DTO (`group.DTO.HridContainsUUID`); `UpdateStatus` reads it back from the upsert `Response` before adding the condition.
 
 #### DTOs are the API payload
 

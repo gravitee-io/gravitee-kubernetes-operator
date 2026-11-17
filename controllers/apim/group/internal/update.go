@@ -20,7 +20,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
@@ -28,9 +27,6 @@ func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
 	if err != nil {
 		return err
 	}
-
-	// Keep the ids on the CR the controller saves, as ToDTO only sets them on its copy.
-	group.PopulateIDs(client.Context, k8s.IsAutomationAPIManaged(group))
 
 	dto, err := apimgroup.ToDTO(group)
 	if err != nil {

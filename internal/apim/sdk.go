@@ -28,7 +28,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-// probeHRID is a group hrid that no resource can have: a namespace-name HRID always contains the namespace.
+// probeHRID is the group hrid Probe gets. A Group named probe-not-found in namespace gko has it too: the
+// probe then reads that group, which proves the same thing.
 const probeHRID = "gko-probe-not-found"
 
 // SDKClient is the APIM Automation API SDK client for one management context.
@@ -46,7 +47,8 @@ func (c *SDKClient) GetEnvID() string {
 }
 
 // Probe checks that the Automation API is reachable and accepts the context's credentials at its org/env.
-// The SDK has no list endpoint, so it gets a group that cannot exist: a 404 is as good as a 200.
+// The SDK has no list endpoint, so it gets one group: a 200 or a 404 both mean reachable and authorised.
+// APIM answers an unknown org or env with a 400, and bad credentials with a 401, so neither passes.
 func (c *SDKClient) Probe(ctx context.Context) error {
 	resp, err := c.GetGroupWithResponse(ctx, probeHRID, &sdk.GetGroupParams{HridContainsUUID: new(false)})
 	err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {

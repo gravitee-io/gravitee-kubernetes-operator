@@ -20,6 +20,7 @@ import (
 	"context"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -41,24 +42,33 @@ type DTO struct {
 // the CRD's and would defeat the drift equivalences. The CRD id is not part of the payload; a legacy group
 // sends it as its hrid.
 func ToDTO(obj *v1alpha1.Group) (DTO, error) {
-	cp := obj.DeepCopy()
-	automation := k8s.IsAutomationAPIManaged(cp)
-	cp.PopulateIDs(nil, automation)
-
-	payload, err := mapper.MapViaJSON[sdk.Group](cp.Spec.Type)
+	payload, err := mapper.MapViaJSON[sdk.Group](obj.Spec.Type)
 	if err != nil {
 		return DTO{}, err
 	}
 
 	dto := DTO{
 		Group:         payload,
-		IgnoreMembers: k8s.HasTrueAnnotation(cp, core.IgnoreMembersAnnotation),
+		IgnoreMembers: k8s.HasTrueAnnotation(obj, core.IgnoreMembersAnnotation),
 	}
-	if cp.Spec.ID != "" && !automation {
-		dto.Hrid = cp.Spec.ID
+	if id := legacyID(obj); id != "" {
+		dto.Hrid = id
 		dto.HridContainsUUID = true
+	} else {
+		dto.Hrid = refs.NewNamespacedNameFromObject(obj).HRID()
 	}
 	return dto, nil
+}
+
+// legacyID returns the UUID of a group created before the Automation API, or "" for a group addressed by its hrid.
+func legacyID(obj *v1alpha1.Group) string {
+	if k8s.IsAutomationAPIManaged(obj) {
+		return ""
+	}
+	if obj.Status.ID != "" {
+		return obj.Status.ID
+	}
+	return obj.Spec.ID
 }
 
 // CreateAPIMClient builds the SDK client of the management context the group references.
@@ -72,6 +82,8 @@ type Response struct {
 	State sdk.GroupState
 	OrgID string
 	EnvID string
+	// HridContainsUUID is the flag the upsert was sent with: a legacy group does not become Automation API managed.
+	HridContainsUUID bool
 }
 
 func (r Response) GetOrgID() string {

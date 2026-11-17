@@ -29,13 +29,15 @@ func validateUpdate(ctx context.Context, oldObj *v1alpha1.Group, newObj *v1alpha
 	if errs.IsSevere() {
 		return errs
 	}
-	client, err := apimgroup.CreateAPIMClient(ctx, newObj)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
+
+	// Group talks to APIM through its SDK client, not the APIM facade: the resolver builds that client,
+	// only once drift is known to be enabled, and hands no facade to the getter.
+	var client *apim.SDKClient
+	resolveContext := func(ctx context.Context) (*apim.APIM, error) {
+		var err error
+		client, err = apimgroup.CreateAPIMClient(ctx, newObj)
+		return nil, err
 	}
-	// The shared drift helper hands over the APIM facade: Group ignores it and uses its SDK client.
-	// Moving Group onto internal/lifecycle removes this adapter.
 	getRemote := func(_ *apim.APIM, grp *v1alpha1.Group) (any, error) {
 		dto, err := apimgroup.ToDTO(grp)
 		if err != nil {
@@ -43,7 +45,8 @@ func validateUpdate(ctx context.Context, oldObj *v1alpha1.Group, newObj *v1alpha
 		}
 		return apimgroup.GetRemote(ctx, client, dto)
 	}
-	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemote, drift.MapDTO(toDTO)))
+	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldObj, newObj, resolveContext, resolveRefs, getRemote,
+		drift.MapDTO(toDTO)))
 	return errs
 }
 

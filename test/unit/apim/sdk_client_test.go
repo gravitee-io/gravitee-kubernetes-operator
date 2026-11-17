@@ -34,7 +34,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
@@ -112,6 +111,13 @@ func bearer(token string) *management.Auth {
 	return &management.Auth{BearerToken: token}
 }
 
+func toDTO(grp *v1alpha1.Group) apimgroup.DTO {
+	GinkgoHelper()
+	dto, err := apimgroup.ToDTO(grp)
+	Expect(err).ToNot(HaveOccurred())
+	return dto
+}
+
 func developers() *v1alpha1.Group {
 	return &v1alpha1.Group{
 		ObjectMeta: metav1.ObjectMeta{Name: "developers", Namespace: "default"},
@@ -148,13 +154,6 @@ var _ = Describe("APIM SDK client factory", func() {
 		client, err := apim.NewSDKClient(ctx, mctx)
 		Expect(err).ToNot(HaveOccurred())
 		return client
-	}
-
-	toDTO := func(grp *v1alpha1.Group) apimgroup.DTO {
-		GinkgoHelper()
-		dto, err := apimgroup.ToDTO(grp)
-		Expect(err).ToNot(HaveOccurred())
-		return dto
 	}
 
 	upsertGroup := func(mctx *v1alpha1.ManagementContext, grp *v1alpha1.Group) (apimgroup.Response, error) {
@@ -268,13 +267,12 @@ var _ = Describe("APIM SDK client factory", func() {
 		Expect(errs.Warning).To(ConsistOf(MatchError("warning one")))
 	})
 
-	It("deletes a legacy group by UUID and reports a missing one as not found", func() {
+	It("deletes a legacy group by UUID and treats a group already gone as deleted", func() {
 		grp := developers()
 		grp.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
 		fake.status = http.StatusNotFound
 
-		err := apimgroup.Delete(ctx, newClient(managementContext(fake.URL, bearer("token"))), toDTO(grp))
-		Expect(gerrors.IsNotFound(err)).To(BeTrue())
+		Expect(apimgroup.Delete(ctx, newClient(managementContext(fake.URL, bearer("token"))), toDTO(grp))).To(Succeed())
 
 		req := fake.lastRequest()
 		Expect(req.Method).To(Equal(http.MethodDelete))
@@ -331,7 +329,7 @@ var _ = Describe("APIM SDK client factory", func() {
 			return newClient(managementContext(fake.URL, bearer("token"))).Probe(ctx)
 		}
 
-		It("gets a group that cannot exist, and treats not found as reachable", func() {
+		It("gets the probe group, and treats not found as reachable", func() {
 			fake.status = http.StatusNotFound
 			Expect(probe()).To(Succeed())
 
@@ -346,6 +344,16 @@ var _ = Describe("APIM SDK client factory", func() {
 
 		It("fails when APIM refuses the credentials", func() {
 			fake.status = http.StatusUnauthorized
+			Expect(probe()).ToNot(Succeed())
+		})
+
+		It("fails when APIM rejects the org or env", func() {
+			fake.status = http.StatusBadRequest
+			Expect(probe()).ToNot(Succeed())
+		})
+
+		It("fails when APIM answers with a server error", func() {
+			fake.status = http.StatusInternalServerError
 			Expect(probe()).ToNot(Succeed())
 		})
 	})

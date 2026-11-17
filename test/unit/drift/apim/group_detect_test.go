@@ -19,6 +19,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -219,14 +220,17 @@ var _ = Describe("Group Drift detection", func() {
 			}
 		}
 
-		It("are not compared: a legacy and an hrid DTO of the same group do not drift", func() {
+		It("are not compared: a legacy DTO with ignore-members and an hrid DTO of the same group do not drift", func() {
 			legacy := developers()
 			legacy.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+			legacy.Annotations = map[string]string{core.IgnoreMembersAnnotation: "true"}
 
 			byUUID, err := apimgroup.ToDTO(legacy)
 			Expect(err).ToNot(HaveOccurred())
 			byHRID, err := apimgroup.ToDTO(developers())
 			Expect(err).ToNot(HaveOccurred())
+			Expect(byUUID.HridContainsUUID).ToNot(Equal(byHRID.HridContainsUUID))
+			Expect(byUUID.IgnoreMembers).ToNot(Equal(byHRID.IgnoreMembers))
 
 			expectNoDrift(drift.DetectWithNamespace(byUUID, byHRID, ""))
 		})

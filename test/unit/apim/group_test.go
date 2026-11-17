@@ -23,7 +23,6 @@ import (
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -37,13 +36,6 @@ var _ = Describe("Group payload", func() {
 		var result map[string]any
 		Expect(json.Unmarshal(data, &result)).To(Succeed())
 		return result
-	}
-
-	toDTO := func(grp *v1alpha1.Group) apimgroup.DTO {
-		GinkgoHelper()
-		dto, err := apimgroup.ToDTO(grp)
-		Expect(err).ToNot(HaveOccurred())
-		return dto
 	}
 
 	It("carries the CRD fields and applies no SDK default", func() {
@@ -87,6 +79,21 @@ var _ = Describe("Group payload", func() {
 		Expect(toDTO(grp).Identity()).To(Equal(grp.Status.ID))
 	})
 
+	It("addresses a group by the UUID set in its spec when it has no status yet", func() {
+		grp := developers()
+		grp.Spec.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+		dto := toDTO(grp)
+		Expect(dto.Identity()).To(Equal(grp.Spec.ID))
+		Expect(dto.HridContainsUUID).To(BeTrue())
+	})
+
+	It("prefers the status UUID to the spec one", func() {
+		grp := developers()
+		grp.Spec.ID = "4d1c5f0a-0000-0000-0000-000000000002"
+		grp.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+		Expect(toDTO(grp).Identity()).To(Equal(grp.Status.ID))
+	})
+
 	It("addresses an Automation API managed group by its hrid, even with a status id", func() {
 		grp := developers()
 		grp.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
@@ -125,12 +132,14 @@ var _ = Describe("Group status", func() {
 
 	It("defaults a missing member count to zero", func() {
 		grp := developers()
+		grp.Status.Members = 3
 		Expect(apimgroup.UpdateStatus(ctx, grp, apimgroup.Response{})).To(Succeed())
 		Expect(grp.Status.Members).To(BeZero())
 	})
 
 	It("never reports a negative member count", func() {
 		grp := developers()
+		grp.Status.Members = 3
 		resp := apimgroup.Response{State: sdk.GroupState{MemberCount: new(int64(-1))}}
 		Expect(apimgroup.UpdateStatus(ctx, grp, resp)).To(Succeed())
 		Expect(grp.Status.Members).To(BeZero())
@@ -145,7 +154,18 @@ var _ = Describe("Group status", func() {
 	It("leaves a legacy group, synced by UUID, unmanaged by the Automation API", func() {
 		grp := developers()
 		grp.Status.ID = id
-		Expect(apimgroup.UpdateStatus(ctx, grp, apimgroup.Response{State: sdk.GroupState{Id: &id}})).To(Succeed())
+		resp := apimgroup.Response{State: sdk.GroupState{Id: &id}, HridContainsUUID: true}
+		Expect(apimgroup.UpdateStatus(ctx, grp, resp)).To(Succeed())
 		Expect(k8s.IsAutomationAPIManaged(grp)).To(BeFalse())
+	})
+
+	It("leaves a group synced by the UUID in its spec, with no status yet, unmanaged", func() {
+		grp := developers()
+		grp.Spec.ID = id
+		dto := toDTO(grp)
+		resp := apimgroup.Response{State: sdk.GroupState{Id: &id}, HridContainsUUID: dto.HridContainsUUID}
+		Expect(apimgroup.UpdateStatus(ctx, grp, resp)).To(Succeed())
+		Expect(k8s.IsAutomationAPIManaged(grp)).To(BeFalse())
+		Expect(grp.Status.ID).To(Equal(id))
 	})
 })
