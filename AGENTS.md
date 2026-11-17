@@ -60,7 +60,7 @@ Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core inte
 ### Controllers (controllers/)
 
 Three controller families, each under `controllers/`:
-- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription)
+- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group` runs on `internal/lifecycle`, like the AM controllers; the others still have a hand-written loop
 - **`am/`** — `amcontext`, `securitydomain` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
@@ -101,7 +101,7 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
   - `CreateAPIMClient(ctx, obj)`, which calls `apim.SDKFromContextRef`. The SDK rejects a context without usable auth when the client is built, so build it only for resources on the SDK.
 - Steps per resource, one resource per PR:
   1. the `internal/apim/<resource>/` package on the SDK, called by the controller and webhook;
-  2. the controller and webhook moved onto `internal/lifecycle` (Group: next);
+  2. the controller and webhook moved onto `internal/lifecycle`: `NewLifecycle()` and `NewAdmissionCtrl()` wire the package functions (see `controllers/apim/group/`, `internal/admission/group/`). Without `ResolveRefs`, the lifecycle reports `Accepted` only, with no `ResolvedRefs` condition: say so in the release note when a resource loses it, as Group did;
   3. tests: unit in `test/unit/`, APIM behaviour in `test/integration/`. APIM stays off envtest until every resource is migrated;
   4. the hand-written DTO, mapper and service methods deleted.
 - Wrap every SDK call in `errors.FromSDKResponse(err, func() (*http.Response, []byte) { return resp.HTTPResponse, resp.Body })` (keep the closure: the SDK returns no response on a transport error) and treat a nil `JSON200` as `errors.UnexpectedSDKResponse`.
