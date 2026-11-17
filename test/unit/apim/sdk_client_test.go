@@ -177,6 +177,7 @@ var _ = Describe("APIM SDK client factory", func() {
 		Expect(*resp.State.Id).To(Equal("4d1c5f0a-0000-0000-0000-000000000001"))
 		Expect(resp.GetOrgID()).To(Equal("org1"))
 		Expect(resp.GetEnvID()).To(Equal("env1"))
+		Expect(resp.HridContainsUUID).To(BeFalse())
 	})
 
 	It("sends basic credentials when the context has no bearer token", func() {
@@ -242,8 +243,9 @@ var _ = Describe("APIM SDK client factory", func() {
 		// a legacy group carries its UUID in status
 		grp.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
 
-		_, err := upsertGroup(managementContext(fake.URL, bearer("token")), grp)
+		resp, err := upsertGroup(managementContext(fake.URL, bearer("token")), grp)
 		Expect(err).ToNot(HaveOccurred())
+		Expect(resp.HridContainsUUID).To(BeTrue())
 
 		req := fake.lastRequest()
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))

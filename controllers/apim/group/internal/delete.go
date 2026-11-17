@@ -38,5 +38,11 @@ func Delete(ctx context.Context, group *v1alpha1.Group) error {
 		return err
 	}
 
+	// A legacy group this CR never synced is only known by the spec.id the user set: it was not adopted,
+	// so leave it in APIM rather than delete a group the operator does not own.
+	if dto.HridContainsUUID && group.Status.ID == "" {
+		return nil
+	}
+
 	return apimgroup.Delete(ctx, client, dto)
 }
