@@ -148,20 +148,20 @@ var _ = Describe("API v4 Drift detection", func() {
 		Entry("unset portal navigation visibility resolved to PUBLIC matches the remote",
 			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha"},
-			}}.WithResolvedVisibility(),
+			}}.ForDrift(),
 			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Public},
-			}}.WithResolvedVisibility(),
+			}}.ForDrift(),
 		),
 		Entry("unset portal navigation visibility under a PRIVATE parent matches the inherited remote",
 			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Private},
 				{Path: "/alpha/docs"},
-			}}.WithResolvedVisibility(),
+			}}.ForDrift(),
 			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Private},
 				{Path: "/alpha/docs", Visibility: nav.Private},
-			}}.WithResolvedVisibility(),
+			}}.ForDrift(),
 		),
 		Entry("unset flow mode equivalent to the DEFAULT the remote resolves",
 			model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{}},
@@ -180,7 +180,7 @@ var _ = Describe("API v4 Drift detection", func() {
 	It("detects a console-side flip of a portal navigation entry the CRD leaves unset", func() {
 		crd := model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 			{Path: "/alpha"},
-		}}.WithResolvedVisibility()
+		}}.ForDrift()
 		remote := model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 			{Path: "/alpha", Visibility: nav.Private},
 		}}
@@ -203,8 +203,8 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	DescribeTable("listener path overrideAccess is ignored",
 		func(crdPaths, remotePaths string) {
-			crd := apiV4WithListenerPaths(crdPaths).WithoutOverrideAccess()
-			remote := apiV4WithListenerPaths(remotePaths).WithoutOverrideAccess()
+			crd := apiV4WithListenerPaths(crdPaths).ForDrift()
+			remote := apiV4WithListenerPaths(remotePaths).ForDrift()
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("unset against false",
@@ -230,8 +230,8 @@ var _ = Describe("API v4 Drift detection", func() {
 	)
 
 	It("still detects drift on the other keys of a listener path", func() {
-		crd := apiV4WithListenerPaths(`[{"path": "/a", "overrideAccess": true}]`).WithoutOverrideAccess()
-		remote := apiV4WithListenerPaths(`[{"path": "/b", "overrideAccess": true}]`).WithoutOverrideAccess()
+		crd := apiV4WithListenerPaths(`[{"path": "/a", "overrideAccess": true}]`).ForDrift()
+		remote := apiV4WithListenerPaths(`[{"path": "/b", "overrideAccess": true}]`).ForDrift()
 		result := drift.DetectWithNamespace(crd, remote, "")
 		Expect(result.DriftDetected()).To(BeTrue())
 		Expect(result.String()).To(ContainSubstring(`path: "/a" != "/b"`))
