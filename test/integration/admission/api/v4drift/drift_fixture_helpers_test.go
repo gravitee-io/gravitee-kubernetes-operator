@@ -49,7 +49,7 @@ func validateDescriptionDrift(
 	newAPI.PopulateIDs(mgmtContext, true)
 	setDescription(newAPI, remoteDescription)
 
-	_, err := apimClient.APIs.ImportV4(newAPI)
+	err := apimClient.UpsertAPIV4(ctx, newAPI)
 	Expect(err).ToNot(HaveOccurred())
 
 	setDescription(newAPI, localCRDDescription)

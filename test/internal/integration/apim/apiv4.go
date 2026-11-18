@@ -1,0 +1,61 @@
+// Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//         http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package apim
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+)
+
+// UpsertAPIV4 PUTs the spec of api to APIM as it is (IDs are not populated again), to change the API behind the
+// operator's back. An API with a spec.id is sent with its UUID as the hrid.
+func (a *APIM) UpsertAPIV4(ctx context.Context, api *v1alpha1.ApiV4Definition) error {
+	payload := model.ToAPIV4DTO(&api.Spec.Api)
+	ignoreGroups := k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation)
+	if api.Spec.ID != "" {
+		payload.HRID = api.Spec.ID
+		_, err := a.APIs.UpsertV4Legacy(payload, false, ignoreGroups)
+		return err
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	resp, err := a.SDK.UpsertApiWithBodyWithResponse(ctx,
+		&sdk.UpsertApiParams{DryRun: new(false), IgnoreGroups: &ignoreGroups}, "application/json", bytes.NewReader(body))
+	return errors.FromSDKResponse(err, func() (*http.Response, []byte) {
+		return resp.HTTPResponse, resp.Body
+	})
+}
+
+// DeleteAPIV4 deletes api in APIM, addressed as the operator addresses it on delete.
+func (a *APIM) DeleteAPIV4(ctx context.Context, api *v1alpha1.ApiV4Definition) error {
+	dto, err := apiv4.ToDTO(api)
+	if err != nil {
+		return err
+	}
+	return apiv4.Delete(ctx, &apiv4.Client{SDKClient: a.SDK, APIM: a.APIM}, dto)
+}

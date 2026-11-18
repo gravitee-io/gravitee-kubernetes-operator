@@ -18,7 +18,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -42,6 +44,10 @@ func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
 		return err
 	}
 
+	if v4API, ok := api.(*v1alpha1.ApiV4Definition); ok {
+		return deleteV4(ctx, v4API)
+	}
+
 	if api.HasContext() {
 		if err := deleteWithContext(ctx, api); err != nil {
 			return err
@@ -49,6 +55,18 @@ func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
 	}
 
 	return nil
+}
+
+func deleteV4(ctx context.Context, api *v1alpha1.ApiV4Definition) error {
+	client, err := apiv4.CreateAPIMClient(ctx, api)
+	if err != nil {
+		return err
+	}
+	dto, err := apiv4.ToDTO(api)
+	if err != nil {
+		return err
+	}
+	return apiv4.Delete(ctx, client, dto)
 }
 
 func deleteWithContext(ctx context.Context, api core.ApiDefinitionObject) error {
@@ -59,8 +77,6 @@ func deleteWithContext(ctx context.Context, api core.ApiDefinitionObject) error 
 	switch {
 	case api.GetDefinitionVersion() == core.ApiV2:
 		return errors.IgnoreNotFound(apimClient.APIs.DeleteV2(api.GetID()))
-	case api.GetDefinitionVersion() == core.ApiV4:
-		return errors.IgnoreNotFound(apimClient.APIs.DeleteV4(api))
 	default:
 		return fmt.Errorf("unknown version %s", api.GetDefinitionVersion())
 	}
