@@ -384,6 +384,9 @@ func setPath(l v4.Listener, suffix string) *v4.GenericListener {
 	case *v4.KafkaListener:
 		t.Host = fmt.Sprintf("%s%s", t.Host, suffix)
 		return v4.ToGenericListener(t)
+	case *v4.SubscriptionListener:
+		// Nothing to randomize: a SUBSCRIPTION listener has no path or host.
+		return v4.ToGenericListener(t)
 	}
 	return nil
 }

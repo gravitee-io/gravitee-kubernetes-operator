@@ -17,12 +17,12 @@ package subscription
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -43,8 +43,8 @@ func validateUpdate(
 	if errs.IsSevere() {
 		return errs
 	}
-	oldSub, ook := oldObj.(core.SubscriptionObject)
-	newSub, nok := newObj.(core.SubscriptionObject)
+	oldSub, ook := oldObj.(*v1alpha1.Subscription)
+	newSub, nok := newObj.(*v1alpha1.Subscription)
 	if ook && nok {
 		errs.MergeWith(validateImmutableProperties(oldSub, newSub))
 		if errs.IsSevere() {
@@ -57,7 +57,20 @@ func validateUpdate(
 			return errs
 		}
 
+		if plan == nil {
+			errs.AddSeveref(
+				"unable to subscribe to API [%s] because plan [%s] cannot be found",
+				newSub.GetApiRef(), newSub.GetPlan(),
+			)
+			return errs
+		}
+
 		errs.Add(validateApiKeys(plan, newSub.GetApiKeys()))
+		if errs.IsSevere() {
+			return errs
+		}
+
+		errs.Add(validateConsumerConfiguration(plan, newSub))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -103,7 +116,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	sub, ok := obj.(core.SubscriptionObject)
+	sub, ok := obj.(*v1alpha1.Subscription)
 	if !ok {
 		return errs
 	}
@@ -128,7 +141,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.Add(validatePlan(sub, api))
+	errs.Add(ValidatePlan(sub, api))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -189,7 +202,8 @@ func resolveDependencies(
 	return api, app, plan
 }
 
-func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *errors.AdmissionError {
+// ValidatePlan checks that the subscribed plan exists and that GKO can subscribe to it.
+func ValidatePlan(sub *v1alpha1.Subscription, api core.ApiDefinitionModel) *errors.AdmissionError {
 	if !api.HasPlans() {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because it has no plan", sub.GetApiRef(),
@@ -197,13 +211,32 @@ func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *erro
 	}
 
 	plan := api.GetPlan(sub.GetPlan())
-	if plan == nil || reflect.ValueOf(plan).IsNil() {
+	if plan == nil {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because plan [%s] cannot be found",
 			sub.GetApiRef(), sub.GetPlan(),
 		)
 	}
-	return validatePlanSecurityType(plan, sub.GetPlan())
+	if err := validatePlanSecurityType(plan, sub.GetPlan()); err != nil {
+		return err
+	}
+	return validateConsumerConfiguration(plan, sub)
+}
+
+// validateConsumerConfiguration mirrors APIM: a PUSH subscription needs the entrypoint
+// that delivers its messages.
+func validateConsumerConfiguration(plan core.PlanModel, sub *v1alpha1.Subscription) *errors.AdmissionError {
+	if !plan.IsPush() {
+		return nil
+	}
+	consumer := sub.Spec.ConsumerConfiguration
+	if consumer == nil || consumer.EntrypointID == "" {
+		return errors.NewSeveref(
+			"consumerConfiguration.entrypointId is required to subscribe to PUSH plan [%s]",
+			sub.GetPlan(),
+		)
+	}
+	return nil
 }
 
 func validateMTLS(
@@ -240,6 +273,9 @@ func validateApplicationState(app core.ApplicationObject) *errors.AdmissionError
 }
 
 func validatePlanSecurityType(plan core.PlanModel, planName string) *errors.AdmissionError {
+	if plan.IsPush() {
+		return nil
+	}
 	if !slices.Contains(allowedPlanSecurities, plan.GetSecurityType()) {
 		return errors.NewSeveref(
 			"unable to subscribe to plan [%s] because security type is not one of [%s]",
@@ -255,10 +291,11 @@ func validateApiKeys(plan core.PlanModel, apiKeys []core.ApiKeyModel) *errors.Ad
 	}
 
 	if plan.GetSecurityType() != "API_KEY" {
-		return errors.NewSeveref(
-			"apiKeys can only be set when subscribing to an API_KEY plan, got [%s]",
-			plan.GetSecurityType(),
-		)
+		got := fmt.Sprintf("[%s]", plan.GetSecurityType())
+		if plan.IsPush() {
+			got = "PUSH plan"
+		}
+		return errors.NewSeveref("apiKeys can only be set when subscribing to an API_KEY plan, got %s", got)
 	}
 
 	seen := make(map[string]bool, len(apiKeys))
