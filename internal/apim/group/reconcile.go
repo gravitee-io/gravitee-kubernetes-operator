@@ -60,12 +60,8 @@ func upsert(ctx context.Context, client *apim.SDKClient, dto DTO, dryRun bool) (
 	return *resp.JSON200, nil
 }
 
-// Delete removes the group from APIM. A group already gone counts as deleted, and an unadopted group
-// (see DTO.Unadopted) is left in APIM without a request.
+// Delete removes the group from APIM. A group already gone counts as deleted.
 func Delete(ctx context.Context, client *apim.SDKClient, dto DTO) error {
-	if dto.Unadopted {
-		return nil
-	}
 	resp, err := client.DeleteGroupWithResponse(ctx, dto.Identity(),
 		&sdk.DeleteGroupParams{HridContainsUUID: &dto.HridContainsUUID})
 	return errors.IgnoreNotFound(errors.FromSDKResponse(err, func() (*http.Response, []byte) {
