@@ -29,7 +29,7 @@ type AuthzPolicyDTO struct {
 	Name       string   `json:"name"`
 	PolicyType string   `json:"policyType"`
 	PolicyText string   `json:"policyText"`
-	Targets    []string `json:"targets,omitempty" drift:"set"`
+	Targets    []string `json:"targets,omitempty" drift:"set:omitted-is-empty"`
 }
 
 // AuthzPolicyState is what a PUT or a GET answers: the payload, the envelope and the deployment.

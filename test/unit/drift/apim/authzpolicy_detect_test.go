@@ -94,6 +94,16 @@ var _ = Describe("Authz policy Drift detection", func() {
 			expectedEquivalentNotHavingAnyZeroValue(completeAuthzPolicyDTO(), completeAuthzPolicyDTO())
 		})
 	})
+
+	It("refuses a target APIM added when neither version of the policy sets targets", func() {
+		remote := model.AuthzPolicyDTO{Name: "before", Targets: []string{"api-1"}}
+		merged := drift.Merge(
+			drift.DetectWithNamespace(model.AuthzPolicyDTO{Name: "before"}, remote, ""),
+			drift.DetectWithNamespace(model.AuthzPolicyDTO{Name: "after"}, remote, ""),
+		)
+
+		Expect(merged.DriftDetected()).To(BeTrue(), merged.String())
+	})
 })
 
 func completeAuthzPolicyDTO() model.AuthzPolicyDTO {

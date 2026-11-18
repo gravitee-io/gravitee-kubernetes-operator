@@ -70,6 +70,10 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("set", reflect.Slice, Set)
 }
 
+// setOmittedIsEmpty makes Set compare a list the CRD omits as an empty list, so values only the remote holds
+// there still drift.
+const setOmittedIsEmpty = "omitted-is-empty"
+
 func Set(crd any, remote any, context DriftContext) Equivalence {
 	// only compare arrays of scalars or flat structs (pointers or not)
 	if !isCompItems(crd) || !isCompItems(remote) {
@@ -89,7 +93,13 @@ func Set(crd any, remote any, context DriftContext) Equivalence {
 		Skip:       true,
 		PostFunc: func(r *Result) {
 			r.Index = new(-1)
-			r.CRDValue = uniqueInCRD
+			// A list the CRD omits is reported absent, so Merge admits values only the remote holds there.
+			// Tagged set:omitted-is-empty, it is an empty list and those values still drift.
+			if isNilSlice(crd) && !slices.Contains(context.FuncArgs, setOmittedIsEmpty) {
+				r.CRDValue = nil
+			} else {
+				r.CRDValue = uniqueInCRD
+			}
 			r.RemoteValue = uniqueInRemote
 			if unchangedCount := len(crdItems) - len(uniqueInCRD); unchangedCount > 0 {
 				r.Reason = fmt.Sprintf("%d unchanged", unchangedCount)
@@ -125,6 +135,10 @@ func isFlatStruct(t reflect.Type) bool {
 		}
 	}
 	return true
+}
+
+func isNilSlice(v any) bool {
+	return v == nil || reflect.ValueOf(v).IsNil()
 }
 
 // uniqueItems returns the dereferenced items of the slice v, without duplicates, in declaration order.

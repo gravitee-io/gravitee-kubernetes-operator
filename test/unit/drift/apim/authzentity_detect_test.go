@@ -133,6 +133,19 @@ var _ = Describe("Authz entity Drift detection", func() {
 			expectedEquivalentNotHavingAnyZeroValue(completeAuthzEntityDTO(), completeAuthzEntityDTO())
 		})
 	})
+
+	It("refuses a parent APIM added when neither version of the entity sets parents", func() {
+		remote := model.AuthzEntityDTO{
+			Kind:    "before",
+			Parents: []model.AuthzEntityParentDTO{{EntityType: "Group", EntityID: "admins"}},
+		}
+		merged := drift.Merge(
+			drift.DetectWithNamespace(model.AuthzEntityDTO{Kind: "before"}, remote, ""),
+			drift.DetectWithNamespace(model.AuthzEntityDTO{Kind: "after"}, remote, ""),
+		)
+
+		Expect(merged.DriftDetected()).To(BeTrue(), merged.String())
+	})
 })
 
 func completeAuthzEntityDTO() model.AuthzEntityDTO {
