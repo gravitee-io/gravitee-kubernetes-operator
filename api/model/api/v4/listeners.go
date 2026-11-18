@@ -243,9 +243,16 @@ type Entrypoint struct {
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
+// ToGatewayDefinition defaults a missing qos to AUTO, as APIM does (a native entrypoint has no qos,
+// and the gateway ignores it there). The CRD default never applies: the API server does not default
+// anything below spec.listeners.
 func (ep *Entrypoint) ToGatewayDefinition() *Entrypoint {
 	entryPoint := ep.DeepCopy()
-	qosType := QosType(Enum(*ep.Qos).ToGatewayDefinition())
+	qos := AutoQOS
+	if ep.Qos != nil {
+		qos = *ep.Qos
+	}
+	qosType := QosType(Enum(qos).ToGatewayDefinition())
 	entryPoint.Qos = &qosType
 	if ep.Dlq != nil && ep.Dlq.Endpoint == nil {
 		entryPoint.Dlq = nil

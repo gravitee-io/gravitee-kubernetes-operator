@@ -149,20 +149,20 @@ var _ = Describe("API v4 Drift detection", func() {
 		Entry("unset portal navigation visibility resolved to PUBLIC matches the remote",
 			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha"},
-			}}.WithResolvedVisibility(),
+			}}.ForDrift(),
 			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Public},
-			}}.WithResolvedVisibility(),
+			}}.ForDrift(),
 		),
 		Entry("unset portal navigation visibility under a PRIVATE parent matches the inherited remote",
 			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Private},
 				{Path: "/alpha/docs"},
-			}}.WithResolvedVisibility(),
+			}}.ForDrift(),
 			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Private},
 				{Path: "/alpha/docs", Visibility: nav.Private},
-			}}.WithResolvedVisibility(),
+			}}.ForDrift(),
 		),
 		Entry("unset flow mode equivalent to the DEFAULT the remote resolves",
 			model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{}},
@@ -181,7 +181,7 @@ var _ = Describe("API v4 Drift detection", func() {
 	It("detects a console-side flip of a portal navigation entry the CRD leaves unset", func() {
 		crd := model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 			{Path: "/alpha"},
-		}}.WithResolvedVisibility()
+		}}.ForDrift()
 		remote := model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 			{Path: "/alpha", Visibility: nav.Private},
 		}}
@@ -204,8 +204,8 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	DescribeTable("listener path overrideAccess is ignored",
 		func(crdPaths, remotePaths string) {
-			crd := apiV4WithListenerPaths(crdPaths).WithoutOverrideAccess()
-			remote := apiV4WithListenerPaths(remotePaths).WithoutOverrideAccess()
+			crd := apiV4WithListenerPaths(crdPaths).ForDrift()
+			remote := apiV4WithListenerPaths(remotePaths).ForDrift()
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("unset against false",
@@ -231,12 +231,43 @@ var _ = Describe("API v4 Drift detection", func() {
 	)
 
 	It("still detects drift on the other keys of a listener path", func() {
-		crd := apiV4WithListenerPaths(`[{"path": "/a", "overrideAccess": true}]`).WithoutOverrideAccess()
-		remote := apiV4WithListenerPaths(`[{"path": "/b", "overrideAccess": true}]`).WithoutOverrideAccess()
+		crd := apiV4WithListenerPaths(`[{"path": "/a", "overrideAccess": true}]`).ForDrift()
+		remote := apiV4WithListenerPaths(`[{"path": "/b", "overrideAccess": true}]`).ForDrift()
 		result := drift.DetectWithNamespace(crd, remote, "")
 		Expect(result.DriftDetected()).To(BeTrue())
 		Expect(result.String()).To(ContainSubstring(`path: "/a" != "/b"`))
 	})
+
+	// What APIM stores for an entrypoint without qos (GKO-3431): AUTO, except on a native
+	// entrypoint, which it stores without qos whatever was sent.
+	DescribeTable("admits the entrypoint qos APIM stores",
+		func(listener, entrypointType, crdQos, remoteQos string) {
+			crd := apiV4WithEntrypoint(listener, entrypointType, crdQos).ForDrift()
+			remote := apiV4WithEntrypoint(listener, entrypointType, remoteQos).ForDrift()
+			expectNoDrift(admissionDriftAPIV4(crd, remote))
+		},
+		Entry("PROXY unset against AUTO", httpListener, "http-proxy", "", "AUTO"),
+		Entry("PROXY AUTO against AUTO", httpListener, "http-proxy", "AUTO", "AUTO"),
+		Entry("PROXY TCP unset against AUTO", `{"type": "TCP", "hosts": ["a"]}`, "tcp-proxy", "", "AUTO"),
+		Entry("MESSAGE unset against AUTO", httpListener, "sse", "", "AUTO"),
+		Entry("MESSAGE subscription unset against AUTO", `{"type": "SUBSCRIPTION"}`, "webhook", "", "AUTO"),
+		Entry("NATIVE AUTO against unset", kafkaListener, "native-kafka", "AUTO", ""),
+		Entry("NATIVE NONE against unset", kafkaListener, "native-kafka", "NONE", ""),
+		Entry("NATIVE unset against unset", kafkaListener, "native-kafka", "", ""),
+	)
+
+	DescribeTable("detects a qos that differs from the one APIM stores",
+		func(entrypointType, crdQos, remoteQos string) {
+			crd := apiV4WithEntrypoint(httpListener, entrypointType, crdQos).ForDrift()
+			remote := apiV4WithEntrypoint(httpListener, entrypointType, remoteQos).ForDrift()
+			merged := admissionDriftAPIV4(crd, remote)
+			Expect(merged.DriftDetected()).To(BeTrue())
+			Expect(merged.String()).To(ContainSubstring(`qos: "` + crdQos + `" != "` + remoteQos + `"`))
+		},
+		Entry("PROXY AUTO changed to NONE in APIM", "http-proxy", "AUTO", "NONE"),
+		Entry("MESSAGE AUTO changed to AT_LEAST_ONCE in APIM", "sse", "AUTO", "AT_LEAST_ONCE"),
+		Entry("PROXY NONE against AUTO", "http-proxy", "NONE", "AUTO"),
+	)
 
 	It("admits the cors defaults APIM adds to the part of a listener cors the CRD sets", func() {
 		crd := apiV4WithListenerCors(`{"enabled": true, "allowOrigin": ["https://app.example.com"], "allowMethods": ["GET", "POST"]}`)
@@ -440,6 +471,17 @@ func apiV4WithListenerCors(cors string) model.APIV4DTO {
 	return parseJSON[model.APIV4DTO](`{"listeners": [{"type": "HTTP", "paths": [{"path": "/a/"}], "cors": ` + cors + `}]}`)
 }
 
+// apiV4WithEntrypoint adds one entrypoint to the listener, with the given qos unless it is empty.
+func apiV4WithEntrypoint(listener, entrypointType, qos string) model.APIV4DTO {
+	GinkgoHelper()
+	entrypoint := `{"type": "` + entrypointType + `"`
+	if qos != "" {
+		entrypoint += `, "qos": "` + qos + `"`
+	}
+	withEntrypoint := strings.TrimSuffix(listener, "}") + `, "entrypoints": [` + entrypoint + `}]}`
+	return parseJSON[model.APIV4DTO](`{"listeners": [` + withEntrypoint + `]}`)
+}
+
 func completeAPIV4DTO() model.APIV4DTO {
 	GinkgoHelper()
 	return loadFixture[model.APIV4DTO]("api_v4_dto.json")
@@ -451,4 +493,6 @@ const (
 	apiV4KeylessPlan = `{"hrid": "KeylessPlan", "name": "Keyless plan", "status": "PUBLISHED", "security": {"type": "KEY_LESS"}}`
 	apiV4PageA       = `{"hrid": "a-page", "name": "A", "type": "MARKDOWN", "content": "a"}`
 	apiV4PageB       = `{"hrid": "b-page", "name": "B", "type": "MARKDOWN", "content": "b"}`
+	httpListener     = `{"type": "HTTP", "paths": [{"path": "/a"}]}`
+	kafkaListener    = `{"type": "KAFKA", "host": "a", "port": 9092}`
 )
