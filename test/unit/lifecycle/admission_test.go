@@ -556,6 +556,37 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 		Expect(c).To(Equal(calls{getRemote: true}))
 	})
 
+	It("dry-runs a metadata-only update that PayloadChanged reports", func() {
+		a := withRemote(testDTO{Key: "g1"}, nil)
+		var c calls
+		recording(&a, &c, "APIM would refuse")
+		a.PayloadChanged = func(oldG, newG *v1alpha1.Group) bool {
+			return oldG.Annotations["payload"] != newG.Annotations["payload"]
+		}
+		g := synced(newGroup("g1", "ns"))
+		annotated := g.DeepCopy()
+		annotated.Annotations = map[string]string{"payload": "changed"}
+
+		errs := a.ValidateUpdate(ctx, g, annotated)
+
+		Expect(errs.IsSevere()).To(BeTrue())
+		Expect(errs.Severe[0].Error()).To(ContainSubstring("APIM would refuse"))
+		Expect(c.dryRun).To(BeTrue())
+	})
+
+	It("does not dry-run a spec change that PayloadChanged does not report", func() {
+		a := withRemote(testDTO{}, gerrors.ServerError{StatusCode: 404})
+		var c calls
+		recording(&a, &c, "APIM would refuse")
+		a.PayloadChanged = func(*v1alpha1.Group, *v1alpha1.Group) bool { return false }
+		g := newGroup("g1", "ns")
+
+		errs := a.ValidateUpdate(ctx, g, withSpecChange(g))
+
+		Expect(errs.IsSevere()).To(BeFalse())
+		Expect(c).To(Equal(calls{}))
+	})
+
 	It("skips drift with a warning when a Secret of the previous version no longer exists", func() {
 		templating := env.Config.EnableTemplating
 		env.Config.EnableTemplating = true

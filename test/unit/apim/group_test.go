@@ -109,6 +109,24 @@ var _ = Describe("Group payload", func() {
 		Expect(dto.Members).To(HaveLen(1))
 		Expect(dto.IgnoreMembers).To(BeTrue())
 	})
+
+	It("reports a payload change on a spec change or an ignore-members change", func() {
+		grp := developers()
+		Expect(apimgroup.PayloadChanged(grp, grp.DeepCopy())).To(BeFalse())
+
+		labelled := grp.DeepCopy()
+		labelled.Labels = map[string]string{"team": "a"}
+		Expect(apimgroup.PayloadChanged(grp, labelled)).To(BeFalse())
+
+		renamed := grp.DeepCopy()
+		renamed.Spec.Name = "Testers"
+		Expect(apimgroup.PayloadChanged(grp, renamed)).To(BeTrue())
+
+		ignoring := grp.DeepCopy()
+		ignoring.Annotations = map[string]string{core.IgnoreMembersAnnotation: "true"}
+		Expect(apimgroup.PayloadChanged(grp, ignoring)).To(BeTrue())
+		Expect(apimgroup.PayloadChanged(ignoring, grp)).To(BeTrue())
+	})
 })
 
 var _ = Describe("Group status", func() {
