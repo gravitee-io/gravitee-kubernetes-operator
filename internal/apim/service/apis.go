@@ -17,19 +17,13 @@ package service
 import (
 	"strconv"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	httputil "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
@@ -122,50 +116,24 @@ func (svc *APIs) importV2(spec *v2.Api, dryRun bool) (*base.Status, error) {
 	return status, nil
 }
 
-func (svc *APIs) ImportV4(api *v1alpha1.ApiV4Definition) (*base.Status, error) {
-	return svc.applyV4(api, false)
-}
-
-func (svc *APIs) DryRunImportV4(api *v1alpha1.ApiV4Definition) (*base.Status, error) {
-	return svc.applyV4(api, true)
-}
-
-func (svc *APIs) applyV4(api *v1alpha1.ApiV4Definition, dryRun bool) (*base.Status, error) {
-	url := svc.AutomationTarget("apis").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
-
-	// populateIDs only set this if it an upgraded API
-	setHridWithUUID := api.Spec.ID != ""
-
-	// Map v4 spec to the apim payload DTO, avoiding the v4 automation payload type.
-	dto := model.ToAPIV4DTO(&api.Spec.Api)
-
-	// If an ID is set, it can be:
-	// 1. export/import case (user is trying to manage an existing API)
-	// 2. CRD created before upgrade to AutomationAPI (prior to 4.12)
-	// Anyhow, use HRID to store ID and pass setHridWithUUID query param
-	// To tell AutomationAPI that this it is not an HRID-managed resource
-	// UUIDs are already computed
-	if setHridWithUUID {
-		dto.HRID = api.Spec.ID
-		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
-	}
-
-	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) {
+// UpsertV4Legacy PUTs a v4 API created before the Automation API (pre-4.12), whose UUID is sent as the hrid, with
+// hridContainsUUID=true. It is the only v4 write left on GKO's HTTP client: APIM reads hridContainsUUID on
+// PUT /apis but its Automation OAS does not declare it, so the generated SDK cannot send it (APIM-16599, Issue 01).
+// Delete it once APIM declares the parameter and the SDK syncs it. Every other v4 call goes through
+// internal/apim/apiv4.
+func (svc *APIs) UpsertV4Legacy(payload model.APIV4DTO, dryRun, ignoreGroups bool) (*sdk.ApiV4State, error) {
+	url := svc.AutomationTarget("apis").
+		WithQueryParam("dryRun", strconv.FormatBool(dryRun)).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	if ignoreGroups {
 		url = url.WithQueryParam("ignoreGroups", env.TrueString)
 	}
 
-	status := new(v4.AutomationStatus)
-	if err := svc.HTTP.Put(url.String(), dto, status); err != nil {
+	state := new(sdk.ApiV4State)
+	if err := svc.HTTP.Put(url.String(), payload, state); err != nil {
 		return nil, err
 	}
-
-	if !setHridWithUUID {
-		k8s.AddAutomationAPIManagedCondition(api)
-	}
-	return &base.Status{
-		ApiStatus: status.ApiStatus,
-		Plans:     status.PlansAsMap(),
-	}, nil
+	return state, nil
 }
 
 func (svc *APIs) UpdateState(apiID string, action model.Action) error {
@@ -178,13 +146,6 @@ func (svc *APIs) DeleteV2(apiID string) error {
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-func (svc *APIs) DeleteV4(api core.ApiDefinitionObject) error {
-	apiID, hridContainsUUID := getApiID(api)
-	url := svc.AutomationTarget("apis").WithPath(apiID).
-		WithQueryParam("hridContainsUUID", strconv.FormatBool(hridContainsUUID))
-	return svc.HTTP.Delete(url.String(), nil)
-}
-
 func (svc *APIs) SetKubernetesContext(apiID string) error {
 	url := svc.EnvV1Target("apis").WithPath(apiID).WithPath("definition-context")
 	return svc.HTTP.Put(url.String(), model.NewKubernetesContext(), nil)
@@ -193,11 +154,4 @@ func (svc *APIs) SetKubernetesContext(apiID string) error {
 func (svc *APIs) Deploy(id string) error {
 	url := svc.EnvV1Target("apis").WithPath(id).WithPath("deploy")
 	return svc.HTTP.Post(url.String(), new(model.ApiDeployment), nil)
-}
-
-func getApiID(api core.ApiDefinitionObject) (string, bool) {
-	if model.APIUsesUUID(api) {
-		return api.GetID(), true
-	}
-	return refs.NewNamespacedNameFromObject(api).HRID(), false
 }
