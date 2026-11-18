@@ -58,8 +58,8 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 	if newObj.IsBeingDeleted() {
 		return errs
 	}
-	// Hashed before templateAndRefs, which compiles templates into newObj.
-	specChanged := oldObj.GetSpec().Hash() != newObj.GetSpec().Hash()
+	// Decided before templateAndRefs, which compiles templates into newObj.
+	payloadChanged := a.payloadChanged(oldObj, newObj)
 
 	a.templateAndRefs(ctx, newObj, errs)
 	if errs.IsSevere() {
@@ -83,9 +83,9 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 		}
 	}
 
-	// A metadata-only update, the lifecycle's own finalizer and annotation writes included,
-	// sends nothing to the remote: only a spec change is dry-run.
-	if specChanged {
+	// An update that leaves the payload as it is, the lifecycle's own finalizer and annotation writes
+	// included, sends nothing to the remote: only a payload change is dry-run.
+	if payloadChanged {
 		a.dryRun(ctx, apiClient, newObj, errs)
 		if errs.IsSevere() {
 			return errs
@@ -149,6 +149,13 @@ func (a AdmissionLifecycle[T, D, C]) resolveContext(
 		return zero, false
 	}
 	return api, true
+}
+
+func (a AdmissionLifecycle[T, D, C]) payloadChanged(oldObj, newObj T) bool {
+	if a.PayloadChanged != nil {
+		return a.PayloadChanged(oldObj, newObj)
+	}
+	return oldObj.GetSpec().Hash() != newObj.GetSpec().Hash()
 }
 
 func (a AdmissionLifecycle[T, D, C]) preCheck(

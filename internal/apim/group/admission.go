@@ -19,9 +19,19 @@ import (
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
+
+// PayloadChanged reports an update the controller will send to APIM: a spec change, or a change of the
+// ignore-members annotation, which decides whether the members are sent. It is the condition the reconcile
+// predicate uses, so admission dry-runs every change the controller applies.
+func PayloadChanged(oldObj, newObj *v1alpha1.Group) bool {
+	return oldObj.GetSpec().Hash() != newObj.GetSpec().Hash() ||
+		oldObj.GetAnnotations()[core.IgnoreMembersAnnotation] != newObj.GetAnnotations()[core.IgnoreMembersAnnotation]
+}
 
 // DryRun validates the group against APIM without persisting it. It returns APIM's validation errors as
 // findings, and APIM's error when the call fails.

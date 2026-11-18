@@ -37,11 +37,12 @@ type AdmissionCtrl struct {
 func NewAdmissionCtrl() AdmissionCtrl {
 	return AdmissionCtrl{
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
-			ClientFactory: apimgroup.CreateAPIMClient,
-			PreCheck:      warnIgnoredMembers,
-			ToDTO:         apimgroup.ToDTO,
-			DryRun:        apimgroup.DryRun,
-			GetRemote:     apimgroup.GetRemote,
+			ClientFactory:  apimgroup.CreateAPIMClient,
+			PreCheck:       warnIgnoredMembers,
+			ToDTO:          apimgroup.ToDTO,
+			DryRun:         apimgroup.DryRun,
+			PayloadChanged: apimgroup.PayloadChanged,
+			GetRemote:      apimgroup.GetRemote,
 		}),
 	}
 }
