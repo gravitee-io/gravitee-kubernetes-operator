@@ -191,7 +191,8 @@ func getTypeOrSkip(crd any, remote any) (reflect.Type, bool) {
 
 func getProperty(field reflect.StructField) string {
 	jsonProperty := field.Tag.Get("json")
-	if jsonProperty == "" {
+	// a field kept out of JSON (json:"-") is still named after the field
+	if jsonProperty == "" || jsonProperty == "-" {
 		// infer the name of the field by lowercasing the first letter
 		runes := []rune(field.Name)
 		runes[0] = unicode.ToLower(runes[0])
