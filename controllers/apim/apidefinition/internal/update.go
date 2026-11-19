@@ -24,7 +24,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
@@ -33,8 +32,6 @@ func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 	switch t := apiDefinition.(type) {
 	case *v1alpha1.ApiDefinition:
 		return createOrUpdateV2(ctx, t)
-	case *v1alpha1.ApiV4Definition:
-		return createOrUpdateV4(ctx, t)
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
@@ -96,43 +93,6 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
 
 	return nil
-}
-
-func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
-	apidefinition.LogUnsyncedGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs())
-
-	if err := apidefinition.PrepareV4SpecForAutomation(ctx, apiDefinition, true); err != nil {
-		log.Error(ctx, err, "Unable to prepare API spec for automation", log.KeyValues(apiDefinition)...)
-		return err
-	}
-
-	client, err := apiv4.CreateAPIMClient(ctx, apiDefinition)
-	if err != nil {
-		return err
-	}
-	dto, err := apiv4.ToDTO(apiDefinition)
-	if err != nil {
-		return err
-	}
-
-	if client != nil {
-		log.Debug(ctx, "Syncing API definition with control plane", log.KeyValues(apiDefinition)...)
-	}
-	resp, err := apiv4.Upsert(ctx, client, dto)
-	if accepted, ok := apiv4.AcceptedResponse(err); ok {
-		// APIM accepted the API: keep its ID and plans in the status, then report the ConfigMap error.
-		if stErr := apiv4.UpdateStatus(ctx, apiDefinition, accepted); stErr != nil {
-			return stErr
-		}
-		return err
-	}
-	if err != nil {
-		return gerrors.NewControlPlaneError(err)
-	}
-	if client != nil {
-		log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
-	}
-	return apiv4.UpdateStatus(ctx, apiDefinition, resp)
 }
 
 func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, status *base.Status) {

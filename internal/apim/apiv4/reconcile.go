@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
 // Upsert sends the API to APIM when it has a management context, then writes or deletes its gateway ConfigMap.
@@ -106,6 +107,17 @@ func syncGateway(ctx context.Context, gateway *v1alpha1.ApiV4Definition, resp Re
 		api.Status.EnvID = resp.EnvID
 	}
 	return apidefinition.UpdateConfigMap(ctx, api)
+}
+
+// DeleteGuard refuses to delete an API a Documentation, PortalListing or PortalLink still references.
+func DeleteGuard(ctx context.Context, obj *v1alpha1.ApiV4Definition) error {
+	if err := search.AssertNoApiDocumentationRef(ctx, obj); err != nil {
+		return err
+	}
+	if err := search.AssertNoApiPortalListingRef(ctx, obj); err != nil {
+		return err
+	}
+	return search.AssertNoApiPortalLinkRef(ctx, obj)
 }
 
 // Delete deletes the API in APIM. An API without a management context has nothing to delete.
