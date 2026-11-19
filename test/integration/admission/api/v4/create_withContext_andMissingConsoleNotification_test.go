@@ -31,7 +31,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	It("should return error on API creation with missing notification ref", func() {
 
@@ -49,7 +49,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"severe",
 				errors.NewSeveref(
-					"api references notification [%s] that does not exist in the cluster",
+					"could not resolve references: api references notification [%s] that does not exist in the cluster",
 					fixtures.APIv4.Spec.NotificationsRefs[0].String(),
 				).Error(),
 				err.Error(),

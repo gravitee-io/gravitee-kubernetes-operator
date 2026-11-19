@@ -18,7 +18,6 @@ import (
 	"context"
 	"net/http"
 
-	addmissionv4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 
@@ -84,11 +83,11 @@ var _ = Describe("Update", labels.WithContext, func() {
 			SyncFrom: "MANAGEMENT",
 		}
 
-		// we unfortunately rely on a side effect in admission controller
-		// to delete the config map
-		admCtrl := addmissionv4.AdmissionCtrl{}
-		_, err := admCtrl.ValidateUpdate(ctx, fixtures.APIv4, updated)
-		Expect(err).ToNot(HaveOccurred())
+		// the reconcile deletes the ConfigMap the API owns once it syncs from management
+		Eventually(func() error {
+			return manager.UpdateSafely(ctx, updated)
+		}, timeout, interval).Should(Succeed())
+
 		By("expecting config map to be deleted")
 
 		Eventually(func() error {

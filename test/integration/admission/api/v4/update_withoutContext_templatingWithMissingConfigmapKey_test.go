@@ -28,7 +28,7 @@ import (
 
 var _ = Describe("Validate update", labels.WithoutContext, func() {
 	ctx := context.Background()
-	admissionCtrl := adm.AdmissionCtrl{}
+	admissionCtrl := adm.NewAdmissionCtrl()
 
 	It("should return error on API V4 update with missing configmap for templating", func() {
 		fixtures := fixture.

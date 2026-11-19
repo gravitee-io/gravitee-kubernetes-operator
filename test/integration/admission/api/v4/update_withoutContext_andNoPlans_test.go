@@ -28,7 +28,7 @@ import (
 
 var _ = Describe("Validate update", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	It("should return error on API update with no plans and state STARTED", func() {
 		fixtures := fixture.
