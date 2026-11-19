@@ -244,7 +244,7 @@ var _ = Describe("API v4 Drift detection", func() {
 		func(listener, entrypointType, crdQos, remoteQos string) {
 			crd := apiV4WithEntrypoint(listener, entrypointType, crdQos).ForDrift()
 			remote := apiV4WithEntrypoint(listener, entrypointType, remoteQos).ForDrift()
-			expectNoDrift(admissionDriftAPIV4(crd, remote))
+			expectNoDrift(admissionDrift(crd, remote))
 		},
 		Entry("PROXY unset against AUTO", httpListener, "http-proxy", "", "AUTO"),
 		Entry("PROXY AUTO against AUTO", httpListener, "http-proxy", "AUTO", "AUTO"),
@@ -260,7 +260,7 @@ var _ = Describe("API v4 Drift detection", func() {
 		func(entrypointType, crdQos, remoteQos string) {
 			crd := apiV4WithEntrypoint(httpListener, entrypointType, crdQos).ForDrift()
 			remote := apiV4WithEntrypoint(httpListener, entrypointType, remoteQos).ForDrift()
-			merged := admissionDriftAPIV4(crd, remote)
+			merged := admissionDrift(crd, remote)
 			Expect(merged.DriftDetected()).To(BeTrue())
 			Expect(merged.String()).To(ContainSubstring(`qos: "` + crdQos + `" != "` + remoteQos + `"`))
 		},
