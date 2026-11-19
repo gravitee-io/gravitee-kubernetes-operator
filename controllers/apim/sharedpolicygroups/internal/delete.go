@@ -43,5 +43,8 @@ func Delete(
 		return apimErr
 	}
 
-	return errors.IgnoreNotFound(apimClient.SharedPolicyGroup.Delete(spg))
+	if err := errors.IgnoreNotFound(apimClient.SharedPolicyGroup.Delete(spg)); err != nil {
+		return errors.NewControlPlaneError(err)
+	}
+	return nil
 }

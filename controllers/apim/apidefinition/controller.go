@@ -18,7 +18,6 @@ package apidefinition
 
 import (
 	"context"
-	"time"
 
 	"k8s.io/client-go/tools/record"
 
@@ -35,8 +34,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
-
-const requeueAfterTime = time.Second * 5
 
 func Reconcile(
 	ctx context.Context,
@@ -74,7 +71,7 @@ func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionO
 
 	if err != nil {
 		log.Error(ctx, err, "Failed to sync API definition template", log.KeyValues(apiDefinition)...)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+		return ctrl.Result{}, err
 	}
 
 	log.Debug(ctx, "Ingress template synced successfully.", log.KeyValues(apiDefinition)...)
@@ -138,7 +135,7 @@ func reconcileApiDefinition(
 
 	if errors.ShouldRetry(err, apiDefinition.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, apiDefinition)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+		return ctrl.Result{}, err
 	}
 
 	log.ErrorAbortingReconcile(ctx, err, apiDefinition)

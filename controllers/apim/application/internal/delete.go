@@ -37,5 +37,8 @@ func Delete(
 		return apimErr
 	}
 
-	return errors.IgnoreNotFound(apimClient.Applications.Delete(application))
+	if err := errors.IgnoreNotFound(apimClient.Applications.Delete(application)); err != nil {
+		return errors.NewControlPlaneError(err)
+	}
+	return nil
 }

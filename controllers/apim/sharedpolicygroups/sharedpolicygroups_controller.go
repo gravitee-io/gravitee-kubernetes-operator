@@ -16,7 +16,6 @@ package sharedpolicygroups
 
 import (
 	"context"
-	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups/internal"
 	corev1 "k8s.io/api/core/v1"
@@ -42,8 +41,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
-
-const requeueAfterTime = time.Second * 5
 
 type Reconciler struct {
 	client.Client
@@ -119,7 +116,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if errors.ShouldRetry(err, spg.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, spg)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+		return ctrl.Result{}, err
 	}
 
 	log.ErrorAbortingReconcile(ctx, err, spg)

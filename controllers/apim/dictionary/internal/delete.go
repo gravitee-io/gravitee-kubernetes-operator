@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -35,5 +36,8 @@ func Delete(ctx context.Context, dict *v1alpha1.Dictionary) error {
 		return err
 	}
 
-	return apimClient.Dictionaries.Delete(dict)
+	if err := gerrors.IgnoreNotFound(apimClient.Dictionaries.Delete(dict)); err != nil {
+		return gerrors.NewControlPlaneError(err)
+	}
+	return nil
 }

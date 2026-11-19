@@ -19,7 +19,6 @@ package application
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -44,8 +43,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-const requeueAfterTime = time.Second * 5
 
 // Reconciler reconciles a Application object.
 type Reconciler struct {
@@ -132,7 +129,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if errors.ShouldRetry(err, application.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, application)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+		return ctrl.Result{}, err
 	}
 
 	log.ErrorAbortingReconcile(ctx, err, application)

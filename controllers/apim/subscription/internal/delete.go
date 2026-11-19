@@ -71,7 +71,7 @@ func Delete(
 		api.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(api))
 
 		if err := errors.IgnoreNotFound(apim.Subscription.Delete(api, subscription)); err != nil {
-			return err
+			return errors.NewControlPlaneError(err)
 		}
 
 		if err := updateSubscriptionCount(ctx, api, core.SubscribableStatus.RemoveSubscription); err != nil {

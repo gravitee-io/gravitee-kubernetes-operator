@@ -274,7 +274,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if errors.ShouldRetry(err, obj.IsBeingDeleted()) {
 		log.ErrorRequeuingReconcile(ctx, err, obj)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+		return ctrl.Result{}, err
 	}
 
 	log.ErrorAbortingReconcile(ctx, err, obj)
@@ -359,7 +359,8 @@ Controllers whose `PopulateIDs` does real work call it immediately after obtaini
 before any ref resolution:
 `obj.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(obj))`.
 
-**`delete.go`** — guard on the finalizer, tolerate a missing remote:
+**`delete.go`** — guard on the finalizer, tolerate a missing remote, and wrap a refusal as a control plane
+error so `Accepted` reports `ControlPlaneError` with APIM's message:
 
 ```go
 func Delete(ctx context.Context, obj *v1alpha1.MyResource) error {
@@ -370,7 +371,10 @@ func Delete(ctx context.Context, obj *v1alpha1.MyResource) error {
 	if err != nil {
 		return err
 	}
-	return errors.IgnoreNotFound(apimClient.MyResources.Delete(obj))
+	if err := errors.IgnoreNotFound(apimClient.MyResources.Delete(obj)); err != nil {
+		return errors.NewControlPlaneError(err)
+	}
+	return nil
 }
 ```
 
