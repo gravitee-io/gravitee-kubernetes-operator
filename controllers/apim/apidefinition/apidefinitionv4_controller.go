@@ -21,8 +21,11 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -34,13 +37,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// V4Lifecycle is the reconcile of an ApiV4Definition on internal/lifecycle.
+type V4Lifecycle = lifecycle.ResourceLifecycle[*v1alpha1.ApiV4Definition, apiv4.DTO, *apiv4.Client, apiv4.Response]
+
+// NewV4Lifecycle wires the ApiV4Definition reconcile steps. The finalizer is the one v2 shares, which existing
+// APIs already carry.
+func NewV4Lifecycle() V4Lifecycle {
+	return lifecycle.NewResourceLifecycle(V4Lifecycle{
+		Finalizer:     core.ApiDefinitionFinalizer,
+		ResolveRefs:   apiv4.ResolveRefs,
+		ClientFactory: apiv4.CreateAPIMClient,
+		ToDTO:         apiv4.ToDTO,
+		DeleteGuard:   apiv4.DeleteGuard,
+		Delete:        apiv4.Delete,
+		Upsert:        apiv4.Upsert,
+		PostUpsert:    apiv4.UpdateStatus,
+	})
+}
+
 // V4Reconciler reconciles a ApiDefinition object.
 type V4Reconciler struct {
 	client.Client
-	Log      logr.Logger
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
-	Watcher  watch.Interface
+	Lifecycle V4Lifecycle
+	Log       logr.Logger
+	Scheme    *runtime.Scheme
+	Recorder  record.EventRecorder
+	Watcher   watch.Interface
 }
 
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
@@ -56,8 +78,13 @@ func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	k8s.ResetConditionsExceptAutomationAPI(apiDefinition)
-	return Reconcile(ctx, apiDefinition, r.Recorder)
+	// An ingress template is never sent to APIM: it keeps its own reconcile.
+	if apiDefinition.GetAnnotations()[core.IngressTemplateAnnotation] == "true" {
+		k8s.ResetConditionsExceptAutomationAPI(apiDefinition)
+		return reconcileApiTemplate(ctx, apiDefinition)
+	}
+
+	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.ApiV4Definition{})
 }
 
 // SetupWithManager filters events per watch rather than with a controller-wide event filter: a
