@@ -49,7 +49,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"severe",
 				errors.NewSeveref(
-					"could not resolve references: api references notification [%s] that does not exist in the cluster",
+					"api references notification [%s] that does not exist in the cluster",
 					fixtures.APIv4.Spec.NotificationsRefs[0].String(),
 				).Error(),
 				err.Error(),
