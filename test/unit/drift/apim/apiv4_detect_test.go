@@ -245,13 +245,11 @@ var _ = Describe("API v4 Drift detection", func() {
 			remote := apiV4WithEntrypoint(listener, entrypointType, remoteQos)
 			expectNoDrift(admissionDrift(crd, remote))
 		},
-		// Pending: apim-sdk v0.2.0 compares Entrypoint.qos exactly. The overlay tag ignore-remote-default:AUTO
-		// (plan apim-16599-apim-sdk-upgrade) makes an unset qos match the AUTO APIM stores.
-		PEntry("PROXY unset against AUTO", httpListener, "http-proxy", "", "AUTO"),
+		Entry("PROXY unset against AUTO", httpListener, "http-proxy", "", "AUTO"),
 		Entry("PROXY AUTO against AUTO", httpListener, "http-proxy", "AUTO", "AUTO"),
-		PEntry("PROXY TCP unset against AUTO", `{"type": "TCP", "hosts": ["a"]}`, "tcp-proxy", "", "AUTO"),
-		PEntry("MESSAGE unset against AUTO", httpListener, "sse", "", "AUTO"),
-		PEntry("MESSAGE subscription unset against AUTO", `{"type": "SUBSCRIPTION"}`, "webhook", "", "AUTO"),
+		Entry("PROXY TCP unset against AUTO", `{"type": "TCP", "hosts": ["a"]}`, "tcp-proxy", "", "AUTO"),
+		Entry("MESSAGE unset against AUTO", httpListener, "sse", "", "AUTO"),
+		Entry("MESSAGE subscription unset against AUTO", `{"type": "SUBSCRIPTION"}`, "webhook", "", "AUTO"),
 		Entry("NATIVE AUTO against unset", kafkaListener, "native-kafka", "AUTO", ""),
 		Entry("NATIVE NONE against unset", kafkaListener, "native-kafka", "NONE", ""),
 		Entry("NATIVE unset against unset", kafkaListener, "native-kafka", "", ""),
@@ -316,9 +314,7 @@ var _ = Describe("API v4 Drift detection", func() {
 		Expect(merged.String()).To(ContainSubstring(`allowOrigin[0]: "https://app.example.com" != ""`))
 	})
 
-	// Pending: apim-sdk v0.2.0 compares plugin configurations exactly. The overlay tag
-	// unstructured:ignore-remote-default (plan apim-16599-apim-sdk-upgrade) admits the defaults APIM saves.
-	PIt("admits the http defaults APIM saves in an endpoint group shared configuration", func() {
+	It("admits the http defaults APIM saves in an endpoint group shared configuration", func() {
 		crd := apiV4WithSharedConfiguration(`{"http": {"readTimeout": 5000}}`)
 		remote := apiV4WithSharedConfiguration(`{"http": {
 			"readTimeout": 5000,
@@ -331,9 +327,7 @@ var _ = Describe("API v4 Drift detection", func() {
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
 
-	// Pending: apim-sdk v0.2.0 compares plugin configurations exactly. The overlay tag
-	// unstructured:ignore-remote-default (plan apim-16599-apim-sdk-upgrade) admits the defaults APIM saves.
-	PIt("admits the defaults APIM saves in a flow step configuration", func() {
+	It("admits the defaults APIM saves in a flow step configuration", func() {
 		crd := apiV4WithRequestStep(`{"name": "Quota", "policy": "quota", "enabled": true, ` +
 			`"configuration": {"quota": {"limit": 100, "periodTime": 1, "periodTimeUnit": "HOURS"}}}`)
 		remote := apiV4WithRequestStep(`{"name": "Quota", "policy": "quota", "enabled": true, ` +
@@ -342,18 +336,14 @@ var _ = Describe("API v4 Drift detection", func() {
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
 
-	// Pending: apim-sdk v0.2.0 compares plugin configurations exactly. The overlay tag
-	// unstructured:ignore-remote-default (plan apim-16599-apim-sdk-upgrade) admits the defaults APIM saves.
-	PIt("admits a default APIM saves in a list item of a plugin configuration", func() {
+	It("admits a default APIM saves in a list item of a plugin configuration", func() {
 		crd := apiV4WithSharedConfiguration(`{"items": [{"name": "a"}]}`)
 		remote := apiV4WithSharedConfiguration(`{"items": [{"name": "a", "enabled": true}]}`)
 
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
 
-	// Pending: apim-sdk v0.2.0 compares plugin configurations exactly. The overlay tag
-	// unstructured:ignore-remote-default (plan apim-16599-apim-sdk-upgrade) admits the defaults APIM saves.
-	PIt("detects a shared configuration value changed in APIM, without the saved defaults", func() {
+	It("detects a shared configuration value changed in APIM, without the saved defaults", func() {
 		crd := apiV4WithSharedConfiguration(`{"http": {"readTimeout": 5000}}`)
 		remote := apiV4WithSharedConfiguration(`{"http": {
 			"readTimeout": 1000,
@@ -372,9 +362,7 @@ var _ = Describe("API v4 Drift detection", func() {
 		}
 	})
 
-	// Pending: apim-sdk v0.2.0 compares plugin configurations exactly. The overlay tag
-	// unstructured:ignore-remote-default (plan apim-16599-apim-sdk-upgrade) admits the defaults APIM saves.
-	PDescribeTable("admits the defaults APIM saves in every plugin configuration",
+	DescribeTable("admits the defaults APIM saves in every plugin configuration",
 		func(apiWithConfiguration string) {
 			crd := sdkV4JSON(fmt.Sprintf(apiWithConfiguration, `{"url": "https://example.com"}`))
 			remote := sdkV4JSON(fmt.Sprintf(apiWithConfiguration, `{"url": "https://example.com", "useSystemProxy": false}`))

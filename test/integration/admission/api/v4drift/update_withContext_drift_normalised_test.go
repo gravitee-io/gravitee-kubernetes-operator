@@ -32,9 +32,7 @@ var _ = Describe("Validate drift on values APIM normalises", labels.WithContext,
 	ctx := context.Background()
 	admissionCtrl := admissionv4.NewAdmissionCtrl()
 
-	// Pending: apim-sdk v0.2.0 compares FlowExecution.mode exactly. The overlay tag case-insensitive
-	// (plan apim-16599-apim-sdk-upgrade) matches the uppercase mode APIM stores.
-	PIt("should not drift on a lowercase flow mode APIM stores in uppercase", func() {
+	It("should not drift on a lowercase flow mode APIM stores in uppercase", func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4WithContextFile).
 			WithContext(constants.ContextWithCredentialsFile).

@@ -7,7 +7,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.7.0
 	github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.6.2
-	github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.0
+	github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.1
 	github.com/gravitee-io/gravitee-automation-sdk/common v1.4.0
 	github.com/moby/moby v27.5.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.28.0
@@ -179,7 +179,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.36.4
-	k8s.io/apiextensions-apiserver v0.36.2 // indirect
+	k8s.io/apiextensions-apiserver v0.36.2
 	k8s.io/klog/v2 v2.140.0
 	k8s.io/kube-openapi v0.0.0-20260501160325-927ab1f70cd6 // indirect
 	k8s.io/utils v0.0.0-20261023123148-ca04ba58ecab
