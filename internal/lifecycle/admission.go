@@ -77,7 +77,7 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 	}
 
 	if a.ImmutableFields != nil {
-		errs.MergeWith(a.ImmutableFields(oldObj, newObj))
+		errs.MergeWith(a.ImmutableFields(ctx, oldObj, newObj))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -245,6 +245,9 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 
+	if a.DriftDTO != nil {
+		oldDTO, newDTO, remote = a.DriftDTO(oldDTO), a.DriftDTO(newDTO), a.DriftDTO(remote)
+	}
 	admissiondrift.CompareWithRemote(newCopy, oldDTO, newDTO, remote, secrets(), errs)
 }
 
