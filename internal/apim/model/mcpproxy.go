@@ -146,14 +146,61 @@ type McpProxyFlowStepDTO struct {
 
 // McpProxyState is what a PUT or a GET answers: the payload plus the platform's identifiers,
 // findings and, for a STUDIO, the status list of its tools. That list sits beside the payload, so
-// drift detection does not compare it; its wire shape is the CRD status shape.
+// drift detection does not compare it.
 type McpProxyState struct {
 	McpProxyDTO `json:",inline"`
-	ID          string                      `json:"id,omitempty"`
-	OrgID       string                      `json:"organizationId,omitempty"`
-	EnvID       string                      `json:"environmentId,omitempty"`
-	Errors      status.Errors               `json:"errors,omitempty"`
-	Tools       []mcpproxy.StudioToolStatus `json:"tools,omitempty"`
+	ID          string                  `json:"id,omitempty"`
+	OrgID       string                  `json:"organizationId,omitempty"`
+	EnvID       string                  `json:"environmentId,omitempty"`
+	Errors      status.Errors           `json:"errors,omitempty"`
+	Tools       []McpProxyToolStatusDTO `json:"tools,omitempty"`
+}
+
+// McpProxyToolStatusDTO is an entry of the state's tools list as the platform sends it. ToolsStatus
+// maps it onto the CRD status, so a key the platform adds or renames never reaches the status
+// unmapped.
+type McpProxyToolStatusDTO struct {
+	Server        string  `json:"server"`
+	Tool          string  `json:"tool"`
+	Alias         *string `json:"alias,omitempty"`
+	EntityID      string  `json:"entityId,omitempty"`
+	AuthPolicyRef string  `json:"authPolicyRef,omitempty"`
+}
+
+// ToolsStatus returns the tools a STUDIO exposes, for the CRD status. It reads the state's tools
+// list, which carries each tool's authPolicyRef. Only a state without that list, as answered by a
+// platform older than AIM 5.1, falls back to studio.tools, whose entries have no reference. An empty
+// list is an answer: it does not fall back.
+func (s *McpProxyState) ToolsStatus() []mcpproxy.StudioToolStatus {
+	if s.Tools != nil {
+		if len(s.Tools) == 0 {
+			return nil
+		}
+		tools := make([]mcpproxy.StudioToolStatus, 0, len(s.Tools))
+		for _, tool := range s.Tools {
+			tools = append(tools, mcpproxy.StudioToolStatus{
+				Server:        tool.Server,
+				Tool:          tool.Tool,
+				Alias:         tool.Alias,
+				EntityID:      tool.EntityID,
+				AuthPolicyRef: tool.AuthPolicyRef,
+			})
+		}
+		return tools
+	}
+	if s.Studio == nil || len(s.Studio.Tools) == 0 {
+		return nil
+	}
+	tools := make([]mcpproxy.StudioToolStatus, 0, len(s.Studio.Tools))
+	for _, tool := range s.Studio.Tools {
+		tools = append(tools, mcpproxy.StudioToolStatus{
+			Server:   tool.Server,
+			Tool:     tool.Tool,
+			Alias:    tool.Alias,
+			EntityID: tool.EntityID,
+		})
+	}
+	return tools
 }
 
 // ToMcpProxyDTO maps the CRD onto the wire payload. It is the single mapping used by the sync
