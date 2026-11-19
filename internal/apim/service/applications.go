@@ -146,8 +146,8 @@ func (svc *Applications) Delete(app *v1alpha1.Application) error {
 }
 
 func getAppID(application *v1alpha1.Application) (string, bool) {
-	if k8s.IsAutomationAPIManaged(application) {
-		return refs.NewNamespacedNameFromObject(application).HRID(), false
+	if model.ApplicationUsesUUID(application) {
+		return application.GetID(), true
 	}
-	return application.GetID(), true
+	return refs.NewNamespacedNameFromObject(application).HRID(), false
 }

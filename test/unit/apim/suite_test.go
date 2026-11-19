@@ -43,6 +43,9 @@ const refusingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/mana
 
 const refusedDeleteMessage = "token expired"
 
+// platformURL is the base URL of the refusing APIM.
+var platformURL string
+
 // acceptingContextPath is where the cluster stub serves ManagementContext gravitee/accepting-ctx,
 // whose APIM accepts every PUT and answers the state acceptedStates holds for its collection.
 const acceptingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/accepting-ctx"
@@ -149,6 +152,7 @@ var _ = BeforeSuite(func() {
 		_, _ = w.Write([]byte(refusingPlatformBody))
 	}))
 	DeferCleanup(platform.Close)
+	platformURL = platform.URL
 	cascade := httptest.NewServer(http.HandlerFunc(cascadePlatform))
 	DeferCleanup(cascade.Close)
 

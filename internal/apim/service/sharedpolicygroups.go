@@ -132,8 +132,8 @@ func (svc *SharedPolicyGroup) Delete(spg *v1alpha1.SharedPolicyGroup) error {
 }
 
 func getSPGID(spg *v1alpha1.SharedPolicyGroup) (string, bool) {
-	if k8s.IsAutomationAPIManaged(spg) {
-		return refs.NewNamespacedNameFromObject(spg).HRID(), false
+	if spg.GetID() != "" && !k8s.IsAutomationAPIManaged(spg) {
+		return spg.GetID(), true
 	}
-	return spg.GetID(), true
+	return refs.NewNamespacedNameFromObject(spg).HRID(), false
 }

@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	spgmodel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
@@ -52,7 +53,7 @@ import (
 // delete is retried whatever the status code, so the CR never stays Terminating with nothing left to
 // retry it, and Accepted names the control plane's refusal.
 var _ = DescribeTable("A delete the control plane refused",
-	func(obj client.Object, finalizer string, newReconciler func(client.Client) reconcile.Reconciler) {
+	func(obj client.Object, finalizer, path string, newReconciler func(client.Client) reconcile.Reconciler) {
 		obj.SetFinalizers([]string{finalizer})
 		obj.SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
 		cli := deletingCluster(obj)
@@ -70,36 +71,47 @@ var _ = DescribeTable("A delete the control plane refused",
 		Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
 		Expect(accepted.Reason).To(Equal("ControlPlaneError"))
 		Expect(accepted.Message).To(ContainSubstring(refusedDeleteMessage))
+		Expect(accepted.Message).To(ContainSubstring("[DELETE] " + platformURL + path))
 	},
-	Entry("ApiV4Definition", apiV4On(refusingCtx), core.ApiDefinitionFinalizer,
+	Entry("ApiV4Definition", apiV4On(refusingCtx), core.ApiDefinitionFinalizer, automation+"/apis/gravitee-orders?",
 		func(cli client.Client) reconcile.Reconciler {
 			return &apidefinition.V4Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
 		}),
+	Entry("ApiDefinition", apiV2On(refusingCtx), core.ApiDefinitionFinalizer,
+		"/management/organizations/DEFAULT/environments/DEFAULT/apis/8f0c",
+		func(cli client.Client) reconcile.Reconciler {
+			return &apidefinition.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+		}),
 	Entry("Application", applicationOn(refusingCtx), core.ApplicationFinalizer,
+		automation+"/applications/gravitee-orders-app?",
 		func(cli client.Client) reconcile.Reconciler {
 			return &application.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
 		}),
-	Entry("Dictionary", dictionaryOn(refusingCtx), core.DictionaryFinalizer,
+	Entry("Dictionary", dictionaryOn(refusingCtx), core.DictionaryFinalizer, automation+"/dictionaries/gravitee-orders-dict",
 		func(cli client.Client) reconcile.Reconciler {
 			return &dictionary.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
 		}),
 	Entry("SharedPolicyGroup", sharedPolicyGroupOn(refusingCtx), core.SharedPolicyGroupFinalizer,
+		automation+"/shared-policy-groups/gravitee-rate-limits?",
 		func(cli client.Client) reconcile.Reconciler {
 			return &sharedpolicygroups.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
 		}),
 	Entry("AuthzEntity", authzEntityOn(refusingCtx), core.AuthzEntityFinalizer,
+		automation+"/authz/entities/gravitee-agents-group",
 		func(cli client.Client) reconcile.Reconciler {
 			return &authzentity.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
 		}),
-	Entry("AuthzPdp", authzPdpOn(refusingCtx), core.AuthzPdpFinalizer,
+	Entry("AuthzPdp", authzPdpOn(refusingCtx), core.AuthzPdpFinalizer, automation+"/authz/pdps/gravitee-orders-eu",
 		func(cli client.Client) reconcile.Reconciler {
 			return &authzpdp.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
 		}),
 	Entry("AuthzPolicy", authzPolicyOn(refusingCtx), core.AuthzPolicyFinalizer,
+		automation+"/authz/policies/gravitee-hotel-booking-read",
 		func(cli client.Client) reconcile.Reconciler {
 			return &authzpolicy.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
 		}),
 	Entry("AuthzSchema", authzSchemaOn(refusingCtx), core.AuthzSchemaFinalizer,
+		automation+"/authz/schemas/gravitee-travel-schema",
 		func(cli client.Client) reconcile.Reconciler {
 			return &authzschema.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
 		}),
@@ -121,6 +133,8 @@ var _ = It("releases a Dictionary APIM no longer holds", func() {
 })
 
 var refusingCtx = &refs.NamespacedName{Name: "refusing-ctx"}
+
+const automation = "/automation/organizations/DEFAULT/environments/DEFAULT"
 
 // deletingCluster registers a fake client holding obj. An API or shared policy group delete first
 // checks that nothing references it: those indexes hold nothing.
@@ -146,6 +160,14 @@ func apiV4On(ctxRef *refs.NamespacedName) *v1alpha1.ApiV4Definition {
 	api := &v1alpha1.ApiV4Definition{ObjectMeta: metav1.ObjectMeta{Name: "orders", Namespace: "gravitee"}}
 	api.Spec.V4BaseApi = &v4.V4BaseApi{ApiBase: &base.ApiBase{}}
 	api.Spec.Context = ctxRef
+	return api
+}
+
+func apiV2On(ctxRef *refs.NamespacedName) *v1alpha1.ApiDefinition {
+	api := &v1alpha1.ApiDefinition{ObjectMeta: metav1.ObjectMeta{Name: "orders-v2", Namespace: "gravitee"}}
+	api.Spec.Api = v2.Api{ApiBase: &base.ApiBase{}}
+	api.Spec.Context = ctxRef
+	api.Status.ID = "8f0c"
 	return api
 }
 
