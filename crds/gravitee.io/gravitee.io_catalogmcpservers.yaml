@@ -174,8 +174,8 @@ spec:
                 CatalogMcpServer.
               properties:
                 authPolicyRef:
-                  description: "What an AuthzPolicy names the server by, derived from entityId:
-                    its engine type and the slug of..."
+                  description: What an AuthzPolicy names the server by, derived from entityId,
+                    e.g. MCPServer::"github".
                   type: string
                 conditions:
                   default: []
@@ -317,7 +317,8 @@ spec:
                       identity and the reference a policy...
                     properties:
                       authPolicyRef:
-                        description: What an AuthzPolicy names the tool by, e.g. MCPTool::"github.
+                        description: What an AuthzPolicy names the tool by, e.g.
+                          MCPTool::"github.create_issue".
                         type: string
                       entityId:
                         description: Catalog identity of the tool, e.g. mcp-tool.github.create_issue.

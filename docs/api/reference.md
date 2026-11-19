@@ -1120,7 +1120,7 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
 | `hrid` _string_ | The human-readable ID the platform addresses this server by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
-| `authPolicyRef` _string_ | What an AuthzPolicy names the server by, derived from entityId: its engine type and the slug of<br />entityId, e.g. MCPServer::"github". |  | Optional: \{\} <br /> |
+| `authPolicyRef` _string_ | What an AuthzPolicy names the server by, derived from entityId, e.g. MCPServer::"github". |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the CatalogMcpServer.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the server has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 | `lastSyncedAt` _string_ | When the platform last discovered the server, as an RFC 3339 date-time. |  | Optional: \{\} <br /> |
@@ -4413,7 +4413,7 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
 | `hrid` _string_ | The human-readable ID the platform addresses this server by, derived from the<br />resource namespace and name. |  | Optional: \{\} <br /> |
-| `authPolicyRef` _string_ | What an AuthzPolicy names the server by, derived from entityId: its engine type and the slug of<br />entityId, e.g. MCPServer::"github". |  | Optional: \{\} <br /> |
+| `authPolicyRef` _string_ | What an AuthzPolicy names the server by, derived from entityId, e.g. MCPServer::"github". |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the CatalogMcpServer.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs"<br />* "AutomationAPIManaged" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the server has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 | `lastSyncedAt` _string_ | When the platform last discovered the server, as an RFC 3339 date-time. |  | Optional: \{\} <br /> |
@@ -4442,7 +4442,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `name` _string_ |  |  | Optional: \{\} <br /> |
 | `entityId` _string_ | Catalog identity of the tool, e.g. mcp-tool.github.create_issue. |  | Optional: \{\} <br /> |
-| `authPolicyRef` _string_ | What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue": the resource the<br />gateway checks on tools/call when a Studio exposing the tool sets enableFGA, whatever its alias. |  | Optional: \{\} <br /> |
+| `authPolicyRef` _string_ | What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue". |  | Optional: \{\} <br /> |
 
 
 #### Transport
@@ -6712,7 +6712,7 @@ _Appears in:_
 | `tool` _string_ | Runtime name of the tool on its server. |  | Optional: \{\} <br /> |
 | `alias` _string_ | Name the Studio exposes the tool under, when one is declared. |  | Optional: \{\} <br /> |
 | `entityId` _string_ | Catalog identity of the tool, e.g. mcp-tool.github.create_issue. |  | Optional: \{\} <br /> |
-| `authPolicyRef` _string_ | What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue": the resource the<br />gateway checks on tools/call when enableFGA is set. An aliased tool keeps the reference of the<br />tool it exposes. |  | Optional: \{\} <br /> |
+| `authPolicyRef` _string_ | What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue", whatever its alias. |  | Optional: \{\} <br /> |
 
 
 #### StudioUpstreamAuth
