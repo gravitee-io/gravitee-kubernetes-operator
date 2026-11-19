@@ -66,7 +66,10 @@ type AdmissionCheckFunc[T core.ContextAwareObject] func(ctx context.Context, obj
 type PayloadChangedFunc[T core.ContextAwareObject] func(oldValue, newValue T) bool
 
 // ImmutableFieldsFunc returns severe errors when frozen spec fields changed between old and new.
-type ImmutableFieldsFunc[T core.ContextAwareObject] func(oldValue, newValue T) *gerrors.AdmissionErrors
+type ImmutableFieldsFunc[T core.ContextAwareObject] func(ctx context.Context, oldValue, newValue T) *gerrors.AdmissionErrors
+
+// DriftDTOFunc normalises a DTO for drift comparison only (never for the payload sent to the remote).
+type DriftDTOFunc[D store.Identifiable] func(dto D) D
 
 // DryRunFunc validates dto against the remote API without persisting. Never maps the CR.
 // The findings are the remote's validation result (severe rejects, warnings admit); err is a call that
@@ -153,6 +156,10 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 
 	// GetRemote runs on update after PostCheck, for drift, once the resource has an ID. Required.
 	GetRemote GetRemoteFunc[C, D]
+
+	// DriftDTO normalises the old, new and remote DTOs before drift compares them, for rules that apply to the
+	// comparison only. Nil compares the DTOs as ToDTO and GetRemote return them.
+	DriftDTO DriftDTOFunc[D]
 
 	// DeleteGuard runs on delete review only. Nil skips.
 	DeleteGuard DeleteGuardFunc[T]

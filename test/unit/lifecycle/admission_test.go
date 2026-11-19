@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -275,7 +276,7 @@ var _ = Describe("AdmissionLifecycle", func() {
 				order = append(order, "precheck")
 				return gerrors.NewAdmissionErrors()
 			}
-			a.ImmutableFields = func(_, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
+			a.ImmutableFields = func(_ context.Context, _, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 				order = append(order, "immutable")
 				return gerrors.NewAdmissionErrors()
 			}
@@ -293,7 +294,7 @@ var _ = Describe("AdmissionLifecycle", func() {
 			tc := &testClient{}
 			a := minimalAdmission(tc)
 			dryRunCalled := false
-			a.ImmutableFields = func(_, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
+			a.ImmutableFields = func(_ context.Context, _, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 				e := gerrors.NewAdmissionErrors()
 				e.AddSevere("field is immutable")
 				return e
@@ -463,6 +464,42 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 
 		Expect(errs.IsSevere()).To(BeTrue())
 		Expect(errs.Severe[0].Error()).To(ContainSubstring("drift detected"))
+	})
+
+	It("compares the DTOs DriftDTO normalises: old, new and remote", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "G1"}, nil)
+		g := synced(newGroup("g1", "ns"))
+
+		Expect(a.ValidateUpdate(ctx, g, g.DeepCopy()).IsSevere()).To(BeTrue(), "without DriftDTO, g1 != G1")
+
+		var normalised []string
+		a.DriftDTO = func(dto testDTO) testDTO {
+			normalised = append(normalised, dto.Name)
+			dto.Name = strings.ToUpper(dto.Name)
+			return dto
+		}
+		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
+
+		Expect(errs.IsSevere()).To(BeFalse())
+		Expect(normalised).To(ConsistOf("g1", "g1", "G1"))
+	})
+
+	It("does not normalise the DTO DryRun sends", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "g1"}, nil)
+		a.DriftDTO = func(dto testDTO) testDTO {
+			dto.Name = strings.ToUpper(dto.Name)
+			return dto
+		}
+		var sent testDTO
+		a.DryRun = func(_ context.Context, _ *testClient, dto testDTO) (*gerrors.AdmissionErrors, error) {
+			sent = dto
+			return gerrors.NewAdmissionErrors(), nil
+		}
+		g := synced(newGroup("g1", "ns"))
+
+		a.ValidateUpdate(ctx, g, withSpecChange(g))
+
+		Expect(sent.Name).To(Equal("g1"))
 	})
 
 	It("accepts when the remote matches", func() {

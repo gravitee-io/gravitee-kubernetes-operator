@@ -635,6 +635,26 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			Expect(accepted.Message).To(ContainSubstring("context not found"))
 		})
 
+		It("keeps a ResolvedRefs=False that ResolveRefs reports without failing, and still upserts", func() {
+			cli := newCluster(newGroup("g1", testNs))
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = func(_ context.Context, g *v1alpha1.Group, _ string) error {
+				k8s.SetCondition(g, k8s.NewResolvedRefsConditionBuilder(g.GetGeneration()).
+					RejectGroupNotFound("group [devs] not found").Build())
+				return nil
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(r.upserted).To(HaveLen(1))
+			g := fetch(cli, "g1")
+			Expect(condition(g, k8s.ConditionAccepted).Status).To(Equal(metav1.ConditionTrue))
+			refs := condition(g, k8s.ConditionResolvedRefs)
+			Expect(refs.Status).To(Equal(metav1.ConditionFalse))
+			Expect(refs.Message).To(ContainSubstring("group [devs] not found"))
+		})
+
 		It("fails with a ResolveRef error and does not upsert", func() {
 			cli := newCluster(newGroup("g1", testNs))
 			l := newGroupLifecycle(r)
