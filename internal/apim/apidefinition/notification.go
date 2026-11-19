@@ -23,11 +23,19 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-// ResolveConsoleNotificationRefs inlines console notification settings from Notification CRDs.
+// ResolveConsoleNotificationRefs inlines console notification settings from Notification CRDs (v2: a missing
+// one fails with the Kubernetes error).
 func ResolveConsoleNotificationRefs(ctx context.Context, api core.ApiDefinitionObject) error {
+	return resolveConsoleNotificationRefs(ctx, api, false)
+}
+
+// resolveConsoleNotificationRefs inlines console notification settings. With wordNotFound, a missing Notification
+// is a ResolveRef error worded as the admission webhook words it (v4).
+func resolveConsoleNotificationRefs(ctx context.Context, api core.ApiDefinitionObject, wordNotFound bool) error {
 	notificationRefs := api.GetNotificationRefs()
 
 	if len(notificationRefs) == 0 {
@@ -38,9 +46,13 @@ func ResolveConsoleNotificationRefs(ctx context.Context, api core.ApiDefinitionO
 	for _, ref := range notificationRefs {
 		notif := new(v1alpha1.Notification)
 		nsn := getNamespacedName(ref, api.GetNamespace())
-		err := k8s.GetClient().Get(ctx, nsn, notif)
-		if err != nil {
-			return err
+		if err := k8s.GetClient().Get(ctx, nsn, notif); err != nil {
+			if !wordNotFound {
+				return err
+			}
+			return gerrors.NewResolveRefError(
+				notFoundRef(err, "api references notification [%s] that does not exist in the cluster", ref),
+			)
 		}
 		// take the first one ignore the rest
 		// validation webhook takes care of checking that beforehand
