@@ -86,6 +86,10 @@ func ApplicationUsesUUID(app core.ApplicationObject) bool {
 	return app.GetID() != "" && !k8s.IsAutomationAPIManaged(app)
 }
 
+func SharedPolicyGroupUsesUUID(spg *v1alpha1.SharedPolicyGroup) bool {
+	return spg.GetID() != "" && !k8s.IsAutomationAPIManaged(spg)
+}
+
 // SubscriptionRemoteUsesLegacyAPI is true when the subscription is HRID-addressed
 // but the API is a pre-4.12 UUID resource. GET must use GetByHRIDWithAPIUUID.
 func SubscriptionRemoteUsesLegacyAPI(sub *v1alpha1.Subscription, api core.ApiDefinitionObject) bool {

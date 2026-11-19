@@ -64,7 +64,7 @@ func deleteWithContext(ctx context.Context, api core.ApiDefinitionObject) error 
 	default:
 		return fmt.Errorf("unknown version %s", api.GetDefinitionVersion())
 	}
-	if err := errors.IgnoreNotFound(err); err != nil {
+	if err = errors.IgnoreNotFound(err); err != nil {
 		return errors.NewControlPlaneError(err)
 	}
 	return nil

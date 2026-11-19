@@ -73,66 +73,63 @@ var _ = DescribeTable("A delete the control plane refused",
 		Expect(accepted.Message).To(ContainSubstring(refusedDeleteMessage))
 		Expect(accepted.Message).To(ContainSubstring("[DELETE] " + platformURL + path))
 	},
-	Entry("ApiV4Definition", apiV4On(refusingCtx), core.ApiDefinitionFinalizer, automation+"/apis/gravitee-orders?",
-		func(cli client.Client) reconcile.Reconciler {
-			return &apidefinition.V4Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
+	Entry("ApiV4Definition", apiV4On(refusingCtx), core.ApiDefinitionFinalizer, automation+"/apis/gravitee-orders?", v4Reconciler),
 	Entry("ApiDefinition", apiV2On(refusingCtx), core.ApiDefinitionFinalizer,
-		"/management/organizations/DEFAULT/environments/DEFAULT/apis/8f0c",
-		func(cli client.Client) reconcile.Reconciler {
-			return &apidefinition.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
+		"/management/organizations/DEFAULT/environments/DEFAULT/apis/8f0c", v2Reconciler),
 	Entry("Application", applicationOn(refusingCtx), core.ApplicationFinalizer,
-		automation+"/applications/gravitee-orders-app?",
-		func(cli client.Client) reconcile.Reconciler {
-			return &application.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
-	Entry("Dictionary", dictionaryOn(refusingCtx), core.DictionaryFinalizer, automation+"/dictionaries/gravitee-orders-dict",
-		func(cli client.Client) reconcile.Reconciler {
-			return &dictionary.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
+		automation+"/applications/gravitee-orders-app?", applicationReconciler),
+	Entry("Application synced before the Automation API", applicationWithID("a1b2", false),
+		core.ApplicationFinalizer, automation+"/applications/a1b2?hridContainsUUID=true", applicationReconciler),
+	Entry("Application managed by the Automation API", applicationWithID("a1b2", true),
+		core.ApplicationFinalizer, automation+"/applications/gravitee-orders-app?hridContainsUUID=false",
+		applicationReconciler),
+	Entry("Dictionary", dictionaryOn(refusingCtx), core.DictionaryFinalizer, automation+"/dictionaries/gravitee-orders-dict", dictionaryReconciler),
 	Entry("SharedPolicyGroup", sharedPolicyGroupOn(refusingCtx), core.SharedPolicyGroupFinalizer,
-		automation+"/shared-policy-groups/gravitee-rate-limits?",
-		func(cli client.Client) reconcile.Reconciler {
-			return &sharedpolicygroups.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
+		automation+"/shared-policy-groups/gravitee-rate-limits?", sharedPolicyGroupReconciler),
+	Entry("SharedPolicyGroup synced before the Automation API", sharedPolicyGroupWithID("c3d4", false),
+		core.SharedPolicyGroupFinalizer, automation+"/shared-policy-groups/c3d4?hridContainsUUID=true",
+		sharedPolicyGroupReconciler),
+	Entry("SharedPolicyGroup managed by the Automation API", sharedPolicyGroupWithID("c3d4", true),
+		core.SharedPolicyGroupFinalizer, automation+"/shared-policy-groups/gravitee-rate-limits?hridContainsUUID=false",
+		sharedPolicyGroupReconciler),
 	Entry("AuthzEntity", authzEntityOn(refusingCtx), core.AuthzEntityFinalizer,
-		automation+"/authz/entities/gravitee-agents-group",
-		func(cli client.Client) reconcile.Reconciler {
-			return &authzentity.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
-	Entry("AuthzPdp", authzPdpOn(refusingCtx), core.AuthzPdpFinalizer, automation+"/authz/pdps/gravitee-orders-eu",
-		func(cli client.Client) reconcile.Reconciler {
-			return &authzpdp.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
+		automation+"/authz/entities/gravitee-agents-group", authzEntityReconciler),
+	Entry("AuthzPdp", authzPdpOn(refusingCtx), core.AuthzPdpFinalizer, automation+"/authz/pdps/gravitee-orders-eu", authzPdpReconciler),
 	Entry("AuthzPolicy", authzPolicyOn(refusingCtx), core.AuthzPolicyFinalizer,
-		automation+"/authz/policies/gravitee-hotel-booking-read",
-		func(cli client.Client) reconcile.Reconciler {
-			return &authzpolicy.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
+		automation+"/authz/policies/gravitee-hotel-booking-read", authzPolicyReconciler),
 	Entry("AuthzSchema", authzSchemaOn(refusingCtx), core.AuthzSchemaFinalizer,
-		automation+"/authz/schemas/gravitee-travel-schema",
-		func(cli client.Client) reconcile.Reconciler {
-			return &authzschema.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
-		}),
+		automation+"/authz/schemas/gravitee-travel-schema", authzSchemaReconciler),
 )
 
-// The accepting APIM answers a DELETE with a 404, as for a dictionary deleted in the console.
-var _ = It("releases a Dictionary APIM no longer holds", func() {
-	dict := dictionaryOn(&refs.NamespacedName{Name: "accepting-ctx"})
-	dict.SetFinalizers([]string{core.DictionaryFinalizer})
-	dict.SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
-	cli := deletingCluster(dict)
-	key := client.ObjectKeyFromObject(dict)
+// The accepting APIM answers a DELETE with a 404, as for a resource deleted in the console.
+var _ = DescribeTable("A delete of a resource APIM no longer holds",
+	func(obj client.Object, finalizer string, newReconciler func(client.Client) reconcile.Reconciler) {
+		obj.SetFinalizers([]string{finalizer})
+		obj.SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
+		cli := deletingCluster(obj)
+		key := client.ObjectKeyFromObject(obj)
 
-	_, err := (&dictionary.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}).
-		Reconcile(context.Background(), ctrl.Request{NamespacedName: key})
+		_, err := newReconciler(cli).Reconcile(context.Background(), ctrl.Request{NamespacedName: key})
 
-	Expect(err).ToNot(HaveOccurred())
-	Expect(apierrors.IsNotFound(cli.Get(context.Background(), key, &v1alpha1.Dictionary{}))).To(BeTrue())
-})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(apierrors.IsNotFound(cli.Get(context.Background(), key, obj))).To(BeTrue())
+	},
+	Entry("ApiV4Definition", apiV4On(acceptingCtx), core.ApiDefinitionFinalizer, v4Reconciler),
+	Entry("ApiDefinition", apiV2On(acceptingCtx), core.ApiDefinitionFinalizer, v2Reconciler),
+	Entry("Application", applicationOn(acceptingCtx), core.ApplicationFinalizer, applicationReconciler),
+	Entry("Dictionary", dictionaryOn(acceptingCtx), core.DictionaryFinalizer, dictionaryReconciler),
+	Entry("SharedPolicyGroup", sharedPolicyGroupOn(acceptingCtx), core.SharedPolicyGroupFinalizer,
+		sharedPolicyGroupReconciler),
+	Entry("AuthzEntity", authzEntityOn(acceptingCtx), core.AuthzEntityFinalizer, authzEntityReconciler),
+	Entry("AuthzPdp", authzPdpOn(acceptingCtx), core.AuthzPdpFinalizer, authzPdpReconciler),
+	Entry("AuthzPolicy", authzPolicyOn(acceptingCtx), core.AuthzPolicyFinalizer, authzPolicyReconciler),
+	Entry("AuthzSchema", authzSchemaOn(acceptingCtx), core.AuthzSchemaFinalizer, authzSchemaReconciler),
+)
 
-var refusingCtx = &refs.NamespacedName{Name: "refusing-ctx"}
+var (
+	refusingCtx  = &refs.NamespacedName{Name: "refusing-ctx"}
+	acceptingCtx = &refs.NamespacedName{Name: "accepting-ctx"}
+)
 
 const automation = "/automation/organizations/DEFAULT/environments/DEFAULT"
 
@@ -156,6 +153,42 @@ func deletingCluster(obj client.Object) client.Client {
 	return cli
 }
 
+func v4Reconciler(cli client.Client) reconcile.Reconciler {
+	return &apidefinition.V4Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
+func v2Reconciler(cli client.Client) reconcile.Reconciler {
+	return &apidefinition.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
+func applicationReconciler(cli client.Client) reconcile.Reconciler {
+	return &application.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
+func dictionaryReconciler(cli client.Client) reconcile.Reconciler {
+	return &dictionary.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
+func sharedPolicyGroupReconciler(cli client.Client) reconcile.Reconciler {
+	return &sharedpolicygroups.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
+func authzEntityReconciler(cli client.Client) reconcile.Reconciler {
+	return &authzentity.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
+func authzPdpReconciler(cli client.Client) reconcile.Reconciler {
+	return &authzpdp.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
+func authzPolicyReconciler(cli client.Client) reconcile.Reconciler {
+	return &authzpolicy.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
+func authzSchemaReconciler(cli client.Client) reconcile.Reconciler {
+	return &authzschema.Reconciler{Client: cli, Recorder: record.NewFakeRecorder(20)}
+}
+
 func apiV4On(ctxRef *refs.NamespacedName) *v1alpha1.ApiV4Definition {
 	api := &v1alpha1.ApiV4Definition{ObjectMeta: metav1.ObjectMeta{Name: "orders", Namespace: "gravitee"}}
 	api.Spec.V4BaseApi = &v4.V4BaseApi{ApiBase: &base.ApiBase{}}
@@ -177,6 +210,17 @@ func applicationOn(ctxRef *refs.NamespacedName) *v1alpha1.Application {
 	return app
 }
 
+// applicationWithID gives the Application the UUID APIM assigned it. Without the AutomationAPIManaged
+// condition, it was synced before the Automation API.
+func applicationWithID(id string, managed bool) *v1alpha1.Application {
+	app := applicationOn(refusingCtx)
+	app.Status.ID = id
+	if managed {
+		k8s.AddAutomationAPIManagedCondition(app)
+	}
+	return app
+}
+
 func dictionaryOn(ctxRef *refs.NamespacedName) *v1alpha1.Dictionary {
 	dict := &v1alpha1.Dictionary{ObjectMeta: metav1.ObjectMeta{Name: "orders-dict", Namespace: "gravitee"}}
 	dict.Spec.Context = ctxRef
@@ -187,6 +231,17 @@ func sharedPolicyGroupOn(ctxRef *refs.NamespacedName) *v1alpha1.SharedPolicyGrou
 	spg := &v1alpha1.SharedPolicyGroup{ObjectMeta: metav1.ObjectMeta{Name: "rate-limits", Namespace: "gravitee"}}
 	spg.Spec.SharedPolicyGroup = &spgmodel.SharedPolicyGroup{}
 	spg.Spec.Context = ctxRef
+	return spg
+}
+
+// sharedPolicyGroupWithID gives the SharedPolicyGroup the UUID APIM assigned it. Without the
+// AutomationAPIManaged condition, it was synced before the Automation API.
+func sharedPolicyGroupWithID(id string, managed bool) *v1alpha1.SharedPolicyGroup {
+	spg := sharedPolicyGroupOn(refusingCtx)
+	spg.Status.CrossID = id
+	if managed {
+		k8s.AddAutomationAPIManagedCondition(spg)
+	}
 	return spg
 }
 

@@ -132,7 +132,7 @@ func (svc *SharedPolicyGroup) Delete(spg *v1alpha1.SharedPolicyGroup) error {
 }
 
 func getSPGID(spg *v1alpha1.SharedPolicyGroup) (string, bool) {
-	if spg.GetID() != "" && !k8s.IsAutomationAPIManaged(spg) {
+	if model.SharedPolicyGroupUsesUUID(spg) {
 		return spg.GetID(), true
 	}
 	return refs.NewNamespacedNameFromObject(spg).HRID(), false
