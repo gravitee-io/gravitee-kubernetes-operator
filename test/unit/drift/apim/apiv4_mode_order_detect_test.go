@@ -27,20 +27,15 @@ var _ = Describe("API v4 Drift detection on what APIM normalises", func() {
 			remoteDTO := remoteDriftV4(crdDTO, remote)
 			expectNoDrift(drift.DetectWithNamespace(crdDTO, remoteDTO, ""))
 		},
-		// Pending: apim-sdk v0.2.0 compares FlowExecution.mode exactly. The overlay tag case-insensitive
-		// (plan apim-16599-apim-sdk-upgrade) matches the uppercase mode APIM stores.
-		PEntry("lowercase default flow mode against the uppercase APIM stores",
+		Entry("lowercase default flow mode against the uppercase APIM stores",
 			`{"name": "api", "flowExecution": {"mode": "default"}}`,
 			`{"name": "api", "flowExecution": {"mode": "DEFAULT"}}`,
 		),
-		PEntry("lowercase best_match flow mode against the uppercase APIM stores",
+		Entry("lowercase best_match flow mode against the uppercase APIM stores",
 			`{"name": "api", "flowExecution": {"mode": "best_match"}}`,
 			`{"name": "api", "flowExecution": {"mode": "BEST_MATCH"}}`,
 		),
-		// Pending: apim-sdk v0.2.0 compares HttpSelector.path and pathOperator exactly. The overlay tags
-		// ignore-remote-default:/ and ignore-remote-default:STARTS_WITH (plan apim-16599-apim-sdk-upgrade) match the
-		// defaults APIM stores.
-		PEntry("HTTP selector without path against the / and STARTS_WITH APIM stores",
+		Entry("HTTP selector without path against the / and STARTS_WITH APIM stores",
 			`{"name": "api", "flows": [{"name": "all", "enabled": true, "selectors": [{"type": "HTTP"}]}]}`,
 			`{"name": "api", "flows": [{"name": "all", "enabled": true, "selectors": [{"type": "HTTP", "path": "/", "pathOperator": "STARTS_WITH"}]}]}`,
 		),
