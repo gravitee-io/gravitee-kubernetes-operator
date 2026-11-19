@@ -435,6 +435,46 @@ var _ = Describe("MCP proxy", func() {
 		})
 	})
 
+	// What the controller writes in status.tools, from the state a PUT answers.
+	Describe("tools status", func() {
+		studioTools := `"studio": {"tools": [{"server": "gravitee-github-mcp", "tool": "search_issues",
+			"alias": "gh_search", "entityId": "mcp-tool.github.search_issues"}]}`
+		fromStudio := []mcpproxy.StudioToolStatus{{
+			Server:   "gravitee-github-mcp",
+			Tool:     "search_issues",
+			Alias:    new("gh_search"),
+			EntityID: "mcp-tool.github.search_issues",
+		}}
+
+		DescribeTable("maps the state onto status.tools",
+			func(body string, expected []mcpproxy.StudioToolStatus) {
+				state := new(model.McpProxyState)
+				Expect(json.Unmarshal([]byte(body), state)).To(Succeed())
+				Expect(state.ToolsStatus()).To(Equal(expected))
+			},
+			Entry("from the tools list when the state answers both lists, references included",
+				`{"mode": "STUDIO", `+studioTools+`, "tools": [{"server": "gravitee-github-mcp",
+					"tool": "search_issues", "alias": "gh_search", "entityId": "mcp-tool.github.search_issues",
+					"authPolicyRef": "MCPTool::\"github.search_issues\""}]}`,
+				[]mcpproxy.StudioToolStatus{{
+					Server:        "gravitee-github-mcp",
+					Tool:          "search_issues",
+					Alias:         new("gh_search"),
+					EntityID:      "mcp-tool.github.search_issues",
+					AuthPolicyRef: `MCPTool::"github.search_issues"`,
+				}}),
+			Entry("from studio.tools, with no reference, when the state has no tools list",
+				`{"mode": "STUDIO", `+studioTools+`}`,
+				fromStudio),
+			Entry("as none when the state answers an empty tools list",
+				`{"mode": "STUDIO", `+studioTools+`, "tools": []}`,
+				nil),
+			Entry("as none for a PROXY",
+				`{"mode": "PROXY", "proxy": {"serverUrl": "https://api.githubcopilot.com/mcp/"}}`,
+				nil),
+		)
+	})
+
 	Describe("refusal findings", func() {
 		refusedWith := func(statusCode int, body string) error {
 			return xErrors.ServerError{StatusCode: statusCode, Body: body}
