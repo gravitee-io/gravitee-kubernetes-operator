@@ -28,7 +28,7 @@ import (
 
 var _ = Describe("Validate drift for MESSAGE APIs", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := admissionv4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.NewAdmissionCtrl()
 
 	It("should not drift on a simple update with minimal fields", func() {
 		fixtures := fixture.Builder().

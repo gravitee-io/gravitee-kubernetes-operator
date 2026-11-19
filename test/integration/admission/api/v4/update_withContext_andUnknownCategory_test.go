@@ -32,7 +32,7 @@ import (
 var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	It("should return warning on API creation with unknown category", func() {
 		fixtures := fixture.

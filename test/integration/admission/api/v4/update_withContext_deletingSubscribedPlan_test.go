@@ -35,7 +35,7 @@ import (
 
 var _ = Describe("Validate delete", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := adm.AdmissionCtrl{}
+	admissionCtrl := adm.NewAdmissionCtrl()
 
 	fixtures := fixture.Builder().
 		AddSecret(constants.SubscribeJWTUseCasePublicKeySecretFile).

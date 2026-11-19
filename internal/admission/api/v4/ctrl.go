@@ -17,20 +17,46 @@ package v4
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	ctrl "sigs.k8s.io/controller-runtime"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
 var _ admission.Validator[*v1alpha1.ApiV4Definition] = AdmissionCtrl{}
 var _ admission.Defaulter[*v1alpha1.ApiV4Definition] = AdmissionCtrl{}
 
-type AdmissionCtrl struct{}
+type Lifecycle = lifecycle.AdmissionLifecycle[*v1alpha1.ApiV4Definition, apiv4.DTO, *apiv4.Client]
 
+type AdmissionCtrl struct {
+	Lifecycle Lifecycle
+}
+
+func NewAdmissionCtrl() AdmissionCtrl {
+	return AdmissionCtrl{
+		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
+			ResolveRefs:     apiv4.ResolveRefsForAdmission,
+			ClientFactory:   apiv4.CreateAPIMClient,
+			PreCheck:        preCheck,
+			ImmutableFields: immutableFields,
+			ToDTO:           apiv4.ToDTO,
+			DryRun:          apiv4.DryRun,
+			PayloadChanged:  apiv4.PayloadChanged,
+			GetRemote:       apiv4.GetRemote,
+			DriftDTO:        apiv4.DriftDTO,
+			DeleteCheck:     deleteCheck,
+		}),
+	}
+}
+
+// SetupWithManager keeps the no-op defaulter: Helm registers a mutating webhook for v4 APIs.
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
+	a = NewAdmissionCtrl()
 	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.ApiV4Definition{}).
 		WithValidator(a).
 		WithDefaulter(a).
@@ -45,14 +71,14 @@ func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context,
 	obj *v1alpha1.ApiV4Definition,
 ) (admission.Warnings, error) {
-	return validateCreate(ctx, obj).Map()
+	return a.Lifecycle.ValidateCreate(ctx, obj).Map()
 }
 
 func (a AdmissionCtrl) ValidateDelete(
 	ctx context.Context,
 	obj *v1alpha1.ApiV4Definition,
 ) (admission.Warnings, error) {
-	return base.ValidateDelete(ctx, obj, search.ApiV4SubsField).Map()
+	return a.Lifecycle.ValidateDelete(ctx, obj).Map()
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
@@ -60,5 +86,10 @@ func (a AdmissionCtrl) ValidateUpdate(
 	oldObj *v1alpha1.ApiV4Definition,
 	newObj *v1alpha1.ApiV4Definition,
 ) (admission.Warnings, error) {
-	return validateUpdate(ctx, oldObj, newObj).Map()
+	return a.Lifecycle.ValidateUpdate(ctx, oldObj, newObj).Map()
+}
+
+// deleteCheck refuses to delete an API Subscriptions still reference.
+func deleteCheck(ctx context.Context, obj *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
+	return base.ValidateDelete(ctx, obj, search.ApiV4SubsField)
 }

@@ -28,7 +28,7 @@ import (
 
 var _ = Describe("Validate drift for PROXY APIs", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := admissionv4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.NewAdmissionCtrl()
 
 	It("should not drift with minimal fields", func() {
 		fixtures := fixture.Builder().

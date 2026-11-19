@@ -31,7 +31,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	It("should return error on api creation with missing parent page", func() {
 		fixtures1 := fixture.

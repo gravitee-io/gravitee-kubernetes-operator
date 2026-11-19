@@ -32,7 +32,7 @@ import (
 var _ = Describe("Validate create", labels.WithoutContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	It("should return error on API creation with conflicting path", func() {
 		fixtures := fixture.

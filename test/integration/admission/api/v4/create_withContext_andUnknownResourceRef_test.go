@@ -30,7 +30,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	It("should return error on api creation with missing resource as ref", func() {
 		fixtures := fixture.
@@ -45,7 +45,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"error",
 				fmt.Sprintf(
-					"api references resource [%s] that does not exist in the cluster",
+					"could not resolve references: api references resource [%s] that does not exist in the cluster",
 					fixtures.APIv4.Spec.Resources[0].Ref,
 				),
 				err.Error(),
