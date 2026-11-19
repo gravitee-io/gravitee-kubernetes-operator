@@ -39,14 +39,10 @@ import (
 // gatewayDefinitionVersion is the apiDefinitionVersion written in the gateway ConfigMap of a v4 API.
 const gatewayDefinitionVersion = "4.0.0"
 
-// DTO is an ApiV4Definition as APIM sees it, plus what the calls around it need. The embedded sdk.ApiV4 is what
-// drift detection compares; Payload is what the PUT sends.
+// DTO is an ApiV4Definition as APIM sees it, plus what the calls around it need. The embedded sdk.ApiV4 is what the
+// PUT sends and what drift detection compares.
 type DTO struct {
 	sdk.ApiV4
-	// Payload is the PUT body: GKO's own v4 payload, sent as raw JSON. sdk.ApiV4 (apim-sdk v0.2.0) sends required
-	// fields the CRD leaves unset as empty values, and APIM rejects an HTTP flow selector with an empty path
-	// (APIM-16599, Issue 02 B). Switch the PUT back to sdk.ApiV4 once the SDK fixes it (plan apim-16599-apim-sdk-upgrade).
-	Payload model.APIV4DTO `json:"-" drift:"ignore"`
 	// HridContainsUUID is set for an API with a spec.id (created before the Automation API, or imported):
 	// its UUID is sent as the hrid.
 	HridContainsUUID bool `json:"-" drift:"ignore"`
@@ -93,7 +89,6 @@ func ToDTO(obj *v1alpha1.ApiV4Definition) (DTO, error) {
 
 	dto := DTO{
 		ApiV4:        api,
-		Payload:      payload,
 		IgnoreGroups: k8s.HasTrueAnnotation(obj, core.IgnoreGroupsAnnotation),
 		Synced:       obj.Status.ID != "",
 	}
@@ -102,7 +97,6 @@ func ToDTO(obj *v1alpha1.ApiV4Definition) (DTO, error) {
 	}
 	if cp.HasContext() && cp.Spec.ID != "" {
 		dto.Hrid = cp.Spec.ID
-		dto.Payload.HRID = cp.Spec.ID
 		dto.HridContainsUUID = true
 	}
 	dto.DeleteID, dto.DeleteHridContainsUUID = deleteIdentity(obj)

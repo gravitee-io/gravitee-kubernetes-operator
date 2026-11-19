@@ -121,7 +121,7 @@ func (svc *APIs) importV2(spec *v2.Api, dryRun bool) (*base.Status, error) {
 // PUT /apis but its Automation OAS does not declare it, so the generated SDK cannot send it (APIM-16599, Issue 01).
 // Delete it once APIM declares the parameter and the SDK syncs it. Every other v4 call goes through
 // internal/apim/apiv4.
-func (svc *APIs) UpsertV4Legacy(payload model.APIV4DTO, dryRun, ignoreGroups bool) (*sdk.ApiV4State, error) {
+func (svc *APIs) UpsertV4Legacy(payload sdk.ApiV4, dryRun, ignoreGroups bool) (*sdk.ApiV4State, error) {
 	url := svc.AutomationTarget("apis").
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun)).
 		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))

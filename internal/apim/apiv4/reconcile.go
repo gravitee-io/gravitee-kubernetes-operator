@@ -15,10 +15,7 @@
 package apiv4
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -49,22 +46,17 @@ func Upsert(ctx context.Context, client *Client, dto DTO) (Response, error) {
 	return resp, nil
 }
 
-// put sends dto.Payload through the SDK, or through GKO's HTTP client for a legacy API (the SDK cannot send
+// put sends dto.ApiV4 through the SDK, or through GKO's HTTP client for a legacy API (the SDK cannot send
 // hridContainsUUID on PUT /apis yet, see APIs.UpsertV4Legacy). Both send the same body and decode the same state.
 func put(ctx context.Context, client *Client, dto DTO, dryRun bool) (*sdk.ApiV4State, error) {
 	if dto.HridContainsUUID {
-		return client.APIM.APIs.UpsertV4Legacy(dto.Payload, dryRun, dto.IgnoreGroups)
-	}
-
-	body, err := json.Marshal(dto.Payload)
-	if err != nil {
-		return nil, fmt.Errorf("unable to marshal the API payload: %w", err)
+		return client.APIM.APIs.UpsertV4Legacy(dto.ApiV4, dryRun, dto.IgnoreGroups)
 	}
 	params := &sdk.UpsertApiParams{DryRun: &dryRun}
 	if dto.IgnoreGroups {
 		params.IgnoreGroups = new(true)
 	}
-	resp, err := client.UpsertApiWithBodyWithResponse(ctx, params, "application/json", bytes.NewReader(body))
+	resp, err := client.UpsertApiWithResponse(ctx, params, dto.ApiV4)
 	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
