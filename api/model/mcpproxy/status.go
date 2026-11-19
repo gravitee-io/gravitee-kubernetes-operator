@@ -33,9 +33,7 @@ type StudioToolStatus struct {
 	// Catalog identity of the tool, e.g. mcp-tool.github.create_issue.
 	// +kubebuilder:validation:Optional
 	EntityID string `json:"entityId,omitempty"`
-	// What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue": the resource the
-	// gateway checks on tools/call when enableFGA is set. An aliased tool keeps the reference of the
-	// tool it exposes.
+	// What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue", whatever its alias.
 	// +kubebuilder:validation:Optional
 	AuthPolicyRef string `json:"authPolicyRef,omitempty"`
 }

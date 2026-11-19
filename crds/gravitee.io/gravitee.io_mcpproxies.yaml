@@ -913,7 +913,8 @@ spec:
                         description: Name the Studio exposes the tool under, when one is declared.
                         type: string
                       authPolicyRef:
-                        description: What an AuthzPolicy names the tool by, e.g. MCPTool::"github.
+                        description: What an AuthzPolicy names the tool by, e.g.
+                          MCPTool::"github.create_issue", whatever its alias.
                         type: string
                       entityId:
                         description: Catalog identity of the tool, e.g. mcp-tool.github.create_issue.

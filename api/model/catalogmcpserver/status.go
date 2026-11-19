@@ -34,8 +34,7 @@ type Tool struct {
 	// Catalog identity of the tool, e.g. mcp-tool.github.create_issue.
 	// +kubebuilder:validation:Optional
 	EntityID string `json:"entityId,omitempty"`
-	// What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue": the resource the
-	// gateway checks on tools/call when a Studio exposing the tool sets enableFGA, whatever its alias.
+	// What an AuthzPolicy names the tool by, e.g. MCPTool::"github.create_issue".
 	// +kubebuilder:validation:Optional
 	AuthPolicyRef string `json:"authPolicyRef,omitempty"`
 }
@@ -91,8 +90,7 @@ type Status struct {
 	// resource namespace and name.
 	// +kubebuilder:validation:Optional
 	HRID string `json:"hrid,omitempty"`
-	// What an AuthzPolicy names the server by, derived from entityId: its engine type and the slug of
-	// entityId, e.g. MCPServer::"github".
+	// What an AuthzPolicy names the server by, derived from entityId, e.g. MCPServer::"github".
 	// +kubebuilder:validation:Optional
 	AuthPolicyRef string `json:"authPolicyRef,omitempty"`
 	// Conditions describe the current conditions of the CatalogMcpServer.
