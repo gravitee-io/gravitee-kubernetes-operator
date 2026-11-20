@@ -17,19 +17,15 @@ package mcpproxy
 import (
 	"context"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/mcpproxy/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimmcpproxy "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -37,14 +33,30 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+type Lifecycle = lifecycle.ResourceLifecycle[*v1alpha1.McpProxy, sdk.AimMcpProxy, *apim.SDKClient, apimmcpproxy.Response]
+
 type Reconciler struct {
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
-	Watcher  watch.Interface
-	Client   client.Client
+	Scheme    *runtime.Scheme
+	Recorder  record.EventRecorder
+	Watcher   watch.Interface
+	Client    client.Client
+	Lifecycle Lifecycle
+}
+
+// NewLifecycle wires the McpProxy reconcile steps.
+func NewLifecycle() Lifecycle {
+	return lifecycle.NewResourceLifecycle(Lifecycle{
+		Finalizer:     core.McpProxyFinalizer,
+		ResolveRefs:   apimmcpproxy.ResolveRefs,
+		ClientFactory: apimmcpproxy.CreateAPIMClient,
+		ToDTO:         apimmcpproxy.ToDTO,
+		Delete:        apimmcpproxy.Delete,
+		Upsert:        apimmcpproxy.Upsert,
+		PostUpsert:    apimmcpproxy.UpdateStatus,
+		OnUpsertError: apimmcpproxy.OnUpsertError,
+	})
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=mcpproxies,verbs=get;list;watch;create;update;patch;delete;deletecollection
@@ -52,77 +64,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=mcpproxies/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	proxy := &v1alpha1.McpProxy{}
-	if err := r.Client.Get(ctx, req.NamespacedName, proxy); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	proxy.SetNamespace(req.Namespace)
-
-	events := event.NewRecorder(r.Recorder)
-
-	k8s.ResetConditionsExceptAutomationAPI(proxy)
-	dc := proxy.DeepCopy()
-
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), proxy, func() error {
-		util.AddFinalizer(proxy, core.McpProxyFinalizer)
-		k8s.AddAnnotation(proxy, core.LastSpecHashAnnotation, hash.Calculate(&proxy.Spec))
-
-		if proxy.IsBeingDeleted() {
-			if err := template.ReleaseReferences(ctx, proxy); err != nil {
-				return err
-			}
-		} else {
-			// A studio selecting a server the platform does not know yet would be refused: wait
-			// for it (ResolvedRefs=False, requeued) rather than calling the platform. Checked
-			// before compiling templates, which registers this proxy on the Secrets it reads: a
-			// failed first reconcile does not persist the finalizer that would release them.
-			if err := dynamic.AssertCatalogMcpServersSynced(ctx, proxy); err != nil {
-				return errors.NewResolveRefError(err)
-			}
-			if err := template.Compile(ctx, dc, true); err != nil {
-				return err
-			}
-		}
-
-		var err error
-		if proxy.IsBeingDeleted() {
-			err = events.Record(event.Delete, proxy, func() error {
-				if err := internal.Delete(ctx, dc); err != nil {
-					return err
-				}
-				util.RemoveFinalizer(proxy, core.McpProxyFinalizer)
-				return nil
-			})
-		} else {
-			err = events.Record(event.Update, proxy, func() error {
-				return internal.CreateOrUpdate(ctx, dc)
-			})
-		}
-
-		return err
-	})
-
-	if err := dc.GetStatus().DeepCopyTo(proxy); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err == nil {
-		log.InfoEndReconcile(ctx, proxy)
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, proxy)
-	}
-
-	if err := internal.UpdateStatusFailure(ctx, proxy, err); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if errors.ShouldRetry(err, proxy.IsBeingDeleted()) {
-		log.ErrorRequeuingReconcile(ctx, err, proxy)
-		return ctrl.Result{}, err
-	}
-
-	log.ErrorAbortingReconcile(ctx, err, proxy)
-	return ctrl.Result{}, nil
+	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.McpProxy{})
 }
 
 // templatingSourceKind is the annotation the template compiler writes on a Secret or ConfigMap an

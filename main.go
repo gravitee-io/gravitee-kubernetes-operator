@@ -449,10 +449,11 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 	}
 
 	if err := (&mcpproxy.Reconciler{
-		Scheme:   mgr.GetScheme(),
-		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("mcpproxy-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.McpProxyList{}),
+		Scheme:    mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Lifecycle: mcpproxy.NewLifecycle(),
+		Recorder:  mgr.GetEventRecorderFor("mcpproxy-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.McpProxyList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for mcp proxies")
 		os.Exit(1)
