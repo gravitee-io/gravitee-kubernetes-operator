@@ -115,6 +115,21 @@ var _ = Describe("MCP proxy Drift detection", func() {
 		),
 	)
 
+	It("names the upstream auth type the platform switched to", func() {
+		crd := mcpProxyDTO(proxyMcpProxyCRD())
+		remote := withUpstreamAuth(mcpProxyRemote(crd), &sdk.AimMcpProxyUpstreamAuth{
+			Bearer: &sdk.AimMcpProxyBearerUpstreamAuth{Type: sdk.AimMcpProxyBearerUpstreamAuthTypeBEARER},
+		})
+
+		merged := admissionDrift(crd, remote)
+
+		Expect(merged.DriftDetected()).To(BeTrue())
+		Expect(merged.String()).To(Equal(`proxy:
+  upstreamAuth:
+    type: "BASIC" != "BEARER"
+    username: "gravitee" != <nil>`))
+	})
+
 	It("admits the defaults APIM saves in a flow step configuration", func() {
 		crd := mcpProxyWithRequestStep(`{"rate": {"limit": 100}}`)
 		remote := mcpProxyWithRequestStep(`{"rate": {"limit": 100}, "addHeaders": false, "async": false}`)

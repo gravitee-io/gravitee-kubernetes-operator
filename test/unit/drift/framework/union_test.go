@@ -31,9 +31,16 @@ type unionEndpoint struct {
 	Endpoint *string `json:"endpoint,omitempty"`
 }
 
+type unionAliased struct {
+	Type  string `json:"type"`
+	Name  string `json:"name"`
+	Alias string `json:"alias"`
+}
+
 type union struct {
 	Named    *unionNamed    `oneof:"NAMED" json:"named,omitempty"`
 	Endpoint *unionEndpoint `oneof:"ENDPOINT" json:"endpoint,omitempty"`
+	Aliased  *unionAliased  `oneof:"ALIASED" json:"aliased,omitempty"`
 }
 
 type withUnion struct {
@@ -49,6 +56,10 @@ func endpoint(value *string) union {
 	return union{Endpoint: &unionEndpoint{Type: "ENDPOINT", Endpoint: value}}
 }
 
+func aliased(name, alias string) union {
+	return union{Aliased: &unionAliased{Type: "ALIASED", Name: name, Alias: alias}}
+}
+
 var _ = Describe("SDK unions", func() {
 
 	It("reports a variant field at the path the wire carries", func() {
@@ -59,18 +70,49 @@ var _ = Describe("SDK unions", func() {
   name: "foo" != "bar"`)
 	})
 
-	It("reports a variant change", func() {
+	It("reports a variant change as one type beside the fields of both variants", func() {
 		crd := withUnion{Auth: new(named("foo"))}
-		remote := withUnion{Auth: new(endpoint(nil))}
+		remote := withUnion{Auth: new(endpoint(new("/me")))}
 
-		result := drift.DetectWithNamespace(crd, remote, "")
-		Expect(result.DriftDetected()).To(BeTrue())
+		expectDrift(drift.DetectWithNamespace(crd, remote, ""), `auth:
+  type: "NAMED" != "ENDPOINT"
+  name: "foo" != <nil>
+  endpoint: <nil> != "/me"`)
 	})
 
-	Describe("in a list, at admission", func() {
+	It("compares once a property two variants carry", func() {
+		crd := withUnion{Auth: new(named("foo"))}
+		remote := withUnion{Auth: new(aliased("foo", "bar"))}
+
+		expectDrift(drift.DetectWithNamespace(crd, remote, ""), `auth:
+  type: "NAMED" != "ALIASED"
+  alias: <nil> != "bar"`)
+	})
+
+	Describe("at admission", func() {
 		admission := func(crd, remote any) drift.Result {
 			return drift.Merge(drift.DetectWithNamespace(crd, remote, ""), drift.DetectWithNamespace(crd, remote, ""))
 		}
+
+		It("names the type the remote switched to outside a list", func() {
+			crd := withUnion{Auth: new(named("foo"))}
+			remote := withUnion{Auth: new(endpoint(new("/me")))}
+
+			expectDrift(admission(crd, remote), `auth:
+  type: "NAMED" != "ENDPOINT"
+  name: "foo" != <nil>`)
+		})
+
+		It("reports a remote change that the variant the resource switches to does not match", func() {
+			old := withUnion{Items: []union{named("foo")}}
+			updated := withUnion{Items: []union{aliased("foo", "x")}}
+			remote := withUnion{Items: []union{aliased("foo", "y")}}
+
+			merged := drift.Merge(drift.DetectWithNamespace(old, remote, ""), drift.DetectWithNamespace(updated, remote, ""))
+
+			expectDrift(merged, `items[0]:
+  alias: "x" != "y"`)
+		})
 
 		It("reports a variant field the resource leaves out and the remote sets", func() {
 			crd := withUnion{Items: []union{named("foo"), endpoint(nil)}}

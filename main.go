@@ -438,10 +438,11 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 	}
 
 	if err := (&catalogmcpserver.Reconciler{
-		Scheme:   mgr.GetScheme(),
-		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("catalogmcpserver-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.CatalogMcpServerList{}),
+		Scheme:    mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Lifecycle: catalogmcpserver.NewLifecycle(),
+		Recorder:  mgr.GetEventRecorderFor("catalogmcpserver-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.CatalogMcpServerList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for catalog mcp servers")
 		os.Exit(1)

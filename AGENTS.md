@@ -60,7 +60,7 @@ Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core inte
 ### Controllers (controllers/)
 
 Three controller families, each under `controllers/`:
-- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group` runs on `internal/lifecycle`, like the AM controllers; the others still have a hand-written loop
+- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group` and `catalogmcpserver` run on `internal/lifecycle`, like the AM controllers; the others still have a hand-written loop
 - **`am/`** — `amcontext`, `securitydomain` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
@@ -85,7 +85,7 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
 | `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
 | `internal/apim/sdk.go` | The APIM SDK client `apim.SDKClient` (`*sdk.APIMClient` + its context, `Probe`), built by `NewSDKClient` / `SDKFromContextRef` with the same URL, auth, org/env and cloud rules as `FromContext` |
-| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/` |
+| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `catalogmcpserver/`, `mcpproxy/` |
 | `internal/apim/service/` | One file per resource not yet on the SDK: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
 | `internal/apim/model/` | The **wire payloads** (`*DTO`, or generated `sdk.*` types for migrated resources) sent to and received from APIM, plus their mappers |
 
@@ -101,11 +101,11 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
   - `CreateAPIMClient(ctx, obj)`, which calls `apim.SDKFromContextRef`. The SDK rejects a context without usable auth when the client is built, so build it only for resources on the SDK.
 - Steps per resource, one resource per PR:
   1. the `internal/apim/<resource>/` package on the SDK, called by the controller and webhook;
-  2. the controller and webhook moved onto `internal/lifecycle`: `NewLifecycle()` and `NewAdmissionCtrl()` wire the package functions (see `controllers/apim/group/`, `internal/admission/group/`). Without `ResolveRefs`, the lifecycle reports `Accepted` only, with no `ResolvedRefs` condition: say so in the release note when a resource loses it, as Group did;
+  2. the controller and webhook moved onto `internal/lifecycle`: `NewLifecycle()` and `NewAdmissionCtrl()` wire the package functions (see `controllers/apim/group/`, `internal/admission/group/`). Without `ResolveRefs`, the lifecycle reports `Accepted` only, with no `ResolvedRefs` condition: say so in the release note when a resource loses it, as Group did. A resource that requires its context sets `ResolveRefs: apim.ResolveContextRef[...]`: an unset or deleted context is NotFound, so a delete releases the finalizer (see `controllers/apim/catalogmcpserver/`);
   3. tests: unit in `test/unit/`, APIM behaviour in `test/integration/`. APIM stays off envtest until every resource is migrated;
   4. the hand-written DTO, mapper and service methods deleted.
 - Wrap every SDK call in `errors.FromSDKResponse(err, func() (*http.Response, []byte) { return resp.HTTPResponse, resp.Body })` (keep the closure: the SDK returns no response on a transport error) and treat a nil `JSON200` as `errors.UnexpectedSDKResponse`.
-- Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). A CRD that nests each union variant under its own key (`header: {name, value}`) cannot round-trip into the SDK's flat `OneOf*` types: map it field by field and set the variant's `Type`, which drift compares (see `internal/apim/catalogmcpserver/`). Drift flattens a variant (a field tagged `oneof`) into its union, as the wire does, so reports and admission treat it like the old flat DTOs. **Never call `WithDefaults()` on the CRD side.**
+- Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). A CRD that nests each union variant under its own key (`header: {name, value}`) cannot round-trip into the SDK's flat `OneOf*` types: map it field by field and set the variant's `Type` (see `internal/apim/catalogmcpserver/`). Drift compares a union in the flat shape the wire carries, its type taken from the `oneof` tag of the variant set and each variant property once, so reports and admission read like the old flat DTOs. **Never call `WithDefaults()` on the CRD side.**
 - Drift compares the PUT type on both sides: turn the GET state into it first with its `Spec()` (`GroupState.Spec()` returns the `sdk.Group` a PUT sends; every `XxxState` has one). Comparing `GroupState` with `Group` panics. `Spec()` is a shallow copy: reassign its fields, never mutate shared slices or maps. The SDK types carry their own `drift:` tags; resource types and list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
 - Keep GKO's HTTP client only for calls the SDK spec does not declare yet (e.g. a `hridContainsUUID` it lacks).
 
