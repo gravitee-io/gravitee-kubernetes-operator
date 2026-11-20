@@ -195,6 +195,30 @@ var _ = Describe("ApiV4Definition through the APIM SDK", func() {
 		Expect(api.Status.Plans).To(HaveKeyWithValue("KeyLess", "6b1d5f0a-0000-0000-0000-000000000003"))
 	})
 
+	It("keeps what APIM accepted in the status on the lifecycle's upsert error", func() {
+		registerFailingConfigMapK8s()
+		api := apiV4ForSDK()
+		api.Spec.DefinitionContext = apiV4WithContext().Spec.DefinitionContext
+
+		_, err := apiv4.Upsert(ctx, client, toAPIV4DTO(api))
+		Expect(err).To(HaveOccurred())
+
+		Expect(apiv4.KeepAcceptedStatus(ctx, api, err)).To(Succeed())
+		Expect(api.Status.ID).To(Equal("6b1d5f0a-0000-0000-0000-000000000001"))
+		Expect(api.Status.Plans).To(HaveKeyWithValue("KeyLess", "6b1d5f0a-0000-0000-0000-000000000003"))
+	})
+
+	It("leaves the status alone on the lifecycle's upsert error when APIM refused the API", func() {
+		fake.status = http.StatusBadRequest
+		api := apiV4ForSDK()
+
+		_, err := apiv4.Upsert(ctx, client, toAPIV4DTO(api))
+		Expect(err).To(HaveOccurred())
+
+		Expect(apiv4.KeepAcceptedStatus(ctx, api, err)).To(Succeed())
+		Expect(api.Status.ID).To(BeEmpty())
+	})
+
 	It("returns no accepted response when APIM refuses the API", func() {
 		fake.status = http.StatusBadRequest
 

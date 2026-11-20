@@ -95,6 +95,16 @@ func put(ctx context.Context, client *Client, dto DTO, dryRun bool) (*sdk.ApiV4S
 	return resp.JSON200, nil
 }
 
+// KeepAcceptedStatus is the lifecycle's OnUpsertError. When APIM accepted the API and only its gateway ConfigMap
+// failed, it copies what APIM returned into the status, so the API and plan IDs are kept. It returns nil: the
+// lifecycle classifies the error as for any other failed upsert.
+func KeepAcceptedStatus(ctx context.Context, obj *v1alpha1.ApiV4Definition, err error) error {
+	if accepted, ok := AcceptedResponse(err); ok {
+		return UpdateStatus(ctx, obj, accepted)
+	}
+	return nil
+}
+
 // syncGateway writes the gateway ConfigMap of an API that syncs from Kubernetes (deletes it while the API is
 // stopped). As before the SDK, it carries the organization and environment APIM returned, if any.
 func syncGateway(ctx context.Context, gateway *v1alpha1.ApiV4Definition, resp Response) error {
