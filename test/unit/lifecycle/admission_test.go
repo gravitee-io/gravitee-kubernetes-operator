@@ -290,21 +290,30 @@ var _ = Describe("AdmissionLifecycle", func() {
 			Expect(order).To(Equal([]string{"immutable", "precheck", "dryrun"}))
 		})
 
-		It("stops on ImmutableFields severe error", func() {
+		It("stops on ImmutableFields severe error, before PreCheck and DryRun", func() {
 			tc := &testClient{}
 			a := minimalAdmission(tc)
+			preCheckCalled := false
 			dryRunCalled := false
 			a.ImmutableFields = func(_ context.Context, _, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 				e := gerrors.NewAdmissionErrors()
 				e.AddSevere("field is immutable")
 				return e
 			}
+			a.PreCheck = func(_ context.Context, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
+				preCheckCalled = true
+				e := gerrors.NewAdmissionErrors()
+				e.AddSevere("spec error")
+				return e
+			}
 			a.DryRun = func(_ context.Context, _ *testClient, _ testDTO) (*gerrors.AdmissionErrors, error) {
 				dryRunCalled = true
 				return gerrors.NewAdmissionErrors(), nil
 			}
-			errs := a.ValidateUpdate(ctx, newGroup("g1", "ns"), newGroup("g1", "ns"))
-			Expect(errs.IsSevere()).To(BeTrue())
+			oldG := newGroup("g1", "ns")
+			errs := a.ValidateUpdate(ctx, oldG, withSpecChange(oldG))
+			Expect(errs.Severe).To(ConsistOf(MatchError("field is immutable")))
+			Expect(preCheckCalled).To(BeFalse())
 			Expect(dryRunCalled).To(BeFalse())
 		})
 	})
