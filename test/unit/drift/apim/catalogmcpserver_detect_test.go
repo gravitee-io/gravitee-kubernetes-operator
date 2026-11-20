@@ -14,12 +14,17 @@
 package apim
 
 import (
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimcatalog "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+var catalogNoAuth = &sdk.AimCatalogMcpServerAuth{
+	None: &sdk.AimCatalogMcpServerNoAuth{Type: sdk.AimCatalogMcpServerNoAuthTypeNONE},
+}
 
 var _ = Describe("Catalog MCP server Drift detection", func() {
 
@@ -28,29 +33,32 @@ var _ = Describe("Catalog MCP server Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
-			model.CatalogMcpServerDTO{},
-			model.CatalogMcpServerDTO{},
+			sdk.AimCatalogMcpServer{},
+			sdk.AimCatalogMcpServer{},
 		),
 		Entry("equal struct",
 			completeCatalogMcpServerDTO(),
 			completeCatalogMcpServerDTO(),
 		),
 		Entry("HEADER auth: the platform never returns the header value",
-			model.ToCatalogMcpServerDTO(headerCatalogMcpServerCRD()),
-			withoutCredentials(model.ToCatalogMcpServerDTO(headerCatalogMcpServerCRD())),
+			catalogMcpServerDTO(headerCatalogMcpServerCRD()),
+			withoutCredentials(catalogMcpServerDTO(headerCatalogMcpServerCRD())),
 		),
 		Entry("OAUTH2 auth: the platform never returns the client secret",
-			model.ToCatalogMcpServerDTO(oauth2CatalogMcpServerCRD()),
-			withoutCredentials(model.ToCatalogMcpServerDTO(oauth2CatalogMcpServerCRD())),
+			catalogMcpServerDTO(oauth2CatalogMcpServerCRD()),
+			withoutCredentials(catalogMcpServerDTO(oauth2CatalogMcpServerCRD())),
+		),
+		Entry("OAUTH2 auth: empty scope equivalent to nil",
+			withScope(catalogMcpServerDTO(oauth2CatalogMcpServerCRD()), nil),
+			withScope(catalogMcpServerDTO(oauth2CatalogMcpServerCRD()), new("")),
 		),
 		Entry("no auth in the spec reads back as NONE",
-			model.ToCatalogMcpServerDTO(noAuthCatalogMcpServerCRD()),
-			withAuth(withoutCredentials(model.ToCatalogMcpServerDTO(noAuthCatalogMcpServerCRD())),
-				&model.CatalogMcpServerAuthDTO{Type: "NONE"}),
+			catalogMcpServerDTO(noAuthCatalogMcpServerCRD()),
+			withAuth(catalogMcpServerDTO(noAuthCatalogMcpServerCRD()), catalogNoAuth),
 		),
 		Entry("empty description equivalent to nil",
-			withDescription(model.ToCatalogMcpServerDTO(noAuthCatalogMcpServerCRD()), nil),
-			withDescription(model.ToCatalogMcpServerDTO(noAuthCatalogMcpServerCRD()), new("")),
+			withDescription(catalogMcpServerDTO(noAuthCatalogMcpServerCRD()), nil),
+			withDescription(catalogMcpServerDTO(noAuthCatalogMcpServerCRD()), new("")),
 		),
 		Entry("hrid is identity, not payload",
 			withHRID(completeCatalogMcpServerDTO(), "default-drift-full"),
@@ -64,14 +72,17 @@ var _ = Describe("Catalog MCP server Drift detection", func() {
 			Expect(result.DriftDetected()).To(BeTrue())
 		},
 		Entry("endpoint changed on the platform",
-			model.ToCatalogMcpServerDTO(headerCatalogMcpServerCRD()),
-			withEndpoint(withoutCredentials(model.ToCatalogMcpServerDTO(headerCatalogMcpServerCRD())),
+			catalogMcpServerDTO(headerCatalogMcpServerCRD()),
+			withEndpoint(withoutCredentials(catalogMcpServerDTO(headerCatalogMcpServerCRD())),
 				"https://mcp.elsewhere.example.com/"),
 		),
 		Entry("auth type changed on the platform",
-			model.ToCatalogMcpServerDTO(headerCatalogMcpServerCRD()),
-			withAuth(model.ToCatalogMcpServerDTO(headerCatalogMcpServerCRD()),
-				&model.CatalogMcpServerAuthDTO{Type: "NONE"}),
+			catalogMcpServerDTO(headerCatalogMcpServerCRD()),
+			withAuth(catalogMcpServerDTO(headerCatalogMcpServerCRD()), catalogNoAuth),
+		),
+		Entry("OAUTH2 scope changed on the platform",
+			catalogMcpServerDTO(oauth2CatalogMcpServerCRD()),
+			withScope(withoutCredentials(catalogMcpServerDTO(oauth2CatalogMcpServerCRD())), new("mcp:write")),
 		),
 	)
 
@@ -82,9 +93,27 @@ var _ = Describe("Catalog MCP server Drift detection", func() {
 	})
 })
 
-func completeCatalogMcpServerDTO() model.CatalogMcpServerDTO {
+// completeCatalogMcpServerDTO sets every field, every auth variant included. JSON carries one variant of
+// the union, so the fixture holds the OAUTH2 one and the others are set here.
+func completeCatalogMcpServerDTO() sdk.AimCatalogMcpServer {
 	GinkgoHelper()
-	return loadFixture[model.CatalogMcpServerDTO]("catalogmcpserver_full_dto.json")
+	dto := loadFixture[sdk.AimCatalogMcpServer]("catalogmcpserver_full_dto.json")
+	auth := *dto.Connection.Auth
+	auth.None = catalogNoAuth.None
+	auth.Header = &sdk.AimCatalogMcpServerHeaderAuth{
+		Type:  sdk.AimCatalogMcpServerHeaderAuthTypeHEADER,
+		Name:  "Authorization",
+		Value: new("Bearer token"),
+	}
+	dto.Connection.Auth = &auth
+	return dto
+}
+
+func catalogMcpServerDTO(srv *v1alpha1.CatalogMcpServer) sdk.AimCatalogMcpServer {
+	GinkgoHelper()
+	dto, err := apimcatalog.ToDTO(srv)
+	Expect(err).ToNot(HaveOccurred())
+	return dto
 }
 
 func headerCatalogMcpServerCRD() *v1alpha1.CatalogMcpServer {
@@ -107,32 +136,50 @@ func noAuthCatalogMcpServerCRD() *v1alpha1.CatalogMcpServer {
 }
 
 // withoutCredentials is what the platform answers: the payload with every credential removed.
-func withoutCredentials(dto model.CatalogMcpServerDTO) model.CatalogMcpServerDTO {
-	if dto.Connection.Auth != nil {
-		auth := *dto.Connection.Auth
-		auth.Value = nil
-		auth.ClientSecret = nil
-		dto.Connection.Auth = &auth
+func withoutCredentials(dto sdk.AimCatalogMcpServer) sdk.AimCatalogMcpServer {
+	if dto.Connection.Auth == nil {
+		return dto
 	}
+	auth := *dto.Connection.Auth
+	if auth.Header != nil {
+		header := *auth.Header
+		header.Value = nil
+		auth.Header = &header
+	}
+	if auth.OAuth2 != nil {
+		oauth2 := *auth.OAuth2
+		oauth2.ClientSecret = nil
+		auth.OAuth2 = &oauth2
+	}
+	dto.Connection.Auth = &auth
 	return dto
 }
 
-func withAuth(dto model.CatalogMcpServerDTO, auth *model.CatalogMcpServerAuthDTO) model.CatalogMcpServerDTO {
+func withAuth(dto sdk.AimCatalogMcpServer, auth *sdk.AimCatalogMcpServerAuth) sdk.AimCatalogMcpServer {
 	dto.Connection.Auth = auth
 	return dto
 }
 
-func withDescription(dto model.CatalogMcpServerDTO, description *string) model.CatalogMcpServerDTO {
+func withScope(dto sdk.AimCatalogMcpServer, scope *string) sdk.AimCatalogMcpServer {
+	auth := *dto.Connection.Auth
+	oauth2 := *auth.OAuth2
+	oauth2.Scope = scope
+	auth.OAuth2 = &oauth2
+	dto.Connection.Auth = &auth
+	return dto
+}
+
+func withDescription(dto sdk.AimCatalogMcpServer, description *string) sdk.AimCatalogMcpServer {
 	dto.Description = description
 	return dto
 }
 
-func withEndpoint(dto model.CatalogMcpServerDTO, endpoint string) model.CatalogMcpServerDTO {
+func withEndpoint(dto sdk.AimCatalogMcpServer, endpoint string) sdk.AimCatalogMcpServer {
 	dto.Connection.Endpoint = endpoint
 	return dto
 }
 
-func withHRID(dto model.CatalogMcpServerDTO, hrid string) model.CatalogMcpServerDTO {
-	dto.HRID = hrid
+func withHRID(dto sdk.AimCatalogMcpServer, hrid string) sdk.AimCatalogMcpServer {
+	dto.Hrid = hrid
 	return dto
 }
