@@ -182,6 +182,12 @@ func (a AdmissionLifecycle[T, D, C]) dryRun(
 	if a.DryRun == nil {
 		return
 	}
+	if a.DeferDryRun != nil {
+		if reason := a.DeferDryRun(ctx, obj); reason != "" {
+			errs.AddWarning(reason)
+			return
+		}
+	}
 	dto, err := a.ToDTO(obj)
 	if err != nil {
 		errs.AddSeveref("could not map the resource: %s", err.Error())

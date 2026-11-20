@@ -19,49 +19,30 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	apimmcpproxy "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-// validateCreate runs the checks in order: the context, the derived HRID, the studio references,
-// then the platform dry run. Schema and CEL own the spec-only rules (entityId grammar, union
-// pairing, mode and the immutable fields).
-func validateCreate(ctx context.Context, proxy *v1alpha1.McpProxy) *errors.AdmissionErrors {
-	errs := validateContext(ctx, proxy)
-	if errs.IsSevere() {
-		return errs
-	}
-
+// preCheck validates the derived HRID, then what the manifest alone can tell about a studio.
+func preCheck(_ context.Context, proxy *v1alpha1.McpProxy) *errors.AdmissionErrors {
 	if err := hrid.Validate(refs.NewNamespacedNameFromObject(proxy).HRID()); err != nil {
+		errs := errors.NewAdmissionErrors()
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	errs.MergeWith(validateStudio(proxy))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validatePlatform(ctx, proxy))
-	return errs
+	return validateStudio(proxy)
 }
 
-// validateContext requires a context that resolves. Resolving also compiles templates, so a dry
-// run that follows carries resolved credentials.
-func validateContext(ctx context.Context, proxy *v1alpha1.McpProxy) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	if !proxy.HasContext() {
-		errs.AddSevere("a management context reference (spec.contextRef) is required")
-		return errs
+// deferDryRun skips the dry run while a CatalogMcpServer the studio selects is missing or not synced: the
+// platform would refuse the proxy, a normal state when a directory is applied at once. The controller waits
+// for the server before applying.
+func deferDryRun(ctx context.Context, proxy *v1alpha1.McpProxy) string {
+	if err := dynamic.AssertCatalogMcpServersSynced(ctx, proxy); err != nil {
+		return err.Error() + ": the proxy is checked against the platform once it is"
 	}
-
-	errs.Add(ctxref.Validate(ctx, proxy))
-	return errs
+	return ""
 }
 
 // validateStudio checks what the manifest alone can tell about a studio: every reference names a
@@ -99,42 +80,4 @@ func validateServerKind(errs *errors.AdmissionErrors, path string, ref refs.Name
 			path, ref.String(), ref.Kind,
 		)
 	}
-}
-
-// validatePlatform dry-runs the declaration. A studio selecting a catalog server that does not
-// exist or has not synced yet cannot be checked by the platform, which would refuse it: that is
-// a normal state when a directory is applied at once, so it is a warning and the dry run is
-// skipped. The controller waits for the server before applying.
-func validatePlatform(ctx context.Context, proxy *v1alpha1.McpProxy) *errors.AdmissionErrors {
-	if err := dynamic.AssertCatalogMcpServersSynced(ctx, proxy); err != nil {
-		errs := errors.NewAdmissionErrors()
-		errs.AddWarningf("%s: the proxy is checked against the platform once it is", err)
-		return errs
-	}
-	return validateDryRun(ctx, proxy)
-}
-
-func validateDryRun(ctx context.Context, proxy *v1alpha1.McpProxy) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	client, err := apimmcpproxy.CreateAPIMClient(ctx, proxy)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	dto, err := apimmcpproxy.ToDTO(proxy)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	findings, err := apimmcpproxy.DryRun(ctx, client, dto)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	errs.MergeWith(findings)
-	return errs
 }
