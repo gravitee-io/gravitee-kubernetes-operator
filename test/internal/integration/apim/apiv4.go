@@ -16,6 +16,7 @@ package apim
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -48,11 +49,23 @@ func (a *APIM) UpsertAPIV4(ctx context.Context, api *v1alpha1.ApiV4Definition) e
 	})
 }
 
-// DeleteAPIV4 deletes api in APIM, addressed as the operator addresses it on delete.
+// DeleteAPIV4 deletes api in APIM, addressed as the operator addresses it on delete, then checks that APIM no
+// longer has it: apiv4.Delete counts a 404 as deleted, which would hide a wrong identity.
 func (a *APIM) DeleteAPIV4(ctx context.Context, api *v1alpha1.ApiV4Definition) error {
 	dto, err := apiv4.ToDTO(api)
 	if err != nil {
 		return err
 	}
-	return apiv4.Delete(ctx, &apiv4.Client{SDKClient: a.SDK, APIM: a.APIM}, dto)
+	client := &apiv4.Client{SDKClient: a.SDK, APIM: a.APIM}
+	if err = apiv4.Delete(ctx, client, dto); err != nil {
+		return err
+	}
+	_, err = apiv4.GetState(ctx, client, dto)
+	if errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("API %s is still in APIM after its delete", dto.DeleteID)
 }
