@@ -23,12 +23,16 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/record"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -208,6 +212,26 @@ var _ = Describe("ApiV4Definition through the APIM SDK", func() {
 		Expect(api.Status.Plans).To(HaveKeyWithValue("KeyLess", "6b1d5f0a-0000-0000-0000-000000000003"))
 	})
 
+	It("keeps what APIM accepted in the status when a reconcile through the V4 lifecycle fails on the ConfigMap", func() {
+		api := apiV4ForSDK()
+		api.Spec.DefinitionContext = apiV4WithContext().Spec.DefinitionContext
+		cli := registerFailingConfigMapK8s(api)
+
+		// The real V4 lifecycle, with only the context and references, which this suite has no cluster for, stubbed.
+		l := apidefinition.NewV4Lifecycle()
+		l.ResolveRefs = func(context.Context, *v1alpha1.ApiV4Definition, string) error { return nil }
+		l.ClientFactory = func(context.Context, *v1alpha1.ApiV4Definition) (*apiv4.Client, error) { return client, nil }
+
+		req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: api.Namespace, Name: api.Name}}
+		_, err := l.Reconcile(ctx, cli, record.NewFakeRecorder(20), req, &v1alpha1.ApiV4Definition{})
+		Expect(err).To(MatchError(ContainSubstring("configmap write refused")))
+
+		got := &v1alpha1.ApiV4Definition{}
+		Expect(cli.Get(ctx, req.NamespacedName, got)).To(Succeed())
+		Expect(got.Status.ID).To(Equal("6b1d5f0a-0000-0000-0000-000000000001"))
+		Expect(got.Status.Plans).To(HaveKeyWithValue("KeyLess", "6b1d5f0a-0000-0000-0000-000000000003"))
+	})
+
 	It("leaves the status alone on the lifecycle's upsert error when APIM refused the API", func() {
 		fake.status = http.StatusBadRequest
 		api := apiV4ForSDK()
@@ -369,18 +393,21 @@ func withoutIDs(body map[string]any) map[string]any {
 	return cp
 }
 
-// registerFailingConfigMapK8s registers a fake Kubernetes client that refuses every ConfigMap write.
-func registerFailingConfigMapK8s() {
+// registerFailingConfigMapK8s registers, and returns, a fake Kubernetes client holding objects that refuses every
+// ConfigMap write.
+func registerFailingConfigMapK8s(objects ...client.Object) client.Client {
 	GinkgoHelper()
 	scheme := runtime.NewScheme()
 	Expect(clientgoscheme.AddToScheme(scheme)).To(Succeed())
+	Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
 	refuse := func(obj client.Object) error {
 		if _, ok := obj.(*corev1.ConfigMap); ok {
 			return goerrors.New("configmap write refused")
 		}
 		return nil
 	}
-	k8s.RegisterClient(fake.NewClientBuilder().WithScheme(scheme).WithInterceptorFuncs(interceptor.Funcs{
+	cli := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...).
+		WithStatusSubresource(&v1alpha1.ApiV4Definition{}).WithInterceptorFuncs(interceptor.Funcs{
 		Create: func(ctx context.Context, cli client.WithWatch, obj client.Object, opts ...client.CreateOption) error {
 			if err := refuse(obj); err != nil {
 				return err
@@ -401,5 +428,7 @@ func registerFailingConfigMapK8s() {
 			}
 			return cli.Patch(ctx, obj, patch, opts...)
 		},
-	}).Build())
+	}).Build()
+	k8s.RegisterClient(cli)
+	return cli
 }
