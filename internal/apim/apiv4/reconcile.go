@@ -141,6 +141,11 @@ func Delete(ctx context.Context, client *Client, dto DTO) error {
 	if client == nil {
 		return nil
 	}
+	// A spec.id GKO never synced (no status.id) names an API GKO did not write: it is left in APIM. The finalizer
+	// is saved before the first upsert, so a CR whose first upsert failed reaches this delete.
+	if dto.DeleteHridContainsUUID && !dto.Synced {
+		return nil
+	}
 	resp, err := client.DeleteApiWithResponse(ctx, dto.DeleteID,
 		&sdk.DeleteApiParams{HridContainsUUID: &dto.DeleteHridContainsUUID})
 	return errors.IgnoreNotFound(errors.FromSDKResponse(err, func() (*http.Response, []byte) {
