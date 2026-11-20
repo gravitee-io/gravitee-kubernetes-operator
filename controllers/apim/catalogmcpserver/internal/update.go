@@ -17,9 +17,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimcatalog "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -31,18 +30,23 @@ func CreateOrUpdate(ctx context.Context, srv *v1alpha1.CatalogMcpServer) error {
 		)
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, srv.ContextRef(), srv.GetNamespace())
+	client, err := apimcatalog.CreateAPIMClient(ctx, srv)
 	if err != nil {
 		return err
 	}
 
-	state, err := apimClient.CatalogMcpServers.CreateOrUpdate(srv)
+	dto, err := apimcatalog.ToDTO(srv)
+	if err != nil {
+		return err
+	}
+
+	resp, err := apimcatalog.Upsert(ctx, client, dto)
 	if err != nil {
 		// A 400 is how the platform refuses an apply, a failed discovery of the upstream included,
 		// which is often transient: keep it recoverable (backoff) rather than terminal until the
 		// next spec change.
 		if gerrors.IsBadRequest(err) {
-			if findings, refused := model.CatalogMcpServerRefusal(err); refused {
+			if findings, refused := model.AutomationRefusal(err); refused {
 				srv.Status.Errors = findings
 			}
 			return fmt.Errorf("catalog mcp server [%s] was refused by the automation api: %w", srv.GetName(), err)
@@ -50,14 +54,5 @@ func CreateOrUpdate(ctx context.Context, srv *v1alpha1.CatalogMcpServer) error {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	// Setting fields by fields to keep the rest (conditions) intact
-	srv.Status.ID = state.ID
-	srv.Status.OrgID = state.OrgID
-	srv.Status.EnvID = state.EnvID
-	srv.Status.HRID = refs.NewNamespacedNameFromObject(srv).HRID()
-	srv.Status.Errors = state.Errors
-	srv.Status.AuthPolicyRef = state.AuthPolicyRef
-	srv.Status.Discovered = state.Discovered
-
-	return nil
+	return apimcatalog.UpdateStatus(ctx, srv, resp)
 }

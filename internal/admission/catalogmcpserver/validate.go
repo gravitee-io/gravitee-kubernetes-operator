@@ -18,8 +18,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimcatalog "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -53,33 +52,24 @@ func validateContext(ctx context.Context, srv *v1alpha1.CatalogMcpServer) *error
 func validateDryRun(ctx context.Context, srv *v1alpha1.CatalogMcpServer) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp := srv.DeepCopy()
-
-	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	client, err := apimcatalog.CreateAPIMClient(ctx, srv)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
 
-	state, err := apimClient.CatalogMcpServers.DryRunCreateOrUpdate(cp)
+	dto, err := apimcatalog.ToDTO(srv)
 	if err != nil {
-		errs.MergeWith(refusalToAdmissionErrors(err))
+		errs.AddSevere(err.Error())
 		return errs
 	}
 
-	errs.MergeWith(errors.NewAdmissionErrorsFromStatus(state.Errors))
-
-	return errs
-}
-
-// refusalToAdmissionErrors reports a platform refusal finding by finding; anything else is
-// reported as the request error.
-func refusalToAdmissionErrors(err error) *errors.AdmissionErrors {
-	if findings, refused := model.CatalogMcpServerRefusal(err); refused {
-		return errors.NewAdmissionErrorsFromStatus(findings)
+	findings, err := apimcatalog.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
 	}
 
-	errs := errors.NewAdmissionErrors()
-	errs.AddSevere(err.Error())
+	errs.MergeWith(findings)
 	return errs
 }

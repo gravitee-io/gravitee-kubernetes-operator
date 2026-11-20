@@ -46,14 +46,15 @@ type recordedRequest struct {
 	Body          map[string]any
 }
 
-// fakeAutomationAPI answers group calls with a fixed state, or a fixed status code.
+// fakeAutomationAPI answers calls with a fixed state, or a fixed status code and its error body.
 type fakeAutomationAPI struct {
 	*httptest.Server
-	mu          sync.Mutex
-	last        recordedRequest
-	status      int
-	response    string
-	contentType string
+	mu            sync.Mutex
+	last          recordedRequest
+	status        int
+	response      string
+	errorResponse string
+	contentType   string
 }
 
 const groupState = `{
@@ -65,7 +66,12 @@ const groupState = `{
 }`
 
 func newFakeAutomationAPI() *fakeAutomationAPI {
-	f := &fakeAutomationAPI{status: http.StatusOK, response: groupState, contentType: "application/json"}
+	f := &fakeAutomationAPI{
+		status:        http.StatusOK,
+		response:      groupState,
+		errorResponse: `{"message": "HRID [x] cannot be found.", "httpStatus": 404}`,
+		contentType:   "application/json",
+	}
 	f.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
@@ -83,7 +89,7 @@ func newFakeAutomationAPI() *fakeAutomationAPI {
 		if f.status == http.StatusOK {
 			_, _ = w.Write([]byte(f.response))
 		} else if f.status >= http.StatusBadRequest {
-			_, _ = w.Write([]byte(`{"message": "HRID [x] cannot be found.", "httpStatus": 404}`))
+			_, _ = w.Write([]byte(f.errorResponse))
 		}
 	}))
 	return f

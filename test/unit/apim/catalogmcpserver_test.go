@@ -14,6 +14,7 @@
 package apim_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -22,11 +23,15 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimcatalog "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	xErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func newCatalogMcpServer(auth *catalogmcpserver.Auth) *v1alpha1.CatalogMcpServer {
@@ -45,6 +50,46 @@ func newCatalogMcpServer(auth *catalogmcpserver.Auth) *v1alpha1.CatalogMcpServer
 	}
 }
 
+func headerAuth() *catalogmcpserver.Auth {
+	return &catalogmcpserver.Auth{
+		Type:   catalogmcpserver.AuthTypeHeader,
+		Header: &catalogmcpserver.HeaderAuth{Name: "Authorization", Value: "Bearer ghp"},
+	}
+}
+
+func toCatalogMcpServerDTO(srv *v1alpha1.CatalogMcpServer) sdk.AimCatalogMcpServer {
+	GinkgoHelper()
+	dto, err := apimcatalog.ToDTO(srv)
+	Expect(err).ToNot(HaveOccurred())
+	return dto
+}
+
+func marshalJSON(v any) string {
+	GinkgoHelper()
+	raw, err := json.Marshal(v)
+	Expect(err).ToNot(HaveOccurred())
+	return string(raw)
+}
+
+// catalogMcpServerState is what the platform answers for the github server: the payload without its
+// credentials, the ids, the findings and what it discovered.
+const catalogMcpServerState = `{
+	"hrid": "gravitee-github",
+	"entityId": "mcp-server.github",
+	"connection": {"endpoint": "https://api.githubcopilot.com/mcp/", "transport": "HTTP",
+		"auth": {"type": "HEADER", "name": "Authorization"}},
+	"id": "8c21f0a2", "organizationId": "DEFAULT", "environmentId": "DEFAULT",
+	"authPolicyRef": "MCPServer::\"github\"",
+	"errors": {"warning": ["something to know"]},
+	"lastSyncedAt": "2026-09-23T09:12:04Z",
+	"protocolVersion": "2025-03-26",
+	"serverInfo": {"name": "github-mcp", "version": "1.4.0"},
+	"tools": [{"name": "create_issue", "entityId": "mcp-tool.github.create_issue",
+		"authPolicyRef": "MCPTool::\"github.create_issue\""}],
+	"prompts": [{"name": "summarize_pr", "entityId": "mcp-prompt.github.summarize_pr"}],
+	"resources": [{"uri": "github://repos", "name": "repositories", "entityId": "mcp-resource.github.repositories"}]
+}`
+
 var _ = Describe("Catalog MCP server", func() {
 	Describe("spec hash", func() {
 		It("changes with the entity id and the connection", func() {
@@ -62,39 +107,26 @@ var _ = Describe("Catalog MCP server", func() {
 
 	Describe("wire mapping", func() {
 		It("derives the hrid from the namespace and name", func() {
-			dto := model.ToCatalogMcpServerDTO(newCatalogMcpServer(nil))
-			Expect(dto.HRID).To(Equal("gravitee-github"))
-			Expect(dto.EntityID).To(Equal("mcp-server.github"))
+			dto := toCatalogMcpServerDTO(newCatalogMcpServer(nil))
+			Expect(dto.Hrid).To(Equal("gravitee-github"))
+			Expect(dto.EntityId).To(Equal("mcp-server.github"))
 			Expect(dto.Connection.Endpoint).To(Equal("https://api.githubcopilot.com/mcp/"))
 		})
 
 		It("defaults the transport to HTTP", func() {
-			dto := model.ToCatalogMcpServerDTO(newCatalogMcpServer(nil))
-			Expect(dto.Connection.Transport).To(Equal("HTTP"))
+			dto := toCatalogMcpServerDTO(newCatalogMcpServer(nil))
+			Expect(dto.Connection.Transport).To(Equal(sdk.AimCatalogMcpServerTransportHTTP))
 		})
 
-		It("sends an explicit NONE auth when the spec has none", func() {
-			dto := model.ToCatalogMcpServerDTO(newCatalogMcpServer(nil))
-			Expect(dto.Connection.Auth).ToNot(BeNil())
-			Expect(dto.Connection.Auth.Type).To(Equal("NONE"))
-			Expect(dto.Connection.Auth.Name).To(BeNil())
-			Expect(dto.Connection.Auth.ClientID).To(BeNil())
-		})
-
-		It("flattens a HEADER auth", func() {
-			dto := model.ToCatalogMcpServerDTO(newCatalogMcpServer(&catalogmcpserver.Auth{
-				Type:   catalogmcpserver.AuthTypeHeader,
-				Header: &catalogmcpserver.HeaderAuth{Name: "Authorization", Value: "Bearer ghp"},
-			}))
-			Expect(dto.Connection.Auth.Type).To(Equal("HEADER"))
-			Expect(*dto.Connection.Auth.Name).To(Equal("Authorization"))
-			Expect(*dto.Connection.Auth.Value).To(Equal("Bearer ghp"))
-			Expect(dto.Connection.Auth.ClientID).To(BeNil())
-			Expect(dto.Connection.Auth.TokenURL).To(BeNil())
-		})
-
-		It("flattens an OAUTH2 auth", func() {
-			dto := model.ToCatalogMcpServerDTO(newCatalogMcpServer(&catalogmcpserver.Auth{
+		DescribeTable("sends the auth flat, with its type",
+			func(auth *catalogmcpserver.Auth, expected string) {
+				dto := toCatalogMcpServerDTO(newCatalogMcpServer(auth))
+				Expect(marshalJSON(dto.Connection.Auth)).To(MatchJSON(expected))
+			},
+			Entry("an explicit NONE when the spec has none", nil, `{"type": "NONE"}`),
+			Entry("NONE", &catalogmcpserver.Auth{Type: catalogmcpserver.AuthTypeNone}, `{"type": "NONE"}`),
+			Entry("HEADER", headerAuth(), `{"type": "HEADER", "name": "Authorization", "value": "Bearer ghp"}`),
+			Entry("OAUTH2", &catalogmcpserver.Auth{
 				Type: catalogmcpserver.AuthTypeOAuth2,
 				OAuth2: &catalogmcpserver.OAuth2Auth{
 					ClientID:     "gravitee-catalog",
@@ -102,24 +134,32 @@ var _ = Describe("Catalog MCP server", func() {
 					TokenURL:     "https://auth.example.com/oauth/token",
 					Scope:        new("mcp:read"),
 				},
-			}))
-			Expect(dto.Connection.Auth.Type).To(Equal("OAUTH2"))
-			Expect(*dto.Connection.Auth.ClientID).To(Equal("gravitee-catalog"))
-			Expect(*dto.Connection.Auth.ClientSecret).To(Equal("s3cr3t"))
-			Expect(*dto.Connection.Auth.TokenURL).To(Equal("https://auth.example.com/oauth/token"))
-			Expect(*dto.Connection.Auth.Scope).To(Equal("mcp:read"))
-			Expect(dto.Connection.Auth.Name).To(BeNil())
-			Expect(dto.Connection.Auth.Value).To(BeNil())
-		})
+			}, `{"type": "OAUTH2", "clientId": "gravitee-catalog", "clientSecret": "s3cr3t",
+				"tokenUrl": "https://auth.example.com/oauth/token", "scope": "mcp:read"}`),
+			Entry("OAUTH2 without a scope", &catalogmcpserver.Auth{
+				Type: catalogmcpserver.AuthTypeOAuth2,
+				OAuth2: &catalogmcpserver.OAuth2Auth{
+					ClientID:     "gravitee-catalog",
+					ClientSecret: "s3cr3t",
+					TokenURL:     "https://auth.example.com/oauth/token",
+				},
+			}, `{"type": "OAUTH2", "clientId": "gravitee-catalog", "clientSecret": "s3cr3t",
+				"tokenUrl": "https://auth.example.com/oauth/token"}`),
+		)
+
+		DescribeTable("refuses an auth it cannot send",
+			func(auth *catalogmcpserver.Auth) {
+				_, err := apimcatalog.ToDTO(newCatalogMcpServer(auth))
+				Expect(err).To(HaveOccurred())
+			},
+			Entry("HEADER without its header", &catalogmcpserver.Auth{Type: catalogmcpserver.AuthTypeHeader}),
+			Entry("OAUTH2 without its oauth2", &catalogmcpserver.Auth{Type: catalogmcpserver.AuthTypeOAuth2}),
+			Entry("an unknown type", &catalogmcpserver.Auth{Type: "BASIC"}),
+		)
 
 		It("serialises the payload with the wire field names", func() {
-			dto := model.ToCatalogMcpServerDTO(newCatalogMcpServer(&catalogmcpserver.Auth{
-				Type:   catalogmcpserver.AuthTypeHeader,
-				Header: &catalogmcpserver.HeaderAuth{Name: "Authorization", Value: "Bearer ghp"},
-			}))
-			raw, err := json.Marshal(dto)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(string(raw)).To(MatchJSON(`{
+			dto := toCatalogMcpServerDTO(newCatalogMcpServer(headerAuth()))
+			Expect(marshalJSON(dto)).To(MatchJSON(`{
 				"hrid": "gravitee-github",
 				"entityId": "mcp-server.github",
 				"connection": {
@@ -131,41 +171,170 @@ var _ = Describe("Catalog MCP server", func() {
 		})
 	})
 
-	Describe("state decoding", func() {
-		It("decodes the payload, the ids, what the platform discovered and the policy references", func() {
-			body := `{
+	Describe("status", func() {
+		It("copies the ids, the findings, what the platform discovered and the policy references", func() {
+			state := sdk.AimCatalogMcpServerState{}
+			Expect(json.Unmarshal([]byte(catalogMcpServerState), &state)).To(Succeed())
+			srv := newCatalogMcpServer(nil)
+
+			Expect(apimcatalog.UpdateStatus(context.Background(), srv, apimcatalog.Response{State: state})).To(Succeed())
+
+			Expect(srv.Status.ID).To(Equal("8c21f0a2"))
+			Expect(srv.Status.OrgID).To(Equal("DEFAULT"))
+			Expect(srv.Status.EnvID).To(Equal("DEFAULT"))
+			Expect(srv.Status.HRID).To(Equal("gravitee-github"))
+			Expect(srv.Status.Errors.Warning).To(ConsistOf("something to know"))
+			Expect(srv.Status.Errors.Severe).To(BeEmpty())
+			Expect(srv.Status.AuthPolicyRef).To(Equal(`MCPServer::"github"`))
+			Expect(srv.Status.Discovered).To(Equal(catalogmcpserver.Discovered{
+				LastSyncedAt:    "2026-09-23T09:12:04Z",
+				ProtocolVersion: "2025-03-26",
+				ServerInfo:      &catalogmcpserver.ServerInfo{Name: "github-mcp", Version: "1.4.0"},
+				Tools: []catalogmcpserver.Tool{{
+					Name:          "create_issue",
+					EntityID:      "mcp-tool.github.create_issue",
+					AuthPolicyRef: `MCPTool::"github.create_issue"`,
+				}},
+				Prompts: []catalogmcpserver.Prompt{{Name: "summarize_pr", EntityID: "mcp-prompt.github.summarize_pr"}},
+				Resources: []catalogmcpserver.Resource{{
+					URI: "github://repos", Name: "repositories", EntityID: "mcp-resource.github.repositories",
+				}},
+			}))
+			Expect(k8s.IsAutomationAPIManaged(srv)).To(BeTrue())
+		})
+
+		It("leaves out what the state leaves out", func() {
+			srv := newCatalogMcpServer(nil)
+			srv.Status.AuthPolicyRef = `MCPServer::"stale"`
+
+			resp := apimcatalog.Response{State: sdk.AimCatalogMcpServerState{Id: new("8c21f0a2")}}
+			Expect(apimcatalog.UpdateStatus(context.Background(), srv, resp)).To(Succeed())
+
+			Expect(srv.Status.ID).To(Equal("8c21f0a2"))
+			Expect(srv.Status.AuthPolicyRef).To(BeEmpty())
+			Expect(srv.Status.Errors.Severe).To(BeNil())
+			Expect(srv.Status.Errors.Warning).To(BeNil())
+			Expect(srv.Status.Discovered).To(Equal(catalogmcpserver.Discovered{}))
+		})
+	})
+
+	Describe("calls", func() {
+		const collection = "/automation/organizations/org1/environments/env1/aim/catalog/mcp-servers"
+
+		var (
+			ctx    context.Context
+			fake   *fakeAutomationAPI
+			client *apim.SDKClient
+		)
+
+		BeforeEach(func() {
+			ctx = context.Background()
+			fake = newFakeAutomationAPI()
+			fake.response = catalogMcpServerState
+			DeferCleanup(fake.Close)
+			var err error
+			client, err = apim.NewSDKClient(ctx, managementContext(fake.URL, bearer("token")))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("puts the payload on the catalog collection and answers the state", func() {
+			resp, err := apimcatalog.Upsert(ctx, client, toCatalogMcpServerDTO(newCatalogMcpServer(headerAuth())))
+			Expect(err).ToNot(HaveOccurred())
+
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodPut))
+			Expect(req.Path).To(Equal(collection))
+			Expect(req.Query.Get("dryRun")).To(Equal("false"))
+			Expect(marshalJSON(req.Body)).To(MatchJSON(`{
 				"hrid": "gravitee-github",
 				"entityId": "mcp-server.github",
-				"connection": {"endpoint": "https://api.githubcopilot.com/mcp/", "transport": "HTTP", "auth": {"type": "HEADER", "name": "Authorization"}},
-				"id": "8c21f0a2", "organizationId": "DEFAULT", "environmentId": "DEFAULT",
-				"authPolicyRef": "MCPServer::\"github\"",
-				"errors": {"warning": ["something to know"]},
-				"lastSyncedAt": "2026-09-23T09:12:04Z",
-				"protocolVersion": "2025-03-26",
-				"serverInfo": {"name": "github-mcp", "version": "1.4.0"},
-				"tools": [{"name": "create_issue", "entityId": "mcp-tool.github.create_issue",
-					"authPolicyRef": "MCPTool::\"github.create_issue\""}],
-				"prompts": [{"name": "summarize_pr", "entityId": "mcp-prompt.github.summarize_pr"}],
-				"resources": [{"uri": "github://repos", "name": "repositories", "entityId": "mcp-resource.github.repositories"}]
-			}`
-			state := new(model.CatalogMcpServerState)
-			Expect(json.Unmarshal([]byte(body), state)).To(Succeed())
+				"connection": {
+					"endpoint": "https://api.githubcopilot.com/mcp/",
+					"transport": "HTTP",
+					"auth": {"type": "HEADER", "name": "Authorization", "value": "Bearer ghp"}
+				}
+			}`))
+			Expect(*resp.State.Id).To(Equal("8c21f0a2"))
+			Expect(resp.GetOrgID()).To(Equal("DEFAULT"))
+			Expect(resp.GetEnvID()).To(Equal("DEFAULT"))
+		})
 
-			Expect(state.HRID).To(Equal("gravitee-github"))
-			Expect(state.EntityID).To(Equal("mcp-server.github"))
-			Expect(state.Connection.Auth.Value).To(BeNil())
-			Expect(state.ID).To(Equal("8c21f0a2"))
-			Expect(state.OrgID).To(Equal("DEFAULT"))
-			Expect(state.Errors.Warning).To(ConsistOf("something to know"))
-			Expect(state.LastSyncedAt).To(Equal("2026-09-23T09:12:04Z"))
-			Expect(state.ProtocolVersion).To(Equal("2025-03-26"))
-			Expect(state.ServerInfo.Name).To(Equal("github-mcp"))
-			Expect(state.Tools).To(HaveLen(1))
-			Expect(state.Tools[0].EntityID).To(Equal("mcp-tool.github.create_issue"))
-			Expect(state.AuthPolicyRef).To(Equal(`MCPServer::"github"`))
-			Expect(state.Tools[0].AuthPolicyRef).To(Equal(`MCPTool::"github.create_issue"`))
-			Expect(state.Prompts[0].Name).To(Equal("summarize_pr"))
-			Expect(state.Resources[0].URI).To(Equal("github://repos"))
+		It("dry runs and returns the findings of the state", func() {
+			fake.response = `{"hrid": "gravitee-github", "entityId": "mcp-server.github",
+				"connection": {"endpoint": "https://api.githubcopilot.com/mcp/", "transport": "HTTP"},
+				"errors": {"severe": ["entityId already used"], "warning": ["slow upstream"]}}`
+
+			findings, err := apimcatalog.DryRun(ctx, client, toCatalogMcpServerDTO(newCatalogMcpServer(nil)))
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(fake.lastRequest().Query.Get("dryRun")).To(Equal("true"))
+			Expect(findings.Severe).To(HaveLen(1))
+			Expect(findings.Severe[0].Message).To(Equal("entityId already used"))
+			Expect(findings.Warning).To(HaveLen(1))
+			Expect(findings.Warning[0].Message).To(Equal("slow upstream"))
+		})
+
+		It("returns the findings of a refused dry run", func() {
+			fake.status = http.StatusBadRequest
+			fake.errorResponse = `{"entityId": "mcp-server.github",
+				"errors": {"severe": ["upstream unreachable"]}}`
+
+			findings, err := apimcatalog.DryRun(ctx, client, toCatalogMcpServerDTO(newCatalogMcpServer(nil)))
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(findings.Severe).To(HaveLen(1))
+			Expect(findings.Severe[0].Message).To(Equal("upstream unreachable"))
+		})
+
+		It("returns a 400 that carries no findings as the error", func() {
+			fake.status = http.StatusBadRequest
+			fake.errorResponse = `{"message": "hrid is required", "http_status": 400}`
+
+			_, err := apimcatalog.DryRun(ctx, client, toCatalogMcpServerDTO(newCatalogMcpServer(nil)))
+
+			Expect(xErrors.IsBadRequest(err)).To(BeTrue())
+		})
+
+		It("gets the remote as the payload a PUT sends", func() {
+			remote, err := apimcatalog.GetRemote(ctx, client, toCatalogMcpServerDTO(newCatalogMcpServer(nil)))
+			Expect(err).ToNot(HaveOccurred())
+
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodGet))
+			Expect(req.Path).To(Equal(collection + "/gravitee-github"))
+			Expect(remote).To(Equal(sdk.AimCatalogMcpServer{
+				Hrid:     "gravitee-github",
+				EntityId: "mcp-server.github",
+				Connection: sdk.AimCatalogMcpServerConnection{
+					Endpoint:  "https://api.githubcopilot.com/mcp/",
+					Transport: sdk.AimCatalogMcpServerTransportHTTP,
+					Auth: &sdk.AimCatalogMcpServerAuth{Header: &sdk.AimCatalogMcpServerHeaderAuth{
+						Type: sdk.AimCatalogMcpServerHeaderAuthTypeHEADER,
+						Name: "Authorization",
+					}},
+				},
+			}))
+		})
+
+		It("reports a remote that is gone as not found", func() {
+			fake.status = http.StatusNotFound
+
+			_, err := apimcatalog.GetRemote(ctx, client, toCatalogMcpServerDTO(newCatalogMcpServer(nil)))
+
+			Expect(xErrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("deletes by hrid and treats a server already gone as deleted", func() {
+			dto := toCatalogMcpServerDTO(newCatalogMcpServer(nil))
+
+			fake.status = http.StatusNoContent
+			Expect(apimcatalog.Delete(ctx, client, dto)).To(Succeed())
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodDelete))
+			Expect(req.Path).To(Equal(collection + "/gravitee-github"))
+
+			fake.status = http.StatusNotFound
+			Expect(apimcatalog.Delete(ctx, client, dto)).To(Succeed())
 		})
 	})
 
@@ -181,7 +350,7 @@ var _ = Describe("Catalog MCP server", func() {
 				"errors": {"severe": ["upstream unreachable", "entityId already used"], "warning": ["slow upstream"]}
 			}`)
 
-			findings, refused := model.CatalogMcpServerRefusal(err)
+			findings, refused := model.AutomationRefusal(err)
 
 			Expect(refused).To(BeTrue())
 			Expect(findings.Severe).To(ConsistOf("upstream unreachable", "entityId already used"))
@@ -192,7 +361,7 @@ var _ = Describe("Catalog MCP server", func() {
 			err := fmt.Errorf("apply failed: %w",
 				refusedWith(http.StatusBadRequest, `{"errors": {"severe": ["upstream unreachable"]}}`))
 
-			findings, refused := model.CatalogMcpServerRefusal(err)
+			findings, refused := model.AutomationRefusal(err)
 
 			Expect(refused).To(BeTrue())
 			Expect(findings.Severe).To(ConsistOf("upstream unreachable"))
@@ -200,7 +369,7 @@ var _ = Describe("Catalog MCP server", func() {
 
 		DescribeTable("is not a refusal",
 			func(err error) {
-				_, refused := model.CatalogMcpServerRefusal(err)
+				_, refused := model.AutomationRefusal(err)
 				Expect(refused).To(BeFalse())
 			},
 			Entry("a 400 without severe findings",
