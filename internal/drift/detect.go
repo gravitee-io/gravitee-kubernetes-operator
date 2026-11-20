@@ -81,6 +81,7 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 	if bothNil {
 		return
 	}
+	t, crd, remote = asWireShape(t, crd, remote)
 
 	for i := 0; i < t.NumField(); i++ {
 		// get info to find an Equivalence func
@@ -547,7 +548,7 @@ func (p *valuePair) setEmptySliceIfNilValue(typ reflect.Type) {
 }
 
 func handleStructField(property string, driftFunc driftFunc, field reflect.StructField, crd any, remote any, this *Result) {
-	if isEmbeddedStruct(field) || isUnionVariant(field) {
+	if isEmbeddedStruct(field) {
 		// no child creation we want fields to be flattened as it is embedded
 		this.context.applyDriftFunc(driftFunc, reflect.Struct)
 		detectStruct(crd, remote, this, false)
@@ -576,15 +577,6 @@ func handleStructField(property string, driftFunc driftFunc, field reflect.Struc
 	if equivalence.PostFunc != nil {
 		equivalence.PostFunc(child)
 	}
-}
-
-// isUnionVariant reports whether the field is a variant of a generated SDK union (OneOf*), tagged
-// `oneof:"<TYPE>"`. The wire carries a union flat, its variant's fields beside the type discriminator, so
-// the variant is flattened into the union like an embedded struct: a drift report names the wire path, and
-// Merge keeps a variant field inside its list item.
-func isUnionVariant(field reflect.StructField) bool {
-	_, tagged := field.Tag.Lookup("oneof")
-	return tagged
 }
 
 func isEmbeddedStruct(field reflect.StructField) bool {
