@@ -77,7 +77,8 @@
       "paths": [
         {
           "host": "api.example.com",
-          "path": "/hello"
+          "path": "/hello",
+          "overrideAccess": true
         }
       ],
       "pathMappings": [

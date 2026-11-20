@@ -17,8 +17,9 @@ package apim
 import (
 	"strconv"
 
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -50,23 +51,23 @@ var _ = Describe("API v4 plan order", func() {
 	)
 
 	It("reads a remote plan's order from its position in the GET list", func() {
-		remote := parseJSON[model.APIV4DTO](`{"name": "api", "plans": [` + plan("foo") + `, ` + plan("bar") + `]}`)
+		crd := crdV4(`{"name": "api", "plans": {"foo": ` + planWithOrder("foo", 2) + `, "bar": ` +
+			planWithOrder("bar", 1) + `}}`)
+		remote := apiv4.RemoteDTO(crd, parseJSON[sdk.ApiV4State](
+			`{"name": "api", "plans": [`+plan("foo")+`, `+plan("bar")+`]}`))
 
-		Expect(remote.Plans).To(HaveLen(2))
-		Expect(remote.Plans[0].HRID).To(Equal("foo"))
-		Expect(remote.Plans[0].Order).To(HaveValue(Equal(1)))
-		Expect(remote.Plans[1].HRID).To(Equal("bar"))
-		Expect(remote.Plans[1].Order).To(HaveValue(Equal(2)))
+		Expect(crd.PlanOrder).To(Equal(map[string]int{"bar": 1, "foo": 2}))
+		Expect(remote.PlanOrder).To(Equal(map[string]int{"foo": 1, "bar": 2}))
 	})
 
 	It("reads a null plan list from the GET as no plans", func() {
-		remote := parseJSON[model.APIV4DTO](`{"name": "api", "plans": null}`)
+		remote := parseJSON[sdk.ApiV4State](`{"name": "api", "plans": null}`)
 
 		Expect(remote.Plans).To(BeNil())
 	})
 
 	It("reads an empty plan list from the GET as no plans", func() {
-		remote := parseJSON[model.APIV4DTO](`{"name": "api", "plans": []}`)
+		remote := parseJSON[sdk.ApiV4State](`{"name": "api", "plans": []}`)
 
 		Expect(remote.Plans).To(BeEmpty())
 	})
@@ -133,8 +134,8 @@ var _ = Describe("API v4 plan order", func() {
 		)
 
 		Expect(result.DriftDetected()).To(BeTrue())
-		Expect(result.String()).To(ContainSubstring("order: 1 != 2"))
-		Expect(result.String()).To(ContainSubstring("order: 2 != 1"))
+		Expect(result.String()).To(ContainSubstring("foo: 1 != 2"))
+		Expect(result.String()).To(ContainSubstring("bar: 2 != 1"))
 		Expect(result.String()).NotTo(ContainSubstring("name:"))
 		Expect(result.String()).NotTo(ContainSubstring("hrid:"))
 	})
@@ -147,31 +148,24 @@ var _ = Describe("API v4 plan order", func() {
 		)
 
 		Expect(result.DriftDetected()).To(BeTrue())
-		Expect(result.String()).To(ContainSubstring("order: 1 != 2"))
+		Expect(result.String()).To(ContainSubstring("foo: 1 != 2"))
 	})
 })
 
 func sentPlanHRIDs(crd string) []string {
 	GinkgoHelper()
-	dto := model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
+	dto := crdV4(crd)
 	hrids := make([]string, 0, len(dto.Plans))
 	for _, p := range dto.Plans {
-		hrids = append(hrids, p.HRID)
+		hrids = append(hrids, p.Hrid)
 	}
 	return hrids
 }
 
 func detectPlanOrderDrift(crd, remote string) drift.Result {
 	GinkgoHelper()
-	crdDTO := crdDriftAPIV4DTO(crd)
-	remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
-	return drift.DetectWithNamespace(crdDTO, remoteDTO, "")
-}
-
-// crdDriftAPIV4DTO maps a CRD spec the way the admission drift check does.
-func crdDriftAPIV4DTO(crd string) model.APIV4DTO {
-	GinkgoHelper()
-	return model.ToAPIV4DriftDTO(parseJSON[*v4.Api](crd))
+	crdDTO := crdDriftV4(crd)
+	return drift.DetectWithNamespace(crdDTO, remoteDriftV4(crdDTO, remote), "")
 }
 
 func plan(hrid string) string {
