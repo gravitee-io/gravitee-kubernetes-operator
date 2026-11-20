@@ -219,6 +219,37 @@ var _ = Describe("AdmissionLifecycle", func() {
 			Expect(errs.Warning).To(BeEmpty())
 		})
 
+		It("warns and skips DryRun while DeferDryRun gives a reason", func() {
+			a := minimalAdmission(&testClient{})
+			dryRun := false
+			a.DryRun = func(context.Context, *testClient, testDTO) (*gerrors.AdmissionErrors, error) {
+				dryRun = true
+				return gerrors.NewAdmissionErrors(), nil
+			}
+			a.DeferDryRun = func(context.Context, *v1alpha1.Group) string { return "server not synced yet" }
+
+			errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
+
+			Expect(errs.IsSevere()).To(BeFalse())
+			Expect(errs.Warning).To(ConsistOf(MatchError("server not synced yet")))
+			Expect(dryRun).To(BeFalse())
+		})
+
+		It("dry-runs when DeferDryRun gives no reason", func() {
+			a := minimalAdmission(&testClient{})
+			a.DryRun = func(context.Context, *testClient, testDTO) (*gerrors.AdmissionErrors, error) {
+				e := gerrors.NewAdmissionErrors()
+				e.AddSevere("refused by the remote")
+				return e, nil
+			}
+			a.DeferDryRun = func(context.Context, *v1alpha1.Group) string { return "" }
+
+			errs := a.ValidateCreate(ctx, newGroup("g1", "ns"))
+
+			Expect(errs.IsSevere()).To(BeTrue())
+			Expect(errs.Warning).To(BeEmpty())
+		})
+
 		It("runs PostCheck after DryRun", func() {
 			tc := &testClient{}
 			var order []string

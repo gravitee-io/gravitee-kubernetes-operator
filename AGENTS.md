@@ -60,7 +60,7 @@ Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core inte
 ### Controllers (controllers/)
 
 Three controller families, each under `controllers/`:
-- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group` and `catalogmcpserver` run on `internal/lifecycle`, like the AM controllers; the others still have a hand-written loop
+- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group`, `catalogmcpserver` and `mcpproxy` run on `internal/lifecycle`, like the AM controllers; the others still have a hand-written loop
 - **`am/`** — `amcontext`, `securitydomain` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
