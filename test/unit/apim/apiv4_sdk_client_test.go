@@ -269,6 +269,11 @@ var _ = Describe("ApiV4Definition through the APIM SDK", func() {
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
 	})
 
+	It("leaves in APIM an API with a spec.id that GKO never synced", func() {
+		Expect(apiv4.Delete(ctx, client, toAPIV4DTO(legacy()))).To(Succeed())
+		Expect(fake.lastRequest().Method).To(BeEmpty())
+	})
+
 	It("treats an API already gone as deleted", func() {
 		fake.status = http.StatusNotFound
 
