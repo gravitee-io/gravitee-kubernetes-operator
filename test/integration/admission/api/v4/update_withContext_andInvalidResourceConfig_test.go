@@ -53,6 +53,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		}
 
 		By("adding an invalid to the API")
+		oldAPI := fixtures.APIv4.DeepCopy()
 		invalidConfig := &utils.GenericStringMap{
 			Unstructured: struct{ Object map[string]interface{} }{Object: map[string]interface{}{
 				"useSsl": "not a boolean",
@@ -63,7 +64,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		By("checking that API validation returns errors")
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, fixtures.APIv4)
+			_, err := admissionCtrl.ValidateUpdate(ctx, oldAPI, fixtures.APIv4)
 
 			return assert.Equals(
 				"severe",
