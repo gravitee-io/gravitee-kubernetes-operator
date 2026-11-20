@@ -10,11 +10,6 @@
     "serverUrl": "https://mcp.example.com/mcp",
     "upstreamAuth": {
       "type": "OAUTH2",
-      "apiKeyHeader": "X-Api-Key",
-      "apiKey": "k",
-      "token": "t",
-      "username": "gravitee",
-      "password": "p",
       "authorizeUrl": "https://auth.example.com/authorize",
       "tokenUrl": "https://auth.example.com/token",
       "clientId": "gravitee",
@@ -38,11 +33,6 @@
         "server": "default-github",
         "auth": {
           "type": "OAUTH2",
-          "apiKeyHeader": "X-Api-Key",
-          "apiKey": "k",
-          "token": "t",
-          "username": "gravitee",
-          "password": "p",
           "authorizeUrl": "https://auth.example.com/authorize",
           "tokenUrl": "https://auth.example.com/token",
           "clientId": "gravitee",
@@ -68,8 +58,7 @@
           "type": "MCP",
           "methods": [
             "tools/call"
-          ],
-          "condition": "{#request.headers['X-Audit'] != null}"
+          ]
         }
       ],
       "request": [
@@ -116,9 +105,7 @@
       "introspectionEndpointMethod": "POST",
       "clientId": "gateway",
       "userInfoEndpoint": "/protocol/openid-connect/userinfo",
-      "clientSecret": "s",
-      "domain": "gravitee.eu.auth0.com",
-      "audience": "https://mcp.example.com"
+      "clientSecret": "s"
     }
   ],
   "plans": [
@@ -128,11 +115,7 @@
         "type": "API_KEY",
         "source": "HEADER",
         "apiKeyHeader": "X-Drift-Key",
-        "propagateApiKey": true,
-        "provider": "keycloak",
-        "scopes": [
-          "repo:read"
-        ]
+        "propagateApiKey": true
       },
       "flows": [
         {
@@ -141,9 +124,6 @@
           "selectors": [
             {
               "type": "CONDITION",
-              "methods": [
-                "tools/list"
-              ],
               "condition": "{#request.headers['X-Plan'] != null}"
             }
           ],

@@ -17,7 +17,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimmcpproxy "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,7 +34,7 @@ func Delete(ctx context.Context, proxy *v1alpha1.McpProxy) error {
 		return nil
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, proxy.ContextRef(), proxy.GetNamespace())
+	client, err := apimmcpproxy.CreateAPIMClient(ctx, proxy)
 	if err != nil {
 		// ManagementContext already gone: APIM is unreachable, let the finalizer be removed.
 		if apierrors.IsNotFound(err) {
@@ -43,7 +43,12 @@ func Delete(ctx context.Context, proxy *v1alpha1.McpProxy) error {
 		return err
 	}
 
-	if err := gerrors.IgnoreNotFound(apimClient.McpProxies.Delete(proxy)); err != nil {
+	dto, err := apimmcpproxy.ToDTO(proxy)
+	if err != nil {
+		return err
+	}
+
+	if err := apimmcpproxy.Delete(ctx, client, dto); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
