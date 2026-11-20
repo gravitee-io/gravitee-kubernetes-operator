@@ -133,13 +133,13 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 	// Builds C for DryRun and GetRemote. Required.
 	ClientFactory ClientFactoryFunc[T, C]
 
-	// PreCheck runs on create/update after ClientFactory, before ImmutableFields. Nil skips.
+	// PreCheck runs on create/update after ClientFactory (and on update after ImmutableFields), before ToDTO. Nil skips.
 	PreCheck AdmissionCheckFunc[T]
 
-	// ImmutableFields runs on update after PreCheck, before ToDTO. Nil skips.
+	// ImmutableFields runs on update after ClientFactory, before PreCheck. Nil skips.
 	ImmutableFields ImmutableFieldsFunc[T]
 
-	// ToDTO runs on create/update after PreCheck and ImmutableFields, before DryRun.
+	// ToDTO runs on create/update after ImmutableFields and PreCheck, before DryRun.
 	// Required. Use the same func as ResourceLifecycle.ToDTO.
 	ToDTO ToDTOFunc[T, D]
 
