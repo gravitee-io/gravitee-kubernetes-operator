@@ -21,6 +21,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -335,6 +336,52 @@ var _ = Describe("Catalog MCP server", func() {
 
 			fake.status = http.StatusNotFound
 			Expect(apimcatalog.Delete(ctx, client, dto)).To(Succeed())
+		})
+	})
+
+	Describe("context reference", func() {
+		It("reports an unset context as not found, so a delete releases the finalizer", func() {
+			srv := newCatalogMcpServer(nil)
+			srv.Spec.Context = nil
+
+			err := apim.ResolveContextRef(context.Background(), srv, srv.Namespace)
+
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			Expect(err).To(MatchError("a management context reference (spec.contextRef) is required"))
+		})
+	})
+
+	Describe("a refused apply", func() {
+		refusedWith := func(statusCode int, body string) error {
+			return xErrors.ServerError{StatusCode: statusCode, Body: body}
+		}
+
+		It("records the findings in the status and stays recoverable", func() {
+			srv := newCatalogMcpServer(nil)
+
+			err := apimcatalog.OnUpsertError(context.Background(), srv,
+				refusedWith(http.StatusBadRequest, `{"errors": {"severe": ["upstream unreachable"]}}`))
+
+			Expect(err).To(MatchError(ContainSubstring("catalog mcp server [github] was refused by the automation api")))
+			Expect(xErrors.IsRecoverable(err)).To(BeTrue())
+			Expect(srv.Status.Errors.Severe).To(ConsistOf("upstream unreachable"))
+		})
+
+		It("stays recoverable when the 400 carries no findings", func() {
+			srv := newCatalogMcpServer(nil)
+
+			err := apimcatalog.OnUpsertError(context.Background(), srv,
+				refusedWith(http.StatusBadRequest, `{"message": "hrid is required", "http_status": 400}`))
+
+			Expect(xErrors.IsRecoverable(err)).To(BeTrue())
+			Expect(srv.Status.Errors.Severe).To(BeEmpty())
+		})
+
+		It("leaves any other failure to the lifecycle", func() {
+			err := apimcatalog.OnUpsertError(context.Background(), newCatalogMcpServer(nil),
+				refusedWith(http.StatusInternalServerError, `{"errors": {"severe": ["boom"]}}`))
+
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 

@@ -16,6 +16,7 @@ package catalogmcpserver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -24,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -68,6 +70,19 @@ func upsert(ctx context.Context, client *apim.SDKClient, dto sdk.AimCatalogMcpSe
 		return sdk.AimCatalogMcpServerState{}, errors.UnexpectedSDKResponse(resp.HTTPResponse)
 	}
 	return *resp.JSON200, nil
+}
+
+// OnUpsertError records the findings of a refused apply in the status. A refusal, a failed discovery of the
+// upstream included, is often transient: it stays recoverable (backoff) rather than terminal until the next
+// spec change. Any other failure keeps the lifecycle's classification.
+func OnUpsertError(_ context.Context, obj *v1alpha1.CatalogMcpServer, err error) error {
+	if !errors.IsBadRequest(err) {
+		return nil
+	}
+	if findings, refused := model.AutomationRefusal(err); refused {
+		obj.Status.Errors = findings
+	}
+	return fmt.Errorf("catalog mcp server [%s] was refused by the automation api: %w", obj.GetName(), err)
 }
 
 // Delete removes the server from the catalog. A server already gone counts as deleted.
