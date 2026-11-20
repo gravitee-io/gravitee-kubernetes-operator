@@ -18,9 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimmcpproxy "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -32,12 +31,17 @@ func CreateOrUpdate(ctx context.Context, proxy *v1alpha1.McpProxy) error {
 		)
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, proxy.ContextRef(), proxy.GetNamespace())
+	client, err := apimmcpproxy.CreateAPIMClient(ctx, proxy)
 	if err != nil {
 		return err
 	}
 
-	state, err := apimClient.McpProxies.CreateOrUpdate(proxy)
+	dto, err := apimmcpproxy.ToDTO(proxy)
+	if err != nil {
+		return err
+	}
+
+	resp, err := apimmcpproxy.Upsert(ctx, client, dto)
 	if err != nil {
 		// A 400 is how the platform refuses an apply. Admission ran the same checks as a dry run,
 		// so a refusal here comes from a state that changed since (a tool gone upstream, a context
@@ -51,14 +55,5 @@ func CreateOrUpdate(ctx context.Context, proxy *v1alpha1.McpProxy) error {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	// Setting fields by fields to keep the rest (conditions) intact
-	proxy.Status.ID = state.ID
-	proxy.Status.OrgID = state.OrgID
-	proxy.Status.EnvID = state.EnvID
-	proxy.Status.HRID = refs.NewNamespacedNameFromObject(proxy).HRID()
-	proxy.Status.Errors = state.Errors
-	proxy.Status.State = state.State
-	proxy.Status.Tools = state.ToolsStatus()
-
-	return nil
+	return apimmcpproxy.UpdateStatus(ctx, proxy, resp)
 }

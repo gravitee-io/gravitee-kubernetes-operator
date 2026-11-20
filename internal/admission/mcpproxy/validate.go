@@ -20,8 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimmcpproxy "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
@@ -118,35 +117,24 @@ func validatePlatform(ctx context.Context, proxy *v1alpha1.McpProxy) *errors.Adm
 func validateDryRun(ctx context.Context, proxy *v1alpha1.McpProxy) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp := proxy.DeepCopy()
-
-	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	client, err := apimmcpproxy.CreateAPIMClient(ctx, proxy)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
 
-	// A dry run answers 200 with its findings; a refusal body is only expected from a real apply,
-	// but is read the same way should the platform answer one.
-	state, err := apimClient.McpProxies.DryRunCreateOrUpdate(cp)
+	dto, err := apimmcpproxy.ToDTO(proxy)
 	if err != nil {
-		errs.MergeWith(refusalToAdmissionErrors(err))
+		errs.AddSevere(err.Error())
 		return errs
 	}
 
-	errs.MergeWith(errors.NewAdmissionErrorsFromStatus(state.Errors))
-
-	return errs
-}
-
-// refusalToAdmissionErrors reports a platform refusal finding by finding; anything else is
-// reported as the request error.
-func refusalToAdmissionErrors(err error) *errors.AdmissionErrors {
-	if findings, refused := model.AutomationRefusal(err); refused {
-		return errors.NewAdmissionErrorsFromStatus(findings)
+	findings, err := apimmcpproxy.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
 	}
 
-	errs := errors.NewAdmissionErrors()
-	errs.AddSevere(err.Error())
+	errs.MergeWith(findings)
 	return errs
 }

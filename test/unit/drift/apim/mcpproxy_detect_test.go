@@ -18,10 +18,11 @@ import (
 	"slices"
 	"strings"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimmcpproxy "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/mcpproxy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -34,40 +35,50 @@ var _ = Describe("MCP proxy Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
-			model.McpProxyDTO{},
-			model.McpProxyDTO{},
+			sdk.AimMcpProxy{},
+			sdk.AimMcpProxy{},
 		),
 		Entry("equal struct",
 			completeMcpProxyDTO(),
 			completeMcpProxyDTO(),
 		),
 		Entry("PROXY: the platform never returns credentials",
-			model.ToMcpProxyDTO(proxyMcpProxyCRD()),
-			mcpProxyRemote(model.ToMcpProxyDTO(proxyMcpProxyCRD())),
+			mcpProxyDTO(proxyMcpProxyCRD()),
+			mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())),
 		),
 		Entry("STUDIO: the platform never returns credentials and adds the tool entity ids",
-			model.ToMcpProxyDTO(studioMcpProxyCRD()),
-			withToolEntityIDs(mcpProxyRemote(model.ToMcpProxyDTO(studioMcpProxyCRD()))),
+			mcpProxyDTO(studioMcpProxyCRD()),
+			withToolEntityIDs(mcpProxyRemote(mcpProxyDTO(studioMcpProxyCRD()))),
 		),
 		Entry("PROXY: NONE upstream auth is stored as passthrough and omitted",
-			model.ToMcpProxyDTO(withProxyAuth(proxyMcpProxyCRD(), &mcpproxy.UpstreamAuth{Type: mcpproxy.UpstreamAuthTypeNone})),
-			withUpstreamAuth(mcpProxyRemote(model.ToMcpProxyDTO(proxyMcpProxyCRD())), nil),
+			mcpProxyDTO(withProxyAuth(proxyMcpProxyCRD(), &mcpproxy.UpstreamAuth{Type: mcpproxy.UpstreamAuthTypeNone})),
+			withUpstreamAuth(mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())), nil),
 		),
 		Entry("default flow execution is omitted by the platform",
-			model.ToMcpProxyDTO(withFlowExecution(proxyMcpProxyCRD(), &v4.FlowExecution{Mode: v4.FlowModeDefault})),
-			withFlowExecutionDTO(mcpProxyRemote(model.ToMcpProxyDTO(proxyMcpProxyCRD())), nil),
+			mcpProxyDTO(withFlowExecution(proxyMcpProxyCRD(), &v4.FlowExecution{Mode: v4.FlowModeDefault})),
+			withFlowExecutionDTO(mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())), nil),
 		),
 		Entry("empty flows are omitted by the platform",
-			withFlows(model.ToMcpProxyDTO(proxyMcpProxyCRD()), []model.McpProxyFlowDTO{}),
-			withFlows(mcpProxyRemote(model.ToMcpProxyDTO(proxyMcpProxyCRD())), nil),
+			withFlows(mcpProxyDTO(proxyMcpProxyCRD()), []sdk.AimMcpProxyFlow{}),
+			withFlows(mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())), nil),
 		),
 		Entry("STUDIO: upstream auth in another order once canonicalized",
-			model.ToMcpProxyDTO(studioMcpProxyCRD()),
-			canonicalized(reversedStudioAuth(mcpProxyRemote(model.ToMcpProxyDTO(studioMcpProxyCRD())))),
+			mcpProxyDTO(studioMcpProxyCRD()),
+			apimmcpproxy.Canonical(reversedStudioAuth(mcpProxyRemote(mcpProxyDTO(studioMcpProxyCRD())))),
 		),
 		Entry("hrid is identity, not payload",
 			withMcpProxyHRID(completeMcpProxyDTO(), "default-drift-full"),
 			withMcpProxyHRID(completeMcpProxyDTO(), "something-else"),
+		),
+		Entry("STUDIO: tool-level authorization off is omitted by the platform",
+			withEnableFGA(mcpProxyDTO(studioMcpProxyCRD()), new(false)),
+			withEnableFGA(mcpProxyRemote(mcpProxyDTO(studioMcpProxyCRD())), nil),
+		),
+		Entry("a flow execution that does not require a match is omitted by the platform",
+			mcpProxyDTO(withFlowExecution(proxyMcpProxyCRD(), &v4.FlowExecution{Mode: v4.FlowModeBestMatch})),
+			withFlowExecutionDTO(mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())), &sdk.AimMcpProxyFlowExecution{
+				Mode: new(sdk.AimMcpProxyFlowExecutionModeBESTMATCH),
+			}),
 		),
 	)
 
@@ -77,20 +88,30 @@ var _ = Describe("MCP proxy Drift detection", func() {
 			Expect(result.DriftDetected()).To(BeTrue())
 		},
 		Entry("context path changed on the platform",
-			model.ToMcpProxyDTO(proxyMcpProxyCRD()),
-			withContextPath(mcpProxyRemote(model.ToMcpProxyDTO(proxyMcpProxyCRD())), "/mcp/elsewhere"),
+			mcpProxyDTO(proxyMcpProxyCRD()),
+			withContextPath(mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())), "/mcp/elsewhere"),
 		),
 		Entry("plan added on the platform",
-			model.ToMcpProxyDTO(proxyMcpProxyCRD()),
-			withExtraPlan(mcpProxyRemote(model.ToMcpProxyDTO(proxyMcpProxyCRD())), "Console"),
+			mcpProxyDTO(proxyMcpProxyCRD()),
+			withExtraPlan(mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())), "Console"),
 		),
 		Entry("tool-level authorization switched off on the platform",
-			model.ToMcpProxyDTO(studioMcpProxyCRD()),
-			withEnableFGA(mcpProxyRemote(model.ToMcpProxyDTO(studioMcpProxyCRD())), false),
+			mcpProxyDTO(studioMcpProxyCRD()),
+			withEnableFGA(mcpProxyRemote(mcpProxyDTO(studioMcpProxyCRD())), new(false)),
+		),
+		Entry("tool-level authorization omitted by the platform",
+			mcpProxyDTO(studioMcpProxyCRD()),
+			withEnableFGA(mcpProxyRemote(mcpProxyDTO(studioMcpProxyCRD())), nil),
 		),
 		Entry("proxy stopped on the platform",
-			model.ToMcpProxyDTO(proxyMcpProxyCRD()),
-			withState(mcpProxyRemote(model.ToMcpProxyDTO(proxyMcpProxyCRD())), "STOPPED"),
+			mcpProxyDTO(proxyMcpProxyCRD()),
+			withState(mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())), sdk.AimMcpProxyLifecycleStateSTOPPED),
+		),
+		Entry("upstream auth type changed on the platform",
+			mcpProxyDTO(proxyMcpProxyCRD()),
+			withUpstreamAuth(mcpProxyRemote(mcpProxyDTO(proxyMcpProxyCRD())), &sdk.AimMcpProxyUpstreamAuth{
+				Bearer: &sdk.AimMcpProxyBearerUpstreamAuth{Type: sdk.AimMcpProxyBearerUpstreamAuthTypeBEARER},
+			}),
 		),
 	)
 
@@ -103,7 +124,7 @@ var _ = Describe("MCP proxy Drift detection", func() {
 
 	DescribeTable("user info endpoint of an identity provider",
 		func(crdEndpoint, remoteEndpoint *string, report string) {
-			crd := model.ToMcpProxyDTO(withGenericIdentityProvider(proxyMcpProxyCRD(), crdEndpoint))
+			crd := mcpProxyDTO(withGenericIdentityProvider(proxyMcpProxyCRD(), crdEndpoint))
 			remote := withUserInfoEndpoint(mcpProxyRemote(crd), remoteEndpoint)
 
 			merged := admissionDrift(crd, remote)
@@ -142,9 +163,74 @@ var _ = Describe("MCP proxy Drift detection", func() {
 	})
 })
 
-func completeMcpProxyDTO() model.McpProxyDTO {
+// completeMcpProxyDTO sets every field, every union variant included. JSON carries one variant of a
+// union, so the fixture holds one and the others are set here.
+func completeMcpProxyDTO() sdk.AimMcpProxy {
 	GinkgoHelper()
-	return loadFixture[model.McpProxyDTO]("mcpproxy_full_dto.json")
+	dto := loadFixture[sdk.AimMcpProxy]("mcpproxy_full_dto.json")
+
+	dto.Proxy.UpstreamAuth = new(withEveryUpstreamAuth(*dto.Proxy.UpstreamAuth))
+	dto.Studio.UpstreamAuth[0].Auth = withEveryUpstreamAuth(dto.Studio.UpstreamAuth[0].Auth)
+
+	dto.Flows[0].Selectors[0].Condition = &sdk.AimMcpProxyConditionFlowSelector{
+		Type:      sdk.AimMcpProxyConditionFlowSelectorTypeCONDITION,
+		Condition: "{#request.headers['X-Audit'] != null}",
+	}
+	dto.Plans[0].Flows[0].Selectors[0].Mcp = &sdk.AimMcpProxyMcpFlowSelector{
+		Type:    sdk.AimMcpProxyMcpFlowSelectorTypeMCP,
+		Methods: []string{"tools/list"},
+	}
+
+	dto.IdentityProviders[0].GraviteeAm = &sdk.AimMcpProxyGraviteeAmIdentityProvider{
+		Type: sdk.AimMcpProxyGraviteeAmIdentityProviderTypeGRAVITEEAM,
+		Name: "am",
+	}
+	dto.IdentityProviders[0].OAuth2Auth0 = &sdk.AimMcpProxyAuth0IdentityProvider{
+		Type:     sdk.AimMcpProxyAuth0IdentityProviderTypeOAUTH2AUTH0,
+		Name:     "auth0",
+		Domain:   "gravitee.eu.auth0.com",
+		Audience: "https://mcp.example.com",
+	}
+
+	dto.Plans[0].Security.KeyLess = &sdk.AimMcpProxyKeyLessPlanSecurity{
+		Type: sdk.AimMcpProxyKeyLessPlanSecurityTypeKEYLESS,
+	}
+	dto.Plans[0].Security.OAuth2 = &sdk.AimMcpProxyOAuth2PlanSecurity{
+		Type:     sdk.AimMcpProxyOAuth2PlanSecurityTypeOAUTH2,
+		Provider: "keycloak",
+		Scopes:   []string{"repo:read"},
+	}
+	return dto
+}
+
+// withEveryUpstreamAuth adds every upstream auth variant to the one the fixture holds.
+func withEveryUpstreamAuth(auth sdk.AimMcpProxyUpstreamAuth) sdk.AimMcpProxyUpstreamAuth {
+	auth.None = &sdk.AimMcpProxyNoUpstreamAuth{Type: sdk.AimMcpProxyNoUpstreamAuthTypeNONE}
+	auth.Passthrough = &sdk.AimMcpProxyPassthroughUpstreamAuth{
+		Type: sdk.AimMcpProxyPassthroughUpstreamAuthTypePASSTHROUGH,
+	}
+	auth.ApiKey = &sdk.AimMcpProxyApiKeyUpstreamAuth{
+		Type:         sdk.AimMcpProxyApiKeyUpstreamAuthTypeAPIKEY,
+		ApiKeyHeader: "X-Api-Key",
+		ApiKey:       new("k"),
+	}
+	auth.Bearer = &sdk.AimMcpProxyBearerUpstreamAuth{
+		Type:  sdk.AimMcpProxyBearerUpstreamAuthTypeBEARER,
+		Token: new("t"),
+	}
+	auth.Basic = &sdk.AimMcpProxyBasicUpstreamAuth{
+		Type:     sdk.AimMcpProxyBasicUpstreamAuthTypeBASIC,
+		Username: "gravitee",
+		Password: new("p"),
+	}
+	return auth
+}
+
+func mcpProxyDTO(proxy *v1alpha1.McpProxy) sdk.AimMcpProxy {
+	GinkgoHelper()
+	dto, err := apimmcpproxy.ToDTO(proxy)
+	Expect(err).ToNot(HaveOccurred())
+	return dto
 }
 
 func proxyMcpProxyCRD() *v1alpha1.McpProxy {
@@ -160,15 +246,11 @@ func studioMcpProxyCRD() *v1alpha1.McpProxy {
 }
 
 // mcpProxyRemote is what the platform answers for a payload: every credential removed.
-func mcpProxyRemote(dto model.McpProxyDTO) model.McpProxyDTO {
-	strip := func(auth model.McpProxyAuthDTO) model.McpProxyAuthDTO {
-		auth.APIKey, auth.Token, auth.Password, auth.ClientSecret = nil, nil, nil, nil
-		return auth
-	}
+func mcpProxyRemote(dto sdk.AimMcpProxy) sdk.AimMcpProxy {
 	if dto.Proxy != nil {
 		proxy := *dto.Proxy
 		if proxy.UpstreamAuth != nil {
-			proxy.UpstreamAuth = new(strip(*proxy.UpstreamAuth))
+			proxy.UpstreamAuth = new(withoutSecrets(*proxy.UpstreamAuth))
 		}
 		dto.Proxy = &proxy
 	}
@@ -176,37 +258,60 @@ func mcpProxyRemote(dto model.McpProxyDTO) model.McpProxyDTO {
 		studio := *dto.Studio
 		studio.UpstreamAuth = slices.Clone(studio.UpstreamAuth)
 		for i := range studio.UpstreamAuth {
-			studio.UpstreamAuth[i].Auth = strip(studio.UpstreamAuth[i].Auth)
+			studio.UpstreamAuth[i].Auth = withoutSecrets(studio.UpstreamAuth[i].Auth)
 		}
 		dto.Studio = &studio
 	}
 	dto.IdentityProviders = slices.Clone(dto.IdentityProviders)
 	for i := range dto.IdentityProviders {
-		dto.IdentityProviders[i].ClientSecret = nil
+		if generic := dto.IdentityProviders[i].OAuth2Generic; generic != nil {
+			stripped := *generic
+			stripped.ClientSecret = nil
+			dto.IdentityProviders[i].OAuth2Generic = &stripped
+		}
 	}
 	return dto
 }
 
-func withToolEntityIDs(dto model.McpProxyDTO) model.McpProxyDTO {
+func withoutSecrets(auth sdk.AimMcpProxyUpstreamAuth) sdk.AimMcpProxyUpstreamAuth {
+	if auth.ApiKey != nil {
+		apiKey := *auth.ApiKey
+		apiKey.ApiKey = nil
+		auth.ApiKey = &apiKey
+	}
+	if auth.Bearer != nil {
+		bearer := *auth.Bearer
+		bearer.Token = nil
+		auth.Bearer = &bearer
+	}
+	if auth.Basic != nil {
+		basic := *auth.Basic
+		basic.Password = nil
+		auth.Basic = &basic
+	}
+	if auth.OAuth2 != nil {
+		oauth2 := *auth.OAuth2
+		oauth2.ClientSecret = nil
+		auth.OAuth2 = &oauth2
+	}
+	return auth
+}
+
+func withToolEntityIDs(dto sdk.AimMcpProxy) sdk.AimMcpProxy {
 	studio := *dto.Studio
 	studio.Tools = slices.Clone(studio.Tools)
 	for i := range studio.Tools {
-		studio.Tools[i].EntityID = "mcp-tool." + studio.Tools[i].Tool
+		studio.Tools[i].EntityId = new("mcp-tool." + studio.Tools[i].Tool)
 	}
 	dto.Studio = &studio
 	return dto
 }
 
-func reversedStudioAuth(dto model.McpProxyDTO) model.McpProxyDTO {
+func reversedStudioAuth(dto sdk.AimMcpProxy) sdk.AimMcpProxy {
 	studio := *dto.Studio
 	studio.UpstreamAuth = slices.Clone(studio.UpstreamAuth)
 	slices.Reverse(studio.UpstreamAuth)
 	dto.Studio = &studio
-	return dto
-}
-
-func canonicalized(dto model.McpProxyDTO) model.McpProxyDTO {
-	dto.Canonicalize()
 	return dto
 }
 
@@ -220,62 +325,64 @@ func withFlowExecution(crd *v1alpha1.McpProxy, execution *v4.FlowExecution) *v1a
 	return crd
 }
 
-func withUpstreamAuth(dto model.McpProxyDTO, auth *model.McpProxyAuthDTO) model.McpProxyDTO {
+func withUpstreamAuth(dto sdk.AimMcpProxy, auth *sdk.AimMcpProxyUpstreamAuth) sdk.AimMcpProxy {
 	proxy := *dto.Proxy
 	proxy.UpstreamAuth = auth
 	dto.Proxy = &proxy
 	return dto
 }
 
-func withFlowExecutionDTO(dto model.McpProxyDTO, execution *v4.FlowExecution) model.McpProxyDTO {
+func withFlowExecutionDTO(dto sdk.AimMcpProxy, execution *sdk.AimMcpProxyFlowExecution) sdk.AimMcpProxy {
 	dto.FlowExecution = execution
 	return dto
 }
 
-func withFlows(dto model.McpProxyDTO, flows []model.McpProxyFlowDTO) model.McpProxyDTO {
+func withFlows(dto sdk.AimMcpProxy, flows []sdk.AimMcpProxyFlow) sdk.AimMcpProxy {
 	dto.Flows = flows
 	return dto
 }
 
-func withContextPath(dto model.McpProxyDTO, contextPath string) model.McpProxyDTO {
+func withContextPath(dto sdk.AimMcpProxy, contextPath string) sdk.AimMcpProxy {
 	dto.ContextPath = contextPath
 	return dto
 }
 
-func withExtraPlan(dto model.McpProxyDTO, name string) model.McpProxyDTO {
-	dto.Plans = append(slices.Clone(dto.Plans), model.McpProxyPlanDTO{
-		Name:     name,
-		Security: model.McpProxyPlanSecurityDTO{Type: "KEY_LESS"},
+func withExtraPlan(dto sdk.AimMcpProxy, name string) sdk.AimMcpProxy {
+	dto.Plans = append(slices.Clone(dto.Plans), sdk.AimMcpProxyPlan{
+		Name: name,
+		Security: sdk.AimMcpProxyPlanSecurity{
+			KeyLess: &sdk.AimMcpProxyKeyLessPlanSecurity{Type: sdk.AimMcpProxyKeyLessPlanSecurityTypeKEYLESS},
+		},
 	})
 	return dto
 }
 
-func withEnableFGA(dto model.McpProxyDTO, enabled bool) model.McpProxyDTO {
+func withEnableFGA(dto sdk.AimMcpProxy, enabled *bool) sdk.AimMcpProxy {
 	studio := *dto.Studio
 	studio.EnableFGA = enabled
 	dto.Studio = &studio
 	return dto
 }
 
-func withState(dto model.McpProxyDTO, state string) model.McpProxyDTO {
-	dto.State = state
+func withState(dto sdk.AimMcpProxy, state sdk.AimMcpProxyLifecycleState) sdk.AimMcpProxy {
+	dto.State = &state
 	return dto
 }
 
-func withMcpProxyHRID(dto model.McpProxyDTO, hrid string) model.McpProxyDTO {
-	dto.HRID = hrid
+func withMcpProxyHRID(dto sdk.AimMcpProxy, hrid string) sdk.AimMcpProxy {
+	dto.Hrid = hrid
 	return dto
 }
 
-func mcpProxyWithRequestStep(configuration string) model.McpProxyDTO {
+func mcpProxyWithRequestStep(configuration string) sdk.AimMcpProxy {
 	GinkgoHelper()
-	return parseJSON[model.McpProxyDTO](`{"name": "mcp", "flows": [{"name": "Log tool calls", "enabled": true, "request": [` +
+	return parseJSON[sdk.AimMcpProxy](`{"name": "mcp", "flows": [{"name": "Log tool calls", "enabled": true, "request": [` +
 		`{"name": "Quota", "policy": "rate-limit", "enabled": true, "configuration": ` + configuration + `}]}]}`)
 }
 
-func mcpProxyWithIdentityProviders(providers ...string) model.McpProxyDTO {
+func mcpProxyWithIdentityProviders(providers ...string) sdk.AimMcpProxy {
 	GinkgoHelper()
-	return parseJSON[model.McpProxyDTO](`{"name": "mcp", "identityProviders": [` + strings.Join(providers, ", ") + `]}`)
+	return parseJSON[sdk.AimMcpProxy](`{"name": "mcp", "identityProviders": [` + strings.Join(providers, ", ") + `]}`)
 }
 
 // keycloakIdentityProvider is an OAUTH2_GENERIC identity provider; extra holds more fields, each
@@ -300,11 +407,13 @@ func withGenericIdentityProvider(crd *v1alpha1.McpProxy, userInfoEndpoint *strin
 }
 
 // withUserInfoEndpoint sets the user info endpoint of the keycloak identity provider.
-func withUserInfoEndpoint(dto model.McpProxyDTO, userInfoEndpoint *string) model.McpProxyDTO {
+func withUserInfoEndpoint(dto sdk.AimMcpProxy, userInfoEndpoint *string) sdk.AimMcpProxy {
 	dto.IdentityProviders = slices.Clone(dto.IdentityProviders)
 	for i := range dto.IdentityProviders {
-		if dto.IdentityProviders[i].Name == "keycloak" {
-			dto.IdentityProviders[i].UserInfoEndpoint = userInfoEndpoint
+		if generic := dto.IdentityProviders[i].OAuth2Generic; generic != nil && generic.Name == "keycloak" {
+			keycloak := *generic
+			keycloak.UserInfoEndpoint = userInfoEndpoint
+			dto.IdentityProviders[i].OAuth2Generic = &keycloak
 		}
 	}
 	return dto
