@@ -34,7 +34,7 @@ import (
 var _ = Describe("Validate update", labels.WithoutContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	DescribeTable("should return error on api update with invalid Flow",
 		func(apiName string, flow func() *apiV4.Flow, errorMsg string) {

@@ -24,12 +24,13 @@ import (
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func validateCreate(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
+// preCheck runs the v4 spec checks on the resolved API: flows and endpoints, Shared Policy Group phases, then
+// plans, path conflicts, resources, pages and notifications. Templates, references and the context are the
+// lifecycle's.
+func preCheck(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	errs = validateFlowsAndEndpoints(api, errs)
@@ -42,7 +43,7 @@ func validateCreate(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.
 		return errs
 	}
 
-	errs.MergeWith(base.ValidateCreate(ctx, api))
+	errs.MergeWith(base.ValidateSpec(ctx, api))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -51,10 +52,17 @@ func validateCreate(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.
 		errs.AddWarningf("spec.groups and spec.groupRefs are not applied while %s is true", core.IgnoreGroupsAnnotation)
 	}
 
-	if api.HasContext() {
-		errs.MergeWith(validateDryRun(ctx, api))
-	}
+	return errs
+}
 
+// immutableFields refuses an update that changes the API type, or drops a plan a Subscription references.
+func immutableFields(ctx context.Context, oldApi, newApi *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	errs.Add(validateApiType(oldApi, newApi))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, search.ApiV4SubsField))
 	return errs
 }
 
@@ -136,70 +144,5 @@ func validateNativeKafkaPlanPorts(api *v4.Api) *errors.AdmissionErrors {
 		}
 	}
 
-	return errs
-}
-
-func validateDryRun(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	cp := api.DeepCopy()
-	if err := apidefinition.PrepareV4SpecForAutomation(ctx, cp, false); err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
-	status, err := apimClient.APIs.DryRunImportV4(cp)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
-	}
-	if errs.IsSevere() {
-		return errs
-	}
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
-	return errs
-}
-
-func validateUpdate(
-	ctx context.Context,
-	oldApi *v1alpha1.ApiV4Definition,
-	newApi *v1alpha1.ApiV4Definition,
-) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	if newApi.IsBeingDeleted() {
-		return errs
-	}
-
-	base.DeleteDefinitionConfigMapIfNeeded(ctx, oldApi, newApi)
-
-	errs.Add(validateApiType(oldApi, newApi))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, search.ApiV4SubsField))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validateCreate(ctx, newApi))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	mergeDriftValidation(ctx, oldApi, newApi, errs)
 	return errs
 }

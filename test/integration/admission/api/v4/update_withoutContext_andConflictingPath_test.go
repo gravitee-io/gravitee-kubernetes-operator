@@ -29,7 +29,7 @@ import (
 var _ = Describe("Validate update", labels.WithoutContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := admission.AdmissionCtrl{}
+	admissionCtrl := admission.NewAdmissionCtrl()
 
 	It("should return error on API update with conflicting path", func() {
 		fixtures := fixture.

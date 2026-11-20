@@ -24,14 +24,21 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
 
-// ResolveResources inlines ApiResource references into the API spec.
+// ResolveResources inlines ApiResource references into the API spec (v2: a missing one fails with the
+// Kubernetes error).
 func ResolveResources(ctx context.Context, resources []*base.ResourceOrRef, updateMetadata bool) error {
+	return resolveResources(ctx, resources, updateMetadata, false)
+}
+
+// resolveResources inlines ApiResource references. With wordNotFound, a missing one is worded as the admission
+// webhook words it (v4).
+func resolveResources(ctx context.Context, resources []*base.ResourceOrRef, updateMetadata, wordNotFound bool) error {
 	if resources == nil {
 		return nil
 	}
 
 	for _, resource := range resources {
-		if err := resolveIfRef(ctx, resource, updateMetadata); err != nil {
+		if err := resolveIfRef(ctx, resource, updateMetadata, wordNotFound); err != nil {
 			return err
 		}
 	}
@@ -39,7 +46,7 @@ func ResolveResources(ctx context.Context, resources []*base.ResourceOrRef, upda
 	return nil
 }
 
-func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef, updateMetadata bool) error {
+func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef, updateMetadata, wordNotFound bool) error {
 	if !resourceOrRef.IsRef() {
 		return nil
 	}
@@ -48,6 +55,9 @@ func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef, update
 	resource := new(v1alpha1.ApiResource)
 
 	if err := k8s.GetClient().Get(ctx, namespacedName, resource); err != nil {
+		if wordNotFound {
+			err = notFoundRef(err, "api references resource [%s] that does not exist in the cluster", resourceOrRef.Ref)
+		}
 		return gerrors.NewResolveRefError(err)
 	}
 

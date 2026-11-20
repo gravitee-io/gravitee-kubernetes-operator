@@ -59,8 +59,6 @@ func deleteWithContext(ctx context.Context, api core.ApiDefinitionObject) error 
 	switch {
 	case api.GetDefinitionVersion() == core.ApiV2:
 		return errors.IgnoreNotFound(apimClient.APIs.DeleteV2(api.GetID()))
-	case api.GetDefinitionVersion() == core.ApiV4:
-		return errors.IgnoreNotFound(apimClient.APIs.DeleteV4(api))
 	default:
 		return fmt.Errorf("unknown version %s", api.GetDefinitionVersion())
 	}

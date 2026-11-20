@@ -110,15 +110,21 @@ func (api *ApiV4Definition) IsSyncFromManagement() bool {
 }
 
 func (api *ApiV4Definition) PopulateIDs(mgmtContext core.ContextModel, automationAPIManaged bool) {
+	api.PopulateIDsWithContext(mgmtContext != nil, automationAPIManaged)
+}
+
+// PopulateIDsWithContext is PopulateIDs for a caller that knows whether the API has a management context
+// without holding it (the APIM SDK mapping resolves the context later, in the client factory).
+func (api *ApiV4Definition) PopulateIDsWithContext(hasContext bool, automationAPIManaged bool) {
 	if api.GetID() == "" || automationAPIManaged {
 		// with a management context and no spec.id, the plan ids sent are the ones APIM gave back
-		useStatusPlanIDs := mgmtContext != nil && api.Spec.ID == ""
+		useStatusPlanIDs := hasContext && api.Spec.ID == ""
 		api.Spec.HRID = api.GetNamespacedName().HRID()
 		api.Spec.Pages = api.pickPageHRIDs()
 		api.Spec.Plans = api.pickPlanHRIDs(useStatusPlanIDs)
 		// without management context => we still need an ID
 		// for the API definition that is required for the sync process
-		if mgmtContext == nil {
+		if !hasContext {
 			api.Spec.ID = uuid.FromStrings(api.Spec.HRID)
 			api.Spec.Plans = api.pickPlanIDs()
 		}
@@ -364,8 +370,15 @@ func (s *ApiV4DefinitionStatus) SetProcessingStatus(status core.ProcessingStatus
 	s.ProcessingStatus = status
 }
 
+// IsFailed reports a refused or failed sync: Accepted is False. A missing group ref only sets ResolvedRefs to
+// False and the API is still synced, so it is not failed.
 func (s *ApiV4DefinitionStatus) IsFailed() bool {
-	return s.ProcessingStatus == core.ProcessingStatusFailed
+	for _, condition := range s.Conditions {
+		if condition.Type == "Accepted" && condition.Status == metav1.ConditionFalse {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *ApiV4DefinitionStatus) DeepCopyFrom(api client.Object) error {

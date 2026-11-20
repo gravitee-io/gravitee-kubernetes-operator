@@ -16,6 +16,7 @@ package apidefinition
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -28,7 +29,7 @@ func PrepareV4SpecForAutomation(ctx context.Context, api *v1alpha1.ApiV4Definiti
 	nsCtx := WithAPINamespace(ctx, api.Namespace)
 	spec := &api.Spec
 
-	if err := ResolveResources(nsCtx, spec.Resources, updateMetadata); err != nil {
+	if err := resolveResources(nsCtx, spec.Resources, updateMetadata, true); err != nil {
 		return err
 	}
 
@@ -36,17 +37,22 @@ func PrepareV4SpecForAutomation(ctx context.Context, api *v1alpha1.ApiV4Definiti
 		return err
 	}
 
-	if groups, err := ResolveGroupRefs(ctx, api, spec.GetGroupRefs()); err == nil {
-		spec.Groups = append(spec.Groups, groups...)
-	} else {
+	groups, err := ResolveGroupRefs(ctx, api, spec.GetGroupRefs())
+	if err != nil {
 		return err
+	}
+	// merged without duplicates: the lifecycle resolves the same object more than once (admission, drift)
+	for _, group := range groups {
+		if !slices.Contains(spec.Groups, group) {
+			spec.Groups = append(spec.Groups, group)
+		}
 	}
 
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 	normalizeV4SpecForAutomation(spec)
 
 	if spec.Context != nil {
-		return ResolveConsoleNotificationRefs(ctx, api)
+		return resolveConsoleNotificationRefs(ctx, api, true)
 	}
 
 	return nil

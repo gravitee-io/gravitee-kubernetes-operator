@@ -19,8 +19,6 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -34,8 +32,6 @@ func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 	switch t := apiDefinition.(type) {
 	case *v1alpha1.ApiDefinition:
 		return createOrUpdateV2(ctx, t)
-	case *v1alpha1.ApiV4Definition:
-		return createOrUpdateV4(ctx, t)
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
@@ -99,44 +95,6 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	return nil
 }
 
-func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
-	spec := &apiDefinition.Spec
-
-	apidefinition.LogUnsyncedGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs())
-
-	if err := apidefinition.PrepareV4SpecForAutomation(ctx, apiDefinition, true); err != nil {
-		log.Error(ctx, err, "Unable to prepare API spec for automation", log.KeyValues(apiDefinition)...)
-		return err
-	}
-
-	if spec.Context != nil {
-		log.Debug(ctx, "Syncing API definition with control plane", log.KeyValues(apiDefinition)...)
-		apimClient, err := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
-		if err != nil {
-			return err
-		}
-		apiDefinition.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(apiDefinition))
-
-		status, err := apimClient.APIs.ImportV4(apiDefinition)
-
-		if err != nil {
-			return gerrors.NewControlPlaneError(err)
-		}
-
-		status.DeepCopyTo(&apiDefinition.Status.Status)
-		log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
-	} else {
-		apiDefinition.PopulateIDs(nil, k8s.IsAutomationAPIManaged(apiDefinition))
-	}
-
-	if spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {
-		return updateConfigMap(ctx, apiDefinition)
-	}
-
-	return nil
-}
-
-// Retrieve the plan ids from the API CRD status.
 func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, status *base.Status) {
 	plans := spec.Plans
 	planIds := status.Plans

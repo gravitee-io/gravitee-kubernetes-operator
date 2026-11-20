@@ -31,7 +31,7 @@ import (
 var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	DescribeTable("should return error on api update with invalid Api Type",
 		func(apiName string, apiType apiV4.ApiType, errorMsg string) {

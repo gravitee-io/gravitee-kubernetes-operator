@@ -166,7 +166,8 @@ func (l ResourceLifecycle[T, D, C, R]) upsert(ctx context.Context, dc T) error {
 		return err
 	}
 
-	if l.ResolveRefs != nil {
+	// ResolveRefs may report a reference it does not fail on (ResolvedRefs=False) and carry on: keep it.
+	if l.ResolveRefs != nil && !k8s.HasUnresolvedRefs(asConditionAware(dc)) {
 		k8s.SetCondition(asConditionAware(dc), k8s.NewResolvedRefsConditionBuilder(dc.GetGeneration()).
 			ResolveRefs("All References successfully resolved").Build())
 	}

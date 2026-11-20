@@ -71,16 +71,17 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 		return errs
 	}
 
-	a.preCheck(ctx, newObj, errs)
-	if errs.IsSevere() {
-		return errs
-	}
-
+	// Frozen fields first: a forbidden change is the error to report, not the spec errors it leads to.
 	if a.ImmutableFields != nil {
-		errs.MergeWith(a.ImmutableFields(oldObj, newObj))
+		errs.MergeWith(a.ImmutableFields(ctx, oldObj, newObj))
 		if errs.IsSevere() {
 			return errs
 		}
+	}
+
+	a.preCheck(ctx, newObj, errs)
+	if errs.IsSevere() {
+		return errs
 	}
 
 	// An update that leaves the payload as it is, the lifecycle's own finalizer and annotation writes
@@ -245,6 +246,9 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 
+	if a.DriftDTO != nil {
+		oldDTO, newDTO, remote = a.DriftDTO(oldDTO), a.DriftDTO(newDTO), a.DriftDTO(remote)
+	}
 	admissiondrift.CompareWithRemote(newCopy, oldDTO, newDTO, remote, secrets(), errs)
 }
 

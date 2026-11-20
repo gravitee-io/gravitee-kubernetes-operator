@@ -18,127 +18,46 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
 
-const (
-	definitionKey = "definition"
-	managedByKey  = "managed-by"
-	gioTypeKey    = "gio-type"
-	orgKey        = "organizationId"
-	envKey        = "environmentId"
-	defaultEnvID  = "DEFAULT"
-	defaultOrgID  = "DEFAULT"
-)
-
-func updateConfigMap(
-	ctx context.Context,
-	api core.ApiDefinitionObject,
-) error {
+func updateConfigMap(ctx context.Context, api *v1alpha1.ApiDefinition) error {
 	if api.IsStopped() {
-		if err := deleteConfigMap(ctx, api); err != nil {
+		if err := apidefinition.DeleteConfigMap(ctx, api.GetName(), api.GetNamespace()); err != nil {
 			log.Error(ctx, err, "Unable to delete config map for API definition", log.KeyValues(api)...)
 			return err
 		}
-	} else {
-		if err := saveConfigMap(ctx, api); err != nil {
-			log.Error(ctx, err, "Unable to create or update config map for API definition", log.KeyValues(api)...)
-			return err
-		}
+		return nil
 	}
-
+	if err := saveConfigMap(ctx, api); err != nil {
+		log.Error(ctx, err, "Unable to create or update config map for API definition", log.KeyValues(api)...)
+		return err
+	}
 	return nil
 }
 
-func saveConfigMap(
-	ctx context.Context,
-	apiDefinition core.ApiDefinitionObject,
-) error {
-	// Create config map with some specific metadata that will be used to check changes across 'Update' events.
-	cm := &v1.ConfigMap{}
-
-	// Set OwnerReference on config map to be able to delete it when API is deleted.
-	// 📝 ConfigMap should be in same namespace as ApiDefinition.
-	newOwnerReferences := []metav1.OwnerReference{
-		{
-			Kind:       apiDefinition.GetObjectKind().GroupVersionKind().Kind,
-			Name:       apiDefinition.GetName(),
-			APIVersion: apiDefinition.GetObjectKind().GroupVersionKind().GroupVersion().String(),
-			UID:        apiDefinition.GetUID(),
-		},
-	}
-	cm.SetOwnerReferences(newOwnerReferences)
-
-	cm.Namespace = apiDefinition.GetNamespace()
-	cm.Name = apiDefinition.GetName()
-
-	cm.CreationTimestamp = metav1.Now()
-	cm.Labels = map[string]string{
-		managedByKey: core.CRDGroup,
-		gioTypeKey:   core.CRDApiDefinitionResource + "." + core.CRDGroup,
-	}
-
-	cm.Data = map[string]string{}
-
-	if apiDefinition.GetOrgID() != "" {
-		cm.Data[orgKey] = apiDefinition.GetOrgID()
-		cm.Data[envKey] = apiDefinition.GetEnvID()
-	} else {
-		cm.Data[orgKey] = defaultOrgID
-		cm.Data[envKey] = defaultEnvID
-	}
-
-	var payload any
-	switch t := apiDefinition.(type) {
-	case *v1alpha1.ApiDefinition:
-		spec := &(t.Spec)
-		payload = spec
-	case *v1alpha1.ApiV4Definition:
-		cm.Data["apiDefinitionVersion"] = "4.0.0"
-		payload = t.ToGatewayDefinition()
-	}
-
-	jsonSpec, err := json.Marshal(payload)
+func saveConfigMap(ctx context.Context, api *v1alpha1.ApiDefinition) error {
+	definition, err := json.Marshal(&api.Spec)
 	if err != nil {
 		return err
 	}
-
-	cm.Data[definitionKey] = string(jsonSpec)
-
-	currentApiDefinition := &v1.ConfigMap{}
-
-	lookupKey := types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}
-
-	err = k8s.GetClient().Get(ctx, lookupKey, currentApiDefinition)
-	if errors.IsNotFound(err) {
-		log.Debug(ctx, "Creating config map for API", log.KeyValues(apiDefinition)...)
-		return k8s.GetClient().Create(ctx, cm)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	log.Debug(ctx, "Updating config map", log.KeyValues(apiDefinition)...)
-	return k8s.GetClient().Update(ctx, cm)
-}
-
-func deleteConfigMap(ctx context.Context, api client.Object) error {
-	configMap := &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      api.GetName(),
-			Namespace: api.GetNamespace(),
+	gvk := api.GetObjectKind().GroupVersionKind()
+	return apidefinition.SaveConfigMap(ctx, apidefinition.GatewayConfigMap{
+		Name:      api.GetName(),
+		Namespace: api.GetNamespace(),
+		// Owned by the API, so that it is deleted with it.
+		Owner: metav1.OwnerReference{
+			Kind:       gvk.Kind,
+			Name:       api.GetName(),
+			APIVersion: gvk.GroupVersion().String(),
+			UID:        api.GetUID(),
 		},
-	}
-
-	log.Debug(ctx, "Deleting any config map associated to the API", log.KeyValues(api)...)
-	return client.IgnoreNotFound(k8s.GetClient().Delete(ctx, configMap))
+		OrgID:      api.GetOrgID(),
+		EnvID:      api.GetEnvID(),
+		Definition: definition,
+	})
 }
