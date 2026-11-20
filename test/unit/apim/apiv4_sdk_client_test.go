@@ -16,10 +16,17 @@ package apim_test
 
 import (
 	"context"
+	goerrors "errors"
 	"net/http"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -157,6 +164,46 @@ var _ = Describe("ApiV4Definition through the APIM SDK", func() {
 		Expect(api.Status.Plans).To(HaveKeyWithValue("KeyLess", "6b1d5f0a-0000-0000-0000-000000000003"))
 	})
 
+	It("copies APIM's state into the status and becomes Automation API managed when upserted by hrid", func() {
+		api := apiV4ForSDK()
+		resp, err := apiv4.Upsert(ctx, client, toAPIV4DTO(api))
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(apiv4.UpdateStatus(ctx, api, resp)).To(Succeed())
+		Expect(api.Status.ID).To(Equal("6b1d5f0a-0000-0000-0000-000000000001"))
+		Expect(api.Status.CrossID).To(Equal("6b1d5f0a-0000-0000-0000-000000000002"))
+		Expect(api.Status.OrgID).To(Equal("org1"))
+		Expect(api.Status.EnvID).To(Equal("env1"))
+		Expect(api.Status.Errors.Severe).To(BeEmpty())
+		Expect(api.Status.Errors.Warning).To(ConsistOf("warning one"))
+		Expect(api.Status.Plans).To(HaveKeyWithValue("KeyLess", "6b1d5f0a-0000-0000-0000-000000000003"))
+		Expect(k8s.IsAutomationAPIManaged(api)).To(BeTrue())
+	})
+
+	It("returns what APIM accepted with the error when the gateway ConfigMap write fails", func() {
+		registerFailingConfigMapK8s()
+		api := apiV4ForSDK()
+		api.Spec.DefinitionContext = apiV4WithContext().Spec.DefinitionContext
+
+		_, err := apiv4.Upsert(ctx, client, toAPIV4DTO(api))
+		Expect(err).To(MatchError(ContainSubstring("configmap write refused")))
+
+		accepted, ok := apiv4.AcceptedResponse(err)
+		Expect(ok).To(BeTrue())
+		Expect(apiv4.UpdateStatus(ctx, api, accepted)).To(Succeed())
+		Expect(api.Status.ID).To(Equal("6b1d5f0a-0000-0000-0000-000000000001"))
+		Expect(api.Status.Plans).To(HaveKeyWithValue("KeyLess", "6b1d5f0a-0000-0000-0000-000000000003"))
+	})
+
+	It("returns no accepted response when APIM refuses the API", func() {
+		fake.status = http.StatusBadRequest
+
+		_, err := apiv4.Upsert(ctx, client, toAPIV4DTO(apiV4ForSDK()))
+		Expect(err).To(HaveOccurred())
+		_, ok := apiv4.AcceptedResponse(err)
+		Expect(ok).To(BeFalse())
+	})
+
 	DescribeTable("asks APIM to leave groups alone under the ignore-groups annotation",
 		func(api func() *v1alpha1.ApiV4Definition) {
 			obj := api()
@@ -230,6 +277,18 @@ var _ = Describe("ApiV4Definition through the APIM SDK", func() {
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
 	})
 
+	It("gets a legacy API that has only a status.id by that UUID", func() {
+		api := apiV4ForSDK()
+		api.Status.ID = legacyAPIID
+
+		_, err := apiv4.GetRemote(ctx, client, toAPIV4DTO(api))
+		Expect(err).ToNot(HaveOccurred())
+		req := fake.lastRequest()
+		Expect(req.Method).To(Equal(http.MethodGet))
+		Expect(req.Path).To(Equal(apisPath + "/" + legacyAPIID))
+		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
+	})
+
 	It("fetches nothing for an API never synced", func() {
 		dto := toAPIV4DTO(apiV4ForSDK())
 		remote, err := apiv4.GetRemote(ctx, client, dto)
@@ -279,4 +338,39 @@ func withoutIDs(body map[string]any) map[string]any {
 	}
 	cp["plans"] = stripped
 	return cp
+}
+
+// registerFailingConfigMapK8s registers a fake Kubernetes client that refuses every ConfigMap write.
+func registerFailingConfigMapK8s() {
+	GinkgoHelper()
+	scheme := runtime.NewScheme()
+	Expect(clientgoscheme.AddToScheme(scheme)).To(Succeed())
+	refuse := func(obj client.Object) error {
+		if _, ok := obj.(*corev1.ConfigMap); ok {
+			return goerrors.New("configmap write refused")
+		}
+		return nil
+	}
+	k8s.RegisterClient(fake.NewClientBuilder().WithScheme(scheme).WithInterceptorFuncs(interceptor.Funcs{
+		Create: func(ctx context.Context, cli client.WithWatch, obj client.Object, opts ...client.CreateOption) error {
+			if err := refuse(obj); err != nil {
+				return err
+			}
+			return cli.Create(ctx, obj, opts...)
+		},
+		Update: func(ctx context.Context, cli client.WithWatch, obj client.Object, opts ...client.UpdateOption) error {
+			if err := refuse(obj); err != nil {
+				return err
+			}
+			return cli.Update(ctx, obj, opts...)
+		},
+		Patch: func(
+			ctx context.Context, cli client.WithWatch, obj client.Object, patch client.Patch, opts ...client.PatchOption,
+		) error {
+			if err := refuse(obj); err != nil {
+				return err
+			}
+			return cli.Patch(ctx, obj, patch, opts...)
+		},
+	}).Build())
 }
