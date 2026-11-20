@@ -16,6 +16,7 @@ package apiv4
 
 import (
 	"context"
+	goerrors "errors"
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -41,9 +42,34 @@ func Upsert(ctx context.Context, client *Client, dto DTO) (Response, error) {
 		resp.EnvID = valueOr(state.EnvironmentId, client.GetEnvID())
 	}
 	if err := syncGateway(ctx, dto.Gateway, resp); err != nil {
-		return Response{}, err
+		return Response{}, &GatewaySyncError{Response: resp, Err: err}
 	}
 	return resp, nil
+}
+
+// GatewaySyncError is a failed gateway ConfigMap write after APIM accepted the API. Response holds what APIM
+// returned, so the caller can still copy it into the status.
+type GatewaySyncError struct {
+	Response Response
+	Err      error
+}
+
+func (e *GatewaySyncError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *GatewaySyncError) Unwrap() error {
+	return e.Err
+}
+
+// AcceptedResponse returns what APIM returned when err is a GatewaySyncError: APIM accepted the API, only its
+// gateway ConfigMap failed.
+func AcceptedResponse(err error) (Response, bool) {
+	var syncErr *GatewaySyncError
+	if goerrors.As(err, &syncErr) {
+		return syncErr.Response, true
+	}
+	return Response{}, false
 }
 
 // put sends dto.ApiV4 through the SDK, or through GKO's HTTP client for a legacy API (the SDK cannot send

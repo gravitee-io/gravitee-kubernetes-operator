@@ -119,6 +119,13 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		log.Debug(ctx, "Syncing API definition with control plane", log.KeyValues(apiDefinition)...)
 	}
 	resp, err := apiv4.Upsert(ctx, client, dto)
+	if accepted, ok := apiv4.AcceptedResponse(err); ok {
+		// APIM accepted the API: keep its ID and plans in the status, then report the ConfigMap error.
+		if stErr := apiv4.UpdateStatus(ctx, apiDefinition, accepted); stErr != nil {
+			return stErr
+		}
+		return err
+	}
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
