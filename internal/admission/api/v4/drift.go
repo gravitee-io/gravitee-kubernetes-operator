@@ -16,6 +16,7 @@ package v4
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
@@ -61,13 +62,22 @@ func mergeDriftValidation(
 		drift.MapDTO(toDriftDTO)))
 }
 
+// resolveApiV4Refs also maps each copy, so that a mapping error refuses the update here: toDriftDTO, whose
+// signature has no error, then maps a copy known to map.
 func resolveApiV4Refs(ctx context.Context, api *v1alpha1.ApiV4Definition) error {
-	return apidefinition.PrepareV4SpecForAutomation(ctx, api, false)
+	if err := apidefinition.PrepareV4SpecForAutomation(ctx, api, false); err != nil {
+		return err
+	}
+	if _, err := apiv4.ToDTO(api); err != nil {
+		return fmt.Errorf("could not map the API: %w", err)
+	}
+	return nil
 }
 
 func toDriftDTO(api *v1alpha1.ApiV4Definition) apiv4.DTO {
 	dto, err := apiv4.ToDTO(api)
 	if err != nil {
+		// unreachable: resolveApiV4Refs refused a copy that does not map
 		return apiv4.DTO{}
 	}
 	return apiv4.DriftDTO(dto)
