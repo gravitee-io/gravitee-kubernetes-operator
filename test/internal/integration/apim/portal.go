@@ -19,6 +19,7 @@ import (
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
 	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
@@ -84,5 +85,24 @@ func (a *APIM) ImportPortalListing(ctx context.Context, listing *v1alpha1.Portal
 		return err
 	}
 	_, err = apimportallisting.Upsert(ctx, a.SDK, dto)
+	return err
+}
+
+// GetDocumentation gets a documentation page state by its parent and HRID, server-managed fields included.
+func (a *APIM) GetDocumentation(
+	ctx context.Context, parent navigation.Parent, hrid string,
+) (sdk.DocumentationState, error) {
+	return apimdocs.GetState(ctx, a.SDK,
+		apimdocs.DTO{Documentation: sdk.Documentation{Hrid: hrid}, Parent: parent})
+}
+
+// ImportDocumentation creates or updates a documentation page in APIM outside the operator, under the parent
+// it references.
+func (a *APIM) ImportDocumentation(ctx context.Context, doc *v1alpha1.Documentation) error {
+	dto, err := apimdocs.ToDTO(doc)
+	if err != nil {
+		return err
+	}
+	_, err = apimdocs.Upsert(ctx, a.SDK, dto)
 	return err
 }

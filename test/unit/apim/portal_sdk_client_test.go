@@ -24,6 +24,7 @@ import (
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
+	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallisting"
@@ -32,6 +33,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
 	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
@@ -388,6 +390,100 @@ var _ = Describe("Portal navigation SDK packages", func() {
 			req := fake.lastRequest()
 			Expect(req.Method).To(Equal(http.MethodDelete))
 			Expect(req.Path).To(Equal(automationEnvPath + "/portals/default-dev/listings/default-catalog"))
+		})
+	})
+	Describe("Documentation", func() {
+		newDoc := func(portalRef, apiRef *refs.NamespacedName) *v1alpha1.Documentation {
+			return &v1alpha1.Documentation{
+				ObjectMeta: metav1.ObjectMeta{Name: "start", Namespace: "default"},
+				Spec: v1alpha1.DocumentationSpec{Type: documentation.Type{
+					Name:     "Start",
+					PageType: documentation.GraviteeMarkdown,
+					Content:  "# Start",
+					Portal:   portalRef,
+					API:      apiRef,
+				}},
+			}
+		}
+		toDTO := func(doc *v1alpha1.Documentation) apimdocs.DTO {
+			GinkgoHelper()
+			dto, err := apimdocs.ToDTO(doc)
+			Expect(err).ToNot(HaveOccurred())
+			return dto
+		}
+
+		BeforeEach(func() {
+			fake.response = portalState(`"hrid": "default-start", "name": "Start", "type": "GRAVITEE_MARKDOWN",
+				"content": "# Start"`)
+		})
+
+		It("refuses a page with both parents, or none", func() {
+			_, err := apimdocs.ToDTO(newDoc(&refs.NamespacedName{Name: "p"}, &refs.NamespacedName{Name: "a"}))
+			Expect(err).To(MatchError(navigation.ErrNotExactlyOneParent))
+			_, err = apimdocs.ToDTO(newDoc(nil, nil))
+			Expect(err).To(MatchError(navigation.ErrNotExactlyOneParent))
+		})
+
+		It("upserts under a portal and copies the ids into the status", func() {
+			doc := newDoc(&refs.NamespacedName{Name: "dev"}, nil)
+			resp, err := apimdocs.Upsert(ctx, client, toDTO(doc))
+			Expect(err).ToNot(HaveOccurred())
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodPut))
+			Expect(req.Path).To(Equal(automationEnvPath + "/portals/default-dev/documentations"))
+			Expect(req.Query.Get("dryRun")).To(Equal("false"))
+			Expect(req.Body).To(HaveKeyWithValue("hrid", "default-start"))
+			Expect(req.Body).ToNot(HaveKey("portalRef"))
+
+			Expect(apimdocs.UpdateStatus(ctx, doc, resp)).To(Succeed())
+			Expect(doc.Status.ID).To(Equal("7a1c"))
+			Expect(doc.Status.OrgID).To(Equal("DEFAULT"))
+			Expect(doc.Status.EnvID).To(Equal("DEV"))
+			Expect(k8s.IsAutomationAPIManaged(doc)).To(BeTrue())
+		})
+
+		It("sends an empty content rather than omitting it", func() {
+			doc := newDoc(&refs.NamespacedName{Name: "dev"}, nil)
+			doc.Spec.Content = ""
+			_, err := apimdocs.Upsert(ctx, client, toDTO(doc))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fake.lastRequest().Body).To(HaveKeyWithValue("content", ""))
+		})
+
+		It("dry-runs under an API and returns the findings", func() {
+			errs, err := apimdocs.DryRun(ctx, client, toDTO(newDoc(nil, &refs.NamespacedName{Name: "pets"})))
+			Expect(err).ToNot(HaveOccurred())
+			req := fake.lastRequest()
+			Expect(req.Path).To(Equal(automationEnvPath + "/apis/default-pets/documentations"))
+			Expect(req.Query.Get("dryRun")).To(Equal("true"))
+			Expect(errs.Severe).To(ConsistOf(MatchError("severe one")))
+			Expect(errs.Warning).To(ConsistOf(MatchError("warning one")))
+		})
+
+		It("gets the remote under its parent as the payload a PUT sends", func() {
+			dto := toDTO(newDoc(nil, &refs.NamespacedName{Name: "pets"}))
+			remote, err := apimdocs.GetRemote(ctx, client, dto)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fake.lastRequest().Path).To(Equal(automationEnvPath + "/apis/default-pets/documentations/default-start"))
+			Expect(remote).To(Equal(dto))
+		})
+
+		It("reports a page missing in APIM as not found, and deletes one already gone", func() {
+			fake.status = http.StatusNotFound
+			dto := toDTO(newDoc(&refs.NamespacedName{Name: "dev"}, nil))
+
+			_, err := apimdocs.GetRemote(ctx, client, dto)
+			Expect(errors.IsNotFound(err)).To(BeTrue())
+
+			Expect(apimdocs.Delete(ctx, client, dto)).To(Succeed())
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodDelete))
+			Expect(req.Path).To(Equal(automationEnvPath + "/portals/default-dev/documentations/default-start"))
+		})
+
+		It("deletes under an API", func() {
+			Expect(apimdocs.Delete(ctx, client, toDTO(newDoc(nil, &refs.NamespacedName{Name: "pets"})))).To(Succeed())
+			Expect(fake.lastRequest().Path).To(Equal(automationEnvPath + "/apis/default-pets/documentations/default-start"))
 		})
 	})
 })
