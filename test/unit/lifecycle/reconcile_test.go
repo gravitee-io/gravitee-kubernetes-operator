@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/funcr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -103,6 +105,26 @@ func deletingGroup(name string, finalizers ...string) *v1alpha1.Group {
 func reconcile(l groupLifecycle, cli client.Client, name string) (ctrl.Result, error) {
 	req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: testNs, Name: name}}
 	return l.Reconcile(context.Background(), cli, record.NewFakeRecorder(20), req, &v1alpha1.Group{})
+}
+
+// reconcileLogged reconciles name and returns what was logged on the way.
+func reconcileLogged(l groupLifecycle, cli client.Client, name string) ([]string, error) {
+	var lines []string
+	logger := funcr.New(func(prefix, args string) { lines = append(lines, args) }, funcr.Options{})
+	req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: testNs, Name: name}}
+	_, err := l.Reconcile(logr.NewContext(context.Background(), logger), cli, record.NewFakeRecorder(20), req,
+		&v1alpha1.Group{})
+	return lines, err
+}
+
+// expectReleaseWarning asserts that a delete released without reaching the platform logged why.
+func expectReleaseWarning(lines []string) {
+	GinkgoHelper()
+	Expect(lines).To(ContainElement(And(
+		ContainSubstring("Releasing the finalizer without deleting the resource from the platform"),
+		ContainSubstring(`"severity"="warning"`),
+		ContainSubstring(`secrets \"token\" not found`),
+	)))
 }
 
 func fetch(cli client.Client, name string) *v1alpha1.Group {
@@ -345,12 +367,13 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 				return fmt.Errorf("resolve secret: %w", notFound)
 			}
 
-			_, err := reconcile(l, cli, "g1")
+			lines, err := reconcileLogged(l, cli, "g1")
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(r.deleted).To(BeEmpty())
 			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
 			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			expectReleaseWarning(lines)
 		})
 
 		It("still requeues on any other resolution error", func() {
@@ -418,12 +441,13 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 				return nil, fmt.Errorf("resolve secret: %w", notFound)
 			}
 
-			_, err := reconcile(l, cli, "g1")
+			lines, err := reconcileLogged(l, cli, "g1")
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(r.deleted).To(BeEmpty())
 			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
 			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			expectReleaseWarning(lines)
 		})
 
 		// The error wraps a NotFound: only the class tells a mapping error from a missing reference.
