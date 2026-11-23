@@ -46,6 +46,8 @@ const acceptingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/man
 
 // acceptedStates are the states the accepting APIM answers, by collection path suffix.
 var acceptedStates = map[string]string{
+	"/authz/entities": `{"hrid":"gravitee-agents-group","id":"3b9d","organizationId":"DEFAULT",` +
+		`"environmentId":"DEFAULT"}`,
 	"/authz/policies": `{"hrid":"gravitee-hotel-booking-read","id":"5f1c","organizationId":"DEFAULT",` +
 		`"environmentId":"DEFAULT","policyStatus":"DEPLOYED"}`,
 }
