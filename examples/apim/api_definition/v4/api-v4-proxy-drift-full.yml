@@ -323,4 +323,3 @@ spec:
   resources:
     - ref:
         name: reusable-resource-cache-redis
-        namespace: default
