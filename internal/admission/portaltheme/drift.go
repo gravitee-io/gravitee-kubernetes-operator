@@ -17,11 +17,11 @@ package portaltheme
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -30,20 +30,41 @@ func validateUpdate(ctx context.Context, oldObj *v1alpha1.PortalTheme, newObj *v
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemotePortalTheme,
-		drift.MapDTO(model.ToPortalThemeDTO)))
+	errs.MergeWith(validateDrift(ctx, oldObj, newObj))
 	return errs
+}
+
+// validateDrift compares through the SDK client, not the APIM facade: the resolver builds that client,
+// only once drift is known to be enabled, and hands no facade to the getter.
+func validateDrift(ctx context.Context, oldObj, newObj *v1alpha1.PortalTheme) *errors.AdmissionErrors {
+	var client *apim.SDKClient
+	resolveContext := func(ctx context.Context) (*apim.APIM, error) {
+		var err error
+		client, err = apimportaltheme.CreateAPIMClient(ctx, newObj)
+		return nil, err
+	}
+	getRemote := func(_ *apim.APIM, thm *v1alpha1.PortalTheme) (any, error) {
+		dto, err := apimportaltheme.ToDTO(thm)
+		if err != nil {
+			return nil, err
+		}
+		return apimportaltheme.GetRemote(ctx, client, dto)
+	}
+	return drift.ValidateDriftWithContext(ctx, oldObj, newObj, resolveContext, resolveRefs, getRemote,
+		drift.MapDTO(toDTO))
 }
 
 func resolveRefs(context.Context, *v1alpha1.PortalTheme) error {
 	return nil
 }
 
-func getRemotePortalTheme(apimClient *apim.APIM, thm *v1alpha1.PortalTheme) (any, error) {
-	hrid := refs.NewNamespacedNameFromObject(thm).HRID()
-	remote, err := apimClient.PortalThemes.GetByHRID(hrid)
+// toDTO maps the CRD to the payload compared with the remote. getRemote maps the new object first and
+// hands its error to the fetch failure policy: only the old object can reach here unmapped, and it is
+// compared as an empty payload.
+func toDTO(thm *v1alpha1.PortalTheme) sdk.PortalTheme {
+	dto, err := apimportaltheme.ToDTO(thm)
 	if err != nil {
-		return nil, err
+		return sdk.PortalTheme{}
 	}
-	return remote.PortalThemeDTO, nil
+	return dto
 }

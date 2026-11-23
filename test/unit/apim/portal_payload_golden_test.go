@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 )
 
@@ -125,6 +126,23 @@ func legacyPortalPayload(obj any) any {
 	return nil
 }
 
+// sdkPortalPayload is the body the SDK packages PUT. Kinds not migrated yet still go through the
+// hand-written mapper.
+func sdkPortalPayload(obj any) any {
+	switch o := obj.(type) {
+	case *v1alpha1.PortalTheme:
+		dto, err := apimportaltheme.ToDTO(o)
+		Expect(err).ToNot(HaveOccurred())
+		return dto
+	}
+	return legacyPortalPayload(obj)
+}
+
+// withAllowedDifferences applies to a golden payload the only differences the SDK payload may have.
+func withAllowedDifferences(_ string, golden map[string]any) map[string]any {
+	return golden
+}
+
 func marshalPortalPayload(payload any) map[string]any {
 	data, err := json.Marshal(payload)
 	Expect(err).ToNot(HaveOccurred())
@@ -155,8 +173,8 @@ var _ = Describe("Portal navigation payloads", func() {
 				writePortalGolden(example.name, legacyPortalPayload(example.obj))
 				continue
 			}
-			golden := readPortalGolden(example.name)
-			Expect(marshalPortalPayload(legacyPortalPayload(example.obj))).To(Equal(golden), example.name)
+			golden := withAllowedDifferences(example.name, readPortalGolden(example.name))
+			Expect(marshalPortalPayload(sdkPortalPayload(example.obj))).To(Equal(golden), example.name)
 		}
 	})
 })

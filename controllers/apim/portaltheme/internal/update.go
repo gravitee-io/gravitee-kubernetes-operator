@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -30,19 +30,20 @@ func CreateOrUpdate(ctx context.Context, thm *v1alpha1.PortalTheme) error {
 		)
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, thm.ContextRef(), thm.GetNamespace())
+	client, err := apimportaltheme.CreateAPIMClient(ctx, thm)
 	if err != nil {
 		return err
 	}
-	status, err := apimClient.PortalThemes.CreateOrUpdate(thm)
+
+	dto, err := apimportaltheme.ToDTO(thm)
+	if err != nil {
+		return gerrors.NewIllegalStateError(err)
+	}
+
+	resp, err := apimportaltheme.Upsert(ctx, client, dto)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	// Setting fields by fields to keep the rest intact
-	thm.Status.ID = status.ID
-	thm.Status.OrgID = status.OrgID
-	thm.Status.EnvID = status.EnvID
-
-	return nil
+	return apimportaltheme.UpdateStatus(ctx, thm, resp)
 }

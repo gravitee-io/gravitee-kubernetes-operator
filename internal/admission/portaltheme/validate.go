@@ -19,7 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
@@ -55,22 +55,21 @@ func validateCreate(ctx context.Context, thm *v1alpha1.PortalTheme) *errors.Admi
 
 func validateDryRun(ctx context.Context, thm *v1alpha1.PortalTheme) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-
-	cp := thm.DeepCopy()
-
-	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	client, err := apimportaltheme.CreateAPIMClient(ctx, thm)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	status, err := apimClient.PortalThemes.DryRunCreateOrUpdate(cp)
+	dto, err := apimportaltheme.ToDTO(thm)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	errs.MergeWith(errors.NewAdmissionErrorsFromStatus(status.Errors))
-
+	findings, err := apimportaltheme.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
+	errs.MergeWith(findings)
 	return errs
 }
