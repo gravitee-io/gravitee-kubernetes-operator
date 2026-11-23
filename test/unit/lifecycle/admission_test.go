@@ -276,7 +276,7 @@ var _ = Describe("AdmissionLifecycle", func() {
 				order = append(order, "precheck")
 				return gerrors.NewAdmissionErrors()
 			}
-			a.ImmutableFields = func(_ context.Context, _, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
+			a.ImmutableFields = func(_, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 				order = append(order, "immutable")
 				return gerrors.NewAdmissionErrors()
 			}
@@ -294,7 +294,7 @@ var _ = Describe("AdmissionLifecycle", func() {
 			tc := &testClient{}
 			a := minimalAdmission(tc)
 			dryRunCalled := false
-			a.ImmutableFields = func(_ context.Context, _, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
+			a.ImmutableFields = func(_, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 				e := gerrors.NewAdmissionErrors()
 				e.AddSevere("field is immutable")
 				return e

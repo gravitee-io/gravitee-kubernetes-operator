@@ -43,7 +43,6 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			ResolveRefs:     apiv4.ResolveRefsForAdmission,
 			ClientFactory:   apiv4.CreateAPIMClient,
 			PreCheck:        preCheck,
-			ImmutableFields: immutableFields,
 			ToDTO:           apiv4.ToDTO,
 			DryRun:          apiv4.DryRun,
 			PayloadChanged:  apiv4.PayloadChanged,
@@ -86,7 +85,18 @@ func (a AdmissionCtrl) ValidateUpdate(
 	oldObj *v1alpha1.ApiV4Definition,
 	newObj *v1alpha1.ApiV4Definition,
 ) (admission.Warnings, error) {
-	return a.Lifecycle.ValidateUpdate(ctx, oldObj, newObj).Map()
+	if newObj.IsBeingDeleted() {
+		return nil, nil
+	}
+	// The API type and the subscribed plans are checked first, as before the lifecycle: a forbidden change is the
+	// error to report, not the reference or spec errors it leads to. The lifecycle's ImmutableFields would run after
+	// them.
+	errs := immutableFields(ctx, oldObj, newObj)
+	if errs.IsSevere() {
+		return errs.Map()
+	}
+	errs.MergeWith(a.Lifecycle.ValidateUpdate(ctx, oldObj, newObj))
+	return errs.Map()
 }
 
 // deleteCheck refuses to delete an API Subscriptions still reference.

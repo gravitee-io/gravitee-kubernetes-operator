@@ -77,7 +77,7 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 	}
 
 	if a.ImmutableFields != nil {
-		errs.MergeWith(a.ImmutableFields(ctx, oldObj, newObj))
+		errs.MergeWith(a.ImmutableFields(oldObj, newObj))
 		if errs.IsSevere() {
 			return errs
 		}

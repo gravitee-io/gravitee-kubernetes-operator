@@ -66,7 +66,7 @@ type AdmissionCheckFunc[T core.ContextAwareObject] func(ctx context.Context, obj
 type PayloadChangedFunc[T core.ContextAwareObject] func(oldValue, newValue T) bool
 
 // ImmutableFieldsFunc returns severe errors when frozen spec fields changed between old and new.
-type ImmutableFieldsFunc[T core.ContextAwareObject] func(ctx context.Context, oldValue, newValue T) *gerrors.AdmissionErrors
+type ImmutableFieldsFunc[T core.ContextAwareObject] func(oldValue, newValue T) *gerrors.AdmissionErrors
 
 // DriftDTOFunc normalises a DTO for drift comparison only (never for the payload sent to the remote).
 type DriftDTOFunc[D store.Identifiable] func(dto D) D
