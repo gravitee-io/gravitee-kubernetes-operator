@@ -294,6 +294,7 @@ var _ = Describe("Authz PDP", func() {
 			err := apimauthzpdp.OnUpsertError(context.Background(), pdp,
 				refusedWith(http.StatusBadRequest, `{"message": "hrid is required", "http_status": 400}`))
 
+			Expect(err).To(MatchError(ContainSubstring("authz pdp [orders-eu] was refused by the automation api")))
 			Expect(xErrors.IsRecoverable(err)).To(BeTrue())
 			Expect(pdp.Status.Errors.Severe).To(BeEmpty())
 		})
