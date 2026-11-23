@@ -16,12 +16,18 @@ package authzpdp_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
 func TestAuthzPdpAdmission(t *testing.T) {
@@ -39,3 +45,33 @@ func (c *recordingCache) IndexField(_ context.Context, _ client.Object, field st
 	c.indexers[field] = f
 	return nil
 }
+
+// platformCalls counts the requests the APIM stub receives: a spec that expects admission to stop
+// before the dry run asserts none arrived.
+var platformCalls atomic.Int32
+
+// The dynamic client resolves ManagementContexts: it answers the dev-ctx context of the travel
+// namespace, pointing at the APIM stub, and 404 for anything else.
+var _ = BeforeSuite(func() {
+	platform := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		platformCalls.Add(1)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	DeferCleanup(platform.Close)
+
+	cluster := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == "/apis/gravitee.io/v1alpha1/namespaces/travel/managementcontexts/dev-ctx" {
+			_, _ = w.Write([]byte(`{"apiVersion":"gravitee.io/v1alpha1","kind":"ManagementContext",` +
+				`"metadata":{"name":"dev-ctx","namespace":"travel"},` +
+				`"spec":{"baseUrl":"` + platform.URL + `","organizationId":"DEFAULT","environmentId":"DEFAULT",` +
+				`"auth":{"bearerToken":"test"}}}`))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"kind":"Status","apiVersion":"v1","status":"Failure",` +
+			`"reason":"NotFound","code":404,"message":"not found"}`))
+	}))
+	DeferCleanup(cluster.Close)
+	dynamic.UseConfig(&rest.Config{Host: cluster.URL})
+})
