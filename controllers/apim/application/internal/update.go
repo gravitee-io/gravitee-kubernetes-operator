@@ -18,28 +18,29 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
-	apim, err := apim.FromContextRef(ctx, application.Spec.Context, application.GetNamespace())
+func CreateOrUpdate(ctx context.Context, app *v1alpha1.Application) error {
+	if err := ResolveClientCertificates(ctx, app); err != nil {
+		return err
+	}
+
+	dto, err := application.ToDTO(app)
 	if err != nil {
 		return err
 	}
 
-	application.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(application))
-
-	if err := ResolveClientCertificates(ctx, application); err != nil {
+	client, err := application.CreateAPIMClient(ctx, app)
+	if err != nil {
 		return err
 	}
 
-	status, mgmtErr := apim.Applications.CreateOrUpdate(application)
-	if mgmtErr != nil {
-		return gerrors.NewControlPlaneError(mgmtErr)
+	resp, err := application.Upsert(ctx, client, dto)
+	if err != nil {
+		return gerrors.NewControlPlaneError(err)
 	}
 
-	status.DeepCopyTo(&application.Status.Status)
-	return nil
+	return application.UpdateStatus(ctx, app, resp)
 }

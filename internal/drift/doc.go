@@ -165,7 +165,7 @@
 //
 //	Metadata []*APIV4MetadataEntryDTO `json:"metadata" drift:"ignore-only:remote"`
 //	Groups   []APIGroup               `json:"groups" drift:"ignore-only:crd,strip-ns"`
-//	ClientCertificates []ApplicationClientCertificateDTO `json:"clientCertificates,omitempty" drift:"ignore-only:crd,expired,scheduled"`
+//	ClientCertificates []sdk.ClientCertificate `json:"clientCertificates,omitempty" drift:"ignore-only:crd,expired,scheduled"`
 //
 // ### ignore-namespace-prefix
 //

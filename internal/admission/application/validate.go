@@ -24,8 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
+	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -124,7 +123,7 @@ func validateSettings(ctx context.Context, app *v1alpha1.Application) *errors.Ad
 		if errs.IsSevere() {
 			return errs
 		}
-		if err := appResolve.ResolveClientCertificates(ctx, settings, app.GetNamespace(), app.GetName()); err != nil {
+		if err := apimapp.ResolveClientCertificates(ctx, settings, app.GetNamespace(), app.GetName()); err != nil {
 			errs.AddSevere(err.Error())
 		}
 	}
@@ -178,30 +177,24 @@ func validateSettingsUpdate(oldApp, newApp *v1alpha1.Application) *errors.Admiss
 func validateDryRun(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp := app.DeepCopy()
-
-	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
-	if err != nil {
-		errs.AddSevere(err.Error())
-	}
-
-	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(app))
-
-	status, err := apim.Applications.DryRunCreateOrUpdate(cp)
+	dto, err := apimapp.ToDTO(app)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
-	}
-	if errs.IsSevere() {
+
+	client, err := apimapp.CreateAPIMClient(ctx, app)
+	if err != nil {
+		errs.AddSevere(err.Error())
 		return errs
 	}
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
+
+	findings, err := apimapp.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
 	}
-	return errs
+	return findings
 }
 
 func validateCertEndDatesVsSubscriptionEndDates(
