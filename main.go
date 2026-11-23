@@ -471,10 +471,11 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 	}
 
 	if err := (&authzschema.Reconciler{
-		Scheme:   mgr.GetScheme(),
-		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("authzschema-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzSchemaList{}),
+		Scheme:    mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Lifecycle: authzschema.NewLifecycle(),
+		Recorder:  mgr.GetEventRecorderFor("authzschema-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzSchemaList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for authz schemas")
 		os.Exit(1)

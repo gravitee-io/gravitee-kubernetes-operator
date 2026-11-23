@@ -74,7 +74,9 @@ var _ = Describe("Authz schema reconcile", func() {
 			}).
 			Build()
 		k8s.RegisterClient(cli)
-		return &authzschema.Reconciler{Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20)}, cli
+		return &authzschema.Reconciler{
+			Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20), Lifecycle: authzschema.NewLifecycle(),
+		}, cli
 	}
 
 	stored := func(cli client.Client) *v1alpha1.AuthzSchema {
@@ -94,9 +96,9 @@ var _ = Describe("Authz schema reconcile", func() {
 	}
 
 	// The ResolvedRefs error is returned, so the controller requeues it with backoff on top of the
-	// AuthzPdp watch. Resolving runs before templates compile: a waiting schema records no reference
-	// on the Secrets it reads.
-	It("waits on ResolvedRefs=False while the AuthzPdp is missing, recording no template reference", func() {
+	// AuthzPdp watch. Templates compile before refs resolve, so a waiting schema records a reference
+	// on the Secrets it reads: the finalizer is saved first, and the delete releases it.
+	It("waits on ResolvedRefs=False while the AuthzPdp is missing, releasing its template references on delete", func() {
 		s := newAuthzSchema()
 		s.Spec.Name = `[[ secret "travel-schema/name" ]]`
 		r, cli := setup(s, &corev1.Secret{
@@ -110,7 +112,13 @@ var _ = Describe("Authz schema reconcile", func() {
 		expectWaitingOnPdp(cli, "authz pdp not found: [gravitee/orders-eu]")
 		secret := &corev1.Secret{}
 		Expect(cli.Get(context.Background(), secretKey, secret)).To(Succeed())
-		Expect(secret.Annotations).ToNot(HaveKey("gravitee.io/authzschemas"))
+		Expect(secret.Finalizers).To(ContainElement(core.TemplatingFinalizer))
+
+		Expect(cli.Delete(context.Background(), stored(cli))).To(Succeed())
+		_, err = r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(cli.Get(context.Background(), secretKey, secret)).To(Succeed())
+		Expect(secret.Finalizers).ToNot(ContainElement(core.TemplatingFinalizer))
 	})
 
 	It("waits on ResolvedRefs=False while the AuthzPdp has no routing scope", func() {

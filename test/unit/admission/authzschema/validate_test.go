@@ -29,13 +29,14 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzschema"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 var _ = Describe("Validating an AuthzSchema target", func() {
 	const ns = "travel"
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 	devCtx := refs.NamespacedName{Name: "dev-ctx"}
 
 	schema := func(target *authzpdp.Target) *v1alpha1.AuthzSchema {
@@ -97,12 +98,15 @@ var _ = Describe("Validating an AuthzSchema target", func() {
 		cluster()
 		oldObj := schema(byRef(refs.NamespacedName{Name: "orders-eu"}))
 		oldObj.Status.ID = "7a1e0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
 		newObj := oldObj.DeepCopy()
 		newObj.Finalizers = []string{"finalizers.gravitee.io/authzschemas"}
 
-		_, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
 
 		Expect(err).ToNot(HaveOccurred())
+		// Drift is skipped too: the target cannot be compared before it resolves.
+		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
 		Expect(platformCalls.Load()).To(BeZero())
 	})
 
