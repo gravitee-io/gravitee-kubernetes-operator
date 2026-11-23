@@ -636,6 +636,7 @@ var _ = Describe("MCP proxy", func() {
 			Expect(err).To(MatchError(ContainSubstring("gamma.mcp.lifecycle.failed")))
 		})
 
+		// Spec() drops the studio tools' entityIds, which AIM 5.1.2+ refuses on a PUT; drift ignores them.
 		It("gets the remote as the payload a PUT sends, sorted like the mapper sorts", func() {
 			fake.response = `{"hrid": "gravitee-support-studio", "mode": "STUDIO", "state": "STARTED",
 				"studio": {
@@ -660,7 +661,7 @@ var _ = Describe("MCP proxy", func() {
 				"hrid": "gravitee-support-studio", "entityId": "", "name": "", "contextPath": "",
 				"mode": "STUDIO", "state": "STARTED",
 				"studio": {
-					"tools": [{"server": "gravitee-github-mcp", "tool": "create_issue", "entityId": "mcp-tool.github.create_issue"},
+					"tools": [{"server": "gravitee-github-mcp", "tool": "create_issue"},
 						{"server": "tools-jira-mcp", "tool": "create_ticket"}],
 					"upstreamAuth": [{"server": "gravitee-github-mcp", "auth": {"type": "BEARER"}},
 						{"server": "tools-jira-mcp", "auth": {"type": "NONE"}}],

@@ -41,7 +41,7 @@ var _ = Describe("Deleting an AuthzPdp", func() {
 	const sole = ": it stays Terminating until each has another target"
 
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 	devCtx := refs.NamespacedName{Name: "dev-ctx"}
 	target := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu"}}
 

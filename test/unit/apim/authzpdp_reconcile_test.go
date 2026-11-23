@@ -72,7 +72,9 @@ var _ = Describe("Authz PDP reconcile", func() {
 			}).
 			Build()
 		k8s.RegisterClient(cli)
-		return &authzpdp.Reconciler{Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20)}, cli
+		return &authzpdp.Reconciler{
+			Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20), Lifecycle: authzpdp.NewLifecycle(),
+		}, cli
 	}
 
 	// The finalizer must be saved even when the apply fails: template.Compile has already recorded
