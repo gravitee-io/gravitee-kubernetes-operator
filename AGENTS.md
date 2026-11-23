@@ -109,7 +109,11 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
 - Drift compares the PUT type on both sides: turn the GET state into it first with its `Spec()` (`GroupState.Spec()` returns the `sdk.Group` a PUT sends; every `XxxState` has one). Comparing `GroupState` with `Group` panics. `Spec()` is a shallow copy: reassign its fields, never mutate shared slices or maps. The SDK types carry their own `drift:` tags; resource types and list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
 - Keep GKO's HTTP client only for calls the SDK spec does not declare yet (e.g. a `hridContainsUUID` it lacks): `APIs.UpsertV4Legacy` is the example, the PUT of a v4 API created before the Automation API.
 - A resource whose context is optional (ApiV4Definition without `contextRef`) returns a nil client and a nil error from its client factory: `Upsert`, `DryRun`, `GetRemote` and `Delete` then do nothing remote (`internal/apim/apiv4/`).
-- Drift-only normalisation (rules for the comparison, never for the payload) goes in `AdmissionLifecycle.DriftDTO`, applied to the old, new and remote DTOs: see `apiv4.DriftDTO`.
+- Drift-only normalisation (rules for the comparison, never for the payload) goes in `AdmissionLifecycle.DriftDTO`, applied to the old, new and remote DTOs: see `apiv4.DriftDTO`, which compares v4 listeners as a free-form map and reads a boolean the GET leaves out as false, so the report reads as it did on GKO's former model.
+- A migration keeps every existing test as on master: only the edits the compiler forces (a removed function replaced by its successor, `NewAdmissionCtrl()`, the test manager wiring). A test that fails after the move is fixed in production code. To keep what users see:
+  - `AdmissionLifecycle.UnprefixedResolveErrors` reports reference and context errors without the lifecycle's `could not resolve …:` prefix (ApiV4Definition);
+  - `ResourceLifecycle.Status` sets the status fields the lifecycle does not manage, such as the deprecated `processingStatus` (`apiv4.SetProcessingStatus`);
+  - checks a resource ran before its references on master run in its own webhook before the lifecycle (the v4 API type and subscribed plans in `internal/admission/api/v4/ctrl.go`).
 
 ### AM client (internal/am/)
 
