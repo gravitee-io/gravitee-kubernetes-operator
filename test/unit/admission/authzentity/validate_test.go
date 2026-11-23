@@ -125,6 +125,23 @@ var _ = Describe("Validating an AuthzEntity", func() {
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
+	// The dry run and drift both skip on the same reason: the API server shows a warning once.
+	It("skips the dry run and drift of a spec change while an AuthzPdp is pending", func() {
+		cluster()
+		oldObj := newEntity("agents-group", "agents", byRef("orders-eu"))
+		oldObj.Status.ID = "3b9d0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
+		newObj := oldObj.DeepCopy()
+		newObj.Spec.EntityType = "Team"
+
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(HaveLen(2))
+		Expect(warnings).To(HaveEach("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
 	It("refuses a pdpRef naming another kind, naming its index", func() {
 		cluster()
 		mcp := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu", Kind: "McpProxy"}}
@@ -133,6 +150,20 @@ var _ = Describe("Validating an AuthzEntity", func() {
 
 		Expect(err).To(MatchError(ContainSubstring(
 			"targets[1].pdpRef [travel/orders-eu]: kind must be AuthzPdp, got [McpProxy]")))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	It("refuses every pdpRef naming another kind in one message", func() {
+		cluster()
+		mcp := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu", Kind: "McpProxy"}}
+		schema := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "travel", Namespace: "shared", Kind: "AuthzSchema"}}
+
+		_, err := ctrl.ValidateCreate(ctx,
+			newEntity("agents-group", "agents", mcp, authzpdp.Target{Scope: "default"}, schema))
+
+		Expect(err).To(MatchError(ContainSubstring(
+			"targets[0].pdpRef [travel/orders-eu]: kind must be AuthzPdp, got [McpProxy]; " +
+				"targets[2].pdpRef [shared/travel]: kind must be AuthzPdp, got [AuthzSchema]")))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 

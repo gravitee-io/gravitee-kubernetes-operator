@@ -204,6 +204,12 @@ func (l ResourceLifecycle[T, D, C, R]) delete(ctx context.Context, obj, dc T) er
 	}
 	api, dto, err := l.clientAndDTO(ctx, dc)
 	if err != nil {
+		if clientNotFound(err) {
+			// The same holds for what the client factory reads: the Secret of a context, deleted first in
+			// a namespace teardown, leaves no credentials to clean up with.
+			l.removeFinalizer(obj)
+			return nil
+		}
 		return err
 	}
 	if l.DeleteGuard != nil {
@@ -222,6 +228,13 @@ func (l ResourceLifecycle[T, D, C, R]) removeFinalizer(obj T) {
 	if l.Finalizer != "" {
 		util.RemoveFinalizer(obj, l.Finalizer)
 	}
+}
+
+// clientNotFound tells whether clientAndDTO failed because the client factory read a reference that does not
+// exist. A mapping error is an IllegalStateError, never this.
+func clientNotFound(err error) bool {
+	var re gerrors.ReconcileError
+	return errors.As(err, &re) && re.Type == gerrors.ResolveRefError && apierrors.IsNotFound(err)
 }
 
 func (l ResourceLifecycle[T, D, C, R]) clientAndDTO(ctx context.Context, dc T) (C, D, error) {
