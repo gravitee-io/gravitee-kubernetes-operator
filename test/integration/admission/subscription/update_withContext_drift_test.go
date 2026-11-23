@@ -5,8 +5,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
+	apimtest "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -67,9 +66,9 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 
 		newObj := fixtures.Subscription.DeepCopy()
 
-		apim := apim.NewClient(ctx)
+		apim := apimtest.NewClient(ctx)
 
-		_, err := apim.Subscriptions.Import(model.SubscriptionDTO{
+		_, err := apim.Subscriptions.Import(apimtest.SubscriptionDTO{
 			ID:       refs.NewNamespacedNameFromObject(fixtures.Subscription).HRID(),
 			ApiID:    refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID(),
 			AppID:    refs.NewNamespacedNameFromObject(fixtures.Application).HRID(),

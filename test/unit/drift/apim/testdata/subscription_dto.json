@@ -1,10 +1,7 @@
 {
-  "id": "12346",
-  "apiId": "456798",
-  "applicationId": "789123",
-  "planId": "keyless",
-  "status": "N/A",
-  "startingAt": "2023-08-25T23:43:16Z",
+  "hrid": "12346",
+  "applicationHrid": "789123",
+  "planHrid": "keyless",
   "endingAt": "2024-08-25T23:43:16Z",
   "metadata": {
     "baz": "puk",
