@@ -88,6 +88,9 @@ func (a AdmissionCtrl) ValidateUpdate(
 	if newObj.IsBeingDeleted() {
 		return nil, nil
 	}
+	// Best effort, as before the lifecycle: the reconcile never touches the ConfigMap of an API that syncs from
+	// management, and some users deny ConfigMap access through RBAC.
+	base.DeleteDefinitionConfigMapIfNeeded(ctx, oldObj, newObj)
 	// The API type and the subscribed plans are checked first, as before the lifecycle: a forbidden change is the
 	// error to report, not the reference or spec errors it leads to. The lifecycle's ImmutableFields would run after
 	// them.
