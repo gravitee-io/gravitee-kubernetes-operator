@@ -43,6 +43,7 @@ var _ = Describe("Errors", func() {
 		Entry("With unauthorized error", errUnauthorized, false),
 		Entry("With bad request", errBadRequest, false),
 		Entry("With bad request reported outside of the control plane", errWrappedBadRequest, true),
+		Entry("With illegal state error", xErrors.NewIllegalStateError(errRaw), false),
 	)
 
 	DescribeTable("ShouldRetry",
@@ -55,7 +56,21 @@ var _ = Describe("Errors", func() {
 		Entry("With unauthorized error, deleting", errUnauthorized, true, true),
 		Entry("With raw error, not deleting", errRaw, false, true),
 		Entry("With raw error, deleting", errRaw, true, true),
+		Entry("With illegal state error, not deleting", xErrors.NewIllegalStateError(errRaw), false, false),
 		Entry("With illegal state error, deleting", xErrors.NewIllegalStateError(errRaw), true, true),
+	)
+
+	DescribeTable("IsIllegalState",
+		func(given error, expected bool) {
+			Expect(xErrors.IsIllegalState(given)).To(Equal(expected))
+		},
+		Entry("With illegal state error", xErrors.NewIllegalStateError(errRaw), true),
+		Entry("With illegal state error wrapped", fmt.Errorf("resolve: %w", xErrors.NewIllegalStateError(errRaw)), true),
+		Entry("With resolve ref error", xErrors.NewResolveRefError(errRaw), false),
+		Entry("With illegal state error inside a resolve ref error",
+			xErrors.NewResolveRefError(xErrors.NewIllegalStateError(errRaw)), false),
+		Entry("With raw error", errRaw, false),
+		Entry("With nil error", nil, false),
 	)
 
 	DescribeTable("context error",
