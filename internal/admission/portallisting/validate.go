@@ -19,7 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -48,7 +48,7 @@ func validateCreate(ctx context.Context, listing *v1alpha1.PortalListing) *error
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, listing, prtl))
+	errs.MergeWith(validateDryRun(ctx, listing))
 	return errs
 }
 
@@ -99,30 +99,24 @@ func validateApiKinds(listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
 	return errs
 }
 
-func validateDryRun(ctx context.Context, listing *v1alpha1.PortalListing, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	cp := listing.DeepCopy()
-
-	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
+	client, err := apimportallisting.CreateAPIMClient(ctx, listing)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	status, err := apimClient.Listings.DryRunCreateOrUpdate(cp, prtl)
+	dto, err := apimportallisting.ToDTO(listing)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
+	findings, err := apimportallisting.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
 	}
-
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
-
+	errs.MergeWith(findings)
 	return errs
 }
 

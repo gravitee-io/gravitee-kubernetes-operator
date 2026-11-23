@@ -17,65 +17,52 @@ package portallisting
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
+	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
+// mergeDriftValidation compares through the SDK client of the portal's context, not the APIM facade: the
+// resolver builds that client, only once drift is known to be enabled, and hands no facade to the getter.
 func mergeDriftValidation(
 	ctx context.Context,
 	oldListing *v1alpha1.PortalListing,
 	newListing *v1alpha1.PortalListing,
 	errs *errors.AdmissionErrors,
 ) {
-	prtl, err := dynamic.ResolvePortal(ctx, newListing.GetPortalRef(), newListing.GetNamespace())
-	if err != nil {
-		errs.AddSeveref(
-			"portal listing [%s] references portal [%v] that can't be resolved",
-			newListing.GetName(), newListing.GetPortalRef(),
-		)
+	if validatePortal(ctx, newListing, errs) == nil {
 		return
 	}
-	if !prtl.HasContext() {
-		errs.AddSeveref(
-			"referenced portal [%v] has no management context (spec.contextRef)",
-			newListing.GetPortalRef(),
-		)
-		return
+	var client *apim.SDKClient
+	resolveContext := func(ctx context.Context) (*apim.APIM, error) {
+		var err error
+		client, err = apimportallisting.CreateAPIMClient(ctx, newListing)
+		return nil, err
 	}
-
-	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldListing, newListing,
-		func(ctx context.Context) (*apim.APIM, error) {
-			return apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
-		},
-		resolveRefs,
-		getRemotePortalListing(prtl),
-		drift.MapDTO(func(listing *v1alpha1.PortalListing) model.PortalListingDTO {
-			return *service.ToPortalListingDTO(listing)
-		}),
-	))
+	getRemote := func(_ *apim.APIM, listing *v1alpha1.PortalListing) (any, error) {
+		dto, err := apimportallisting.ToDTO(listing)
+		if err != nil {
+			return nil, err
+		}
+		return apimportallisting.GetRemote(ctx, client, dto)
+	}
+	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldListing, newListing, resolveContext, resolveRefs,
+		getRemote, drift.MapDTO(toDTO)))
 }
 
 func resolveRefs(context.Context, *v1alpha1.PortalListing) error {
 	return nil
 }
 
-func getRemotePortalListing(prtl *v1alpha1.Portal) drift.RemoteObjectGetter[*v1alpha1.PortalListing] {
-	return func(apimClient *apim.APIM, listing *v1alpha1.PortalListing) (any, error) {
-		dto := service.ToPortalListingDTO(listing)
-		portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
-		remote, err := apimClient.Listings.GetByHRID(portalHrid, dto.HRID)
-		if err != nil {
-			return nil, err
-		}
-		return model.PortalListingDTO{
-			HRID: remote.HRID,
-			APIs: remote.APIs,
-		}, nil
+// toDTO maps the CRD to the payload compared with the remote. getRemote maps the new object first and
+// hands its error to the fetch failure policy: only the old object can reach here unmapped, and it is
+// compared as an empty payload.
+func toDTO(listing *v1alpha1.PortalListing) apimportallisting.DTO {
+	dto, err := apimportallisting.ToDTO(listing)
+	if err != nil {
+		return apimportallisting.DTO{}
 	}
+	return dto
 }

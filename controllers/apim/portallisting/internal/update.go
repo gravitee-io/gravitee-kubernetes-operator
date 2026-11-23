@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
@@ -38,20 +38,20 @@ func CreateOrUpdate(ctx context.Context, listing *v1alpha1.PortalListing) error 
 		)
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
+	client, err := apimportallisting.CreateAPIMClient(ctx, listing)
 	if err != nil {
 		return err
 	}
 
-	status, err := apimClient.Listings.CreateOrUpdate(listing, prtl)
+	dto, err := apimportallisting.ToDTO(listing)
+	if err != nil {
+		return gerrors.NewIllegalStateError(err)
+	}
+
+	resp, err := apimportallisting.Upsert(ctx, client, dto)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	// Setting fields by fields to keep the rest intact
-	listing.Status.ID = status.ID
-	listing.Status.OrgID = status.OrgID
-	listing.Status.EnvID = status.EnvID
-
-	return nil
+	return apimportallisting.UpdateStatus(ctx, listing, resp)
 }
