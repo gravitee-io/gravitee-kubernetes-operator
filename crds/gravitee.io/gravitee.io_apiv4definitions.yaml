@@ -1521,7 +1521,7 @@ spec:
                       hrid:
                         type: string
                       id:
-                        description: Plan ID
+                        description: The ID of the plan.
                         type: string
                       mode:
                         allOf:
