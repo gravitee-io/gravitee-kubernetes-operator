@@ -72,13 +72,22 @@ func validateTargetKind(schema *v1alpha1.AuthzSchema) error {
 	return nil
 }
 
-// deferDryRun skips the dry run while the target's AuthzPdp is pending: the platform has no routing scope to
-// check the schema against yet.
+// syncedDuringAdmission is why deferDryRun skips the dry run of a target whose AuthzPdp synced after resolveRefs
+// read it.
+const syncedDuringAdmission = "platform checks deferred (an AuthzPdp synced during admission)"
+
+// deferDryRun skips the dry run while resolveRefs has left the pdpRef as written, which it does for a pending
+// AuthzPdp only: the platform has no routing scope to check the schema against yet. The AuthzPdp is read again to
+// name it. One that synced since resolveRefs read it still defers: ToDTO cannot map an unresolved pdpRef.
 func deferDryRun(ctx context.Context, schema *v1alpha1.AuthzSchema) string {
-	if _, err := dynamic.ResolveAuthzTarget(ctx, schema, schema.Spec.Target); dynamic.IsAuthzPdpPending(err) {
+	target := schema.Spec.Target
+	if target == nil || target.PdpRef == nil {
+		return ""
+	}
+	if _, err := dynamic.ResolveAuthzTarget(ctx, schema, target); err != nil {
 		return fmt.Sprintf("platform checks deferred (%s)", err)
 	}
-	return ""
+	return syncedDuringAdmission
 }
 
 // deferDrift skips drift while either version cannot be mapped as the platform holds it. A pending target gives

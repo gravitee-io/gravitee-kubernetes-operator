@@ -691,9 +691,13 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(r.upserted).To(BeEmpty())
-			accepted := condition(fetch(cli, "g1"), k8s.ConditionAccepted)
+			g := fetch(cli, "g1")
+			accepted := condition(g, k8s.ConditionAccepted)
 			Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
 			Expect(accepted.Message).To(ContainSubstring("ref of another context"))
+			// k8s.ErrorToCondition sets ResolvedRefs=False for a ResolveRefError only, as the AuthZ
+			// controllers have always reported a ref of another context.
+			Expect(condition(g, k8s.ConditionResolvedRefs).Status).To(Equal(metav1.ConditionTrue))
 		})
 	})
 

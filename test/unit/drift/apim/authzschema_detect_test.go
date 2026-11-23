@@ -41,6 +41,11 @@ var _ = Describe("Authz schema Drift detection", func() {
 			minimalAuthzSchemaDTO(),
 			minimalAuthzSchemaDTO(),
 		),
+		// GKO's DTO held the target as a string: left out and "" compare equal.
+		Entry("target left out against an empty target",
+			minimalAuthzSchemaDTO(),
+			withAuthzSchemaEmptyTarget(minimalAuthzSchemaDTO()),
+		),
 		Entry("hrid is identity, not payload",
 			withAuthzSchemaHRID(completeAuthzSchemaDTO(), "default-drift-full"),
 			withAuthzSchemaHRID(completeAuthzSchemaDTO(), "something-else"),
@@ -124,5 +129,11 @@ func withAuthzSchemaTarget(dto sdk.AuthzSchema, target string) sdk.AuthzSchema {
 	if target != "" {
 		dto.Target = new(target)
 	}
+	return dto
+}
+
+// withAuthzSchemaEmptyTarget sets the target to "", as a platform answering an empty string would.
+func withAuthzSchemaEmptyTarget(dto sdk.AuthzSchema) sdk.AuthzSchema {
+	dto.Target = new("")
 	return dto
 }
