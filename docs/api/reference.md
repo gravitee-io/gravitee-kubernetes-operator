@@ -748,7 +748,7 @@ _Appears in:_
 | `background` _string_ | The base64 encoded background to use for this application when displaying it on the portal |  | Optional: \{\} <br /> |
 | `domain` _string_ | Application domain |  | Optional: \{\} <br /> |
 | `groups` _string array_ | Application groups |  | Optional: \{\} <br /> |
-| `picture` _string_ | The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL) |  | Optional: \{\} <br /> |
+| `picture` _string_ | Deprecated: ignored by APIM, will be removed in 2027-12. Use pictureUrl.<br />The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL) |  | Optional: \{\} <br /> |
 | `pictureUrl` _string_ | A URL pointing to the picture to use when displaying the application on the portal |  | Optional: \{\} <br /> |
 | `settings` _[Setting](#setting)_ | Application settings |  | Required: \{\} <br /> |
 | `notifyMembers` _boolean_ | Notify members when they are added to the application |  | Optional: \{\} <br /> |
@@ -2272,7 +2272,7 @@ _Appears in:_
 | `background` _string_ | The base64 encoded background to use for this application when displaying it on the portal |  | Optional: \{\} <br /> |
 | `domain` _string_ | Application domain |  | Optional: \{\} <br /> |
 | `groups` _string array_ | Application groups |  | Optional: \{\} <br /> |
-| `picture` _string_ | The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL) |  | Optional: \{\} <br /> |
+| `picture` _string_ | Deprecated: ignored by APIM, will be removed in 2027-12. Use pictureUrl.<br />The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL) |  | Optional: \{\} <br /> |
 | `pictureUrl` _string_ | A URL pointing to the picture to use when displaying the application on the portal |  | Optional: \{\} <br /> |
 | `settings` _[Setting](#setting)_ | Application settings |  | Required: \{\} <br /> |
 | `notifyMembers` _boolean_ | Notify members when they are added to the application |  | Optional: \{\} <br /> |
@@ -2770,7 +2770,7 @@ _Appears in:_
 | `value` _string_ | Metadata Value |  | Optional: \{\} <br /> |
 | `defaultValue` _string_ | Metadata DefaultValue |  | Optional: \{\} <br /> |
 | `format` _[MetaDataFormat](#metadataformat)_ | Metadata Format |  | Enum: [STRING NUMERIC BOOLEAN DATE MAIL URL] <br /> |
-| `hidden` _boolean_ | Metadata is hidden or not? |  | Optional: \{\} <br /> |
+| `hidden` _boolean_ | Deprecated: ignored by APIM, will be removed in 2027-12.<br />Metadata is hidden or not? |  | Optional: \{\} <br /> |
 
 
 #### MfaSettings

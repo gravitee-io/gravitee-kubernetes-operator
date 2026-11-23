@@ -40,6 +40,7 @@ func validateCreate(ctx context.Context, app *v1alpha1.Application) *errors.Admi
 	if errs.IsSevere() {
 		return errs
 	}
+	errs.MergeWith(WarnDeprecatedFields(app))
 	errs.Add(ctxref.Validate(ctx, app))
 	if errs.IsSevere() {
 		return errs
@@ -71,6 +72,7 @@ func validateUpdate(
 	if errs.IsSevere() {
 		return errs
 	}
+	errs.MergeWith(WarnDeprecatedFields(newApp))
 	errs.Add(ctxref.Validate(ctx, newApp))
 	if errs.IsSevere() {
 		return errs
@@ -95,6 +97,25 @@ func validateUpdate(
 	}
 	mergeDriftValidation(ctx, oldApp, newApp, errs)
 
+	return errs
+}
+
+// WarnDeprecatedFields warns about each field set that APIM ignores and that will be removed in 2027-12.
+func WarnDeprecatedFields(app *v1alpha1.Application) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	if app.Spec.Picture != nil {
+		errs.AddWarning("[spec.picture] is deprecated and ignored by APIM, it will be removed in 2027-12; " +
+			"use [spec.pictureUrl]")
+	}
+	if app.Spec.Metadata == nil {
+		return errs
+	}
+	for _, metadata := range *app.Spec.Metadata {
+		if metadata.Hidden != nil {
+			errs.AddWarningf("[spec.metadata[%s].hidden] is deprecated and ignored by APIM, "+
+				"it will be removed in 2027-12", metadata.Name)
+		}
+	}
 	return errs
 }
 

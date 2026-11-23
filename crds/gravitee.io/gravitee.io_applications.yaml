@@ -126,7 +126,11 @@ spec:
                           - URL
                         type: string
                       hidden:
-                        description: Metadata is hidden or not?
+                        description: >-
+                          Deprecated: ignored by APIM, will be removed in
+                          2027-12.
+
+                          Metadata is hidden or not?
                         type: boolean
                       name:
                         description: Metadata Name
@@ -145,8 +149,8 @@ spec:
                   description: Notify members when they are added to the application
                   type: boolean
                 picture:
-                  description: The base64 encoded picture to use for this application when
-                    displaying it on the portal (if not...
+                  description: "Deprecated: ignored by APIM, will be removed in 2027-12. Use
+                    pictureUrl."
                   type: string
                 pictureUrl:
                   description: A URL pointing to the picture to use when displaying the
