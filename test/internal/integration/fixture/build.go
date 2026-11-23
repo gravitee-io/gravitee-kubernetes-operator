@@ -512,6 +512,15 @@ func setupIDPGroupMapping(obj *Objects, idpGroupMapping **v1alpha1.IDPGroupMappi
 	obj.IDPGroupMapping = *idpGroupMapping
 	obj.IDPGroupMapping.Name += suffix
 	obj.IDPGroupMapping.Namespace = constants.Namespace
+
+	// Group names are matched exactly: follow the random suffix given to the fixture group.
+	if obj.Group != nil {
+		for i, group := range obj.IDPGroupMapping.Spec.Groups {
+			if group+suffix == obj.Group.Spec.Name {
+				obj.IDPGroupMapping.Spec.Groups[i] = obj.Group.Spec.Name
+			}
+		}
+	}
 }
 
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
