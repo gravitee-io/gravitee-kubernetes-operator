@@ -68,11 +68,6 @@ var _ = Describe("Authz entity Drift detection", func() {
 			completeAuthzEntityDTO(),
 			withAuthzEntityTargets(completeAuthzEntityDTO(), []string{"default", "drift-full@eu"}),
 		),
-		// The platform always answers active: GKO's DTO held it as a bool, absent and false compare equal.
-		Entry("active false against active left out",
-			withAuthzEntityActive(completeAuthzEntityDTO(), new(false)),
-			withAuthzEntityActive(completeAuthzEntityDTO(), nil),
-		),
 		Entry("absent parents against the platform's []",
 			withAuthzEntityParents(completeAuthzEntityDTO(), nil),
 			withAuthzEntityParents(completeAuthzEntityDTO(), []sdk.AuthzEntityParent{}),
@@ -122,6 +117,11 @@ var _ = Describe("Authz entity Drift detection", func() {
 		Entry("deactivated on the platform",
 			completeAuthzEntityDTO(),
 			withAuthzEntityActive(completeAuthzEntityDTO(), new(false)),
+		),
+		// active defaults to true in the API: an entity answered without it is active.
+		Entry("declared inactive, answered without active",
+			withAuthzEntityActive(completeAuthzEntityDTO(), new(false)),
+			withAuthzEntityActive(completeAuthzEntityDTO(), nil),
 		),
 	)
 
