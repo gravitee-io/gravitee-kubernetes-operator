@@ -32,12 +32,10 @@ type PlanValidation string
 
 type Plan struct {
 	// +kubebuilder:validation:Optional
-	// The ID of the plan. Set it to take over an existing plan
-	// of the same API in the same environment, as when applying
-	// an API exported from APIM.
-	// An ApiV4Definition with a management context uses it only
-	// when spec.id is set; otherwise APIM assigns the plan ID.
-	// If not set, the ID is generated or assigned by APIM.
+	// The plan ID, for an ApiV4Definition with spec.id set or without a management context.
+	// Ignored by ApiDefinition (v2).
+	// With spec.id set, it takes over the existing plan of the same API in the same
+	// environment, as in an API exported from APIM. If not set, the ID is generated.
 	ID string `json:"id,omitempty"`
 	// The plan Cross ID.
 	// This field is used to identify plans defined for an API
