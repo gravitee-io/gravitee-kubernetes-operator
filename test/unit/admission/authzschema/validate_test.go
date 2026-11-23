@@ -70,6 +70,7 @@ var _ = Describe("Validating an AuthzSchema target", func() {
 
 	BeforeEach(func() {
 		platformCalls.Store(0)
+		platformAnswer.Store(nil)
 	})
 
 	It("warns and skips the dry run when the AuthzPdp does not exist yet", func() {
@@ -158,6 +159,25 @@ var _ = Describe("Validating an AuthzSchema target", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(ConsistOf("platform checks deferred (an AuthzPdp synced during admission)"))
 		Expect(platformCalls.Load()).To(BeZero())
+	})
+
+	// The AuthzPdp the stored schema targets was deleted, and the platform removed its scope from the
+	// document: comparing the old target would refuse the edit that retargets the schema.
+	It("dry-runs a retarget away from a deleted AuthzPdp and skips drift", func() {
+		cluster()
+		platformAnswer.Store(new(`{"hrid":"travel-travel-schema"}`))
+		oldObj := schema(byRef(refs.NamespacedName{Name: "orders-eu"}))
+		oldObj.Status.ID = "7a1e0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
+		newObj := oldObj.DeepCopy()
+		newObj.Spec.Target = &authzpdp.Target{Scope: "default"}
+
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the previous target no longer resolves: " +
+			"authz pdp not found: [travel/orders-eu]"))
+		Expect(platformCalls.Load()).To(BeEquivalentTo(1), "the new spec is dry-run, the remote is not read")
 	})
 
 	It("refuses a pdpRef naming another kind", func() {

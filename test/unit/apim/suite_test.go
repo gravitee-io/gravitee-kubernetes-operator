@@ -54,8 +54,12 @@ var acceptedStates = map[string]string{
 // suffix.
 var lastReceived sync.Map
 
-// deletedPaths holds the path of every DELETE the accepting APIM answered.
+// deletedPaths holds the path of every DELETE the accepting APIM answered during the current spec.
 var deletedPaths sync.Map
+
+var _ = BeforeEach(func() {
+	deletedPaths.Clear()
+})
 
 // wasDeleted tells whether the accepting APIM answered a DELETE on a path ending with suffix.
 func wasDeleted(suffix string) bool {
