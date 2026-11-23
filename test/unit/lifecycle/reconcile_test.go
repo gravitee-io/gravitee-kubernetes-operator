@@ -408,6 +408,35 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			Expect(r.deleted).To(BeEmpty())
 			Expect(fetch(cli, "g1").Finalizers).To(ContainElement(testFinalizer))
 		})
+
+		// The context resolves, but its Secret was deleted first, in a namespace teardown for instance.
+		It("releases the finalizer of a delete without calling Delete when what it reads is gone", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			l.ClientFactory = func(context.Context, *v1alpha1.Group) (*testClient, error) {
+				notFound := apierrors.NewNotFound(corev1.Resource("secrets"), "token")
+				return nil, fmt.Errorf("resolve secret: %w", notFound)
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(r.deleted).To(BeEmpty())
+			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("still requeues a delete when ToDTO cannot map the resource", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			l.ToDTO = failToDTO
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(reconcileErrorType(err)).To(Equal(gerrors.IllegalStateError))
+			Expect(r.deleted).To(BeEmpty())
+			Expect(fetch(cli, "g1").Finalizers).To(ContainElement(testFinalizer))
+		})
 	})
 
 	Describe("Owner", func() {
