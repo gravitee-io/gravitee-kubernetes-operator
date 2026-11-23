@@ -98,7 +98,8 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 	// Nil skips resolution and the ResolvedRefs condition. Use the same func as AdmissionLifecycle.ResolveRefs,
 	// or a stricter one that waits on refs the webhook defers with DeferDryRun.
 	// An error is a ResolveRefError, requeued, unless it is an IllegalStateError: a ref that only a spec change
-	// can fix is reported on Accepted and not requeued.
+	// can fix is reported on Accepted and, outside a delete, not requeued. ResolvedRefs then keeps its default
+	// status, True, as k8s.ErrorToCondition sets it for every class but ResolveRefError.
 	// On delete, a NotFound reference means nothing is left to clean: the finalizer is released
 	// without calling Delete.
 	ResolveRefs RefResolverFunc[T]
@@ -172,7 +173,8 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 
 	// DeferDrift skips drift while the stored object is not what the remote holds (its last apply was refused) or
 	// cannot be mapped (a reference gone since). Runs before GetRemote, after DryRun, which it never skips: the
-	// dry run validates the edit that fixes the object. Nil always compares.
+	// dry run validates the edit that fixes the object. Not called for an object without an ID or with drift
+	// detection disabled. Nil always compares.
 	DeferDrift DeferDriftFunc[T]
 
 	// DeleteGuard runs on delete review only. Nil skips.
