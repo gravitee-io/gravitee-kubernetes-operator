@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzschema"
@@ -107,6 +108,55 @@ var _ = Describe("Validating an AuthzSchema target", func() {
 		Expect(err).ToNot(HaveOccurred())
 		// Drift is skipped too: the target cannot be compared before it resolves.
 		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
+		Expect(platformCalls.Load()).To(BeZero())
+	})
+
+	// The dry run and drift both skip on the same reason: the API server shows a warning once.
+	It("skips the dry run and drift of a spec change while the AuthzPdp is pending", func() {
+		cluster()
+		oldObj := schema(byRef(refs.NamespacedName{Name: "orders-eu"}))
+		oldObj.Status.ID = "7a1e0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
+		newObj := oldObj.DeepCopy()
+		newObj.Spec.Name = "Travel schema v2"
+
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(HaveLen(2))
+		Expect(warnings).To(HaveEach("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
+		Expect(platformCalls.Load()).To(BeZero())
+	})
+
+	// resolveRefs reads the AuthzPdp unsynced and leaves the pdpRef as written; deferDryRun reads it
+	// synced. Dry-running would map an unresolved pdpRef, which ToDTO refuses.
+	It("skips the dry run when the AuthzPdp syncs during admission", func() {
+		scheme := runtime.NewScheme()
+		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
+		reads := 0
+		k8s.RegisterClient(fake.NewClientBuilder().
+			WithScheme(scheme).
+			WithObjects(pdp(devCtx, "")).
+			WithInterceptorFuncs(interceptor.Funcs{
+				Get: func(ctx context.Context, c client.WithWatch, key client.ObjectKey, obj client.Object,
+					opts ...client.GetOption) error {
+					if err := c.Get(ctx, key, obj, opts...); err != nil {
+						return err
+					}
+					if synced, isPdp := obj.(*v1alpha1.AuthzPdp); isPdp {
+						if reads++; reads > 1 {
+							synced.Status.RoutingScope = "orders@eu"
+						}
+					}
+					return nil
+				},
+			}).
+			Build())
+
+		warnings, err := ctrl.ValidateCreate(ctx, schema(byRef(refs.NamespacedName{Name: "orders-eu"})))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("platform checks deferred (an AuthzPdp synced during admission)"))
 		Expect(platformCalls.Load()).To(BeZero())
 	})
 
