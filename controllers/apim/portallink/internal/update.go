@@ -19,23 +19,17 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-// resolvedParent carries everything needed to sync a PortalLink to its owning
-// portal or API: the management context ref to authenticate against and the
-// parent identifier injected into the automation endpoint path.
+// resolvedParent is what reconcile checks on the PortalLink's owning portal or API
+// before syncing: whether it carries a management context.
 type resolvedParent struct {
 	name       string
 	kind       string
 	hasContext bool
-	contextRef core.ObjectRef
-	contextNs  string
-	parent     service.LinkParent
 }
 
 // resolveParent resolves the link's owning Portal or API and derives the
@@ -67,9 +61,6 @@ func resolveParent(ctx context.Context, link *v1alpha1.PortalLink) (*resolvedPar
 			name:       prtl.GetName(),
 			kind:       "portal",
 			hasContext: prtl.HasContext(),
-			contextRef: prtl.ContextRef(),
-			contextNs:  prtl.GetNamespace(),
-			parent:     service.LinkParent{Portal: prtl},
 		}, nil
 	}
 
@@ -81,9 +72,6 @@ func resolveParent(ctx context.Context, link *v1alpha1.PortalLink) (*resolvedPar
 		name:       api.GetName(),
 		kind:       "API",
 		hasContext: api.HasContext(),
-		contextRef: api.ContextRef(),
-		contextNs:  api.GetNamespace(),
-		parent:     service.LinkParent{API: api},
 	}, nil
 }
 
@@ -99,20 +87,20 @@ func CreateOrUpdate(ctx context.Context, link *v1alpha1.PortalLink) error {
 		)
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, parent.contextRef, parent.contextNs)
+	client, err := apimportallink.CreateAPIMClient(ctx, link)
 	if err != nil {
 		return err
 	}
 
-	status, err := apimClient.Links.CreateOrUpdate(link, parent.parent)
+	dto, err := apimportallink.ToDTO(link)
+	if err != nil {
+		return gerrors.NewIllegalStateError(err)
+	}
+
+	resp, err := apimportallink.Upsert(ctx, client, dto)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	// Setting fields by fields to keep the rest intact
-	link.Status.ID = status.ID
-	link.Status.OrgID = status.OrgID
-	link.Status.EnvID = status.EnvID
-
-	return nil
+	return apimportallink.UpdateStatus(ctx, link, resp)
 }

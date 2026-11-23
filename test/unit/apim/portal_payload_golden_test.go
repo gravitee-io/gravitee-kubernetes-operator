@@ -28,6 +28,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
+	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 )
@@ -137,6 +138,10 @@ func sdkPortalPayload(obj any) any {
 		return dto
 	case *v1alpha1.Portal:
 		dto, err := apimportal.ToDTO(o)
+		Expect(err).ToNot(HaveOccurred())
+		return dto
+	case *v1alpha1.PortalLink:
+		dto, err := apimportallink.ToDTO(o)
 		Expect(err).ToNot(HaveOccurred())
 		return dto
 	}
