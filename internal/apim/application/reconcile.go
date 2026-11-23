@@ -32,10 +32,10 @@ func Upsert(ctx context.Context, client *apim.SDKClient, dto DTO) (Response, err
 		return Response{}, err
 	}
 	return Response{
-		State:            state,
-		OrgID:            client.GetOrgID(),
-		EnvID:            client.GetEnvID(),
-		HridContainsUUID: dto.HridContainsUUID,
+		State:  state,
+		OrgID:  client.GetOrgID(),
+		EnvID:  client.GetEnvID(),
+		Legacy: dto.Legacy,
 	}, nil
 }
 
@@ -45,7 +45,7 @@ func upsert(ctx context.Context, client *apim.SDKClient, dto DTO, dryRun bool) (
 		params.IgnoreGroups = new(true)
 	}
 
-	resp, err := client.UpsertApplicationWithResponse(ctx, params, dto.Application, withHridContainsUUID(dto)...)
+	resp, err := client.UpsertApplicationWithResponse(ctx, params, dto.Application, dto.Legacy.editors()...)
 	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
@@ -59,7 +59,7 @@ func upsert(ctx context.Context, client *apim.SDKClient, dto DTO, dryRun bool) (
 
 // Delete removes the application from APIM. An application already gone counts as deleted.
 func Delete(ctx context.Context, client *apim.SDKClient, dto DTO) error {
-	resp, err := client.DeleteApplicationWithResponse(ctx, dto.Identity(), withHridContainsUUID(dto)...)
+	resp, err := client.DeleteApplicationWithResponse(ctx, dto.Identity(), dto.Legacy.editors()...)
 	return errors.IgnoreNotFound(errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}))
@@ -83,7 +83,7 @@ func UpdateStatus(_ context.Context, obj *v1alpha1.Application, resp Response) e
 		obj.Status.Errors.Warning = resp.State.Errors.Warning
 	}
 
-	if !resp.HridContainsUUID {
+	if !resp.Legacy.HridContainsUUID {
 		k8s.AddAutomationAPIManagedCondition(obj)
 	}
 	return nil

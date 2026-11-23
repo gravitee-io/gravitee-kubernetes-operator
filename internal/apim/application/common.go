@@ -18,8 +18,6 @@ package application
 
 import (
 	"context"
-	"net/http"
-	"strconv"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -37,8 +35,8 @@ const defaultMetadataFormat = sdk.MetadataFormat("STRING")
 // never see it. The flags are not sent (Upsert sends the embedded sdk.Application) and drift detection ignores them.
 type DTO struct {
 	sdk.Application
-	// HridContainsUUID is set for an application created before the Automation API: its UUID is sent as the hrid.
-	HridContainsUUID bool `json:"-" drift:"ignore"`
+	// Legacy flags an application created before the Automation API: its UUID is sent as the hrid.
+	Legacy Legacy `json:"-" drift:"ignore"`
 	// IgnoreGroups is set by the gravitee.io/ignore-groups annotation.
 	IgnoreGroups bool `json:"-" drift:"ignore"`
 }
@@ -63,39 +61,9 @@ func ToDTO(obj *v1alpha1.Application) (DTO, error) {
 		Application:  payload,
 		IgnoreGroups: k8s.HasTrueAnnotation(obj, core.IgnoreGroupsAnnotation),
 	}
-	if id := legacyID(obj); id != "" {
-		dto.Hrid = id
-		dto.HridContainsUUID = true
-	} else {
-		dto.Hrid = refs.NewNamespacedNameFromObject(obj).HRID()
-	}
+	dto.Hrid = refs.NewNamespacedNameFromObject(obj).HRID()
+	applyLegacy(&dto, obj)
 	return dto, nil
-}
-
-// legacyID returns the UUID of an application created before the Automation API, or "" for an application
-// addressed by its hrid.
-func legacyID(obj *v1alpha1.Application) string {
-	if k8s.IsAutomationAPIManaged(obj) {
-		return ""
-	}
-	if obj.Status.ID != "" {
-		return obj.Status.ID
-	}
-	return obj.Spec.ID
-}
-
-// withHridContainsUUID tells APIM that the hrid of the request is the UUID of a legacy application.
-// TODO: remove once apim-sdk declares hridContainsUUID on applications (see Case 12)
-func withHridContainsUUID(dto DTO) []sdk.RequestEditorFn {
-	if !dto.HridContainsUUID {
-		return nil
-	}
-	return []sdk.RequestEditorFn{func(_ context.Context, req *http.Request) error {
-		query := req.URL.Query()
-		query.Set("hridContainsUUID", strconv.FormatBool(true))
-		req.URL.RawQuery = query.Encode()
-		return nil
-	}}
 }
 
 // CreateAPIMClient builds the SDK client of the management context the application references.
@@ -109,9 +77,8 @@ type Response struct {
 	State sdk.ApplicationState
 	OrgID string
 	EnvID string
-	// HridContainsUUID is the flag the upsert was sent with: a legacy application does not become
-	// Automation API managed.
-	HridContainsUUID bool
+	// Legacy is what the upsert was sent with: a legacy application does not become Automation API managed.
+	Legacy Legacy
 }
 
 func (r Response) GetOrgID() string {

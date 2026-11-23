@@ -63,7 +63,7 @@ func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error
 		return DTO{}, err
 	}
 	// Spec is a shallow copy of the state: only reassign its fields, never mutate shared slices or maps.
-	remote := DTO{Application: state.Spec(), HridContainsUUID: dto.HridContainsUUID, IgnoreGroups: dto.IgnoreGroups}
+	remote := DTO{Application: state.Spec(), Legacy: dto.Legacy, IgnoreGroups: dto.IgnoreGroups}
 	if dto.IgnoreGroups {
 		// APIM owns the groups under ignore-groups: report the CR's own, so they are never compared.
 		remote.Groups = dto.Groups
@@ -73,7 +73,7 @@ func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error
 
 // GetState fetches the application state from APIM, including the server-managed fields (id, status).
 func GetState(ctx context.Context, client *apim.SDKClient, dto DTO) (sdk.ApplicationState, error) {
-	resp, err := client.GetApplicationWithResponse(ctx, dto.Identity(), withHridContainsUUID(dto)...)
+	resp, err := client.GetApplicationWithResponse(ctx, dto.Identity(), dto.Legacy.editors()...)
 	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}); err != nil {
