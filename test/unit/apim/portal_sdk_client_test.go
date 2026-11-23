@@ -24,7 +24,9 @@ import (
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portal"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallink"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -32,6 +34,7 @@ import (
 	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
 	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
+	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
 	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -302,6 +305,89 @@ var _ = Describe("Portal navigation SDK packages", func() {
 			Expect(apimportallink.Delete(ctx, client, toDTO(newLink(nil, &refs.NamespacedName{Name: "pets"})))).
 				To(Succeed())
 			Expect(fake.lastRequest().Path).To(Equal(automationEnvPath + "/apis/default-pets/links/default-docs"))
+		})
+	})
+	Describe("PortalListing", func() {
+		newListing := func() *v1alpha1.PortalListing {
+			return &v1alpha1.PortalListing{
+				ObjectMeta: metav1.ObjectMeta{Name: "catalog", Namespace: "default"},
+				Spec: v1alpha1.PortalListingSpec{Type: portallisting.Type{
+					Portal: refs.NamespacedName{Name: "dev"},
+					APIs: []portallisting.ApiEntry{
+						{Ref: refs.NamespacedName{Name: "pets"}, Location: "/alpha", Order: new(int32(2))},
+						{Ref: refs.NamespacedName{Name: "orders", Namespace: "apis"}, Location: "/beta",
+							Visibility: new(nav.Private)},
+					},
+				}},
+			}
+		}
+		toDTO := func(listing *v1alpha1.PortalListing) apimportallisting.DTO {
+			GinkgoHelper()
+			dto, err := apimportallisting.ToDTO(listing)
+			Expect(err).ToNot(HaveOccurred())
+			return dto
+		}
+
+		BeforeEach(func() {
+			fake.response = portalState(`"hrid": "default-catalog", "apis": [
+				{"apiHrid": "default-pets", "location": "/alpha", "order": 2},
+				{"apiHrid": "apis-orders", "location": "/beta", "visibility": "PRIVATE"}]`)
+		})
+
+		It("maps the entries, the API namespace defaulting to the listing's", func() {
+			Expect(toDTO(newListing())).To(Equal(apimportallisting.DTO{
+				PortalListing: sdk.PortalListing{Hrid: "default-catalog", Apis: []sdk.PortalListingApiEntry{
+					{ApiHrid: "default-pets", Location: "/alpha", Order: new(2)},
+					{ApiHrid: "apis-orders", Location: "/beta", Visibility: new(sdk.PortalVisibilityPRIVATE)},
+				}},
+				PortalHrid: "default-dev",
+			}))
+		})
+
+		It("upserts under its portal and copies the ids into the status", func() {
+			listing := newListing()
+			resp, err := apimportallisting.Upsert(ctx, client, toDTO(listing))
+			Expect(err).ToNot(HaveOccurred())
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodPut))
+			Expect(req.Path).To(Equal(automationEnvPath + "/portals/default-dev/listings"))
+			Expect(req.Query.Get("dryRun")).To(Equal("false"))
+			Expect(req.Body).ToNot(HaveKey("portalRef"))
+
+			Expect(apimportallisting.UpdateStatus(ctx, listing, resp)).To(Succeed())
+			Expect(listing.Status.ID).To(Equal("7a1c"))
+			Expect(listing.Status.OrgID).To(Equal("DEFAULT"))
+			Expect(listing.Status.EnvID).To(Equal("DEV"))
+			Expect(k8s.IsAutomationAPIManaged(listing)).To(BeTrue())
+		})
+
+		It("returns the dry run findings", func() {
+			errs, err := apimportallisting.DryRun(ctx, client, toDTO(newListing()))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fake.lastRequest().Query.Get("dryRun")).To(Equal("true"))
+			Expect(errs.Severe).To(ConsistOf(MatchError("severe one")))
+			Expect(errs.Warning).To(ConsistOf(MatchError("warning one")))
+		})
+
+		It("gets the remote under its portal as the payload a PUT sends", func() {
+			dto := toDTO(newListing())
+			remote, err := apimportallisting.GetRemote(ctx, client, dto)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fake.lastRequest().Path).To(Equal(automationEnvPath + "/portals/default-dev/listings/default-catalog"))
+			Expect(remote).To(Equal(dto))
+		})
+
+		It("reports a listing missing in APIM as not found, and deletes one already gone", func() {
+			fake.status = http.StatusNotFound
+			dto := toDTO(newListing())
+
+			_, err := apimportallisting.GetRemote(ctx, client, dto)
+			Expect(errors.IsNotFound(err)).To(BeTrue())
+
+			Expect(apimportallisting.Delete(ctx, client, dto)).To(Succeed())
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodDelete))
+			Expect(req.Path).To(Equal(automationEnvPath + "/portals/default-dev/listings/default-catalog"))
 		})
 	})
 })

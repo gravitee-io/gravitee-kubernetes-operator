@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
 	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
+	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
 	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 )
 
@@ -67,5 +68,21 @@ func (a *APIM) ImportPortalLink(ctx context.Context, link *v1alpha1.PortalLink) 
 		return err
 	}
 	_, err = apimportallink.Upsert(ctx, a.SDK, dto)
+	return err
+}
+
+// GetPortalListing gets a listing state by its portal HRID and its HRID, server-managed fields included.
+func (a *APIM) GetPortalListing(ctx context.Context, portalHrid, hrid string) (sdk.PortalListingState, error) {
+	return apimportallisting.GetState(ctx, a.SDK,
+		apimportallisting.DTO{PortalListing: sdk.PortalListing{Hrid: hrid}, PortalHrid: portalHrid})
+}
+
+// ImportPortalListing creates or updates a listing in APIM outside the operator, under its portal.
+func (a *APIM) ImportPortalListing(ctx context.Context, listing *v1alpha1.PortalListing) error {
+	dto, err := apimportallisting.ToDTO(listing)
+	if err != nil {
+		return err
+	}
+	_, err = apimportallisting.Upsert(ctx, a.SDK, dto)
 	return err
 }
