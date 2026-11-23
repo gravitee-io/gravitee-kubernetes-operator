@@ -17,11 +17,10 @@ package subscription
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	subscriptionsdk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -38,35 +37,26 @@ func mergeDriftValidation(
 		drift.ValidateDriftWithContext(ctx, oldSub, newSub,
 			resolveContext(app),
 			resolveRefs,
-			remoteSubscriptionGetter(api),
+			remoteSubscriptionGetter(ctx, api, app),
 			dtoMapper(api, app)),
 	)
 }
 
-func remoteSubscriptionGetter(api core.ApiDefinitionObject) drift.RemoteObjectGetter[*v1alpha1.Subscription] {
+func remoteSubscriptionGetter(
+	ctx context.Context,
+	api core.ApiDefinitionObject,
+	app core.ApplicationObject,
+) drift.RemoteObjectGetter[*v1alpha1.Subscription] {
 	return func(apimClient *apim.APIM, sub *v1alpha1.Subscription) (any, error) {
-		subHRID := refs.NewNamespacedNameFromObject(sub).HRID()
-		var (
-			remoteSub *model.SubscriptionDTO
-			err       error
-		)
-
-		switch {
-		case model.SubscriptionUsesUUID(sub) && model.APIUsesUUID(api):
-			remoteSub, err = apimClient.Subscription.GetWithUUID(api.GetID(), sub.Status.ID)
-		case model.SubscriptionUsesUUID(sub):
-			apiHRID := refs.NewNamespacedNameFromObject(api).HRID()
-			remoteSub, err = apimClient.Subscription.GetByHRIDWithSubUUID(apiHRID, sub.Status.ID)
-		case model.SubscriptionRemoteUsesLegacyAPI(sub, api):
-			remoteSub, err = apimClient.Subscription.GetByHRIDWithAPIUUID(api.GetID(), subHRID)
-		default:
-			apiHRID := refs.NewNamespacedNameFromObject(api).HRID()
-			remoteSub, err = apimClient.Subscription.GetByHRID(apiHRID, subHRID)
-		}
+		client, err := apimClient.SDK()
 		if err != nil {
 			return nil, err
 		}
-		return *remoteSub, nil
+		dto, err := subscriptionsdk.ToDTO(sub, api, app)
+		if err != nil {
+			return nil, err
+		}
+		return subscriptionsdk.GetRemote(ctx, client, dto)
 	}
 }
 
@@ -85,6 +75,8 @@ func dtoMapper(
 	app core.ApplicationObject,
 ) drift.DTOMapper[*v1alpha1.Subscription] {
 	return func(sub *v1alpha1.Subscription) any {
-		return model.ToSubscriptionDTOForDrift(sub, api, app)
+		// The CRD schema makes the spec fit the SDK payload: mapping it cannot fail.
+		dto, _ := subscriptionsdk.ToDriftDTO(sub, api, app)
+		return dto
 	}
 }
