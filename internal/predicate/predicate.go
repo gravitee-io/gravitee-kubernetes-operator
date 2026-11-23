@@ -77,6 +77,8 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Group:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.IDPGroupMapping:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Notification:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Dictionary:
@@ -186,6 +188,9 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		oo, _ := e.ObjectOld.(*v1alpha1.Group)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec) ||
 			annotationChanged(oo, no, core.IgnoreMembersAnnotation)
+	case *v1alpha1.IDPGroupMapping:
+		oo, _ := e.ObjectOld.(*v1alpha1.IDPGroupMapping)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.Notification:
 		oo, _ := e.ObjectOld.(*v1alpha1.Notification)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)

@@ -39,6 +39,24 @@ func (svc *Env) CreateCategory(category *model.Category) error {
 	return svc.HTTP.Post(url.String(), category, category)
 }
 
+func (svc *Env) FindGroup(name string) (*model.Group, error) {
+	url := svc.EnvV1Target("configuration").
+		WithPath("groups").
+		WithPath("_paged").
+		WithQueryParam("query", name)
+
+	paginatedGroup := new(model.PaginatedGroups)
+	if err := svc.HTTP.Get(url.String(), paginatedGroup); err != nil {
+		return nil, err
+	}
+
+	if paginatedGroup.Page.TotalElements == 0 {
+		return nil, nil //nolint:nilnil // Returning nil, nil is intentional: not found is not an error condition
+	}
+
+	return &paginatedGroup.Data[0], nil
+}
+
 func (svc *Env) Get() (*model.Env, error) {
 	env := new(model.Env)
 	if err := svc.HTTP.Get(svc.URLs.EnvV2.String(), env); err != nil {

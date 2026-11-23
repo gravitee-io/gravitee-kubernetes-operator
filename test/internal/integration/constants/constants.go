@@ -199,6 +199,9 @@ const (
 	PortalThemeDriftMinimalFile = "apim/portal/portal-theme-drift-minimal.yml"
 	PortalThemeDriftFullFile    = "apim/portal/portal-theme-drift-full.yml"
 
+	IDPGroupMappingFile           = "apim/idpgroupmapping/idpgroupmapping.yml"
+	IDPGroupMappingMultipleGroups = "apim/idpgroupmapping/idpgroupmapping-multiple-groups.yml"
+
 	NotificationNoGroupFile   = "apim/notification/notification-no-group.yml"
 	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"
 

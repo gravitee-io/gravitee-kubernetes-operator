@@ -56,6 +56,11 @@ func (client *Client) OrgTarget(path string) *http.URL {
 	return client.URLs.Org.WithPath(path)
 }
 
+// ConfigurationTarget returns a new URL with the given path appended to the configuration URL.
+func (client *Client) ConfigurationTarget(path string) *http.URL {
+	return client.URLs.Org.WithPath("configuration").WithPath(path)
+}
+
 // AutomationTarget returns a new URL with the given path appended to the environment URL.
 func (client *Client) AutomationTarget(path string) *http.URL {
 	return client.URLs.Automation.WithPath(path)

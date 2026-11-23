@@ -52,6 +52,7 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&Documentation{}, &DocumentationList{},
 		&GatewayClassParameters{}, &GatewayClassParametersList{},
 		&Group{}, &GroupList{},
+		&IDPGroupMapping{}, &IDPGroupMappingList{},
 		&KafkaRoute{}, &KafkaRouteList{},
 		&AMContext{}, &AMContextList{},
 		&ManagementContext{}, &ManagementContextList{},
