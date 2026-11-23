@@ -53,6 +53,11 @@ var _ = Describe("Authz PDP Drift detection", func() {
 			withAuthzPdpStrict(completeAuthzPdpDTO(), new(false)),
 			withAuthzPdpStrict(completeAuthzPdpDTO(), nil),
 		),
+		// GKO's DTO held the tag as a string: left out and "" compare equal.
+		Entry("tag left out against an empty tag",
+			withAuthzPdpTag(completeAuthzPdpDTO(), nil),
+			withAuthzPdpTag(completeAuthzPdpDTO(), new("")),
+		),
 		Entry("hrid is identity, not payload",
 			withAuthzPdpHRID(completeAuthzPdpDTO(), "default-drift-full"),
 			withAuthzPdpHRID(completeAuthzPdpDTO(), "something-else"),
@@ -120,6 +125,12 @@ func withAuthzPdpName(dto sdk.AuthzPdp, name string) sdk.AuthzPdp {
 
 func withAuthzPdpStrict(dto sdk.AuthzPdp, strict *bool) sdk.AuthzPdp {
 	dto.Strict = strict
+	return dto
+}
+
+// withAuthzPdpTag sets the tag, or leaves it out when tag is nil.
+func withAuthzPdpTag(dto sdk.AuthzPdp, tag *string) sdk.AuthzPdp {
+	dto.Tag = tag
 	return dto
 }
 
