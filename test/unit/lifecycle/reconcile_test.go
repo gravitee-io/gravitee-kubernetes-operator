@@ -687,9 +687,10 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 				return gerrors.NewIllegalStateError(errors.New("ref of another context"))
 			}
 
-			_, err := reconcile(l, cli, "g1")
+			result, err := reconcile(l, cli, "g1")
 
 			Expect(err).ToNot(HaveOccurred())
+			Expect(result).To(Equal(ctrl.Result{}))
 			Expect(r.upserted).To(BeEmpty())
 			g := fetch(cli, "g1")
 			accepted := condition(g, k8s.ConditionAccepted)
