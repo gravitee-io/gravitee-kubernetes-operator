@@ -122,6 +122,15 @@ func ToAutomation(api v1alpha1.ApiV4DefinitionSpec) AutomationApiDTO {
 		V4BaseApi: api.V4BaseApi,
 	}
 
+	// V4BaseApi is shared with the CR: copy it before sending the mode in the Automation API spelling
+	if api.V4BaseApi != nil && api.FlowExecution != nil {
+		baseAPI := *api.V4BaseApi
+		fe := *api.FlowExecution
+		fe.Mode = v4.FlowMode(v4.Enum(fe.Mode).ToAutomation())
+		baseAPI.FlowExecution = &fe
+		autoAPI.V4BaseApi = &baseAPI
+	}
+
 	// mapping plans map to list
 	if api.Plans != nil {
 		autoAPI.Plans = make([]*v4.Plan, 0, len(*api.Plans))
