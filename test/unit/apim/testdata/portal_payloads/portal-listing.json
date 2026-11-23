@@ -1,0 +1,10 @@
+{
+  "hrid": "default-default-portal-listing",
+  "apis": [
+    {
+      "apiHrid": "default-api-v4-with-context",
+      "location": "/projects/alpha",
+      "order": 1
+    }
+  ]
+}

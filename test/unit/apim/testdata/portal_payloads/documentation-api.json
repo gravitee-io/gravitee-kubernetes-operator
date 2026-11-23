@@ -1,0 +1,8 @@
+{
+  "hrid": "default-pets-api-getting-started",
+  "name": "Getting Started with Pets API",
+  "type": "GRAVITEE_MARKDOWN",
+  "content": "# Pets API\n\nThis page documents the Pets API.\n",
+  "location": "/docs",
+  "order": 1
+}

@@ -1,0 +1,13 @@
+{
+  "hrid": "default-default-portal",
+  "name": "Default Portal",
+  "structure": {
+    "topNavbar": [
+      {
+        "path": "/projects/alpha",
+        "displayName": "Alpha"
+      }
+    ]
+  },
+  "activeThemeHrid": "default-default-theme"
+}

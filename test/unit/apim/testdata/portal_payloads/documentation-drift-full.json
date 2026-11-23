@@ -1,0 +1,10 @@
+{
+  "hrid": "default-drift-full-documentation",
+  "name": "Drift Full Doc",
+  "type": "GRAVITEE_MARKDOWN",
+  "content": "# Drift Full\n\nFull documentation page for drift tests.\n",
+  "location": "/projects/alpha",
+  "order": 1,
+  "area": "TOP_NAVBAR",
+  "visibility": "PUBLIC"
+}

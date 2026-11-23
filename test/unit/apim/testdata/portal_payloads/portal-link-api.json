@@ -1,0 +1,7 @@
+{
+  "hrid": "default-default-portal-link-api",
+  "name": "External Docs",
+  "href": "https://docs.example.com",
+  "location": "/docs",
+  "order": 1
+}

@@ -1,0 +1,23 @@
+{
+  "hrid": "default-default-portal",
+  "name": "Default Portal",
+  "navigation": [
+    {
+      "path": "/projects/alpha",
+      "displayName": "Alpha",
+      "order": 1
+    },
+    {
+      "path": "/projects/alpha/docs"
+    },
+    {
+      "path": "/projects/alpha/src"
+    },
+    {
+      "path": "/projects/beta"
+    },
+    {
+      "path": "/archive/2024"
+    }
+  ]
+}

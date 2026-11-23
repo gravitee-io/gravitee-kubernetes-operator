@@ -1,0 +1,7 @@
+{
+  "hrid": "default-drift-minimal-documentation",
+  "name": "Drift Minimal Doc",
+  "type": "GRAVITEE_MARKDOWN",
+  "content": "# Drift Minimal\n\nMinimal documentation page for drift tests.\n",
+  "location": "/projects/alpha"
+}

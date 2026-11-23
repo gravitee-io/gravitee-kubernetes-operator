@@ -1,0 +1,21 @@
+{
+  "hrid": "default-default-theme",
+  "name": "Default Theme",
+  "definition": {
+    "customCss": ".portal { padding: 0; }\n",
+    "font": {
+      "fontFamily": "\"Inter\", sans-serif"
+    },
+    "color": {
+      "primary": "#123456",
+      "secondary": "#654321",
+      "tertiary": "#abcdef",
+      "error": "#ff0000",
+      "background": {
+        "page": "#ffffff",
+        "card": "#f4f4f4"
+      }
+    }
+  },
+  "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+}
