@@ -31,6 +31,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzentity"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -88,7 +89,7 @@ func cluster(objects ...client.Object) {
 
 var _ = Describe("Validating an AuthzEntity", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 
 	BeforeEach(func() {
 		platform.reset()
@@ -112,12 +113,15 @@ var _ = Describe("Validating an AuthzEntity", func() {
 		cluster()
 		oldObj := newEntity("agents-group", "agents", byRef("orders-eu"))
 		oldObj.Status.ID = "3b9d0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
 		newObj := oldObj.DeepCopy()
 		newObj.Finalizers = []string{"finalizers.gravitee.io/authzentities"}
 
-		_, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
 
 		Expect(err).ToNot(HaveOccurred())
+		// Drift is skipped too: the targets cannot be compared before they resolve.
+		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
@@ -173,7 +177,7 @@ var _ = Describe("Validating an AuthzEntity", func() {
 
 var _ = Describe("Deleting an AuthzEntity", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 
 	child := func(name string, contextRef refs.NamespacedName, parents ...authzentity.Parent) *v1alpha1.AuthzEntity {
 		entity := newEntity(name, name)
@@ -235,7 +239,7 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 
 var _ = Describe("Detecting drift on an AuthzEntity the platform does not hold", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 	notFound := `{"message":"entity not found"}`
 
 	BeforeEach(func() {
@@ -269,9 +273,10 @@ var _ = Describe("Detecting drift on an AuthzEntity the platform does not hold",
 			`with its parent, so declare the parent first or drop it from parents`}
 		cluster(refused)
 
-		_, err := ctrl.ValidateUpdate(ctx, refused, withoutParents(refused))
+		warnings, err := ctrl.ValidateUpdate(ctx, refused, withoutParents(refused))
 
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the platform refused the last apply"))
 		Expect(platform.requests()).To(HaveLen(1), "the new spec is dry-run")
 	})
 
@@ -302,9 +307,11 @@ var _ = Describe("Detecting drift on an AuthzEntity the platform does not hold",
 		retargeted := applied.DeepCopy()
 		retargeted.Spec.Targets = []authzpdp.Target{{Scope: "default"}}
 
-		_, err := ctrl.ValidateUpdate(ctx, applied, retargeted)
+		warnings, err := ctrl.ValidateUpdate(ctx, applied, retargeted)
 
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the previous targets no longer resolve: " +
+			"authz pdp not found: [travel/orders-eu]"))
 		Expect(platform.requests()).To(HaveLen(1), "the new spec is dry-run")
 	})
 })

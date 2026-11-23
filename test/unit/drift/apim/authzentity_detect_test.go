@@ -17,8 +17,9 @@ package apim
 import (
 	"slices"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimauthzentity "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -38,16 +39,16 @@ var _ = Describe("Authz entity Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
-			model.AuthzEntityDTO{},
-			model.AuthzEntityDTO{},
+			sdk.AuthzEntity{},
+			sdk.AuthzEntity{},
 		),
 		Entry("equal struct",
 			completeAuthzEntityDTO(),
 			completeAuthzEntityDTO(),
 		),
 		Entry("minimal CRD against what the platform answers for it",
-			model.ToAuthzEntityDTO(minimalAuthzEntityCRD()),
-			parseJSON[model.AuthzEntityDTO](minimalAuthzEntityRemote),
+			minimalAuthzEntityDTO(),
+			parseJSON[sdk.AuthzEntity](minimalAuthzEntityRemote),
 		),
 		Entry("hrid is identity, not payload",
 			withAuthzEntityHRID(completeAuthzEntityDTO(), "default-drift-full"),
@@ -67,9 +68,14 @@ var _ = Describe("Authz entity Drift detection", func() {
 			completeAuthzEntityDTO(),
 			withAuthzEntityTargets(completeAuthzEntityDTO(), []string{"default", "drift-full@eu"}),
 		),
+		// The platform always answers active: GKO's DTO held it as a bool, absent and false compare equal.
+		Entry("active false against active left out",
+			withAuthzEntityActive(completeAuthzEntityDTO(), new(false)),
+			withAuthzEntityActive(completeAuthzEntityDTO(), nil),
+		),
 		Entry("absent parents against the platform's []",
 			withAuthzEntityParents(completeAuthzEntityDTO(), nil),
-			withAuthzEntityParents(completeAuthzEntityDTO(), []model.AuthzEntityParentDTO{}),
+			withAuthzEntityParents(completeAuthzEntityDTO(), []sdk.AuthzEntityParent{}),
 		),
 	)
 
@@ -97,13 +103,13 @@ var _ = Describe("Authz entity Drift detection", func() {
 			}`),
 		),
 		Entry("an attribute added on the platform",
-			model.ToAuthzEntityDTO(minimalAuthzEntityCRD()),
-			withAuthzEntityAttributes(parseJSON[model.AuthzEntityDTO](minimalAuthzEntityRemote), `{"level": 3}`),
+			minimalAuthzEntityDTO(),
+			withAuthzEntityAttributes(parseJSON[sdk.AuthzEntity](minimalAuthzEntityRemote), `{"level": 3}`),
 		),
 		Entry("a parent added on the platform",
 			completeAuthzEntityDTO(),
 			withAuthzEntityParents(completeAuthzEntityDTO(), append(completeAuthzEntityDTO().Parents,
-				model.AuthzEntityParentDTO{EntityType: "Group", EntityID: "finance"})),
+				sdk.AuthzEntityParent{EntityType: "Group", EntityId: "finance"})),
 		),
 		Entry("a parent removed on the platform",
 			completeAuthzEntityDTO(),
@@ -115,17 +121,17 @@ var _ = Describe("Authz entity Drift detection", func() {
 		),
 		Entry("deactivated on the platform",
 			completeAuthzEntityDTO(),
-			withAuthzEntityActive(completeAuthzEntityDTO(), false),
+			withAuthzEntityActive(completeAuthzEntityDTO(), new(false)),
 		),
 	)
 
 	It("names the parent the platform added", func() {
 		remote := withAuthzEntityParents(completeAuthzEntityDTO(), append(completeAuthzEntityDTO().Parents,
-			model.AuthzEntityParentDTO{EntityType: "Group", EntityID: "finance"}))
+			sdk.AuthzEntityParent{EntityType: "Group", EntityId: "finance"}))
 
 		result := drift.DetectWithNamespace(completeAuthzEntityDTO(), remote, "")
 
-		Expect(result.String()).To(ContainSubstring(`+ {"entityType":"Group","entityId":"finance"}`))
+		Expect(result.String()).To(ContainSubstring(`+ {"entityId":"finance","entityType":"Group"}`))
 	})
 
 	Describe("All properties regression test", func() {
@@ -135,22 +141,22 @@ var _ = Describe("Authz entity Drift detection", func() {
 	})
 
 	It("refuses a parent APIM added when neither version of the entity sets parents", func() {
-		remote := model.AuthzEntityDTO{
+		remote := sdk.AuthzEntity{
 			Kind:    "before",
-			Parents: []model.AuthzEntityParentDTO{{EntityType: "Group", EntityID: "admins"}},
+			Parents: []sdk.AuthzEntityParent{{EntityType: "Group", EntityId: "admins"}},
 		}
 		merged := drift.Merge(
-			drift.DetectWithNamespace(model.AuthzEntityDTO{Kind: "before"}, remote, ""),
-			drift.DetectWithNamespace(model.AuthzEntityDTO{Kind: "after"}, remote, ""),
+			drift.DetectWithNamespace(sdk.AuthzEntity{Kind: "before"}, remote, ""),
+			drift.DetectWithNamespace(sdk.AuthzEntity{Kind: "after"}, remote, ""),
 		)
 
 		Expect(merged.DriftDetected()).To(BeTrue(), merged.String())
 	})
 })
 
-func completeAuthzEntityDTO() model.AuthzEntityDTO {
+func completeAuthzEntityDTO() sdk.AuthzEntity {
 	GinkgoHelper()
-	return loadFixture[model.AuthzEntityDTO]("authzentity_full_dto.json")
+	return loadFixture[sdk.AuthzEntity]("authzentity_full_dto.json")
 }
 
 func minimalAuthzEntityCRD() *v1alpha1.AuthzEntity {
@@ -159,28 +165,36 @@ func minimalAuthzEntityCRD() *v1alpha1.AuthzEntity {
 	return &fixture
 }
 
-func withAuthzEntityHRID(dto model.AuthzEntityDTO, hrid string) model.AuthzEntityDTO {
-	dto.HRID = hrid
-	return dto
-}
-
-func withAuthzEntityAttributes(dto model.AuthzEntityDTO, attributes string) model.AuthzEntityDTO {
+func minimalAuthzEntityDTO() sdk.AuthzEntity {
 	GinkgoHelper()
-	dto.Attributes = parseJSON[model.AuthzEntityDTO](`{"attributes": ` + attributes + `}`).Attributes
+	dto, err := apimauthzentity.ToDTO(minimalAuthzEntityCRD())
+	Expect(err).ToNot(HaveOccurred())
 	return dto
 }
 
-func withAuthzEntityParents(dto model.AuthzEntityDTO, parents []model.AuthzEntityParentDTO) model.AuthzEntityDTO {
+func withAuthzEntityHRID(dto sdk.AuthzEntity, hrid string) sdk.AuthzEntity {
+	dto.Hrid = hrid
+	return dto
+}
+
+func withAuthzEntityAttributes(dto sdk.AuthzEntity, attributes string) sdk.AuthzEntity {
+	GinkgoHelper()
+	dto.Attributes = parseJSON[sdk.AuthzEntity](`{"attributes": ` + attributes + `}`).Attributes
+	return dto
+}
+
+func withAuthzEntityParents(dto sdk.AuthzEntity, parents []sdk.AuthzEntityParent) sdk.AuthzEntity {
 	dto.Parents = parents
 	return dto
 }
 
-func withAuthzEntityTargets(dto model.AuthzEntityDTO, targets []string) model.AuthzEntityDTO {
+func withAuthzEntityTargets(dto sdk.AuthzEntity, targets []string) sdk.AuthzEntity {
 	dto.Targets = targets
 	return dto
 }
 
-func withAuthzEntityActive(dto model.AuthzEntityDTO, active bool) model.AuthzEntityDTO {
+// withAuthzEntityActive sets active, or leaves it out when active is nil.
+func withAuthzEntityActive(dto sdk.AuthzEntity, active *bool) sdk.AuthzEntity {
 	dto.Active = active
 	return dto
 }

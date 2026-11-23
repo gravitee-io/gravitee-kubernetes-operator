@@ -23,7 +23,7 @@ import (
 
 // ResolveAuthzEntityRefs replaces the entity's targets with what they send on the wire, in
 // declaration order: each scope as written, each pdpRef as the routing scope of the AuthzPdp it
-// names. ToAuthzEntityDTO then only maps. The reconcile, the admission dry run and drift detection
+// names. authzentity.ToDTO then only maps. The reconcile, the admission dry run and drift detection
 // all resolve with it. Its errors are those of ResolveAuthzTargets, and leave the targets as they
 // were.
 func ResolveAuthzEntityRefs(ctx context.Context, entity *v1alpha1.AuthzEntity) error {

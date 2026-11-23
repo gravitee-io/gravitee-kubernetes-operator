@@ -73,7 +73,9 @@ var _ = Describe("Authz entity reconcile", func() {
 			}).
 			Build()
 		k8s.RegisterClient(cli)
-		return &authzentity.Reconciler{Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20)}, cli
+		return &authzentity.Reconciler{
+			Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20), Lifecycle: authzentity.NewLifecycle(),
+		}, cli
 	}
 
 	stored := func(cli client.Client) *v1alpha1.AuthzEntity {

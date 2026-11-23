@@ -43,7 +43,6 @@ type APIM struct {
 	Links             *service.Links
 	Documentations    *service.Documentations
 	PortalThemes      *service.PortalThemes
-	AuthzEntities     *service.AuthzEntities
 	AuthzPolicies     *service.AuthzPolicies
 	Env               *service.Env
 
@@ -97,7 +96,6 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		Links:             service.NewLinks(c),
 		Documentations:    service.NewDocumentations(c),
 		PortalThemes:      service.NewPortalThemes(c),
-		AuthzEntities:     service.NewAuthzEntities(c),
 		AuthzPolicies:     service.NewAuthzPolicies(c),
 		Env:               service.NewEnv(c),
 		Context:           context,
