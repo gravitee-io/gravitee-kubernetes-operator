@@ -69,7 +69,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"error",
 				errors.NewSeveref(
-					"could not resolve references: unable to get Shared Policy Group [missing-shared-policy-group] in namespace [%s]",
+					"unable to get Shared Policy Group [missing-shared-policy-group] in namespace [%s]",
 					fixtures.APIv4.Namespace,
 				),
 				err,

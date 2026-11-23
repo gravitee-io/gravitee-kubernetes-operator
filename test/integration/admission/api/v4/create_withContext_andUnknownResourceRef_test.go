@@ -45,7 +45,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"error",
 				fmt.Sprintf(
-					"could not resolve references: api references resource [%s] that does not exist in the cluster",
+					"api references resource [%s] that does not exist in the cluster",
 					fixtures.APIv4.Spec.Resources[0].Ref,
 				),
 				err.Error(),

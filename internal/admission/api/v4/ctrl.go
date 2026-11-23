@@ -22,6 +22,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
@@ -41,7 +42,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 	return AdmissionCtrl{
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
 			ResolveRefs:    apiv4.ResolveRefsForAdmission,
-			ClientFactory:  apiv4.CreateAPIMClient,
+			ClientFactory:  admissionClient,
 			PreCheck:       preCheck,
 			ToDTO:          apiv4.ToDTO,
 			DryRun:         apiv4.DryRun,
@@ -49,6 +50,8 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			GetRemote:      apiv4.GetRemote,
 			DriftDTO:       apiv4.DriftDTO,
 			DeleteCheck:    deleteCheck,
+			// The v4 admission messages are the ones the webhook reported before the lifecycle.
+			UnprefixedResolveErrors: true,
 		}),
 	}
 }
@@ -100,6 +103,15 @@ func (a AdmissionCtrl) ValidateUpdate(
 	}
 	errs.MergeWith(a.Lifecycle.ValidateUpdate(ctx, oldObj, newObj))
 	return errs.Map()
+}
+
+// admissionClient refuses a context reference that does not exist with the message the webhook reported before the
+// lifecycle, then builds the API client.
+func admissionClient(ctx context.Context, api *v1alpha1.ApiV4Definition) (*apiv4.Client, error) {
+	if err := ctxref.Validate(ctx, api); err != nil {
+		return nil, err
+	}
+	return apiv4.CreateAPIMClient(ctx, api)
 }
 
 // everyUpdate dry-runs every update, as before the lifecycle: a v4 update APIM would refuse is refused, whatever

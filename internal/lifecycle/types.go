@@ -166,6 +166,11 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 
 	// DeleteCheck runs on delete review after DeleteGuard. Severe rejects, warnings admit. Nil skips.
 	DeleteCheck AdmissionCheckFunc[T]
+
+	// UnprefixedResolveErrors reports a ResolveRefs or ClientFactory error as it is, without the
+	// "could not resolve references: " or "could not resolve context: " prefix, for a resource whose admission
+	// messages predate the lifecycle and must not change.
+	UnprefixedResolveErrors bool
 }
 
 // NewResourceLifecycle returns l, and panics on the first missing required hole.
