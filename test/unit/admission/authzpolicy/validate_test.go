@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpolicy"
@@ -81,11 +82,35 @@ func newPdp(name string, contextRef refs.NamespacedName, scope string) *v1alpha1
 // cluster registers a fake client holding objects, AuthzPolicy indexed as the manager's cache
 // indexes it.
 func cluster(objects ...client.Object) {
+	clusterWith(interceptor.Funcs{}, objects...)
+}
+
+// syncedFromSecondRead answers the first read of an AuthzPdp as stored, and every later one with scope as its
+// routing scope: an AuthzPdp that syncs between two reads.
+func syncedFromSecondRead(scope string) interceptor.Funcs {
+	reads := 0
+	return interceptor.Funcs{
+		Get: func(ctx context.Context, c client.WithWatch, key client.ObjectKey, obj client.Object,
+			opts ...client.GetOption) error {
+			if err := c.Get(ctx, key, obj, opts...); err != nil {
+				return err
+			}
+			if pdp, isPdp := obj.(*v1alpha1.AuthzPdp); isPdp {
+				if reads++; reads > 1 {
+					pdp.Status.RoutingScope = scope
+				}
+			}
+			return nil
+		},
+	}
+}
+
+func clusterWith(funcs interceptor.Funcs, objects ...client.Object) {
 	c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
 	Expect(search.InitCache(context.Background(), c)).To(Succeed())
 	scheme := runtime.NewScheme()
 	Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
-	builder := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...)
+	builder := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...).WithInterceptorFuncs(funcs)
 	for _, field := range []search.IndexField{search.AuthzPolicyContextField, search.AuthzPolicyAuthzPdpField} {
 		builder = builder.WithIndex(&v1alpha1.AuthzPolicy{}, field.String(), c.indexers[field.String()])
 	}
@@ -115,6 +140,19 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu]; " +
 			"authz pdp not synced: [travel/orders-us])"))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	// resolveRefs reads the AuthzPdp unsynced and leaves the pdpRef as written; deferDryRun reads it
+	// synced. Dry-running would map an unresolved pdpRef, which ToDTO refuses.
+	It("skips the dry run when an AuthzPdp syncs during admission", func() {
+		clusterWith(syncedFromSecondRead("orders@eu"), newPdp("orders-eu", devCtx, ""))
+
+		warnings, err := ctrl.ValidateCreate(ctx, newPolicy("hotel-booking-read", "policy.hotel-booking-read",
+			byRef("orders-eu"), authzpdp.Target{Scope: "default"}))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("platform checks deferred (an AuthzPdp synced during admission)"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 

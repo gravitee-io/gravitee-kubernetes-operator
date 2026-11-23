@@ -17,8 +17,10 @@ package authzpolicy
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -78,13 +80,22 @@ func validateTargetKinds(policy *v1alpha1.AuthzPolicy) error {
 	return nil
 }
 
-// deferDryRun skips the dry run while an AuthzPdp of the targets is pending: the platform has no routing scope to
-// check the policy against yet.
+// syncedDuringAdmission is why deferDryRun skips the dry run of targets whose AuthzPdps synced after resolveRefs
+// read them.
+const syncedDuringAdmission = "platform checks deferred (an AuthzPdp synced during admission)"
+
+// deferDryRun skips the dry run while resolveRefs has left the pdpRefs as written, which it does for a pending
+// AuthzPdp only: the platform has no routing scope to check the policy against yet. The AuthzPdps are read again
+// to name every pending one. Targets whose AuthzPdps synced since resolveRefs read them still defer: ToDTO cannot
+// map an unresolved pdpRef.
 func deferDryRun(ctx context.Context, policy *v1alpha1.AuthzPolicy) string {
-	if _, err := dynamic.ResolveAuthzTargets(ctx, policy, policy.Spec.Targets); dynamic.IsAuthzPdpPending(err) {
+	if !slices.ContainsFunc(policy.Spec.Targets, func(t authzpdp.Target) bool { return t.PdpRef != nil }) {
+		return ""
+	}
+	if _, err := dynamic.ResolveAuthzTargets(ctx, policy, policy.Spec.Targets); err != nil {
 		return fmt.Sprintf("platform checks deferred (%s)", err)
 	}
-	return ""
+	return syncedDuringAdmission
 }
 
 // deferDrift skips drift while the stored policy is not what the platform holds, or cannot be mapped as it:
