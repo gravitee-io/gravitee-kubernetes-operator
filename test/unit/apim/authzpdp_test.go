@@ -178,8 +178,8 @@ var _ = Describe("Authz PDP", func() {
 				"strict": true,
 				"endpoint": {"path": "/authz/orders-eu"}
 			}`))
-			Expect(*resp.State.Id).To(Equal("5d0c1e7a"))
-			Expect(*resp.State.RoutingScope).To(Equal("orders@eu"))
+			Expect(resp.State.Id).To(HaveValue(Equal("5d0c1e7a")))
+			Expect(resp.State.RoutingScope).To(HaveValue(Equal("orders@eu")))
 			Expect(resp.GetOrgID()).To(Equal("DEFAULT"))
 			Expect(resp.GetEnvID()).To(Equal("DEFAULT"))
 		})

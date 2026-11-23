@@ -182,7 +182,7 @@ var _ = Describe("Authz schema", func() {
 				"target": "orders@eu",
 				"schema": "entity User in [Group];\nentity Group;\nentity Hotel;\n"
 			}`))
-			Expect(*resp.State.Id).To(Equal("7a1e0c2b"))
+			Expect(resp.State.Id).To(HaveValue(Equal("7a1e0c2b")))
 			Expect(resp.GetOrgID()).To(Equal("DEFAULT"))
 			Expect(resp.GetEnvID()).To(Equal("DEFAULT"))
 		})
