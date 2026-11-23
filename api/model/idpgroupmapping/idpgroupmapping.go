@@ -23,6 +23,14 @@ import (
 type Type struct {
 	// +kubebuilder:validation:Optional
 	ID string `json:"id,omitempty"`
+	// Group names, or expressions resolving to group names at login (e.g. {#profile['groups']}).
+	// Groups are assigned to users matching the condition. Each value is either:
+	// * the name of a group of the environment, resolved to its ID by the operator
+	// (names that match no group are skipped);
+	// * an expression evaluated at login and resolving to group names, e.g.
+	// {#jsonPath(#profile, '$.groups')}. A value is an expression when it contains
+	// "{#", "{ #", "{T(" or "{(". Expressions are stored as-is in APIM, which rejects
+	// those that do not parse.
 	// +kubebuilder:validation:Required
 	Groups []string `json:"groups"`
 	// +kubebuilder:validation:Required

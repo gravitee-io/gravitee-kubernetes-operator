@@ -15,8 +15,43 @@
 package internal
 
 import (
+	"context"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/idpgroupmapping"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
+
+// resolveGroups returns the values to store in the APIM group mapping for the spec groups.
+// Expressions are kept as-is: APIM evaluates them at login and they resolve to group names.
+// Any other value is a group name, resolved to its ID. Unresolved names are skipped.
+func resolveGroups(
+	ctx context.Context,
+	env *service.Env,
+	mapping *v1alpha1.IDPGroupMapping,
+) ([]string, error) {
+	resolved := []string{}
+	for _, group := range mapping.Spec.Groups {
+		if idpgroupmapping.IsGroupExpression(group) {
+			resolved = append(resolved, group)
+			continue
+		}
+
+		found, err := env.FindGroup(group)
+		if err != nil {
+			return nil, gerrors.NewControlPlaneError(err)
+		}
+		if found == nil || found.ID == "" {
+			log.Error(ctx, nil, "unable to resolve group, skipping", "group", group, "mapping", mapping.Name)
+			continue
+		}
+		resolved = append(resolved, found.ID)
+	}
+	return resolved, nil
+}
 
 func containsGroupMapping(groupMappings []model.GroupMapping, condition string, groups []string) bool {
 	for _, gm := range groupMappings {

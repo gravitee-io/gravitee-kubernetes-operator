@@ -29,7 +29,10 @@ spec:
   # Example: map users with "developer" role claim to the developers group
   condition: "{#jsonPath(#profile, '$.roles') matches 'developer'}"
   
-  # List of Gravitee groups to assign when condition is met
+  # List of Gravitee groups to assign when condition is met.
+  # Each value is either a group name (resolved to the group ID by the operator)
+  # or an expression resolving to group names at login (stored as-is in APIM).
   groups:
     - "developers"
     - "api-consumers"
+    - "{#jsonPath(#profile, '$.teams')}"

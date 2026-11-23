@@ -5970,7 +5970,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `id` _string_ |  |  | Optional: \{\} <br /> |
-| `groups` _string array_ |  |  | Required: \{\} <br /> |
+| `groups` _string array_ | Group names, or expressions resolving to group names at login (e.g. \{#profile['groups']\}).<br />Groups are assigned to users matching the condition. Each value is either:<br />* the name of a group of the environment, resolved to its ID by the operator<br />(names that match no group are skipped);<br />* an expression evaluated at login and resolving to group names, e.g.<br />\{#jsonPath(#profile, '$.groups')\}. A value is an expression when it contains<br />"\{#", "\{ #", "\{T(" or "\{(". Expressions are stored as-is in APIM, which rejects<br />those that do not parse. |  | Required: \{\} <br /> |
 | `idpId` _string_ |  |  | Required: \{\} <br /> |
 | `condition` _string_ |  |  | Required: \{\} <br /> |
 

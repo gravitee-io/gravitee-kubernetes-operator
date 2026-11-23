@@ -16,6 +16,7 @@ package idpgroupmapping
 
 import (
 	"context"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -130,6 +131,46 @@ var _ = Describe("Create", labels.WithContext, func() {
 				return assert.Equals("group mapping with multiple groups found", true, false)
 			}
 			return nil
+		}, timeout, interval).Should(Succeed(), fixtures.IDPGroupMapping.Name)
+	})
+
+	It("should create IDP group mapping with a group expression", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithGroup(constants.GroupFile).
+			WithIDPGroupMapping(constants.IDPGroupMappingExpression).
+			WithContext(constants.ContextWithSecretFile).
+			Build().
+			Apply()
+
+		By("expecting IDP group mapping status to be completed")
+
+		Expect(assert.IDPGroupMappingCompleted(fixtures.IDPGroupMapping)).To(Succeed())
+		Expect(assert.IDPGroupMappingAccepted(fixtures.IDPGroupMapping)).To(Succeed())
+
+		By("calling rest API, expecting the group ID and the expression as-is in the IDP configuration")
+
+		apimClient := apim.NewClient(ctx)
+		expression := "{#jsonPath(#profile, '$.groups')}"
+
+		Eventually(func() error {
+			idpConfig, err := apimClient.Configuration.GetIDPConfiguration(fixtures.IDPGroupMapping.Spec.IDPID)
+			if err != nil {
+				return err
+			}
+
+			for _, gm := range idpConfig.GroupMappings {
+				if gm.Condition == fixtures.IDPGroupMapping.Spec.Condition {
+					return assert.SliceEqualsSorted(
+						"mapped groups",
+						[]string{fixtures.Group.Status.ID, expression},
+						gm.Groups,
+						strings.Compare,
+					)
+				}
+			}
+
+			return assert.Equals("group mapping found", true, false)
 		}, timeout, interval).Should(Succeed(), fixtures.IDPGroupMapping.Name)
 	})
 })

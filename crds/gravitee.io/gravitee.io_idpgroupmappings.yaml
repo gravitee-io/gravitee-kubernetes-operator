@@ -58,6 +58,8 @@ spec:
                     - name
                   type: object
                 groups:
+                  description: Group names, or expressions resolving to group names at login (e.g.
+                    {#profile['groups']}).
                   items:
                     type: string
                   type: array
