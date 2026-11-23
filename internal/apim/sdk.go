@@ -83,6 +83,16 @@ func SDKFromContextRef(ctx context.Context, ref core.ObjectRef, parentNs string)
 	return NewSDKClient(ctx, mctx)
 }
 
+// SDK builds the SDK client of the management context this APIM client was built from, whose secrets
+// FromContext already injected.
+func (apim *APIM) SDK() (*SDKClient, error) {
+	client, err := newSDKClient(apim.Context)
+	if err != nil {
+		return nil, err
+	}
+	return &SDKClient{APIMClient: client, Context: apim.Context}, nil
+}
+
 // newSDKClient builds the SDK client of a context whose secrets are already injected.
 // The SDK checks the authentication when the client is built, not on the first call.
 func newSDKClient(mctx core.ContextModel) (*sdk.APIMClient, error) {

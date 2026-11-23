@@ -34,7 +34,6 @@ const (
 // APIM wraps services needed to sync resources with a given environment on a Gravitee.io APIM instance.
 type APIM struct {
 	APIs              *service.APIs
-	Subscription      *service.Subscriptions
 	SharedPolicyGroup *service.SharedPolicyGroup
 	Dictionaries      *service.Dictionaries
 	Portals           *service.Portals
@@ -91,7 +90,6 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 
 	return &APIM{
 		APIs:              service.NewAPIs(c),
-		Subscription:      service.NewSubscriptions(c),
 		SharedPolicyGroup: service.NewSharedPolicyGroup(c),
 		Dictionaries:      service.NewDictionaries(c),
 		Portals:           service.NewPortals(c),
