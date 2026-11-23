@@ -186,4 +186,22 @@ var _ = Describe("Authz schema reconcile", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(apierrors.IsNotFound(cli.Get(context.Background(), key, &v1alpha1.AuthzSchema{}))).To(BeTrue())
 	})
+
+	// ToDTO refuses an unresolved pdpRef, and a delete does not resolve it: the delete drops the
+	// target, so a schema whose AuthzPdp is gone is deleted on the platform, by hrid.
+	It("deletes a schema whose AuthzPdp is missing from the platform of a live context", func() {
+		s := newAuthzSchema()
+		s.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}
+		r, cli := setup(s)
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).To(HaveOccurred())
+		expectWaitingOnPdp(cli, "authz pdp not found: [gravitee/orders-eu]")
+		Expect(cli.Delete(context.Background(), stored(cli))).To(Succeed())
+
+		_, err = r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(wasDeleted("/authz/schemas/gravitee-travel-schema")).To(BeTrue())
+		Expect(apierrors.IsNotFound(cli.Get(context.Background(), key, &v1alpha1.AuthzSchema{}))).To(BeTrue())
+	})
 })
