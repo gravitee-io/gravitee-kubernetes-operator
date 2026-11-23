@@ -180,6 +180,8 @@ github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.2-0.20261123181008-
 github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.2-0.20261123181008-f1d0b0473800/go.mod h1:lD3C9dC9Xrlr1342cT7hlz1ksGK2WUGMHgi0HfSs4Qw=
 github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.2-0.20261123181950-c58f140ada26 h1:PFzmBw5+rYcOsJvwGDXkN2PrlR5gwVVfBG3rbO6l9eU=
 github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.2-0.20261123181950-c58f140ada26/go.mod h1:lD3C9dC9Xrlr1342cT7hlz1ksGK2WUGMHgi0HfSs4Qw=
+github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.2-0.20261123182746-d6a8a9f845ba h1:JaMWzEh0q5GSrYYuwlJGnV+Yk/FeTk1SI9I53EePlAU=
+github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.2-0.20261123182746-d6a8a9f845ba/go.mod h1:lD3C9dC9Xrlr1342cT7hlz1ksGK2WUGMHgi0HfSs4Qw=
 github.com/gravitee-io/gravitee-automation-sdk/common v1.4.0 h1:vYxaFezYKNcYry3s38JWpLOpgXkh+D7imn7TeTgVBGY=
 github.com/gravitee-io/gravitee-automation-sdk/common v1.4.0/go.mod h1:pCa79yKuchkLBnMYNOASQtuHUvnPlTW7ayLrBOETRII=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 h1:5VipnvEpbqr2gA2VbM+nYVbkIF28c5ZQfqCBQ5g2xfk=
