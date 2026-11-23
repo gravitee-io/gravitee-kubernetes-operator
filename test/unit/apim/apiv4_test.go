@@ -177,7 +177,7 @@ var _ = Describe("ApiV4Definition APIM mapping", func() {
 			}`))
 
 			Expect(plans(dto)).To(Equal([]string{"b", "c", "a"}))
-			Expect(dto.PlanOrder).To(Equal(map[string]int{"b": 1, "c": 2, "a": 3}))
+			Expect(dto.PlanOrder).To(Equal(map[string]apiv4.PlanRank{"b": {Order: 1}, "c": {Order: 2}, "a": {Order: 3}}))
 		})
 
 		It("leaves the plan order out of drift when a plan has no order", func() {

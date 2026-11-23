@@ -196,7 +196,7 @@ var _ = Describe("API v4 Drift detection", func() {
 			ApiBase:   &base.ApiBase{},
 			Analytics: &v4.Analytics{Enabled: true, ConnectionEvents: &events},
 		}})
-		remote := sdkV4JSON(`{"notifyMembers": false, "analytics": {"enabled": true, "connectionEvents": ["DISCONNECTED", "CONNECTED"]}}`)
+		remote := remoteDriftV4JSON(`{"analytics": {"enabled": true, "connectionEvents": ["DISCONNECTED", "CONNECTED"]}}`)
 
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
@@ -261,7 +261,7 @@ var _ = Describe("API v4 Drift detection", func() {
 			remote := apiV4WithEntrypoint(httpListener, entrypointType, remoteQos)
 			merged := admissionDrift(crd, remote)
 			Expect(merged.DriftDetected()).To(BeTrue())
-			Expect(merged.String()).To(ContainSubstring(`qos: ` + crdQos + ` != ` + remoteQos))
+			Expect(merged.String()).To(ContainSubstring(`qos: "` + crdQos + `" != "` + remoteQos + `"`))
 		},
 		Entry("PROXY AUTO changed to NONE in APIM", "http-proxy", "AUTO", "NONE"),
 		Entry("MESSAGE AUTO changed to AT_LEAST_ONCE in APIM", "sse", "AUTO", "AT_LEAST_ONCE"),
@@ -311,7 +311,7 @@ var _ = Describe("API v4 Drift detection", func() {
 		merged := admissionDrift(crd, remote)
 
 		Expect(merged.DriftDetected()).To(BeTrue())
-		Expect(merged.String()).To(ContainSubstring(`allowOrigin[0]: "https://app.example.com" != ""`))
+		Expect(merged.String()).To(ContainSubstring(`allowOrigin[0]: "https://app.example.com" != <nil>`))
 	})
 
 	It("admits the http defaults APIM saves in an endpoint group shared configuration", func() {
@@ -438,7 +438,7 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
-			expectedEquivalentNotHavingAnyZeroValue(completeAPIV4Payload(), completeAPIV4Payload())
+			expectedEquivalentNotHavingAnyZeroValue(completeAPIV4DTO(), completeAPIV4DTO())
 		})
 	})
 })

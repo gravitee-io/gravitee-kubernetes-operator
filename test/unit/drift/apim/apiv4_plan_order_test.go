@@ -19,7 +19,9 @@ import (
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -51,23 +53,26 @@ var _ = Describe("API v4 plan order", func() {
 	)
 
 	It("reads a remote plan's order from its position in the GET list", func() {
+		// The CR's plans all have an order, so the remote side ranks its plans too.
 		crd := crdV4(`{"name": "api", "plans": {"foo": ` + planWithOrder("foo", 2) + `, "bar": ` +
 			planWithOrder("bar", 1) + `}}`)
-		remote := apiv4.RemoteDTO(crd, parseJSON[sdk.ApiV4State](
-			`{"name": "api", "plans": [`+plan("foo")+`, `+plan("bar")+`]}`))
+		remote := apiv4.RemoteDTO(crd, parseJSON[sdk.ApiV4State](`{"name": "api", "plans": [`+plan("foo")+`, `+plan("bar")+`]}`))
 
-		Expect(crd.PlanOrder).To(Equal(map[string]int{"bar": 1, "foo": 2}))
-		Expect(remote.PlanOrder).To(Equal(map[string]int{"foo": 1, "bar": 2}))
+		Expect(remote.Plans).To(HaveLen(2))
+		Expect(remote.Plans[0].Hrid).To(Equal("foo"))
+		Expect(remote.PlanOrder[remote.Plans[0].Hrid].Order).To(Equal(1))
+		Expect(remote.Plans[1].Hrid).To(Equal("bar"))
+		Expect(remote.PlanOrder[remote.Plans[1].Hrid].Order).To(Equal(2))
 	})
 
 	It("reads a null plan list from the GET as no plans", func() {
-		remote := parseJSON[sdk.ApiV4State](`{"name": "api", "plans": null}`)
+		remote := apiv4.RemoteDTO(apiv4.DTO{}, parseJSON[sdk.ApiV4State](`{"name": "api", "plans": null}`))
 
 		Expect(remote.Plans).To(BeNil())
 	})
 
 	It("reads an empty plan list from the GET as no plans", func() {
-		remote := parseJSON[sdk.ApiV4State](`{"name": "api", "plans": []}`)
+		remote := apiv4.RemoteDTO(apiv4.DTO{}, parseJSON[sdk.ApiV4State](`{"name": "api", "plans": []}`))
 
 		Expect(remote.Plans).To(BeEmpty())
 	})
@@ -134,8 +139,8 @@ var _ = Describe("API v4 plan order", func() {
 		)
 
 		Expect(result.DriftDetected()).To(BeTrue())
-		Expect(result.String()).To(ContainSubstring("foo: 1 != 2"))
-		Expect(result.String()).To(ContainSubstring("bar: 2 != 1"))
+		Expect(result.String()).To(ContainSubstring("order: 1 != 2"))
+		Expect(result.String()).To(ContainSubstring("order: 2 != 1"))
 		Expect(result.String()).NotTo(ContainSubstring("name:"))
 		Expect(result.String()).NotTo(ContainSubstring("hrid:"))
 	})
@@ -148,16 +153,16 @@ var _ = Describe("API v4 plan order", func() {
 		)
 
 		Expect(result.DriftDetected()).To(BeTrue())
-		Expect(result.String()).To(ContainSubstring("foo: 1 != 2"))
+		Expect(result.String()).To(ContainSubstring("order: 1 != 2"))
 	})
 })
 
 func sentPlanHRIDs(crd string) []string {
 	GinkgoHelper()
-	dto := crdV4(crd)
+	dto := model.ToAPIV4DTO(parseJSON[*v4.Api](crd))
 	hrids := make([]string, 0, len(dto.Plans))
 	for _, p := range dto.Plans {
-		hrids = append(hrids, p.Hrid)
+		hrids = append(hrids, p.HRID)
 	}
 	return hrids
 }

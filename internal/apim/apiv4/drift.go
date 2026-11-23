@@ -20,6 +20,9 @@ import (
 	"strings"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
 )
 
 // DriftDTO applies the normalisations the drift comparison needs, to the CR and the remote side alike. Drift
@@ -28,7 +31,9 @@ import (
 //   - plans and pages are compared in hrid order (the plan order is compared through PlanOrder);
 //   - portal navigation visibility is resolved from the closest declared ancestor, as APIM does;
 //   - listener paths lose overrideAccess, which APIM does not store as sent;
-//   - KAFKA entrypoints lose their qos, which APIM does not store for a native entrypoint.
+//   - KAFKA entrypoints lose their qos, which APIM does not store for a native entrypoint;
+//   - listeners are then compared unstructured (DriftListeners), as GKO always compared them;
+//   - a boolean left out reads as false, as in GKO's former payload model.
 //
 // It never mutates the slices or maps of dto (a remote DTO shares them with the fetched state).
 func DriftDTO(dto DTO) DTO {
@@ -39,8 +44,51 @@ func DriftDTO(dto DTO) DTO {
 		return cmp.Compare(a.Hrid, b.Hrid)
 	})
 	dto.PortalNavigation = withResolvedVisibility(dto.PortalNavigation)
-	dto.Listeners = withNormalisedListeners(dto.Listeners)
+	dto.DriftListeners = unstructuredListeners(withNormalisedListeners(dto.Listeners))
+	dto.Listeners = nil
+	return withFalseWhenUnset(dto)
+}
+
+// unstructuredListeners maps the listeners to the free-form maps GKO's former payload model held them in, so
+// that drift reports their values as it always did.
+func unstructuredListeners(listeners []sdk.Listener) []*model.APIV4GenericListenerDTO {
+	if listeners == nil {
+		return nil
+	}
+	generic, err := mapper.MapViaJSON[[]*model.APIV4GenericListenerDTO](listeners)
+	if err != nil {
+		// unreachable: a listener the SDK decoded or mapped encodes back to JSON
+		return nil
+	}
+	return generic
+}
+
+// withFalseWhenUnset sets to false the booleans the SDK leaves nil when absent and GKO's former payload model read
+// as false: notifyMembers, flowExecution.matchRequired, and each page's homepage and published.
+func withFalseWhenUnset(dto DTO) DTO {
+	dto.NotifyMembers = falseWhenUnset(dto.NotifyMembers)
+	if dto.FlowExecution != nil {
+		flowExecution := *dto.FlowExecution
+		flowExecution.MatchRequired = falseWhenUnset(flowExecution.MatchRequired)
+		dto.FlowExecution = &flowExecution
+	}
+	if dto.Pages != nil {
+		pages := make([]sdk.PageV4, len(dto.Pages))
+		for i, page := range dto.Pages {
+			page.Homepage = falseWhenUnset(page.Homepage)
+			page.Published = falseWhenUnset(page.Published)
+			pages[i] = page
+		}
+		dto.Pages = pages
+	}
 	return dto
+}
+
+func falseWhenUnset(value *bool) *bool {
+	if value != nil {
+		return value
+	}
+	return new(false)
 }
 
 func withResolvedVisibility(paths []sdk.NavigationPath) []sdk.NavigationPath {

@@ -15,6 +15,8 @@
 package apim
 
 import (
+	"slices"
+
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -58,15 +60,29 @@ func crdDriftV4Spec(spec *v4.Api) apiv4.DTO {
 // remoteDriftV4 maps a GET response (JSON) the way the admission drift check does, against the CR's DTO.
 func remoteDriftV4(crd apiv4.DTO, remote string) apiv4.DTO {
 	GinkgoHelper()
-	return apiv4.DriftDTO(apiv4.RemoteDTO(crd, withEchoedBooleans(crd, parseJSON[sdk.ApiV4State](remote))))
+	return apiv4.DriftDTO(apiv4.RemoteDTO(crd, parseJSON[sdk.ApiV4State](remote)))
 }
 
-// sdkV4 maps a DTO of GKO's former v4 payload model to the SDK payload, normalised for drift.
+// sdkV4 maps a DTO of GKO's former v4 payload model to the SDK payload, normalised for drift. The plan order is
+// compared when every plan has one, as for a CR.
 func sdkV4(dto model.APIV4DTO) apiv4.DTO {
 	GinkgoHelper()
 	api, err := mapper.MapViaJSON[sdk.ApiV4](dto)
 	Expect(err).ToNot(HaveOccurred())
-	return apiv4.DriftDTO(apiv4.DTO{ApiV4: api})
+	sent := apiv4.DTO{ApiV4: api}
+	if len(dto.Plans) > 0 && !slices.ContainsFunc(dto.Plans, func(plan *model.APIV4PlanDTO) bool { return plan.Order == nil }) {
+		sent.PlanOrder = make(map[string]apiv4.PlanRank, len(dto.Plans))
+		for _, plan := range dto.Plans {
+			sent.PlanOrder[plan.HRID] = apiv4.PlanRank{Order: *plan.Order}
+		}
+	}
+	return apiv4.DriftDTO(sent)
+}
+
+// remoteDriftV4JSON maps a GET response (JSON) the way the admission drift check does, for a CR without plans.
+func remoteDriftV4JSON(remote string) apiv4.DTO {
+	GinkgoHelper()
+	return apiv4.DriftDTO(apiv4.RemoteDTO(apiv4.DTO{}, parseJSON[sdk.ApiV4State](remote)))
 }
 
 // sdkV4JSON parses an SDK payload, normalised for drift.
@@ -80,48 +96,6 @@ func remoteOfCRD(crd apiv4.DTO, remote model.APIV4DTO) apiv4.DTO {
 	GinkgoHelper()
 	state, err := mapper.MapViaJSON[sdk.ApiV4State](remote)
 	Expect(err).ToNot(HaveOccurred())
-	return apiv4.DriftDTO(apiv4.RemoteDTO(crd, withEchoedBooleans(crd, state)))
+	return apiv4.DriftDTO(apiv4.RemoteDTO(crd, state))
 }
 
-// withEchoedBooleans fills the booleans a test GET response leaves out with the value the CR sends. GKO
-// always sends them and APIM's GET always returns them (the v4drift integration suite syncs full APIs
-// without drift on them), so an omitted one stands for "what GKO sent", not for the SDK default.
-func withEchoedBooleans(crd apiv4.DTO, state sdk.ApiV4State) sdk.ApiV4State {
-	if state.NotifyMembers == nil {
-		state.NotifyMembers = crd.NotifyMembers
-	}
-	if state.FlowExecution != nil && state.FlowExecution.MatchRequired == nil && crd.FlowExecution != nil {
-		flowExecution := *state.FlowExecution
-		flowExecution.MatchRequired = crd.FlowExecution.MatchRequired
-		state.FlowExecution = &flowExecution
-	}
-	sent := make(map[string]sdk.PageV4, len(crd.Pages))
-	for _, page := range crd.Pages {
-		sent[page.Hrid] = page
-	}
-	pages := make([]sdk.PageV4, len(state.Pages))
-	for i, page := range state.Pages {
-		if crdPage, ok := sent[page.Hrid]; ok {
-			if page.Homepage == nil {
-				page.Homepage = crdPage.Homepage
-			}
-			if page.Published == nil {
-				page.Published = crdPage.Published
-			}
-		}
-		pages[i] = page
-	}
-	if state.Pages != nil {
-		state.Pages = pages
-	}
-	return state
-}
-
-// completeAPIV4Payload is the complete fixture as sent to APIM, before DriftDTO drops the fields
-// drift leaves out (listener path overrideAccess), so that every SDK property is walked.
-func completeAPIV4Payload() apiv4.DTO {
-	GinkgoHelper()
-	api, err := mapper.MapViaJSON[sdk.ApiV4](loadFixture[model.APIV4DTO]("api_v4_dto.json"))
-	Expect(err).ToNot(HaveOccurred())
-	return apiv4.DTO{ApiV4: api, PlanOrder: map[string]int{"fixture": 1}}
-}

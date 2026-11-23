@@ -54,10 +54,13 @@ type DTO struct {
 	IgnoreGroups bool `json:"-" drift:"ignore"`
 	// Synced is set once APIM gave the API an ID (status.id): drift has nothing to compare before that.
 	Synced bool `json:"-" drift:"ignore"`
-	// PlanOrder is the rank of each plan (hrid to position, from 1) in the list APIM stores, drift only: APIM
+	// PlanOrder is the rank of each plan (hrid to its order, from 1) in the list APIM stores, drift only: APIM
 	// orders plans by position and the SDK plan has no order. It is only set, and compared, when every plan has
 	// an order and is published (APIM renumbers published plans only).
-	PlanOrder map[string]int `json:"-"`
+	PlanOrder map[string]PlanRank `json:"-"`
+	// DriftListeners holds the listeners as DriftDTO compares them: unstructured, as GKO always compared them.
+	// Drift only: the payload is ApiV4.Listeners, which DriftDTO empties.
+	DriftListeners []*model.APIV4GenericListenerDTO `json:"listeners,omitempty"`
 	// Gateway is the ConfigMap the gateway syncs the API from.
 	Gateway GatewaySync `json:"-" drift:"ignore"`
 }
@@ -112,12 +115,17 @@ func orderNotComparable(plan *model.APIV4PlanDTO) bool {
 	return plan.Order == nil || !published
 }
 
+// PlanRank is the order of a plan, as APIM stores it.
+type PlanRank struct {
+	Order int `json:"order"`
+}
+
 // planRanks gives each plan its position in plans, from 1: the order APIM stores for a plan list it receives,
 // and lists them in on GET.
-func planRanks(plans []sdk.PlanV4) map[string]int {
-	ranks := make(map[string]int, len(plans))
+func planRanks(plans []sdk.PlanV4) map[string]PlanRank {
+	ranks := make(map[string]PlanRank, len(plans))
 	for i, plan := range plans {
-		ranks[plan.Hrid] = i + 1
+		ranks[plan.Hrid] = PlanRank{Order: i + 1}
 	}
 	return ranks
 }
