@@ -88,7 +88,6 @@ func (svc *APIs) GetV4ByHRID(hrid string) (*model.APIV4DTO, error) {
 }
 
 // GetV4WithUUID fetches a pre-Automation V4 API from the Automation API by UUID.
-// For test purposes only.
 func (svc *APIs) GetV4WithUUID(apiID string) (*model.APIV4DTO, error) {
 	url := svc.AutomationTarget("apis").WithPath(apiID).
 		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))

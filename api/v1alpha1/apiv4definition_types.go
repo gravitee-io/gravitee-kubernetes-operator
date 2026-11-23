@@ -205,6 +205,16 @@ func (api *ApiV4Definition) pickCrossID() string {
 	return uuid.FromStrings(namespacedName.String())
 }
 
+// LegacyID is the id GKO 4.11 gave an API it created through a management context.
+func (api *ApiV4Definition) LegacyID(mCtx core.ContextModel) string {
+	return uuid.FromStrings(api.pickCrossID(), mCtx.GetOrgID(), mCtx.GetEnvID())
+}
+
+// LegacyCrossID is the cross id GKO 4.11 gave the same API.
+func (api *ApiV4Definition) LegacyCrossID() string {
+	return api.pickCrossID()
+}
+
 func (api *ApiV4Definition) pickPlanIDs() *map[string]*v4.Plan {
 	if !api.HasPlans() {
 		return nil

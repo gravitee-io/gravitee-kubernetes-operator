@@ -154,6 +154,10 @@ func validateDryRun(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.
 		return errs
 	}
 
+	if err = apidefinition.AdoptLegacyID(ctx, apimClient, cp); err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
 	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
 	status, err := apimClient.APIs.DryRunImportV4(cp)
 	if err != nil {

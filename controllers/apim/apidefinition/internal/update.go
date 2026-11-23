@@ -115,6 +115,9 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		if err != nil {
 			return err
 		}
+		if err = apidefinition.AdoptLegacyID(ctx, apimClient, apiDefinition); err != nil {
+			return gerrors.NewControlPlaneError(err)
+		}
 		apiDefinition.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(apiDefinition))
 
 		status, err := apimClient.APIs.ImportV4(apiDefinition)
