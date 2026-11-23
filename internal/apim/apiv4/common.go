@@ -17,14 +17,12 @@ package apiv4
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"slices"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -35,9 +33,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
 )
-
-// gatewayDefinitionVersion is the apiDefinitionVersion written in the gateway ConfigMap of a v4 API.
-const gatewayDefinitionVersion = "4.0.0"
 
 // DTO is an ApiV4Definition as APIM sees it, plus what the calls around it need. The embedded sdk.ApiV4 is what the
 // PUT sends and what drift detection compares.
@@ -61,21 +56,10 @@ type DTO struct {
 	// DriftListeners holds the listeners as DriftDTO compares them: unstructured, as GKO always compared them.
 	// Drift only: the payload is ApiV4.Listeners, which DriftDTO empties.
 	DriftListeners []*model.APIV4GenericListenerDTO `json:"listeners,omitempty"`
-	// Gateway is the ConfigMap the gateway syncs the API from.
-	Gateway GatewaySync `json:"-" drift:"ignore"`
-}
-
-// GatewaySync is the gateway ConfigMap of the API.
-type GatewaySync struct {
-	// Enabled is set when the API syncs from Kubernetes (definitionContext.syncFrom KUBERNETES). When unset, a
-	// ConfigMap the API owns is deleted.
-	Enabled   bool
-	Name      string
-	Namespace string
-	Owner     metav1.OwnerReference
-	Stopped   bool
-	// Definition is the JSON gateway definition of the API, IDs populated.
-	Definition []byte
+	// Gateway is the API, IDs populated, whose gateway ConfigMap the upsert writes. It is nil for an API that syncs
+	// from management: as before the SDK, the reconcile leaves its ConfigMap alone (the admission webhook deletes
+	// it, best effort, on the switch to management).
+	Gateway *v1alpha1.ApiV4Definition `json:"-" drift:"ignore"`
 }
 
 // ToDTO maps an ApiV4Definition, references already resolved, to its APIM payload.
@@ -104,8 +88,8 @@ func ToDTO(obj *v1alpha1.ApiV4Definition) (DTO, error) {
 	}
 	dto.DeleteID, dto.DeleteHridContainsUUID = deleteIdentity(obj)
 
-	if dto.Gateway, err = toGatewaySync(cp); err != nil {
-		return DTO{}, err
+	if cp.Spec.DefinitionContext != nil && cp.Spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {
+		dto.Gateway = cp
 	}
 	return dto, nil
 }
@@ -135,31 +119,6 @@ func deleteIdentity(obj *v1alpha1.ApiV4Definition) (string, bool) {
 		return obj.GetID(), true
 	}
 	return refs.NewNamespacedNameFromObject(obj).HRID(), false
-}
-
-func toGatewaySync(cp *v1alpha1.ApiV4Definition) (GatewaySync, error) {
-	gvk := cp.GetObjectKind().GroupVersionKind()
-	sync := GatewaySync{
-		Enabled:   !cp.IsSyncFromManagement(),
-		Name:      cp.GetName(),
-		Namespace: cp.GetNamespace(),
-		Owner: metav1.OwnerReference{
-			Kind:       gvk.Kind,
-			Name:       cp.GetName(),
-			APIVersion: gvk.GroupVersion().String(),
-			UID:        cp.GetUID(),
-		},
-		Stopped: cp.IsStopped(),
-	}
-	if !sync.Enabled {
-		return sync, nil
-	}
-	definition, err := json.Marshal(cp.ToGatewayDefinition())
-	if err != nil {
-		return GatewaySync{}, fmt.Errorf("unable to marshal the gateway definition: %w", err)
-	}
-	sync.Definition = definition
-	return sync, nil
 }
 
 // Client is the APIM SDK client of the API's management context, plus GKO's APIM facade for the one call the

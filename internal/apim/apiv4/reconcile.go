@@ -95,23 +95,17 @@ func put(ctx context.Context, client *Client, dto DTO, dryRun bool) (*sdk.ApiV4S
 }
 
 // syncGateway writes the gateway ConfigMap of an API that syncs from Kubernetes (deletes it while the API is
-// stopped), and deletes the one an API that syncs from management still owns.
-func syncGateway(ctx context.Context, gateway GatewaySync, resp Response) error {
-	if !gateway.Enabled {
-		return apidefinition.DeleteOwnedConfigMap(ctx, gateway.Name, gateway.Namespace, gateway.Owner.UID)
+// stopped). As before the SDK, it carries the organization and environment APIM returned, if any.
+func syncGateway(ctx context.Context, gateway *v1alpha1.ApiV4Definition, resp Response) error {
+	if gateway == nil {
+		return nil
 	}
-	if gateway.Stopped {
-		return apidefinition.DeleteConfigMap(ctx, gateway.Name, gateway.Namespace)
+	api := gateway.DeepCopy()
+	if resp.State != nil {
+		api.Status.OrgID = resp.OrgID
+		api.Status.EnvID = resp.EnvID
 	}
-	return apidefinition.SaveConfigMap(ctx, apidefinition.GatewayConfigMap{
-		Name:              gateway.Name,
-		Namespace:         gateway.Namespace,
-		Owner:             gateway.Owner,
-		OrgID:             resp.OrgID,
-		EnvID:             resp.EnvID,
-		DefinitionVersion: gatewayDefinitionVersion,
-		Definition:        gateway.Definition,
-	})
+	return apidefinition.UpdateConfigMap(ctx, api)
 }
 
 // Delete deletes the API in APIM. An API without a management context has nothing to delete.

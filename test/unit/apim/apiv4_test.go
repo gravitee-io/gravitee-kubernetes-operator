@@ -108,7 +108,7 @@ var _ = Describe("ApiV4Definition APIM mapping", func() {
 			Expect(dto.Hrid).To(Equal(ordersHRID()))
 			Expect(dto.HridContainsUUID).To(BeFalse())
 			Expect(api.Spec.ID).To(BeEmpty(), "ToDTO must not populate the IDs of the object it was given")
-			Expect(string(dto.Gateway.Definition)).To(ContainSubstring(`"id":"`))
+			Expect(dto.Gateway.Spec.ID).ToNot(BeEmpty(), "the gateway ConfigMap is written with the IDs populated")
 		})
 
 		It("is synced once APIM gave the API an ID", func() {
@@ -208,35 +208,21 @@ var _ = Describe("ApiV4Definition APIM mapping", func() {
 		})
 	})
 
-	Describe("GatewaySync", func() {
-		It("enables the ConfigMap of an API that syncs from Kubernetes, owned by the API", func() {
+	Describe("Gateway", func() {
+		It("is the API, for an API that syncs from Kubernetes", func() {
 			gateway := toAPIV4DTO(apiV4WithContext()).Gateway
 
-			Expect(gateway.Enabled).To(BeTrue())
-			Expect(gateway.Stopped).To(BeFalse())
+			Expect(gateway).ToNot(BeNil())
 			Expect(gateway.Name).To(Equal("orders"))
 			Expect(gateway.Namespace).To(Equal("default"))
-			Expect(gateway.Owner).To(Equal(metav1.OwnerReference{
-				Kind: "ApiV4Definition", Name: "orders", APIVersion: "gravitee.io/v1alpha1", UID: "orders-uid",
-			}))
-			Expect(string(gateway.Definition)).To(ContainSubstring(`"name":"orders"`))
+			Expect(gateway.UID).To(Equal(types.UID("orders-uid")))
 		})
 
-		It("disables the ConfigMap of an API that syncs from management", func() {
+		It("is nil for an API that syncs from management", func() {
 			api := apiV4WithContext()
 			api.Spec.DefinitionContext = nil
 
-			gateway := toAPIV4DTO(api).Gateway
-
-			Expect(gateway.Enabled).To(BeFalse())
-			Expect(gateway.Definition).To(BeNil())
-			Expect(gateway.Owner.UID).To(Equal(types.UID("orders-uid")))
-		})
-
-		It("marks a stopped API", func() {
-			api := apiV4WithContext()
-			api.Spec.State = "STOPPED"
-			Expect(toAPIV4DTO(api).Gateway.Stopped).To(BeTrue())
+			Expect(toAPIV4DTO(api).Gateway).To(BeNil())
 		})
 	})
 
@@ -287,19 +273,8 @@ var _ = Describe("ApiV4Definition APIM mapping", func() {
 			Expect(kerrors.IsNotFound(k8s.GetClient().Get(ctx, cmKey, &corev1.ConfigMap{}))).To(BeTrue())
 		})
 
-		It("deletes the ConfigMap it owns when the API moves to management sync", func() {
+		It("leaves alone the ConfigMap of an API that syncs from management, as before the SDK", func() {
 			registerFakeK8s(configMap("orders-uid"))
-			api := apiV4WithContext()
-			api.Spec.Context = nil
-			api.Spec.DefinitionContext = nil
-
-			_, err := apiv4.Upsert(ctx, nil, toAPIV4DTO(api))
-			Expect(err).ToNot(HaveOccurred())
-			Expect(kerrors.IsNotFound(k8s.GetClient().Get(ctx, cmKey, &corev1.ConfigMap{}))).To(BeTrue())
-		})
-
-		It("keeps a ConfigMap of the same name that another object owns", func() {
-			registerFakeK8s(configMap("someone-else"))
 			api := apiV4WithContext()
 			api.Spec.Context = nil
 			api.Spec.DefinitionContext = nil

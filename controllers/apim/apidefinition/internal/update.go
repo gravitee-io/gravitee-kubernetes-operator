@@ -66,7 +66,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 			return gerrors.NewIllegalStateError(
 				gerrors.NewUnrecoverableError("a context is required when setting local to false"))
 		}
-		if err := updateConfigMap(ctx, apiDefinition); err != nil {
+		if err := apidefinition.UpdateConfigMap(ctx, apiDefinition); err != nil {
 			return err
 		}
 		apiDefinition.Status.State = spec.State
@@ -90,7 +90,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	if spec.IsLocal {
 		retrieveMgmtPlanIds(spec, status)
-		return updateConfigMap(ctx, apiDefinition)
+		return apidefinition.UpdateConfigMap(ctx, apiDefinition)
 	}
 
 	log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
