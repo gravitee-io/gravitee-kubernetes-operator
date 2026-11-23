@@ -695,7 +695,7 @@ spec:
                           type: object
                         type: array
                       id:
-                        description: Plan ID
+                        description: The ID of the plan.
                         type: string
                       name:
                         description: Plan name

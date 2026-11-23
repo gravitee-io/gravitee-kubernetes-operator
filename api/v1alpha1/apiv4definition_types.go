@@ -217,7 +217,7 @@ func (api *ApiV4Definition) pickPlanIDs() *map[string]*v4.Plan {
 		p.HRID = hrid.NameToValidHRID(key)
 		if id, ok := api.Status.Plans[key]; ok {
 			p.ID = id
-		} else {
+		} else if p.ID == "" {
 			p.ID = uuid.FromStrings(api.pickID(), key)
 		}
 
