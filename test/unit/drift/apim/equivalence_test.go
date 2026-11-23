@@ -19,6 +19,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 )
@@ -101,8 +102,8 @@ var _ = Describe("IgnoreOnlyArgs strip-ns groups", func() {
 	})
 
 	It("Detect reports drift when remote group membership differs", func() {
-		crd := model.ApplicationDTO{Groups: []model.ApplicationGroup{"group1", "group2"}}
-		remote := model.ApplicationDTO{Groups: []model.ApplicationGroup{"group1", "group3"}}
+		crd := apimapp.DTO{Application: sdk.Application{Groups: []string{"group1", "group2"}}}
+		remote := apimapp.DTO{Application: sdk.Application{Groups: []string{"group1", "group3"}}}
 		result := drift.DetectWithNamespace(crd, remote, "test-namespace")
 		Expect(result.DriftDetected()).To(BeTrue())
 	})

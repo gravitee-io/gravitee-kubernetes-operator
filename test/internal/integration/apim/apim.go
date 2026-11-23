@@ -28,6 +28,7 @@ import (
 type APIM struct {
 	*apim.APIM
 
+	Applications  *Applications
 	Subscriptions *service.Subscriptions
 	Pages         *service.Pages
 	Org           *service.Org
@@ -56,6 +57,7 @@ func NewClient(ctx context.Context) *APIM {
 
 	return &APIM{
 		APIM:          apim,
+		Applications:  NewApplications(ctx, sdkClient, apim.APIs.Client),
 		Subscriptions: subscriptions,
 		Pages:         pages,
 		Org:           org,

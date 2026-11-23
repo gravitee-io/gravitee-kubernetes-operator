@@ -15,8 +15,9 @@
 package apim
 
 import (
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -29,8 +30,8 @@ var _ = Describe("Application Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, "namespace"))
 		},
 		Entry("empty struct",
-			model.ApplicationDTO{},
-			model.ApplicationDTO{},
+			apimapp.DTO{},
+			apimapp.DTO{},
 		),
 		Entry("equal struct",
 			completeApplicationDTO(),
@@ -38,61 +39,60 @@ var _ = Describe("Application Drift detection", func() {
 		),
 		Entry("equal struct",
 			completeApplicationDTO(),
-			model.ToApplicationDTO(completeApplicationCRD().Spec),
+			toApplicationDTO(completeApplicationCRD()),
 		),
 		Entry("crd-only members ignored",
-			model.ApplicationDTO{
-				Members: []model.ApplicationMemberDTO{
-					{Source: "memory", SourceID: "admin", Role: "ADMIN"},
-					{Source: "memory", SourceID: "local-only", Role: "USER"},
+			apimapp.DTO{Application: sdk.Application{
+				Members: []sdk.Member{
+					{Source: "memory", SourceId: "admin", Role: "ADMIN"},
+					{Source: "memory", SourceId: "local-only", Role: "USER"},
 				},
-			},
-			model.ApplicationDTO{
-				Members: []model.ApplicationMemberDTO{
-					{Source: "memory", SourceID: "admin", Role: "ADMIN"},
+			}},
+			apimapp.DTO{Application: sdk.Application{
+				Members: []sdk.Member{
+					{Source: "memory", SourceId: "admin", Role: "ADMIN"},
 				},
-			},
+			}},
 		),
 		Entry("equivalent struct",
-			model.ApplicationDTO{
+			apimapp.DTO{Application: sdk.Application{
 				Members: nil,
-				Groups:  []model.ApplicationGroup{"foo", "bar"},
-			},
-			model.ApplicationDTO{
-				ID:            "123456",
-				HRID:          "my-app",
-				Status:        "ACTIVE",
-				Groups:        []model.ApplicationGroup{"namespace-bar"},
-				Members:       make([]model.ApplicationMemberDTO, 0),
-				Metadata:      make([]model.ApplicationMetadataDTO, 0),
-				Settings:      &model.ApplicationSettingsDTO{},
+				Groups:  []string{"foo", "bar"},
+			}},
+			apimapp.DTO{Application: sdk.Application{
+				Hrid:          "my-app",
+				Status:        new(sdk.ApplicationSpecStatus("ACTIVE")),
+				Groups:        []string{"namespace-bar"},
+				Members:       make([]sdk.Member, 0),
+				Metadata:      make([]sdk.Metadata, 0),
+				Settings:      &sdk.ApplicationSettings{},
 				NotifyMembers: new(false),
-			},
+			}},
 		),
 		Entry("client certificate equivalent",
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificate: `-----BEGIN CERTIFICATE-----
------END CERTIFICATE-----`,
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificate: new(`-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----`),
 					},
 				},
-			},
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificate: `-----BEGIN CERTIFICATE-----
+			}},
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificate: new(`-----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----
-`,
+`),
 					},
 				},
-			},
+			}},
 		),
 		Entry("listed certificates equivalent",
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
 							{
 								Content: `-----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----`,
@@ -100,11 +100,11 @@ var _ = Describe("Application Drift detection", func() {
 						},
 					},
 				},
-			},
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
+			}},
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
 							{
 								Content: `-----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----
@@ -113,30 +113,25 @@ var _ = Describe("Application Drift detection", func() {
 						},
 					},
 				},
-			},
+			}},
 		),
 		Entry("listed certificates equivalent, ref ignored",
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
 							{
-								Ref: &model.ApplicationCertificateRefDTO{
-									Kind: "configmaps",
-									Name: "foo",
-									Key:  "cert",
-								},
 								Content: `-----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----`,
 							},
 						},
 					},
 				},
-			},
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
+			}},
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
 							{
 								Content: `-----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----
@@ -145,82 +140,82 @@ var _ = Describe("Application Drift detection", func() {
 						},
 					},
 				},
-			},
+			}},
 		),
 		Entry("expired cert omitted from remote is not drift",
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
-							{Name: "expired", Content: "CERT-A", EndsAt: "2000-01-01T00:00:00Z"},
-							{Name: "active", Content: "CERT-B", EndsAt: "2099-01-01T00:00:00Z"},
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
+							{Name: "expired", Content: "CERT-A", EndsAt: new("2000-01-01T00:00:00Z")},
+							{Name: "active", Content: "CERT-B", EndsAt: new("2099-01-01T00:00:00Z")},
 						},
 					},
 				},
-			},
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
-							{Name: "active", Content: "CERT-B", EndsAt: "2099-01-01T00:00:00Z"},
+			}},
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
+							{Name: "active", Content: "CERT-B", EndsAt: new("2099-01-01T00:00:00Z")},
 						},
 					},
 				},
-			},
+			}},
 		),
 		Entry("scheduled cert omitted from remote is not drift",
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
-							{Name: "scheduled", Content: "CERT-A", StartsAt: "2099-01-01T00:00:00Z"},
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
+							{Name: "scheduled", Content: "CERT-A", StartsAt: new("2099-01-01T00:00:00Z")},
 						},
 					},
 				},
-			},
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{},
+			}},
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{},
 					},
 				},
-			},
+			}},
 		),
 		Entry("listed certificates equivalent, start/end date",
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
 							{
-								StartsAt: "2023-07-25T02:43:16+03:00",
-								EndsAt:   "2099-08-25T23:43:16Z",
+								StartsAt: new("2023-07-25T02:43:16+03:00"),
+								EndsAt:   new("2099-08-25T23:43:16Z"),
 							},
 						},
 					},
 				},
-			},
-			model.ApplicationDTO{
-				Settings: &model.ApplicationSettingsDTO{
-					TLS: &model.ApplicationTLSSettingsDTO{
-						ClientCertificates: []model.ApplicationClientCertificateDTO{
+			}},
+			apimapp.DTO{Application: sdk.Application{
+				Settings: &sdk.ApplicationSettings{
+					Tls: &sdk.ApplicationTLSSettings{
+						ClientCertificates: []sdk.ClientCertificate{
 							{
-								StartsAt: "2023-07-24T20:43:16-03:00",
-								EndsAt:   "2099-08-25T23:43:16-00:00",
+								StartsAt: new("2023-07-24T20:43:16-03:00"),
+								EndsAt:   new("2099-08-25T23:43:16-00:00"),
 							},
 						},
 					},
 				},
-			},
+			}},
 		),
 	)
 
 	It("detects a console-side change of the OAuth additional client metadata", func() {
-		withMetadata := func(softwareID string) model.ApplicationDTO {
-			return model.ApplicationDTO{Settings: &model.ApplicationSettingsDTO{
-				Oauth: &model.ApplicationOAuthClientSettingsDTO{
+		withMetadata := func(softwareID string) apimapp.DTO {
+			return apimapp.DTO{Application: sdk.Application{Settings: &sdk.ApplicationSettings{
+				Oauth: &sdk.ApplicationOAuthClientSettings{
 					AdditionalClientMetadata: map[string]string{"software_id": softwareID},
 				},
-			}}
+			}}}
 		}
 
 		result := drift.DetectWithNamespace(withMetadata("crd-template"), withMetadata("console-template"), "")
@@ -229,12 +224,12 @@ var _ = Describe("Application Drift detection", func() {
 	})
 
 	It("treats absent and empty OAuth additional client metadata as equivalent", func() {
-		crd := model.ApplicationDTO{Settings: &model.ApplicationSettingsDTO{
-			Oauth: &model.ApplicationOAuthClientSettingsDTO{},
-		}}
-		remote := model.ApplicationDTO{Settings: &model.ApplicationSettingsDTO{
-			Oauth: &model.ApplicationOAuthClientSettingsDTO{AdditionalClientMetadata: map[string]string{}},
-		}}
+		crd := apimapp.DTO{Application: sdk.Application{Settings: &sdk.ApplicationSettings{
+			Oauth: &sdk.ApplicationOAuthClientSettings{},
+		}}}
+		remote := apimapp.DTO{Application: sdk.Application{Settings: &sdk.ApplicationSettings{
+			Oauth: &sdk.ApplicationOAuthClientSettings{AdditionalClientMetadata: map[string]string{}},
+		}}}
 
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
@@ -246,19 +241,26 @@ var _ = Describe("Application Drift detection", func() {
 	})
 
 	It("refuses a group APIM added when neither version of the application sets groups", func() {
-		remote := model.ApplicationDTO{Description: "before", Groups: []model.ApplicationGroup{"dev"}}
+		remote := apimapp.DTO{Application: sdk.Application{Description: "before", Groups: []string{"dev"}}}
 		merged := drift.Merge(
-			drift.DetectWithNamespace(model.ApplicationDTO{Description: "before"}, remote, "namespace"),
-			drift.DetectWithNamespace(model.ApplicationDTO{Description: "after"}, remote, "namespace"),
+			drift.DetectWithNamespace(apimapp.DTO{Application: sdk.Application{Description: "before"}}, remote, "namespace"),
+			drift.DetectWithNamespace(apimapp.DTO{Application: sdk.Application{Description: "after"}}, remote, "namespace"),
 		)
 
 		Expect(merged.DriftDetected()).To(BeTrue(), merged.String())
 	})
 })
 
-func completeApplicationDTO() model.ApplicationDTO {
+func completeApplicationDTO() apimapp.DTO {
 	GinkgoHelper()
-	return loadFixture[model.ApplicationDTO]("application_dto.json")
+	return loadFixture[apimapp.DTO]("application_dto.json")
+}
+
+func toApplicationDTO(app *v1alpha1.Application) apimapp.DTO {
+	GinkgoHelper()
+	dto, err := apimapp.ToDTO(app)
+	Expect(err).ToNot(HaveOccurred())
+	return dto
 }
 
 func completeApplicationCRD() *v1alpha1.Application {

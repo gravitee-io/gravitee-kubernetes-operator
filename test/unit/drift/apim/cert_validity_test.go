@@ -15,7 +15,7 @@
 package apim
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -23,7 +23,7 @@ import (
 var _ = Describe("ApplicationClientCertificateDTO validity", func() {
 	DescribeTable("Expired",
 		func(endsAt string, expired bool) {
-			Expect(model.ApplicationClientCertificateDTO{EndsAt: endsAt}.Expired()).To(Equal(expired))
+			Expect(sdk.ClientCertificate{EndsAt: optional(endsAt)}.Expired()).To(Equal(expired))
 		},
 		Entry("missing", "", false),
 		Entry("past", "2000-01-01T00:00:00Z", true),
@@ -32,7 +32,7 @@ var _ = Describe("ApplicationClientCertificateDTO validity", func() {
 
 	DescribeTable("Scheduled",
 		func(startsAt string, scheduled bool) {
-			Expect(model.ApplicationClientCertificateDTO{StartsAt: startsAt}.Scheduled()).To(Equal(scheduled))
+			Expect(sdk.ClientCertificate{StartsAt: optional(startsAt)}.Scheduled()).To(Equal(scheduled))
 		},
 		Entry("missing", "", false),
 		Entry("past", "2000-01-01T00:00:00Z", false),
@@ -40,11 +40,19 @@ var _ = Describe("ApplicationClientCertificateDTO validity", func() {
 	)
 
 	It("does not treat a scheduled cert as expired", func() {
-		c := model.ApplicationClientCertificateDTO{
-			StartsAt: "2099-01-01T00:00:00Z",
-			EndsAt:   "2099-12-31T00:00:00Z",
+		c := sdk.ClientCertificate{
+			StartsAt: new("2099-01-01T00:00:00Z"),
+			EndsAt:   new("2099-12-31T00:00:00Z"),
 		}
 		Expect(c.Scheduled()).To(BeTrue())
 		Expect(c.Expired()).To(BeFalse())
 	})
 })
+
+// optional maps a missing date ("") to an unset one.
+func optional(date string) *string {
+	if date == "" {
+		return nil
+	}
+	return &date
+}
