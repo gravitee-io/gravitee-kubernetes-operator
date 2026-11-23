@@ -248,6 +248,9 @@ func (l ResourceLifecycle[T, D, C, R]) resolveRefs(ctx context.Context, obj T) e
 	if err == nil {
 		return nil
 	}
+	if gerrors.IsIllegalState(err) {
+		return err
+	}
 	return gerrors.NewResolveRefError(err)
 }
 

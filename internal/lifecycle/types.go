@@ -77,6 +77,10 @@ type DryRunFunc[C any, D store.Identifiable] func(ctx context.Context, client C,
 // DeferDryRunFunc returns why obj cannot be dry-run yet, reported as a warning, or "" to dry-run it.
 type DeferDryRunFunc[T core.ContextAwareObject] func(ctx context.Context, obj T) string
 
+// DeferDriftFunc returns why the remote cannot be compared with oldObj, reported as a warning, or "" to compare it.
+// newObj has its templates compiled and its refs resolved; oldObj is as stored.
+type DeferDriftFunc[T core.ContextAwareObject] func(ctx context.Context, oldObj, newObj T) string
+
 // GetRemoteFunc returns the live remote object for dto.Identity().
 // Return the client error as-is, including 404.
 type GetRemoteFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) (D, error)
@@ -91,7 +95,10 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 	Finalizer string
 
 	// ResolveRefs runs after template compile/release, before ClientFactory.
-	// Nil skips resolution and the ResolvedRefs condition. Use the same func as AdmissionLifecycle.ResolveRefs.
+	// Nil skips resolution and the ResolvedRefs condition. Use the same func as AdmissionLifecycle.ResolveRefs,
+	// or a stricter one that waits on refs the webhook defers with DeferDryRun.
+	// An error is a ResolveRefError, requeued, unless it is an IllegalStateError: a ref that only a spec change
+	// can fix is reported on Accepted and not requeued.
 	// On delete, a NotFound reference means nothing is left to clean: the finalizer is released
 	// without calling Delete.
 	ResolveRefs RefResolverFunc[T]
@@ -160,6 +167,11 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 
 	// GetRemote runs on update after PostCheck, for drift, once the resource has an ID. Required.
 	GetRemote GetRemoteFunc[C, D]
+
+	// DeferDrift skips drift while the stored object is not what the remote holds (its last apply was refused) or
+	// cannot be mapped (a reference gone since). Runs before GetRemote, after DryRun, which it never skips: the
+	// dry run validates the edit that fixes the object. Nil always compares.
+	DeferDrift DeferDriftFunc[T]
 
 	// DeleteGuard runs on delete review only. Nil skips.
 	DeleteGuard DeleteGuardFunc[T]

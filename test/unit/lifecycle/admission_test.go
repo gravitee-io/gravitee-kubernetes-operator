@@ -618,6 +618,39 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 		Expect(c).To(Equal(calls{}))
 	})
 
+	It("dry-runs and skips drift with the reason DeferDrift gives", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		var c calls
+		recording(&a, &c, "")
+		var stored *v1alpha1.Group
+		a.DeferDrift = func(_ context.Context, oldG, _ *v1alpha1.Group) string {
+			stored = oldG
+			return "the last apply was refused"
+		}
+		g := synced(newGroup("g1", "ns"))
+
+		errs := a.ValidateUpdate(ctx, g, withSpecChange(g))
+
+		Expect(errs.IsSevere()).To(BeFalse())
+		Expect(errs.Warning).To(ConsistOf(MatchError("the last apply was refused")))
+		Expect(c).To(Equal(calls{dryRun: true}))
+		Expect(stored).To(BeIdenticalTo(g))
+	})
+
+	It("compares with the remote when DeferDrift gives no reason", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		var c calls
+		recording(&a, &c, "")
+		a.DeferDrift = func(context.Context, *v1alpha1.Group, *v1alpha1.Group) string { return "" }
+		g := synced(newGroup("g1", "ns"))
+
+		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
+
+		Expect(errs.IsSevere()).To(BeTrue())
+		Expect(errs.Severe[0].Error()).To(ContainSubstring("drift detected"))
+		Expect(c).To(Equal(calls{getRemote: true}))
+	})
+
 	It("skips drift with a warning when a Secret of the previous version no longer exists", func() {
 		templating := env.Config.EnableTemplating
 		env.Config.EnableTemplating = true

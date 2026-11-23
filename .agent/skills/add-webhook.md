@@ -15,6 +15,8 @@ Section 3 is the part to get right.
 > same condition, so admission dry-runs every change the controller sends (Group: `ignore-members`).
 > When the remote cannot validate the resource until a dependency syncs, set `DeferDryRun`: it warns
 > and skips the dry run, and the controller's `ResolveRefs` holds the resource (McpProxy: its CatalogMcpServers).
+> When the stored object cannot be compared with the remote (its last apply was refused, or a reference it
+> names is gone), set `DeferDrift`: it warns and skips drift, and the dry run still checks the edit.
 
 ## 1. `internal/admission/<resource>/ctrl.go`
 

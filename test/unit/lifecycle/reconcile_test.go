@@ -650,6 +650,22 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			Expect(refs.Status).To(Equal(metav1.ConditionFalse))
 			Expect(refs.Message).To(ContainSubstring("secret missing"))
 		})
+
+		It("reports an IllegalStateError on Accepted without requeueing or upserting", func() {
+			cli := newCluster(newGroup("g1", testNs))
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = func(context.Context, *v1alpha1.Group, string) error {
+				return gerrors.NewIllegalStateError(errors.New("ref of another context"))
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(r.upserted).To(BeEmpty())
+			accepted := condition(fetch(cli, "g1"), k8s.ConditionAccepted)
+			Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+			Expect(accepted.Message).To(ContainSubstring("ref of another context"))
+		})
 	})
 
 	It("requeues on a template compile error without upserting", func() {
