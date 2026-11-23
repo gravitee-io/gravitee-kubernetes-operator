@@ -19,11 +19,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	corev1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -51,9 +48,8 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec) ||
 			t.Status.ProcessingStatus != core.ProcessingStatusCompleted
 	case *v1alpha1.ApiV4Definition:
-		// processingStatus is no longer written for v4: replay an API whose last sync was not accepted
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec) ||
-			!isAccepted(t.Status.Conditions)
+			t.Status.ProcessingStatus != core.ProcessingStatusCompleted
 	case *v1alpha1.ManagementContext:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.AMContext:
@@ -273,9 +269,4 @@ func annotationChanged(oldObj, newObj client.Object, key string) bool {
 
 func shouldAlwaysReconcile() bool {
 	return env.Config.ReconcileStrategy == "always"
-}
-
-func isAccepted(conditions []metav1.Condition) bool {
-	accepted := meta.FindStatusCondition(conditions, k8s.ConditionAccepted)
-	return accepted != nil && accepted.Status == metav1.ConditionTrue
 }

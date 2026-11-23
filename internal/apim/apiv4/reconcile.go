@@ -25,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -147,9 +148,18 @@ func Delete(ctx context.Context, client *Client, dto DTO) error {
 	}))
 }
 
+// SetProcessingStatus writes the deprecated processingStatus, as before the lifecycle: Completed after a successful
+// reconcile, Failed after a failed one.
+func SetProcessingStatus(obj *v1alpha1.ApiV4Definition, err error) {
+	if err != nil {
+		obj.Status.ProcessingStatus = core.ProcessingStatusFailed
+		return
+	}
+	obj.Status.ProcessingStatus = core.ProcessingStatusCompleted
+}
+
 // UpdateStatus copies the APIM state into the status. The subscription count is not APIM's and is kept.
 func UpdateStatus(_ context.Context, obj *v1alpha1.ApiV4Definition, resp Response) error {
-	obj.Status.ProcessingStatus = ""
 	if resp.State == nil {
 		return nil
 	}

@@ -230,6 +230,7 @@ var _ = Describe("ApiV4Definition through the APIM SDK", func() {
 		Expect(cli.Get(ctx, req.NamespacedName, got)).To(Succeed())
 		Expect(got.Status.ID).To(Equal("6b1d5f0a-0000-0000-0000-000000000001"))
 		Expect(got.Status.Plans).To(HaveKeyWithValue("KeyLess", "6b1d5f0a-0000-0000-0000-000000000003"))
+		Expect(got.Status.ProcessingStatus).To(Equal(core.ProcessingStatusFailed))
 	})
 
 	It("leaves the status alone on the lifecycle's upsert error when APIM refused the API", func() {

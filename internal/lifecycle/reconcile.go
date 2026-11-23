@@ -258,6 +258,9 @@ func (l ResourceLifecycle[T, D, C, R]) updateStatusSuccess(ctx context.Context, 
 	}
 	k8s.AddSuccessfulConditions(asConditionAware(obj))
 	l.dropResolvedRefsWhenUnused(obj)
+	if l.Status != nil {
+		l.Status(obj, nil)
+	}
 	return cli.Status().Update(ctx, obj)
 }
 
@@ -268,6 +271,9 @@ func (l ResourceLifecycle[T, D, C, R]) updateStatusFailure(ctx context.Context, 
 		l.setAcceptedMessage(obj, err.Error())
 	}
 	l.dropResolvedRefsWhenUnused(obj)
+	if l.Status != nil {
+		l.Status(obj, err)
+	}
 	return cli.Status().Update(ctx, obj)
 }
 

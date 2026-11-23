@@ -53,6 +53,7 @@ func NewV4Lifecycle() V4Lifecycle {
 		Upsert:        apiv4.Upsert,
 		PostUpsert:    apiv4.UpdateStatus,
 		OnUpsertError: apiv4.KeepAcceptedStatus,
+		Status:        apiv4.SetProcessingStatus,
 	})
 }
 

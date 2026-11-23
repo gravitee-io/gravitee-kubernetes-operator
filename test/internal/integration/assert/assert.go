@@ -91,9 +91,8 @@ func ApiRejected(apiDefinition *v1alpha1.ApiDefinition) error {
 		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionFalse)
 }
 
-// ApiV4Completed waits on the Accepted condition: processingStatus is no longer written for v4.
 func ApiV4Completed(apiDefinition *v1alpha1.ApiV4Definition) error {
-	return ApiV4Accepted(apiDefinition)
+	return Equals(reconcileStatus, core.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
 }
 
 func ApiV4Accepted(apiDefinition *v1alpha1.ApiV4Definition) error {
@@ -265,7 +264,7 @@ func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 }
 
 func ApiV4Failed(apiDefinition *v1alpha1.ApiV4Definition) error {
-	return Equals(reconcileCondition, true, apiDefinition.Status.IsFailed())
+	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }
 
 func NoErrorAndHTTPStatus(err error, res *http.Response, expectedStatus int) error {

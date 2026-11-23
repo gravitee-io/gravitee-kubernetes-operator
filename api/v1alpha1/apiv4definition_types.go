@@ -370,15 +370,8 @@ func (s *ApiV4DefinitionStatus) SetProcessingStatus(status core.ProcessingStatus
 	s.ProcessingStatus = status
 }
 
-// IsFailed reports a refused or failed sync: Accepted is False. A missing group ref only sets ResolvedRefs to
-// False and the API is still synced, so it is not failed.
 func (s *ApiV4DefinitionStatus) IsFailed() bool {
-	for _, condition := range s.Conditions {
-		if condition.Type == "Accepted" && condition.Status == metav1.ConditionFalse {
-			return true
-		}
-	}
-	return false
+	return s.ProcessingStatus == core.ProcessingStatusFailed
 }
 
 func (s *ApiV4DefinitionStatus) DeepCopyFrom(api client.Object) error {

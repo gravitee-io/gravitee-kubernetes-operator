@@ -55,6 +55,10 @@ type PostUpsertFunc[T core.ContextAwareObject, R any] func(ctx context.Context, 
 // What it writes stays on the status until PostUpsert clears it.
 type UpsertErrorFunc[T core.ContextAwareObject] func(ctx context.Context, obj T, err error) error
 
+// StatusFunc sets the status fields the lifecycle does not manage, before it saves the status of a reconcile.
+// err is nil when the reconcile succeeded. It mutates obj only.
+type StatusFunc[T core.ContextAwareObject] func(obj T, err error)
+
 // RefResolverFunc writes resolved in-cluster refs onto obj (secrets, parent CRs). Mutates obj.
 type RefResolverFunc[T any] func(ctx context.Context, obj T, namespace string) error
 
@@ -121,6 +125,10 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 
 	// OnUpsertError runs on create/update after a failed Upsert, before the error is returned. Nil skips.
 	OnUpsertError UpsertErrorFunc[T]
+
+	// Status runs before the lifecycle saves the status, after the conditions are set: on success (not while
+	// deleting) and on failure. Nil skips.
+	Status StatusFunc[T]
 }
 
 // AdmissionLifecycle is the admission holes for one CR kind.
