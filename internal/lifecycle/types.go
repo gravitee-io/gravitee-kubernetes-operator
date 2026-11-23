@@ -104,6 +104,8 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 	ResolveRefs RefResolverFunc[T]
 
 	// ClientFactory runs after refs, before ToDTO. Required.
+	// An error is a ResolveRefError. On delete, a NotFound, a context Secret deleted first for instance,
+	// releases the finalizer without calling Delete, as from ResolveRefs.
 	ClientFactory ClientFactoryFunc[T, C]
 
 	// Owner runs on create/update before mutate, saved with the finalizer. Nil skips.
