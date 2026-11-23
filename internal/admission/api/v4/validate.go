@@ -164,6 +164,10 @@ func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 		return errs
 	}
 
+	if err = apidefinition.AdoptLegacyID(ctx, apimClient, cp); err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
 	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
 	cp.SetDefinitionContext(v4.NewDefaultKubernetesContext().MergeWith(cp.GetDefinitionContext()))
 	status, err := apimClient.APIs.DryRunImportV4(cp)
