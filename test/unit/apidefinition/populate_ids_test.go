@@ -184,4 +184,16 @@ var _ = Describe("PopulateIDs", func() {
 		Entry("no plan id anywhere: an id is generated",
 			"", nil, uuid.FromStrings("exported-api-uuid", "k")),
 	)
+
+	It("keeps the spec plan id without a management context", func() {
+		plans := map[string]*v4.Plan{
+			"k": {Plan: &base.Plan{ID: "X"}, Name: "Test Plan"},
+		}
+		api := legacyAPI(&plans, nil)
+		api.Status = v1alpha1.ApiV4DefinitionStatus{}
+
+		api.PopulateIDs(nil, false)
+
+		Expect((*api.Spec.Plans)["k"].ID).To(Equal("X"))
+	})
 })
