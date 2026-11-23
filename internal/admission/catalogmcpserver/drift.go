@@ -76,8 +76,8 @@ func resolveRefs(context.Context, *v1alpha1.CatalogMcpServer) error {
 }
 
 // toDTO maps the CRD to the payload compared with the remote. CEL pairs every auth type with its block,
-// so a mapping error is not expected here; should one occur, the empty payload is reported as drift
-// rather than silently admitted.
+// so a mapping error is not expected. getRemote maps the new object first and hands its error to the fetch
+// failure policy: only the old object can reach here unmapped, and it is compared as an empty payload.
 func toDTO(srv *v1alpha1.CatalogMcpServer) sdk.AimCatalogMcpServer {
 	dto, err := apimcatalog.ToDTO(srv)
 	if err != nil {
