@@ -198,7 +198,7 @@ var _ = Describe("Authz policy", func() {
 			Expect(req.Path).To(Equal(collection))
 			Expect(req.Query.Get("dryRun")).To(Equal("false"))
 			Expect(marshalJSON(req.Body)).To(MatchJSON(marshalJSON(toAuthzPolicyDTO(resolvedAuthzPolicy()))))
-			Expect(*resp.State.Id).To(Equal("5f1c"))
+			Expect(resp.State.Id).To(HaveValue(Equal("5f1c")))
 			Expect(resp.GetOrgID()).To(Equal("DEFAULT"))
 			Expect(resp.GetEnvID()).To(Equal("DEFAULT"))
 		})
