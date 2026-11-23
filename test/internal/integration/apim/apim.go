@@ -29,7 +29,7 @@ type APIM struct {
 	*apim.APIM
 
 	Applications  *Applications
-	Subscriptions *service.Subscriptions
+	Subscriptions *Subscriptions
 	Pages         *service.Pages
 	Org           *service.Org
 	Export        *Export
@@ -49,7 +49,7 @@ func NewClient(ctx context.Context) *APIM {
 	apim, err := apim.FromContext(ctx, context, context.GetNamespace())
 	Expect(err).ToNot(HaveOccurred())
 
-	subscriptions := service.NewSubscriptions(apim.APIs.Client)
+	subscriptions := &Subscriptions{Subscriptions: service.NewSubscriptions(apim.APIs.Client), sdk: sdkClient}
 	pages := service.NewPages(apim.APIs.Client)
 	org := service.NewOrg(apim.APIs.Client)
 	export := NewExport(apim.APIs.Client)
