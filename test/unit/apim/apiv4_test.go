@@ -285,27 +285,4 @@ var _ = Describe("ApiV4Definition APIM mapping", func() {
 		})
 	})
 
-	Describe("PayloadChanged", func() {
-		It("is false for the same spec and annotations", func() {
-			Expect(apiv4.PayloadChanged(apiV4WithContext(), apiV4WithContext())).To(BeFalse())
-		})
-
-		It("is true when the spec changes", func() {
-			changed := apiV4WithContext()
-			changed.Spec.Description = new("changed")
-			Expect(apiv4.PayloadChanged(apiV4WithContext(), changed)).To(BeTrue())
-		})
-
-		It("is true when the ignore-groups annotation changes", func() {
-			changed := apiV4WithContext()
-			changed.Annotations = map[string]string{core.IgnoreGroupsAnnotation: "true"}
-			Expect(apiv4.PayloadChanged(apiV4WithContext(), changed)).To(BeTrue())
-		})
-
-		It("is false when another annotation changes", func() {
-			changed := apiV4WithContext()
-			changed.Annotations = map[string]string{"example.com/other": "x"}
-			Expect(apiv4.PayloadChanged(apiV4WithContext(), changed)).To(BeFalse())
-		})
-	})
 })

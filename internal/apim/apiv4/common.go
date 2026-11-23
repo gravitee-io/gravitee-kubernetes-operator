@@ -28,7 +28,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
@@ -164,11 +163,4 @@ func (r Response) GetOrgID() string {
 
 func (r Response) GetEnvID() string {
 	return r.EnvID
-}
-
-// PayloadChanged reports a change the controller sends to APIM: the spec, or the gravitee.io/ignore-groups
-// annotation (LastSpecHashPredicate.Update reconciles on both).
-func PayloadChanged(oldObj, newObj *v1alpha1.ApiV4Definition) bool {
-	return hash.Calculate(&oldObj.Spec) != hash.Calculate(&newObj.Spec) ||
-		oldObj.GetAnnotations()[core.IgnoreGroupsAnnotation] != newObj.GetAnnotations()[core.IgnoreGroupsAnnotation]
 }

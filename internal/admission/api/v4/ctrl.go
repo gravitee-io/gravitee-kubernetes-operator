@@ -40,15 +40,15 @@ type AdmissionCtrl struct {
 func NewAdmissionCtrl() AdmissionCtrl {
 	return AdmissionCtrl{
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
-			ResolveRefs:     apiv4.ResolveRefsForAdmission,
-			ClientFactory:   apiv4.CreateAPIMClient,
-			PreCheck:        preCheck,
-			ToDTO:           apiv4.ToDTO,
-			DryRun:          apiv4.DryRun,
-			PayloadChanged:  apiv4.PayloadChanged,
-			GetRemote:       apiv4.GetRemote,
-			DriftDTO:        apiv4.DriftDTO,
-			DeleteCheck:     deleteCheck,
+			ResolveRefs:    apiv4.ResolveRefsForAdmission,
+			ClientFactory:  apiv4.CreateAPIMClient,
+			PreCheck:       preCheck,
+			ToDTO:          apiv4.ToDTO,
+			DryRun:         apiv4.DryRun,
+			PayloadChanged: everyUpdate,
+			GetRemote:      apiv4.GetRemote,
+			DriftDTO:       apiv4.DriftDTO,
+			DeleteCheck:    deleteCheck,
 		}),
 	}
 }
@@ -100,6 +100,12 @@ func (a AdmissionCtrl) ValidateUpdate(
 	}
 	errs.MergeWith(a.Lifecycle.ValidateUpdate(ctx, oldObj, newObj))
 	return errs.Map()
+}
+
+// everyUpdate dry-runs every update, as before the lifecycle: a v4 update APIM would refuse is refused, whatever
+// changed.
+func everyUpdate(_, _ *v1alpha1.ApiV4Definition) bool {
+	return true
 }
 
 // deleteCheck refuses to delete an API Subscriptions still reference.
