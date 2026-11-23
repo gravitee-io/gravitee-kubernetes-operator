@@ -426,10 +426,14 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			Expect(apierrors.IsNotFound(err)).To(BeTrue())
 		})
 
+		// The error wraps a NotFound: only the class tells a mapping error from a missing reference.
 		It("still requeues a delete when ToDTO cannot map the resource", func() {
 			cli := newCluster(deletingGroup("g1", testFinalizer))
 			l := newGroupLifecycle(r)
-			l.ToDTO = failToDTO
+			l.ToDTO = func(*v1alpha1.Group) (testDTO, error) {
+				notFound := apierrors.NewNotFound(corev1.Resource("secrets"), "token")
+				return testDTO{}, fmt.Errorf("map members: %w", notFound)
+			}
 
 			_, err := reconcile(l, cli, "g1")
 
