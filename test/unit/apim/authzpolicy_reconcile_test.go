@@ -241,4 +241,25 @@ var _ = Describe("Authz policy reconcile", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(apierrors.IsNotFound(cli.Get(context.Background(), key, &v1alpha1.AuthzPolicy{}))).To(BeTrue())
 	})
+
+	// ToDTO refuses an unresolved pdpRef, and a delete does not resolve it: the delete drops the
+	// targets, so an applied policy is deleted on the platform, by hrid.
+	It("deletes an applied policy whose targets name an AuthzPdp from the platform", func() {
+		policy := newAuthzPolicy()
+		policy.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}
+		pdp := newAuthzPdp()
+		pdp.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}
+		pdp.Status.RoutingScope = "orders@eu"
+		r, cli := setup(policy, pdp)
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(stored(cli).Status.ID).To(Equal("5f1c"))
+		Expect(cli.Delete(context.Background(), stored(cli))).To(Succeed())
+
+		_, err = r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(wasDeleted("/authz/policies/gravitee-hotel-booking-read")).To(BeTrue())
+		Expect(apierrors.IsNotFound(cli.Get(context.Background(), key, &v1alpha1.AuthzPolicy{}))).To(BeTrue())
+	})
 })

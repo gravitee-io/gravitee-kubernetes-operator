@@ -49,13 +49,13 @@ func (r Response) GetEnvID() string {
 // then the management context. obj is the lifecycle's working copy, never saved, so the stored policy keeps its
 // pdpRefs. Missing, deleting or unsynced AuthzPdps are waited out (ResolvedRefs=False names every one, requeued):
 // the AuthzPdp watch requeues the policy once they sync. An AuthzPdp of another context is an IllegalStateError,
-// reported on Accepted and not requeued: only a change to the pdpRef fixes it. A delete goes by hrid, so a pending
-// AuthzPdp does not block it.
+// reported on Accepted and not requeued: only a change to the pdpRef fixes it. A delete goes by hrid: it drops the
+// targets from the working copy instead, so that ToDTO maps it whatever the state of its AuthzPdps.
 func ResolveRefs(ctx context.Context, obj *v1alpha1.AuthzPolicy, ns string) error {
-	if !obj.IsBeingDeleted() {
-		if err := dynamic.ResolveAuthzPolicyRefs(ctx, obj); err != nil {
-			return err
-		}
+	if obj.IsBeingDeleted() {
+		obj.Spec.Targets = nil
+	} else if err := dynamic.ResolveAuthzPolicyRefs(ctx, obj); err != nil {
+		return err
 	}
 	return apim.ResolveContextRef(ctx, obj, ns)
 }
