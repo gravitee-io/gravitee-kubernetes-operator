@@ -46,7 +46,7 @@ func ToDTO(obj *v1alpha1.AuthzEntity) (sdk.AuthzEntity, error) {
 	return sdk.AuthzEntity{
 		Hrid:       refs.NewNamespacedNameFromObject(obj).HRID(),
 		EntityId:   obj.Spec.EntityID,
-		Kind:       sdk.AuthzEntitySpecKind(obj.Spec.Kind),
+		Kind:       sdk.AuthzEntityKind(obj.Spec.Kind),
 		EntityType: obj.Spec.EntityType,
 		Attributes: toAttributes(obj.Spec.Attributes),
 		Parents:    parents,
