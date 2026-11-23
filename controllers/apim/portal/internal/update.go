@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
@@ -31,26 +31,27 @@ func CreateOrUpdate(ctx context.Context, prtl *v1alpha1.Portal) error {
 		)
 	}
 
-	thm, err := resolveTheme(ctx, prtl)
+	// The payload carries the theme HRID from the ref: reading the theme only refuses one GKO does not know.
+	if _, err := resolveTheme(ctx, prtl); err != nil {
+		return err
+	}
+
+	client, err := apimportal.CreateAPIMClient(ctx, prtl)
 	if err != nil {
 		return err
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
+	dto, err := apimportal.ToDTO(prtl)
 	if err != nil {
-		return err
+		return gerrors.NewIllegalStateError(err)
 	}
-	status, err := apimClient.Portals.CreateOrUpdate(prtl, thm)
+
+	resp, err := apimportal.Upsert(ctx, client, dto)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	// Setting fields by fields to keep the rest intact
-	prtl.Status.ID = status.ID
-	prtl.Status.OrgID = status.OrgID
-	prtl.Status.EnvID = status.EnvID
-
-	return nil
+	return apimportal.UpdateStatus(ctx, prtl, resp)
 }
 
 // resolveTheme reads the referenced theme from the cluster so that a portal is never

@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 )
@@ -134,12 +135,26 @@ func sdkPortalPayload(obj any) any {
 		dto, err := apimportaltheme.ToDTO(o)
 		Expect(err).ToNot(HaveOccurred())
 		return dto
+	case *v1alpha1.Portal:
+		dto, err := apimportal.ToDTO(o)
+		Expect(err).ToNot(HaveOccurred())
+		return dto
 	}
 	return legacyPortalPayload(obj)
 }
 
-// withAllowedDifferences applies to a golden payload the only differences the SDK payload may have.
-func withAllowedDifferences(_ string, golden map[string]any) map[string]any {
+// withAllowedDifferences applies to a golden payload the only differences the SDK payload may have:
+// a portal no longer sends the deprecated navigation[].order, which APIM ignores (Issue 07).
+func withAllowedDifferences(kind string, golden map[string]any) map[string]any {
+	if kind == "Portal" {
+		if entries, ok := golden["navigation"].([]any); ok {
+			for _, entry := range entries {
+				if fields, ok := entry.(map[string]any); ok {
+					delete(fields, "order")
+				}
+			}
+		}
+	}
 	return golden
 }
 
@@ -173,7 +188,7 @@ var _ = Describe("Portal navigation payloads", func() {
 				writePortalGolden(example.name, legacyPortalPayload(example.obj))
 				continue
 			}
-			golden := withAllowedDifferences(example.name, readPortalGolden(example.name))
+			golden := withAllowedDifferences(example.kind, readPortalGolden(example.name))
 			Expect(marshalPortalPayload(sdkPortalPayload(example.obj))).To(Equal(golden), example.name)
 		}
 	})

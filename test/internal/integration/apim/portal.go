@@ -19,6 +19,7 @@ import (
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 )
 
@@ -34,5 +35,20 @@ func (a *APIM) ImportPortalTheme(ctx context.Context, thm *v1alpha1.PortalTheme)
 		return err
 	}
 	_, err = apimportaltheme.Upsert(ctx, a.SDK, dto)
+	return err
+}
+
+// GetPortal gets a portal state by HRID, server-managed fields included.
+func (a *APIM) GetPortal(ctx context.Context, hrid string) (sdk.PortalState, error) {
+	return apimportal.GetState(ctx, a.SDK, sdk.Portal{Hrid: hrid})
+}
+
+// ImportPortal creates or updates a portal in APIM outside the operator.
+func (a *APIM) ImportPortal(ctx context.Context, prtl *v1alpha1.Portal) error {
+	dto, err := apimportal.ToDTO(prtl)
+	if err != nil {
+		return err
+	}
+	_, err = apimportal.Upsert(ctx, a.SDK, dto)
 	return err
 }
