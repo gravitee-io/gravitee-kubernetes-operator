@@ -32,6 +32,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzpolicy"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -99,7 +100,7 @@ func mustJSON(v any) string {
 
 var _ = Describe("Validating an AuthzPolicy", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 
 	BeforeEach(func() {
 		platform.reset()
@@ -123,12 +124,15 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 		cluster()
 		oldObj := newPolicy("hotel-booking-read", "policy.hotel-booking-read", byRef("orders-eu"))
 		oldObj.Status.ID = "5f1c"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
 		newObj := oldObj.DeepCopy()
 		newObj.Finalizers = []string{"finalizers.gravitee.io/authzpolicies"}
 
-		_, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
 
 		Expect(err).ToNot(HaveOccurred())
+		// Drift is skipped too: the targets cannot be compared before they resolve.
+		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
@@ -225,7 +229,7 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 
 var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 
 	BeforeEach(func() {
 		platform.reset()
@@ -315,9 +319,10 @@ var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 		fixed := refused.DeepCopy()
 		fixed.Spec.PolicyText = `permit(principal, action == Action::"read", resource);`
 
-		_, err := ctrl.ValidateUpdate(ctx, refused, fixed)
+		warnings, err := ctrl.ValidateUpdate(ctx, refused, fixed)
 
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the platform refused the last apply"))
 	})
 
 	// The usual cause is a deleted AuthzPdp, whose scope the platform has already removed from the
@@ -329,8 +334,10 @@ var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 		orphaned := retargeted.DeepCopy()
 		orphaned.Spec.Targets = []authzpdp.Target{byRef("orders-eu")}
 
-		_, err := ctrl.ValidateUpdate(ctx, orphaned, retargeted)
+		warnings, err := ctrl.ValidateUpdate(ctx, orphaned, retargeted)
 
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the previous targets no longer resolve: " +
+			"authz pdp not found: [travel/orders-eu]"))
 	})
 })

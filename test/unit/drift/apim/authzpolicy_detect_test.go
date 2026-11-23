@@ -17,8 +17,9 @@ package apim
 import (
 	"strings"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimauthzpolicy "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authzpolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -38,16 +39,16 @@ var _ = Describe("Authz policy Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
-			model.AuthzPolicyDTO{},
-			model.AuthzPolicyDTO{},
+			sdk.AuthzPolicy{},
+			sdk.AuthzPolicy{},
 		),
 		Entry("equal struct",
 			completeAuthzPolicyDTO(),
 			completeAuthzPolicyDTO(),
 		),
 		Entry("minimal CRD against what the platform answers for it",
-			model.ToAuthzPolicyDTO(minimalAuthzPolicyCRD()),
-			parseJSON[model.AuthzPolicyDTO](minimalAuthzPolicyRemote),
+			minimalAuthzPolicyDTO(),
+			parseJSON[sdk.AuthzPolicy](minimalAuthzPolicyRemote),
 		),
 		Entry("hrid is identity, not payload",
 			withAuthzPolicyHRID(completeAuthzPolicyDTO(), "default-drift-full"),
@@ -84,8 +85,8 @@ var _ = Describe("Authz policy Drift detection", func() {
 			withAuthzPolicyTargets(completeAuthzPolicyDTO(), []string{"default"}),
 		),
 		Entry("a target added on the platform",
-			model.ToAuthzPolicyDTO(minimalAuthzPolicyCRD()),
-			withAuthzPolicyTargets(parseJSON[model.AuthzPolicyDTO](minimalAuthzPolicyRemote), []string{"default"}),
+			minimalAuthzPolicyDTO(),
+			withAuthzPolicyTargets(parseJSON[sdk.AuthzPolicy](minimalAuthzPolicyRemote), []string{"default"}),
 		),
 	)
 
@@ -96,19 +97,19 @@ var _ = Describe("Authz policy Drift detection", func() {
 	})
 
 	It("refuses a target APIM added when neither version of the policy sets targets", func() {
-		remote := model.AuthzPolicyDTO{Name: "before", Targets: []string{"api-1"}}
+		remote := sdk.AuthzPolicy{Name: "before", Targets: []string{"api-1"}}
 		merged := drift.Merge(
-			drift.DetectWithNamespace(model.AuthzPolicyDTO{Name: "before"}, remote, ""),
-			drift.DetectWithNamespace(model.AuthzPolicyDTO{Name: "after"}, remote, ""),
+			drift.DetectWithNamespace(sdk.AuthzPolicy{Name: "before"}, remote, ""),
+			drift.DetectWithNamespace(sdk.AuthzPolicy{Name: "after"}, remote, ""),
 		)
 
 		Expect(merged.DriftDetected()).To(BeTrue(), merged.String())
 	})
 })
 
-func completeAuthzPolicyDTO() model.AuthzPolicyDTO {
+func completeAuthzPolicyDTO() sdk.AuthzPolicy {
 	GinkgoHelper()
-	return loadFixture[model.AuthzPolicyDTO]("authzpolicy_full_dto.json")
+	return loadFixture[sdk.AuthzPolicy]("authzpolicy_full_dto.json")
 }
 
 func minimalAuthzPolicyCRD() *v1alpha1.AuthzPolicy {
@@ -117,22 +118,29 @@ func minimalAuthzPolicyCRD() *v1alpha1.AuthzPolicy {
 	return &fixture
 }
 
-func withAuthzPolicyHRID(dto model.AuthzPolicyDTO, hrid string) model.AuthzPolicyDTO {
-	dto.HRID = hrid
+func minimalAuthzPolicyDTO() sdk.AuthzPolicy {
+	GinkgoHelper()
+	dto, err := apimauthzpolicy.ToDTO(minimalAuthzPolicyCRD())
+	Expect(err).ToNot(HaveOccurred())
 	return dto
 }
 
-func withAuthzPolicyText(dto model.AuthzPolicyDTO, text string) model.AuthzPolicyDTO {
+func withAuthzPolicyHRID(dto sdk.AuthzPolicy, hrid string) sdk.AuthzPolicy {
+	dto.Hrid = hrid
+	return dto
+}
+
+func withAuthzPolicyText(dto sdk.AuthzPolicy, text string) sdk.AuthzPolicy {
 	dto.PolicyText = text
 	return dto
 }
 
-func withAuthzPolicyName(dto model.AuthzPolicyDTO, name string) model.AuthzPolicyDTO {
+func withAuthzPolicyName(dto sdk.AuthzPolicy, name string) sdk.AuthzPolicy {
 	dto.Name = name
 	return dto
 }
 
-func withAuthzPolicyTargets(dto model.AuthzPolicyDTO, targets []string) model.AuthzPolicyDTO {
+func withAuthzPolicyTargets(dto sdk.AuthzPolicy, targets []string) sdk.AuthzPolicy {
 	dto.Targets = targets
 	return dto
 }

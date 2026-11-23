@@ -75,7 +75,9 @@ var _ = Describe("Authz policy reconcile", func() {
 			}).
 			Build()
 		k8s.RegisterClient(cli)
-		return &authzpolicy.Reconciler{Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20)}, cli
+		return &authzpolicy.Reconciler{
+			Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20), Lifecycle: authzpolicy.NewLifecycle(),
+		}, cli
 	}
 
 	stored := func(cli client.Client) *v1alpha1.AuthzPolicy {
@@ -106,9 +108,9 @@ var _ = Describe("Authz policy reconcile", func() {
 		return pdp
 	}
 
-	// Resolving runs before templates compile: a waiting policy records no reference on the
-	// Secrets it reads.
-	It("waits on ResolvedRefs=False naming every pending AuthzPdp, recording no template reference", func() {
+	// Templates compile before refs resolve, so a waiting policy records a reference on the Secrets it
+	// reads: the finalizer is saved first, and the delete releases it.
+	It("waits on ResolvedRefs=False naming every pending AuthzPdp, releasing its template references on delete", func() {
 		policy := twoPdps()
 		policy.Spec.Name = `[[ secret "hotel-booking/name" ]]`
 		r, cli := setup(policy, unsynced("orders-us"), &corev1.Secret{
@@ -130,7 +132,13 @@ var _ = Describe("Authz policy reconcile", func() {
 
 		secret := &corev1.Secret{}
 		Expect(cli.Get(context.Background(), secretKey, secret)).To(Succeed())
-		Expect(secret.Annotations).ToNot(HaveKey("gravitee.io/authzpolicies"))
+		Expect(secret.Finalizers).To(ContainElement(core.TemplatingFinalizer))
+
+		Expect(cli.Delete(context.Background(), stored(cli))).To(Succeed())
+		_, err = r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(cli.Get(context.Background(), secretKey, secret)).To(Succeed())
+		Expect(secret.Finalizers).ToNot(ContainElement(core.TemplatingFinalizer))
 	})
 
 	// Both contexts are immutable: only a change to the pdpRef fixes it, and that change reconciles
