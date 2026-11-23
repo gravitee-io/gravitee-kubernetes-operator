@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -44,7 +44,7 @@ func Delete(ctx context.Context, doc *v1alpha1.Documentation) error {
 		return nil
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, parent.contextRef, parent.contextNs)
+	client, err := apimdocs.CreateAPIMClient(ctx, doc)
 	if err != nil {
 		// ManagementContext already gone: APIM is unreachable, let the finalizer be removed.
 		if apierrors.IsNotFound(err) {
@@ -53,7 +53,12 @@ func Delete(ctx context.Context, doc *v1alpha1.Documentation) error {
 		return err
 	}
 
-	if err := gerrors.IgnoreNotFound(apimClient.Documentations.Delete(doc, parent.parent)); err != nil {
+	dto, err := apimdocs.ToDTO(doc)
+	if err != nil {
+		return gerrors.NewIllegalStateError(err)
+	}
+
+	if err := apimdocs.Delete(ctx, client, dto); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 

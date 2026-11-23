@@ -19,23 +19,17 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-// resolvedParent carries everything needed to sync a documentation page to its
-// owning portal or API: the management context ref to authenticate against and
-// the parent identifier injected into the automation endpoint path.
+// resolvedParent is what reconcile checks on the documentation page's owning
+// portal or API before syncing: whether it carries a management context.
 type resolvedParent struct {
 	name       string
 	kind       string
 	hasContext bool
-	contextRef core.ObjectRef
-	contextNs  string
-	parent     service.DocumentationParent
 }
 
 // resolveParent resolves the documentation page's owning Portal or API and
@@ -67,9 +61,6 @@ func resolveParent(ctx context.Context, doc *v1alpha1.Documentation) (*resolvedP
 			name:       prtl.GetName(),
 			kind:       "portal",
 			hasContext: prtl.HasContext(),
-			contextRef: prtl.ContextRef(),
-			contextNs:  prtl.GetNamespace(),
-			parent:     service.DocumentationParent{Portal: prtl},
 		}, nil
 	}
 
@@ -81,9 +72,6 @@ func resolveParent(ctx context.Context, doc *v1alpha1.Documentation) (*resolvedP
 		name:       api.GetName(),
 		kind:       "API",
 		hasContext: api.HasContext(),
-		contextRef: api.ContextRef(),
-		contextNs:  api.GetNamespace(),
-		parent:     service.DocumentationParent{API: api},
 	}, nil
 }
 
@@ -99,20 +87,20 @@ func CreateOrUpdate(ctx context.Context, doc *v1alpha1.Documentation) error {
 		)
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, parent.contextRef, parent.contextNs)
+	client, err := apimdocs.CreateAPIMClient(ctx, doc)
 	if err != nil {
 		return err
 	}
 
-	status, err := apimClient.Documentations.CreateOrUpdate(doc, parent.parent)
+	dto, err := apimdocs.ToDTO(doc)
+	if err != nil {
+		return gerrors.NewIllegalStateError(err)
+	}
+
+	resp, err := apimdocs.Upsert(ctx, client, dto)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	// Setting fields by fields to keep the rest intact
-	doc.Status.ID = status.ID
-	doc.Status.OrgID = status.OrgID
-	doc.Status.EnvID = status.EnvID
-
-	return nil
+	return apimdocs.UpdateStatus(ctx, doc, resp)
 }

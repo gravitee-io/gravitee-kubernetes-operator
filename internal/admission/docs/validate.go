@@ -20,8 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -40,12 +39,11 @@ func validateCreate(ctx context.Context, doc *v1alpha1.Documentation) *errors.Ad
 		return errs
 	}
 
-	target := resolveTarget(ctx, doc, errs)
-	if errs.IsSevere() {
+	if !resolveTarget(ctx, doc, errs) {
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, target, doc))
+	errs.MergeWith(validateDryRun(ctx, doc))
 	return errs
 }
 
@@ -141,98 +139,70 @@ func validateParentRef(doc *v1alpha1.Documentation) *errors.AdmissionErrors {
 	return errs
 }
 
-// dryRunTarget carries the resolved management context and parent endpoint used
-// to dry-run a documentation page against APIM.
-type dryRunTarget struct {
-	contextRef core.ObjectRef
-	contextNs  string
-	parent     service.DocumentationParent
-}
-
-func validateDryRun(ctx context.Context, target *dryRunTarget, doc *v1alpha1.Documentation) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, doc *v1alpha1.Documentation) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-
-	cp := doc.DeepCopy()
-
-	apimClient, err := apim.FromContextRef(ctx, target.contextRef, target.contextNs)
+	client, err := apimdocs.CreateAPIMClient(ctx, doc)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	status, err := apimClient.Documentations.DryRunCreateOrUpdate(cp, target.parent)
+	dto, err := apimdocs.ToDTO(doc)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
+	findings, err := apimdocs.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
 	}
-
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
-
+	errs.MergeWith(findings)
 	return errs
 }
 
-func resolveTarget(ctx context.Context, cp *v1alpha1.Documentation, errs *errors.AdmissionErrors) *dryRunTarget {
-	var target *dryRunTarget
-	if cp.IsPortalDoc() {
-		target = resolvePortalTarget(ctx, cp, errs)
-	} else {
-		target = resolveApiTarget(ctx, cp, errs)
+// resolveTarget checks that the page's portal or API exists and carries a management context, the one
+// the page is synced with. It reports why not as a severe error and returns false.
+func resolveTarget(ctx context.Context, doc *v1alpha1.Documentation, errs *errors.AdmissionErrors) bool {
+	if doc.IsPortalDoc() {
+		return resolvePortalTarget(ctx, doc, errs)
 	}
-	return target
+	return resolveApiTarget(ctx, doc, errs)
 }
 
-func resolvePortalTarget(
-	ctx context.Context, doc *v1alpha1.Documentation, errs *errors.AdmissionErrors,
-) *dryRunTarget {
+func resolvePortalTarget(ctx context.Context, doc *v1alpha1.Documentation, errs *errors.AdmissionErrors) bool {
 	prtl, err := dynamic.ResolvePortal(ctx, doc.GetPortalRef(), doc.GetNamespace())
 	if err != nil {
 		errs.AddSeveref(
 			"documentation [%s] references portal [%v] that can't be resolved",
 			doc.GetName(), doc.GetPortalRef(),
 		)
-		return nil
+		return false
 	}
 	if !prtl.HasContext() {
 		errs.AddSeveref(
 			"referenced portal [%v] has no management context (spec.contextRef)",
 			doc.GetPortalRef(),
 		)
-		return nil
+		return false
 	}
-	return &dryRunTarget{
-		contextRef: prtl.ContextRef(),
-		contextNs:  prtl.GetNamespace(),
-		parent:     service.DocumentationParent{Portal: prtl},
-	}
+	return true
 }
 
-func resolveApiTarget(
-	ctx context.Context, doc *v1alpha1.Documentation, errs *errors.AdmissionErrors,
-) *dryRunTarget {
+func resolveApiTarget(ctx context.Context, doc *v1alpha1.Documentation, errs *errors.AdmissionErrors) bool {
 	api, err := dynamic.ResolveAPI(ctx, doc.GetApiRef(), doc.GetNamespace())
 	if err != nil {
 		errs.AddSeveref(
 			"documentation [%s] references API [%v] that can't be resolved",
 			doc.GetName(), doc.GetApiRef(),
 		)
-		return nil
+		return false
 	}
 	if !api.HasContext() {
 		errs.AddSeveref(
 			"referenced API [%s] has no management context (spec.contextRef)",
 			api.GetName(),
 		)
-		return nil
+		return false
 	}
-	return &dryRunTarget{
-		contextRef: api.ContextRef(),
-		contextNs:  api.GetNamespace(),
-		parent:     service.DocumentationParent{API: api},
-	}
+	return true
 }

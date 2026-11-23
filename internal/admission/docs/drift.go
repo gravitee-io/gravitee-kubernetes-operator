@@ -20,63 +20,50 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
+// mergeDriftValidation compares through the SDK client of the page's parent context, not the APIM
+// facade: the resolver builds that client, only once drift is known to be enabled, and hands no facade
+// to the getter.
 func mergeDriftValidation(
 	ctx context.Context,
 	oldDoc *v1alpha1.Documentation,
 	newDoc *v1alpha1.Documentation,
 	errs *errors.AdmissionErrors,
 ) {
-	var target *dryRunTarget
-	if newDoc.IsPortalDoc() {
-		target = resolvePortalTarget(ctx, newDoc, errs)
-	} else {
-		target = resolveApiTarget(ctx, newDoc, errs)
-	}
-	if errs.IsSevere() || target == nil {
+	if !resolveTarget(ctx, newDoc, errs) {
 		return
 	}
-
-	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldDoc, newDoc,
-		documentationContextResolver(target),
-		resolveRefs,
-		getRemoteDocumentation(target.parent),
-		drift.MapDTO(func(doc *v1alpha1.Documentation) model.DocumentationDTO {
-			return model.ToDocumentationDTO(doc)
-		}),
-	))
-}
-
-func documentationContextResolver(target *dryRunTarget) drift.ContextResolver {
-	return func(ctx context.Context) (*apim.APIM, error) {
-		return apim.FromContextRef(ctx, target.contextRef, target.contextNs)
+	var client *apim.SDKClient
+	resolveContext := func(ctx context.Context) (*apim.APIM, error) {
+		var err error
+		client, err = apimdocs.CreateAPIMClient(ctx, newDoc)
+		return nil, err
 	}
+	getRemote := func(_ *apim.APIM, doc *v1alpha1.Documentation) (any, error) {
+		dto, err := apimdocs.ToDTO(doc)
+		if err != nil {
+			return nil, err
+		}
+		return apimdocs.GetRemote(ctx, client, dto)
+	}
+	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldDoc, newDoc, resolveContext, resolveRefs, getRemote,
+		drift.MapDTO(toDTO)))
 }
 
 func resolveRefs(context.Context, *v1alpha1.Documentation) error {
 	return nil
 }
 
-func getRemoteDocumentation(parent service.DocumentationParent) drift.RemoteObjectGetter[*v1alpha1.Documentation] {
-	return func(apimClient *apim.APIM, doc *v1alpha1.Documentation) (any, error) {
-		dto := model.ToDocumentationDTO(doc)
-		remote, err := apimClient.Documentations.GetByHRID(parent, dto.HRID)
-		if err != nil {
-			return nil, err
-		}
-		return model.DocumentationDTO{
-			HRID:       remote.HRID,
-			Name:       remote.Name,
-			PageType:   remote.PageType,
-			Content:    remote.Content,
-			Location:   remote.Location,
-			Order:      remote.Order,
-			Area:       remote.Area,
-			Visibility: remote.Visibility,
-		}, nil
+// toDTO maps the CRD to the payload compared with the remote. getRemote maps the new object first and
+// hands its error to the fetch failure policy: only the old object can reach here unmapped, and it is
+// compared as an empty payload.
+func toDTO(doc *v1alpha1.Documentation) apimdocs.DTO {
+	dto, err := apimdocs.ToDTO(doc)
+	if err != nil {
+		return apimdocs.DTO{}
 	}
+	return dto
 }

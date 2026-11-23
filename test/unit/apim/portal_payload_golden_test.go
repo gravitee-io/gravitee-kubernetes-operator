@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
@@ -129,8 +130,7 @@ func legacyPortalPayload(obj any) any {
 	return nil
 }
 
-// sdkPortalPayload is the body the SDK packages PUT. Kinds not migrated yet still go through the
-// hand-written mapper.
+// sdkPortalPayload is the body the SDK packages PUT.
 func sdkPortalPayload(obj any) any {
 	switch o := obj.(type) {
 	case *v1alpha1.PortalTheme:
@@ -149,14 +149,23 @@ func sdkPortalPayload(obj any) any {
 		dto, err := apimportallisting.ToDTO(o)
 		Expect(err).ToNot(HaveOccurred())
 		return dto
+	case *v1alpha1.Documentation:
+		dto, err := apimdocs.ToDTO(o)
+		Expect(err).ToNot(HaveOccurred())
+		return dto
 	}
-	return legacyPortalPayload(obj)
+	Fail("unexpected object")
+	return nil
 }
 
 // withAllowedDifferences applies to a golden payload the only differences the SDK payload may have:
-// a portal no longer sends the deprecated navigation[].order, which APIM ignores (Issue 07).
-func withAllowedDifferences(kind string, golden map[string]any) map[string]any {
-	if kind == "Portal" {
+// a portal no longer sends the deprecated navigation[].order, which APIM ignores (Issue 07), and an empty
+// documentation content is sent rather than omitted (Issue 09).
+func withAllowedDifferences(example portalPayloadExample, golden map[string]any) map[string]any {
+	if example.name == emptyContentExample {
+		golden["content"] = ""
+	}
+	if example.kind == "Portal" {
 		if entries, ok := golden["navigation"].([]any); ok {
 			for _, entry := range entries {
 				if fields, ok := entry.(map[string]any); ok {
@@ -198,7 +207,7 @@ var _ = Describe("Portal navigation payloads", func() {
 				writePortalGolden(example.name, legacyPortalPayload(example.obj))
 				continue
 			}
-			golden := withAllowedDifferences(example.kind, readPortalGolden(example.name))
+			golden := withAllowedDifferences(example, readPortalGolden(example.name))
 			Expect(marshalPortalPayload(sdkPortalPayload(example.obj))).To(Equal(golden), example.name)
 		}
 	})
