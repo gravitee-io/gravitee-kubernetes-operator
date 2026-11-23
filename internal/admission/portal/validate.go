@@ -19,7 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -48,13 +48,13 @@ func validateCreate(ctx context.Context, prtl *v1alpha1.Portal) *errors.Admissio
 		return errs
 	}
 
-	thm, themeErrs := resolveThemeRef(ctx, prtl)
+	_, themeErrs := resolveThemeRef(ctx, prtl)
 	errs.MergeWith(themeErrs)
 	if errs.IsSevere() {
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, prtl, thm))
+	errs.MergeWith(validateDryRun(ctx, prtl))
 	return errs
 }
 
@@ -118,32 +118,23 @@ func validateNavigation(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	return errs
 }
 
-func validateDryRun(
-	ctx context.Context, prtl *v1alpha1.Portal, thm *v1alpha1.PortalTheme,
-) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-
-	cp := prtl.DeepCopy()
-
-	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	client, err := apimportal.CreateAPIMClient(ctx, prtl)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	status, err := apimClient.Portals.DryRunCreateOrUpdate(cp, thm)
+	dto, err := apimportal.ToDTO(prtl)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
+	findings, err := apimportal.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
 	}
-
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
-
+	errs.MergeWith(findings)
 	return errs
 }

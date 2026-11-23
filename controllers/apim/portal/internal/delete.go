@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -48,7 +48,7 @@ func Delete(ctx context.Context, prtl *v1alpha1.Portal) error {
 		return nil
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
+	client, err := apimportal.CreateAPIMClient(ctx, prtl)
 	if err != nil {
 		// ManagementContext already gone: APIM is unreachable, let the finalizer be removed.
 		if apierrors.IsNotFound(err) {
@@ -57,7 +57,12 @@ func Delete(ctx context.Context, prtl *v1alpha1.Portal) error {
 		return err
 	}
 
-	if err := gerrors.IgnoreNotFound(apimClient.Portals.Delete(prtl)); err != nil {
+	dto, err := apimportal.ToDTO(prtl)
+	if err != nil {
+		return gerrors.NewIllegalStateError(err)
+	}
+
+	if err := apimportal.Delete(ctx, client, dto); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 

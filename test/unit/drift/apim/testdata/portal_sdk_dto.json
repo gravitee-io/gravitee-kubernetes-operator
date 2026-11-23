@@ -1,0 +1,12 @@
+{
+  "hrid": "default-my-portal",
+  "name": "My Portal",
+  "navigation": [
+    {
+      "path": "/projects/alpha",
+      "displayName": "Alpha",
+      "visibility": "PRIVATE"
+    }
+  ],
+  "activeThemeHrid": "default-brand-theme"
+}
