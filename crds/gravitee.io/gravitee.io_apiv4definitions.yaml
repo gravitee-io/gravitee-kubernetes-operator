@@ -1521,7 +1521,8 @@ spec:
                       hrid:
                         type: string
                       id:
-                        description: The ID of the plan.
+                        description: The plan ID, for an ApiV4Definition with spec.id set or without a
+                          management context.
                         type: string
                       mode:
                         allOf:
