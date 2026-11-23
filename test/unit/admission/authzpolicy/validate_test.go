@@ -201,6 +201,39 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
+	It("refuses every pdpRef naming another kind in one message", func() {
+		cluster()
+		mcp := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu", Kind: "McpProxy"}}
+		schema := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "travel", Namespace: "shared", Kind: "AuthzSchema"}}
+
+		_, err := ctrl.ValidateCreate(ctx,
+			newPolicy("hotel-booking-read", "policy.hotel-booking-read", mcp, authzpdp.Target{Scope: "default"}, schema))
+
+		Expect(err).To(MatchError(ContainSubstring(
+			"targets[0].pdpRef [travel/orders-eu]: kind must be AuthzPdp, got [McpProxy]; " +
+				"targets[2].pdpRef [shared/travel]: kind must be AuthzPdp, got [AuthzSchema]")))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	// A Kubernetes name may hold a dot, which the automation API refuses in a hrid.
+	It("refuses a create or an update whose namespace and name give an invalid hrid, before the dry run", func() {
+		cluster()
+		dotted := newPolicy("hotel.booking-read", "policy.hotel-booking-read", authzpdp.Target{Scope: "default"})
+		hridFinding := "hrid [travel-hotel.booking-read] derived from the resource namespace and name must match"
+
+		_, err := ctrl.ValidateCreate(ctx, dotted)
+
+		Expect(err).To(MatchError(ContainSubstring(hridFinding)))
+
+		edited := dotted.DeepCopy()
+		edited.Spec.PolicyText = "permit(principal, action, resource);"
+
+		_, err = ctrl.ValidateUpdate(ctx, dotted, edited)
+
+		Expect(err).To(MatchError(ContainSubstring(hridFinding)))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
 	It("refuses an AuthzPdp of another management context", func() {
 		cluster(newPdp("orders-eu", refs.NamespacedName{Name: "prod-ctx"}, "orders@eu"))
 

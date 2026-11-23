@@ -183,6 +183,28 @@ var _ = Describe("Authz policy reconcile", func() {
 		Expect(p.Status.PolicyStatus).To(BeEmpty())
 	})
 
+	// A token without ENVIRONMENT_AUTHZ_PDP[UPDATE] cannot withdraw a deployed policy: the delete is
+	// retried, the finalizer kept, and Accepted names the reason until the token is granted it.
+	It("keeps the finalizer of a delete the platform forbids, naming the reason on Accepted", func() {
+		policy := newAuthzPolicy()
+		policy.Spec.Context = &refs.NamespacedName{Name: "refusing-ctx"}
+		policy.Spec.Targets = []authzpdp.Target{{Scope: "default"}}
+		r, cli := setup(policy)
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).To(HaveOccurred())
+		Expect(cli.Delete(context.Background(), stored(cli))).To(Succeed())
+
+		_, err = r.Reconcile(context.Background(), req)
+		Expect(err).To(HaveOccurred())
+
+		p := stored(cli)
+		Expect(p.Finalizers).To(ContainElement(core.AuthzPolicyFinalizer))
+		accepted := condition(cli, k8s.ConditionAccepted)
+		Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+		Expect(accepted.Message).To(ContainSubstring(forbiddenDelete))
+	})
+
 	It("records in status the deployment and the identifiers the platform answers", func() {
 		policy := newAuthzPolicy()
 		policy.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}

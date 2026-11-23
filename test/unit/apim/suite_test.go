@@ -37,8 +37,12 @@ func TestAPIM(t *testing.T) {
 }
 
 // refusingContextPath is where the cluster stub serves ManagementContext gravitee/refusing-ctx,
-// whose APIM refuses every PUT with the ownership finding of the resource's kind.
+// whose APIM refuses every PUT with the ownership finding of the resource's kind, and every DELETE
+// with forbiddenDelete, as for a token without the permission to withdraw it.
 const refusingContextPath = "/apis/gravitee.io/v1alpha1/namespaces/gravitee/managementcontexts/refusing-ctx"
+
+// forbiddenDelete is the message of the 403 the refusing APIM answers a DELETE with.
+const forbiddenDelete = "You do not have sufficient rights to access this resource"
 
 // acceptingContextPath is where the cluster stub serves ManagementContext gravitee/accepting-ctx,
 // whose APIM accepts every PUT and answers the state acceptedStates holds for its collection.
@@ -154,6 +158,11 @@ var _ = BeforeSuite(func() {
 	refusingPolicyBody := `{"errors":{"severe":[` + mustJSON(policyOwnershipFinding) + `]}}`
 	platform := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodDelete {
+			w.WriteHeader(http.StatusForbidden)
+			_, _ = w.Write([]byte(`{"message":"` + forbiddenDelete + `","http_status":403}`))
+			return
+		}
 		if r.Method != http.MethodPut {
 			w.WriteHeader(http.StatusNotFound)
 			return
