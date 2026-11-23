@@ -1,0 +1,8 @@
+{
+  "hrid": "default-default-portal-link",
+  "name": "External Docs",
+  "href": "https://docs.example.com",
+  "location": "/foo",
+  "order": 4,
+  "visibility": "PUBLIC"
+}

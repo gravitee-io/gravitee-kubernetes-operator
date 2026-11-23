@@ -1,0 +1,24 @@
+{
+  "hrid": "default-default-portal",
+  "name": "Default Portal With Structure",
+  "structure": {
+    "topNavbar": [
+      {
+        "path": "/projects/alpha",
+        "displayName": "Alpha"
+      },
+      {
+        "path": "/projects/alpha/docs"
+      },
+      {
+        "path": "/projects/alpha/src"
+      },
+      {
+        "path": "/projects/beta"
+      },
+      {
+        "path": "/archive/2024"
+      }
+    ]
+  }
+}

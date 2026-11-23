@@ -1,0 +1,7 @@
+{
+  "hrid": "default-portal-homepage",
+  "name": "Home",
+  "type": "GRAVITEE_MARKDOWN",
+  "content": "# Welcome\n\nThis page is the developer portal homepage.\n",
+  "area": "HOMEPAGE"
+}

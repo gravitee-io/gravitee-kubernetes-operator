@@ -1,0 +1,9 @@
+{
+  "hrid": "default-portal-top-navbar",
+  "name": "Guides",
+  "type": "GRAVITEE_MARKDOWN",
+  "content": "# Guides\n\nThis page is displayed in the developer portal top navbar.\n",
+  "location": "/projects/alpha",
+  "order": 1,
+  "area": "TOP_NAVBAR"
+}

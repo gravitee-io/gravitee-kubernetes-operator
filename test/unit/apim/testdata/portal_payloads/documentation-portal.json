@@ -1,0 +1,8 @@
+{
+  "hrid": "default-portal-getting-started",
+  "name": "Getting Started",
+  "type": "GRAVITEE_MARKDOWN",
+  "content": "# Getting Started\n\nWelcome to the developer portal.\n",
+  "location": "/projects/alpha",
+  "order": 1
+}
