@@ -19,7 +19,9 @@ import (
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
 	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
+	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
 )
 
@@ -50,5 +52,20 @@ func (a *APIM) ImportPortal(ctx context.Context, prtl *v1alpha1.Portal) error {
 		return err
 	}
 	_, err = apimportal.Upsert(ctx, a.SDK, dto)
+	return err
+}
+
+// GetPortalLink gets a link state by its parent and HRID, server-managed fields included.
+func (a *APIM) GetPortalLink(ctx context.Context, parent navigation.Parent, hrid string) (sdk.PortalLinkState, error) {
+	return apimportallink.GetState(ctx, a.SDK, apimportallink.DTO{PortalLink: sdk.PortalLink{Hrid: hrid}, Parent: parent})
+}
+
+// ImportPortalLink creates or updates a link in APIM outside the operator, under the parent it references.
+func (a *APIM) ImportPortalLink(ctx context.Context, link *v1alpha1.PortalLink) error {
+	dto, err := apimportallink.ToDTO(link)
+	if err != nil {
+		return err
+	}
+	_, err = apimportallink.Upsert(ctx, a.SDK, dto)
 	return err
 }

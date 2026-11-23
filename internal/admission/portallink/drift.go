@@ -17,60 +17,53 @@ package portallink
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
+	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
+// mergeDriftValidation compares through the SDK client of the link's parent context, not the APIM
+// facade: the resolver builds that client, only once drift is known to be enabled, and hands no facade
+// to the getter.
 func mergeDriftValidation(
 	ctx context.Context,
 	oldLink *v1alpha1.PortalLink,
 	newLink *v1alpha1.PortalLink,
 	errs *errors.AdmissionErrors,
 ) {
-	target := resolveTarget(ctx, newLink, errs)
-	if errs.IsSevere() || target == nil {
+	if !resolveTarget(ctx, newLink, errs) {
 		return
 	}
-
-	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldLink, newLink,
-		linkContextResolver(target),
-		resolveRefs,
-		getRemotePortalLink(target.parent),
-		drift.MapDTO(func(link *v1alpha1.PortalLink) model.PortalLinkDTO {
-			return model.ToPortalLinkDTO(link.Spec.Type, refs.NewNamespacedNameFromObject(link).HRID())
-		}),
-	))
-}
-
-func linkContextResolver(target *dryRunTarget) drift.ContextResolver {
-	return func(ctx context.Context) (*apim.APIM, error) {
-		return apim.FromContextRef(ctx, target.contextRef, target.contextNs)
+	var client *apim.SDKClient
+	resolveContext := func(ctx context.Context) (*apim.APIM, error) {
+		var err error
+		client, err = apimportallink.CreateAPIMClient(ctx, newLink)
+		return nil, err
 	}
+	getRemote := func(_ *apim.APIM, link *v1alpha1.PortalLink) (any, error) {
+		dto, err := apimportallink.ToDTO(link)
+		if err != nil {
+			return nil, err
+		}
+		return apimportallink.GetRemote(ctx, client, dto)
+	}
+	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldLink, newLink, resolveContext, resolveRefs, getRemote,
+		drift.MapDTO(toDTO)))
 }
 
 func resolveRefs(context.Context, *v1alpha1.PortalLink) error {
 	return nil
 }
 
-func getRemotePortalLink(parent service.LinkParent) drift.RemoteObjectGetter[*v1alpha1.PortalLink] {
-	return func(apimClient *apim.APIM, link *v1alpha1.PortalLink) (any, error) {
-		hrid := refs.NewNamespacedNameFromObject(link).HRID()
-		remote, err := apimClient.Links.GetByHRID(parent, hrid)
-		if err != nil {
-			return nil, err
-		}
-		return model.PortalLinkDTO{
-			HRID:       remote.HRID,
-			Name:       remote.Name,
-			Href:       remote.Href,
-			Location:   remote.Location,
-			Order:      remote.Order,
-			Visibility: remote.Visibility,
-		}, nil
+// toDTO maps the CRD to the payload compared with the remote. getRemote maps the new object first and
+// hands its error to the fetch failure policy: only the old object can reach here unmapped, and it is
+// compared as an empty payload.
+func toDTO(link *v1alpha1.PortalLink) apimportallink.DTO {
+	dto, err := apimportallink.ToDTO(link)
+	if err != nil {
+		return apimportallink.DTO{}
 	}
+	return dto
 }

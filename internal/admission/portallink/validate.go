@@ -20,8 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
+	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -40,12 +39,11 @@ func validateCreate(ctx context.Context, link *v1alpha1.PortalLink) *errors.Admi
 		return errs
 	}
 
-	target := resolveTarget(ctx, link, errs)
-	if errs.IsSevere() {
+	if !resolveTarget(ctx, link, errs) {
 		return errs
 	}
 
-	errs.MergeWith(validateDryRun(ctx, target, link))
+	errs.MergeWith(validateDryRun(ctx, link))
 	return errs
 }
 
@@ -137,99 +135,70 @@ func validateParentRef(link *v1alpha1.PortalLink) *errors.AdmissionErrors {
 	return errs
 }
 
-// dryRunTarget carries the resolved management context and parent endpoint used
-// to dry-run a PortalLink against APIM.
-type dryRunTarget struct {
-	contextRef core.ObjectRef
-	contextNs  string
-	parent     service.LinkParent
-}
-
-func resolveTarget(ctx context.Context, link *v1alpha1.PortalLink, errs *errors.AdmissionErrors) *dryRunTarget {
+// resolveTarget checks that the link's portal or API exists and carries a management context, the one
+// the link is synced with. It reports why not as a severe error and returns false.
+func resolveTarget(ctx context.Context, link *v1alpha1.PortalLink, errs *errors.AdmissionErrors) bool {
 	if link.IsPortalLink() {
 		return resolvePortalTarget(ctx, link, errs)
 	}
 	return resolveApiTarget(ctx, link, errs)
 }
 
-func resolvePortalTarget(
-	ctx context.Context, link *v1alpha1.PortalLink, errs *errors.AdmissionErrors,
-) *dryRunTarget {
+func resolvePortalTarget(ctx context.Context, link *v1alpha1.PortalLink, errs *errors.AdmissionErrors) bool {
 	prtl, err := dynamic.ResolvePortal(ctx, link.GetPortalRef(), link.GetNamespace())
 	if err != nil {
 		errs.AddSeveref(
 			"portal link [%s] references portal [%v] that can't be resolved",
 			link.GetName(), link.GetPortalRef(),
 		)
-		return nil
+		return false
 	}
 	if !prtl.HasContext() {
 		errs.AddSeveref(
 			"referenced portal [%v] has no management context (spec.contextRef)",
 			link.GetPortalRef(),
 		)
-		return nil
+		return false
 	}
-	return &dryRunTarget{
-		contextRef: prtl.ContextRef(),
-		contextNs:  prtl.GetNamespace(),
-		parent:     service.LinkParent{Portal: prtl},
-	}
+	return true
 }
 
-func resolveApiTarget(
-	ctx context.Context, link *v1alpha1.PortalLink, errs *errors.AdmissionErrors,
-) *dryRunTarget {
+func resolveApiTarget(ctx context.Context, link *v1alpha1.PortalLink, errs *errors.AdmissionErrors) bool {
 	api, err := dynamic.ResolveAPI(ctx, link.GetApiRef(), link.GetNamespace())
 	if err != nil {
 		errs.AddSeveref(
 			"portal link [%s] references API [%v] that can't be resolved",
 			link.GetName(), link.GetApiRef(),
 		)
-		return nil
+		return false
 	}
 	if !api.HasContext() {
 		errs.AddSeveref(
 			"referenced API [%s] has no management context (spec.contextRef)",
 			api.GetName(),
 		)
-		return nil
+		return false
 	}
-	return &dryRunTarget{
-		contextRef: api.ContextRef(),
-		contextNs:  api.GetNamespace(),
-		parent:     service.LinkParent{API: api},
-	}
+	return true
 }
 
-func validateDryRun(ctx context.Context, target *dryRunTarget, link *v1alpha1.PortalLink) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, link *v1alpha1.PortalLink) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-
-	if target == nil {
-		return errs
-	}
-
-	cp := link.DeepCopy()
-
-	apimClient, err := apim.FromContextRef(ctx, target.contextRef, target.contextNs)
+	client, err := apimportallink.CreateAPIMClient(ctx, link)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	status, err := apimClient.Links.DryRunCreateOrUpdate(cp, target.parent)
+	dto, err := apimportallink.ToDTO(link)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
+	findings, err := apimportallink.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
 	}
-
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
-
+	errs.MergeWith(findings)
 	return errs
 }
