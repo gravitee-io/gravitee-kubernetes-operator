@@ -17,12 +17,12 @@ package authzpolicy
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authz"
 )
 
 // ToDTO maps a policy whose refs dynamic.ResolveAuthzPolicyRefs has resolved onto the payload a PUT sends: each
@@ -31,7 +31,7 @@ import (
 // compares exactly; it sorts targets and answers [] for none, which the SDK's drift tag does not compare by
 // position. An unresolved pdpRef is an error: it has no scope to send.
 func ToDTO(obj *v1alpha1.AuthzPolicy) (sdk.AuthzPolicy, error) {
-	targets, err := toTargets(obj)
+	targets, err := authz.ToTargets(obj, obj.Spec.Targets)
 	if err != nil {
 		return sdk.AuthzPolicy{}, err
 	}
@@ -44,21 +44,6 @@ func ToDTO(obj *v1alpha1.AuthzPolicy) (sdk.AuthzPolicy, error) {
 		PolicyText: obj.Spec.PolicyText,
 		Targets:    targets,
 	}, nil
-}
-
-func toTargets(obj *v1alpha1.AuthzPolicy) ([]string, error) {
-	var targets []string
-	for i, target := range obj.Spec.Targets {
-		if target.PdpRef != nil {
-			ref := *target.PdpRef
-			if ref.Namespace == "" {
-				ref.Namespace = obj.GetNamespace()
-			}
-			return nil, fmt.Errorf("targets[%d].pdpRef [%s] is not resolved", i, ref.String())
-		}
-		targets = append(targets, target.Scope)
-	}
-	return targets, nil
 }
 
 // CreateAPIMClient builds the SDK client of the management context the policy references.

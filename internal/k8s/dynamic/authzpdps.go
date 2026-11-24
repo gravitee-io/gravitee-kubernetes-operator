@@ -27,6 +27,7 @@ import (
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -57,9 +58,7 @@ func ResolveAuthzPdpRoutingScope(
 	dependent core.ContextAwareObject,
 	ref refs.NamespacedName,
 ) (string, error) {
-	if ref.Namespace == "" {
-		ref.Namespace = dependent.GetNamespace()
-	}
+	ref = AuthzPdpRef(dependent, ref)
 
 	pdp := &v1alpha1.AuthzPdp{}
 	key := types.NamespacedName{Namespace: ref.Namespace, Name: ref.Name}
@@ -86,6 +85,50 @@ func ResolveAuthzPdpRoutingScope(
 	}
 
 	return pdp.Status.RoutingScope, nil
+}
+
+// AuthzPdpRef returns ref with its namespace defaulted to the dependent's, as a pdpRef reads.
+func AuthzPdpRef(dependent metav1.Object, ref refs.NamespacedName) refs.NamespacedName {
+	if ref.Namespace == "" {
+		ref.Namespace = dependent.GetNamespace()
+	}
+	return ref
+}
+
+// ValidateAuthzTargetKind refuses a pdpRef that names a kind other than AuthzPdp. It runs before the target
+// resolves, which replaces the pdpRef with a scope.
+func ValidateAuthzTargetKind(dependent metav1.Object, target *authzpdp.Target) error {
+	if target == nil {
+		return nil
+	}
+	if wrong := wrongAuthzPdpKind(dependent, "target", *target); wrong != "" {
+		return errors.New(wrong)
+	}
+	return nil
+}
+
+// ValidateAuthzTargetKinds refuses each pdpRef that names a kind other than AuthzPdp, naming its index, in one
+// error. It runs before the targets resolve, which replaces the pdpRefs with scopes.
+func ValidateAuthzTargetKinds(dependent metav1.Object, targets []authzpdp.Target) error {
+	var wrong []string
+	for i, target := range targets {
+		if msg := wrongAuthzPdpKind(dependent, fmt.Sprintf("targets[%d]", i), target); msg != "" {
+			wrong = append(wrong, msg)
+		}
+	}
+	if len(wrong) > 0 {
+		return errors.New(strings.Join(wrong, "; "))
+	}
+	return nil
+}
+
+func wrongAuthzPdpKind(dependent metav1.Object, field string, target authzpdp.Target) string {
+	ref := target.PdpRef
+	if ref == nil || ref.Kind == "" || ResourceFromKind(ref.Kind) == core.CRDAuthzPdpResource {
+		return ""
+	}
+	named := AuthzPdpRef(dependent, *ref)
+	return fmt.Sprintf("%s.pdpRef [%s]: kind must be AuthzPdp, got [%s]", field, named.String(), ref.Kind)
 }
 
 // ResolveAuthzTarget returns what target sends on the wire: an empty string without a target, the

@@ -16,18 +16,17 @@ package authzentity
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authz"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
+	"k8s.io/utils/ptr"
 )
 
 // Response is what Upsert returns: the state the platform answers.
@@ -37,12 +36,12 @@ type Response struct {
 
 // GetOrgID is the organization the state reports, as the status has always shown it.
 func (r Response) GetOrgID() string {
-	return valueOf(r.State.OrganizationId)
+	return ptr.Deref(r.State.OrganizationId, "")
 }
 
 // GetEnvID is the environment the state reports, as the status has always shown it.
 func (r Response) GetEnvID() string {
-	return valueOf(r.State.EnvironmentId)
+	return ptr.Deref(r.State.EnvironmentId, "")
 }
 
 // ResolveRefs resolves, outside a delete, each pdpRef of the targets onto the routing scope the platform receives,
@@ -90,13 +89,7 @@ func upsert(ctx context.Context, client *apim.SDKClient, dto sdk.AuthzEntity, dr
 // pdpRef is pending, and another source may take the entityId since: it stays recoverable (backoff) rather than
 // terminal until the next spec change. Any other failure keeps the lifecycle's classification.
 func OnUpsertError(_ context.Context, obj *v1alpha1.AuthzEntity, err error) error {
-	if !errors.IsBadRequest(err) {
-		return nil
-	}
-	if findings, refused := model.AutomationRefusal(err); refused {
-		obj.Status.Errors = findings
-	}
-	return fmt.Errorf("authz entity [%s] was refused by the automation api: %w", obj.GetName(), err)
+	return authz.OnRefusal("authz entity", obj, &obj.Status.Errors, err)
 }
 
 // Delete deletes the entity by hrid. The platform deletes its RESOURCE children with it and detaches its PRINCIPAL
@@ -113,27 +106,12 @@ func Delete(ctx context.Context, client *apim.SDKClient, dto sdk.AuthzEntity) er
 // UpdateStatus copies the upsert state into the CR status, field by field so that the conditions are kept, and
 // marks the entity Automation API managed.
 func UpdateStatus(_ context.Context, obj *v1alpha1.AuthzEntity, resp Response) error {
-	obj.Status.ID = valueOf(resp.State.Id)
+	obj.Status.ID = ptr.Deref(resp.State.Id, "")
 	obj.Status.OrgID = resp.GetOrgID()
 	obj.Status.EnvID = resp.GetEnvID()
 	obj.Status.HRID = refs.NewNamespacedNameFromObject(obj).HRID()
-	obj.Status.Errors = ToStatusErrors(resp.State.Errors)
+	obj.Status.Errors = authz.ToStatusErrors(resp.State.Errors)
 
 	k8s.AddAutomationAPIManagedCondition(obj)
 	return nil
-}
-
-// ToStatusErrors maps the findings of a state onto the CR status.
-func ToStatusErrors(errs *sdk.AuthzErrors) status.Errors {
-	if errs == nil {
-		return status.Errors{}
-	}
-	return status.Errors{Severe: errs.Severe, Warning: errs.Warning}
-}
-
-func valueOf(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }

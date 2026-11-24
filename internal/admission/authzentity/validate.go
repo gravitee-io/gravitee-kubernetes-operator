@@ -18,13 +18,11 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -45,7 +43,7 @@ func preCheck(_ context.Context, entity *v1alpha1.AuthzEntity) *errors.Admission
 // checks with a warning naming every pending one. The controller waits for them before applying. Any other
 // error, an AuthzPdp of another context for instance, refuses the entity.
 func resolveRefs(ctx context.Context, entity *v1alpha1.AuthzEntity, ns string) error {
-	if err := validateTargetKinds(entity); err != nil {
+	if err := dynamic.ValidateAuthzTargetKinds(entity, entity.Spec.Targets); err != nil {
 		return err
 	}
 	if err := apim.ResolveContextRef(ctx, entity, ns); err != nil {
@@ -53,29 +51,6 @@ func resolveRefs(ctx context.Context, entity *v1alpha1.AuthzEntity, ns string) e
 	}
 	if err := dynamic.ResolveAuthzEntityRefs(ctx, entity); err != nil && !dynamic.IsAuthzPdpPending(err) {
 		return err
-	}
-	return nil
-}
-
-// validateTargetKinds refuses each pdpRef that names a kind other than AuthzPdp, naming its index. It runs before
-// the targets resolve, which replaces the pdpRefs with scopes.
-func validateTargetKinds(entity *v1alpha1.AuthzEntity) error {
-	var wrong []string
-	for i, target := range entity.Spec.Targets {
-		if target.PdpRef == nil {
-			continue
-		}
-		ref := *target.PdpRef
-		if ref.Namespace == "" {
-			ref.Namespace = entity.GetNamespace()
-		}
-		if ref.Kind != "" && dynamic.ResourceFromKind(ref.Kind) != core.CRDAuthzPdpResource {
-			wrong = append(wrong, fmt.Sprintf("targets[%d].pdpRef [%s]: kind must be AuthzPdp, got [%s]",
-				i, ref.String(), ref.Kind))
-		}
-	}
-	if len(wrong) > 0 {
-		return fmt.Errorf("%s", strings.Join(wrong, "; "))
 	}
 	return nil
 }
