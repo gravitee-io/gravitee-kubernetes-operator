@@ -15,8 +15,9 @@
 package apim
 
 import (
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimauthzpdp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -29,24 +30,33 @@ var _ = Describe("Authz PDP Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
-			model.AuthzPdpDTO{},
-			model.AuthzPdpDTO{},
+			sdk.AuthzPdp{},
+			sdk.AuthzPdp{},
 		),
 		Entry("equal struct",
 			completeAuthzPdpDTO(),
 			completeAuthzPdpDTO(),
 		),
 		Entry("minimal CRD against what the platform stores for it",
-			model.ToAuthzPdpDTO(minimalAuthzPdpCRD()),
-			model.ToAuthzPdpDTO(minimalAuthzPdpCRD()),
+			minimalAuthzPdpDTO(),
+			minimalAuthzPdpDTO(),
 		),
 		Entry("no endpoint against an empty endpoint",
 			withAuthzPdpEndpoint(completeAuthzPdpDTO(), nil),
-			withAuthzPdpEndpoint(completeAuthzPdpDTO(), &model.AuthzPdpEndpointDTO{}),
+			withAuthzPdpEndpoint(completeAuthzPdpDTO(), &sdk.AuthzPdpEndpoint{}),
 		),
 		Entry("an empty endpoint against no endpoint",
-			withAuthzPdpEndpoint(completeAuthzPdpDTO(), &model.AuthzPdpEndpointDTO{}),
+			withAuthzPdpEndpoint(completeAuthzPdpDTO(), &sdk.AuthzPdpEndpoint{}),
 			withAuthzPdpEndpoint(completeAuthzPdpDTO(), nil),
+		),
+		Entry("strict false against strict left out",
+			withAuthzPdpStrict(completeAuthzPdpDTO(), new(false)),
+			withAuthzPdpStrict(completeAuthzPdpDTO(), nil),
+		),
+		// GKO's DTO held the tag as a string: left out and "" compare equal.
+		Entry("tag left out against an empty tag",
+			withAuthzPdpTag(completeAuthzPdpDTO(), nil),
+			withAuthzPdpTag(completeAuthzPdpDTO(), new("")),
 		),
 		Entry("hrid is identity, not payload",
 			withAuthzPdpHRID(completeAuthzPdpDTO(), "default-drift-full"),
@@ -65,16 +75,16 @@ var _ = Describe("Authz PDP Drift detection", func() {
 		),
 		Entry("strict switched off by a sibling of the same targetPdpId",
 			completeAuthzPdpDTO(),
-			withAuthzPdpStrict(completeAuthzPdpDTO(), false),
+			withAuthzPdpStrict(completeAuthzPdpDTO(), new(false)),
 		),
 		Entry("endpoint path changed on the platform",
 			completeAuthzPdpDTO(),
-			withAuthzPdpEndpoint(completeAuthzPdpDTO(), &model.AuthzPdpEndpointDTO{Path: "/authz/elsewhere"}),
+			withAuthzPdpEndpoint(completeAuthzPdpDTO(), &sdk.AuthzPdpEndpoint{Path: "/authz/elsewhere"}),
 		),
 		Entry("endpoint added on the platform",
-			model.ToAuthzPdpDTO(minimalAuthzPdpCRD()),
-			withAuthzPdpEndpoint(model.ToAuthzPdpDTO(minimalAuthzPdpCRD()),
-				&model.AuthzPdpEndpointDTO{Path: "/authz/drift-minimal"}),
+			minimalAuthzPdpDTO(),
+			withAuthzPdpEndpoint(minimalAuthzPdpDTO(),
+				&sdk.AuthzPdpEndpoint{Path: "/authz/drift-minimal"}),
 		),
 	)
 
@@ -85,9 +95,9 @@ var _ = Describe("Authz PDP Drift detection", func() {
 	})
 })
 
-func completeAuthzPdpDTO() model.AuthzPdpDTO {
+func completeAuthzPdpDTO() sdk.AuthzPdp {
 	GinkgoHelper()
-	return loadFixture[model.AuthzPdpDTO]("authzpdp_full_dto.json")
+	return loadFixture[sdk.AuthzPdp]("authzpdp_full_dto.json")
 }
 
 func minimalAuthzPdpCRD() *v1alpha1.AuthzPdp {
@@ -96,22 +106,35 @@ func minimalAuthzPdpCRD() *v1alpha1.AuthzPdp {
 	return &fixture
 }
 
-func withAuthzPdpHRID(dto model.AuthzPdpDTO, hrid string) model.AuthzPdpDTO {
-	dto.HRID = hrid
+func minimalAuthzPdpDTO() sdk.AuthzPdp {
+	GinkgoHelper()
+	dto, err := apimauthzpdp.ToDTO(minimalAuthzPdpCRD())
+	Expect(err).ToNot(HaveOccurred())
 	return dto
 }
 
-func withAuthzPdpName(dto model.AuthzPdpDTO, name string) model.AuthzPdpDTO {
+func withAuthzPdpHRID(dto sdk.AuthzPdp, hrid string) sdk.AuthzPdp {
+	dto.Hrid = hrid
+	return dto
+}
+
+func withAuthzPdpName(dto sdk.AuthzPdp, name string) sdk.AuthzPdp {
 	dto.Name = name
 	return dto
 }
 
-func withAuthzPdpStrict(dto model.AuthzPdpDTO, strict bool) model.AuthzPdpDTO {
+func withAuthzPdpStrict(dto sdk.AuthzPdp, strict *bool) sdk.AuthzPdp {
 	dto.Strict = strict
 	return dto
 }
 
-func withAuthzPdpEndpoint(dto model.AuthzPdpDTO, endpoint *model.AuthzPdpEndpointDTO) model.AuthzPdpDTO {
+// withAuthzPdpTag sets the tag, or leaves it out when tag is nil.
+func withAuthzPdpTag(dto sdk.AuthzPdp, tag *string) sdk.AuthzPdp {
+	dto.Tag = tag
+	return dto
+}
+
+func withAuthzPdpEndpoint(dto sdk.AuthzPdp, endpoint *sdk.AuthzPdpEndpoint) sdk.AuthzPdp {
 	dto.Endpoint = endpoint
 	return dto
 }

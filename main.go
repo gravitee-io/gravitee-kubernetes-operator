@@ -460,10 +460,11 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 	}
 
 	if err := (&authzpdp.Reconciler{
-		Scheme:   mgr.GetScheme(),
-		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("authzpdp-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzPdpList{}),
+		Scheme:    mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Lifecycle: authzpdp.NewLifecycle(),
+		Recorder:  mgr.GetEventRecorderFor("authzpdp-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.AuthzPdpList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for authz pdps")
 		os.Exit(1)
