@@ -18,25 +18,22 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+type Lifecycle = lifecycle.ResourceLifecycle[*v1alpha1.Documentation, apimdocs.DTO, *apim.SDKClient, apimdocs.Response]
 
 type Reconciler struct {
 	Scheme   *runtime.Scheme
@@ -45,73 +42,23 @@ type Reconciler struct {
 	Client   client.Client
 }
 
+// resourceLifecycle wires the reconcile steps of documentation pages.
+var resourceLifecycle = lifecycle.NewResourceLifecycle(Lifecycle{
+	Finalizer:     core.DocumentationFinalizer,
+	ResolveRefs:   apimdocs.ResolveRefs,
+	ClientFactory: apimdocs.CreateAPIMClient,
+	ToDTO:         apimdocs.ToDTO,
+	Delete:        apimdocs.Delete,
+	Upsert:        apimdocs.Upsert,
+	PostUpsert:    apimdocs.UpdateStatus,
+})
+
 // +kubebuilder:rbac:groups=gravitee.io,resources=documentations,verbs=get;list;watch;create;update;patch;delete;deletecollection
 // +kubebuilder:rbac:groups=gravitee.io,resources=documentations/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=gravitee.io,resources=documentations/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	doc := &v1alpha1.Documentation{}
-	if err := r.Client.Get(ctx, req.NamespacedName, doc); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	doc.SetNamespace(req.Namespace)
-
-	events := event.NewRecorder(r.Recorder)
-
-	k8s.ResetConditionsExceptAutomationAPI(doc)
-	dc := doc.DeepCopy()
-
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), doc, func() error {
-		util.AddFinalizer(doc, core.DocumentationFinalizer)
-		k8s.AddAnnotation(doc, core.LastSpecHashAnnotation, hash.Calculate(&doc.Spec))
-
-		if doc.IsBeingDeleted() {
-			if err := template.ReleaseReferences(ctx, doc); err != nil {
-				return err
-			}
-		} else if err := template.Compile(ctx, dc, true); err != nil {
-			return err
-		}
-
-		var err error
-		if doc.IsBeingDeleted() {
-			err = events.Record(event.Delete, doc, func() error {
-				if err := internal.Delete(ctx, dc); err != nil {
-					return err
-				}
-				util.RemoveFinalizer(doc, core.DocumentationFinalizer)
-				return nil
-			})
-		} else {
-			err = events.Record(event.Update, doc, func() error {
-				return internal.CreateOrUpdate(ctx, dc)
-			})
-		}
-
-		return err
-	})
-
-	if err := dc.GetStatus().DeepCopyTo(doc); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err == nil {
-		log.InfoEndReconcile(ctx, doc)
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, doc)
-	}
-
-	if err := internal.UpdateStatusFailure(ctx, doc, err); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if errors.ShouldRetry(err, doc.IsBeingDeleted()) {
-		log.ErrorRequeuingReconcile(ctx, err, doc)
-		return ctrl.Result{}, err
-	}
-
-	log.ErrorAbortingReconcile(ctx, err, doc)
-	return ctrl.Result{}, nil
+	return resourceLifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.Documentation{})
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
