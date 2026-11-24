@@ -1750,7 +1750,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
 | `structure` _[NavigationStructure](#navigationstructure)_ | The portal's navigation, grouped by portal area. |  | Optional: \{\} <br /> |
-| `navigation` _NavigationPath array_ | Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.<br />Still synced for portals created before navigation was grouped by area. |  | Optional: \{\} <br /> |
+| `navigation` _NavigationPath array_ | Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.<br />Still synced for portals created before navigation was grouped by area.<br />The order field of these entries is not sent: APIM orders them by their position in the list. |  | Optional: \{\} <br /> |
 | `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this portal is synced to. |  |  |
 | `themeRef` _[NamespacedName](#namespacedname)_ | Reference to the theme this portal uses, of kind PortalTheme when kind is omitted.<br />Setting it activates that theme for the environment, leaving it unset deactivates<br />whichever theme was active. |  | Optional: \{\} <br /> |
 
@@ -7024,7 +7024,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
 | `structure` _[NavigationStructure](#navigationstructure)_ | The portal's navigation, grouped by portal area. |  | Optional: \{\} <br /> |
-| `navigation` _NavigationPath array_ | Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.<br />Still synced for portals created before navigation was grouped by area. |  | Optional: \{\} <br /> |
+| `navigation` _NavigationPath array_ | Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.<br />Still synced for portals created before navigation was grouped by area.<br />The order field of these entries is not sent: APIM orders them by their position in the list. |  | Optional: \{\} <br /> |
 
 
 
