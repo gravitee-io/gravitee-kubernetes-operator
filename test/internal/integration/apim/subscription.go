@@ -32,15 +32,6 @@ type Subscriptions struct {
 	sdk *apim.SDKClient
 }
 
-// SubscriptionDTO is the subscription Import writes: identities and an end date, nothing else.
-type SubscriptionDTO struct {
-	ID       string
-	ApiID    string
-	AppID    string
-	PlanID   string
-	EndingAt string
-}
-
 // GetByHRID gets a subscription by its hrid, under an API addressed by its hrid.
 func (s *Subscriptions) GetByHRID(apiHrid, subscriptionHrid string) (sdk.SubscriptionState, error) {
 	return apimsubscription.GetState(context.Background(), s.sdk, apimsubscription.DTO{
@@ -60,33 +51,12 @@ func (s *Subscriptions) GetByHRIDWithAPIUUID(apiUUID, subscriptionHrid string) (
 
 // Import creates or updates a subscription in APIM outside the operator. As the operator does, it marks obj
 // Automation API managed unless the subscription is addressed by its UUID.
-func (s *Subscriptions) Import(
-	spec SubscriptionDTO,
-	obj core.ConditionAwareObject,
-	hridContainsUUID, hridContainsApiUUID, hridContainsAppUUID bool,
-) (sdk.SubscriptionState, error) {
-	dto := apimsubscription.DTO{
-		Subscription: sdk.Subscription{
-			Hrid:            spec.ID,
-			ApplicationHrid: spec.AppID,
-			PlanHrid:        spec.PlanID,
-		},
-		ApiHrid: spec.ApiID,
-		Legacy: apimsubscription.Legacy{
-			HridContainsUUID:    hridContainsUUID,
-			HridContainsApiUUID: hridContainsApiUUID,
-			HridContainsAppUUID: hridContainsAppUUID,
-		},
-	}
-	if spec.EndingAt != "" {
-		dto.EndingAt = &spec.EndingAt
-	}
-
+func (s *Subscriptions) Import(dto apimsubscription.DTO, obj core.ConditionAwareObject) (sdk.SubscriptionState, error) {
 	resp, err := apimsubscription.Upsert(context.Background(), s.sdk, dto)
 	if err != nil {
 		return sdk.SubscriptionState{}, err
 	}
-	if !hridContainsUUID {
+	if !dto.Legacy.HridContainsUUID {
 		k8s.AddAutomationAPIManagedCondition(obj)
 	}
 	return resp.State, nil
