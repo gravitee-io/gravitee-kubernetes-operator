@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -28,21 +28,12 @@ func Delete(ctx context.Context, group *v1alpha1.Group) error {
 		return nil
 	}
 
-	client, err := apimgroup.CreateAPIMClient(ctx, group)
+	ns := group.Namespace
+
+	apim, err := apim.FromContextRef(ctx, group.ContextRef(), ns)
 	if err != nil {
 		return err
 	}
 
-	dto, err := apimgroup.ToDTO(group)
-	if err != nil {
-		return err
-	}
-
-	// A legacy group this CR never synced is only known by the spec.id the user set: it was not adopted,
-	// so leave it in APIM rather than delete a group the operator does not own.
-	if dto.HridContainsUUID && group.Status.ID == "" {
-		return nil
-	}
-
-	return apimgroup.Delete(ctx, client, dto)
+	return apim.Env.DeleteGroup(ctx, group)
 }

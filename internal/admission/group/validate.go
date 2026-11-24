@@ -19,7 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -41,24 +41,29 @@ func validateCreate(ctx context.Context, group *v1alpha1.Group) *errors.Admissio
 func validateDryRun(ctx context.Context, group *v1alpha1.Group) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	client, err := apimgroup.CreateAPIMClient(ctx, group)
+	cp := group.DeepCopy()
+
+	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
 
-	dto, err := apimgroup.ToDTO(group)
+	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(group))
+
+	status, err := apim.Env.DryRunImportGroup(ctx, cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
 
-	findings, err := apimgroup.DryRun(ctx, client, dto)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
+	for _, severe := range status.Errors.Severe {
+		errs.AddSevere(severe)
 	}
 
-	errs.MergeWith(findings)
+	for _, warning := range status.Errors.Warning {
+		errs.AddWarning(warning)
+	}
+
 	return errs
 }
