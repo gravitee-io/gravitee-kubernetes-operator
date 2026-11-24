@@ -168,7 +168,10 @@ var _ = Describe("Portal navigation reference resolution", func() {
 				To(MatchError("themeRef [dark] is of kind Portal, but only PortalTheme is supported"))
 		})
 
-		It("does not look at the theme while deleting", func() {
+		// Only the kind check is observable here: with a context, the deleting path reads it from the
+		// cluster. That the theme is not resolved while deleting is covered by
+		// test/integration/portal/delete_withContext_themeGone_test.go.
+		It("does not check the theme kind while deleting", func() {
 			portalCluster()
 			prtl := deleting(refPortal(false))
 			prtl.Spec.Theme = &refs.NamespacedName{Name: "dark", Kind: "Portal"}

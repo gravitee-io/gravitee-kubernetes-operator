@@ -107,6 +107,11 @@ func (a *APIM) ImportDocumentation(ctx context.Context, doc *v1alpha1.Documentat
 	return err
 }
 
+// DeletePortalTheme deletes a theme in APIM outside the operator. A theme already gone counts as deleted.
+func (a *APIM) DeletePortalTheme(ctx context.Context, hrid string) error {
+	return apimportaltheme.Delete(ctx, a.SDK, sdk.PortalTheme{Hrid: hrid})
+}
+
 // DeletePortal deletes a portal in APIM outside the operator. A portal already gone counts as deleted.
 func (a *APIM) DeletePortal(ctx context.Context, hrid string) error {
 	return apimportal.Delete(ctx, a.SDK, sdk.Portal{Hrid: hrid})
