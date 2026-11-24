@@ -94,7 +94,7 @@ Controllers and webhooks never build a URL or a payload themselves. For a resour
 
 #### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
 
-Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **ApiV4Definition**, **PortalTheme**, **Portal**, **PortalLink**, **PortalListing**, **Documentation**. The portal kinds' hand-written services (`internal/apim/service/{portals,portalthemes,portallinks,portallistings,documentations}.go`) and DTOs (`internal/apim/model/`) stay for master's tests only: production code does not use them.
+Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **ApiV4Definition**, **Application**, **PortalTheme**, **Portal**, **PortalLink**, **PortalListing**, **Documentation**. The portal kinds' hand-written services (`internal/apim/service/{portals,portalthemes,portallinks,portallistings,documentations}.go`) and DTOs (`internal/apim/model/`) stay for master's tests only: production code does not use them.
 
 - Each migrated resource gets an `internal/apim/<resource>/` package laid out like `internal/am/<resource>/`, with the `internal/lifecycle` signatures (see `internal/apim/group/`):
   - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields;
@@ -109,6 +109,7 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
 - Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). **Never call `WithDefaults()` on the CRD side.**
 - Drift compares the PUT type on both sides: turn the GET state into it first with its `Spec()` (`GroupState.Spec()` returns the `sdk.Group` a PUT sends; every `XxxState` has one). Comparing `GroupState` with `Group` panics. `Spec()` is a shallow copy: reassign its fields, never mutate shared slices or maps. The SDK types carry their own `drift:` tags; resource types and list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
 - Keep GKO's HTTP client only for calls the SDK spec does not declare yet (e.g. a `hridContainsUUID` it lacks): `APIs.UpsertV4Legacy` is the example, the PUT of a v4 API created before the Automation API.
+- Application adds a query parameter the SDK does not declare yet with a request editor (`sdk.RequestEditorFn`) instead: `hridContainsUUID` (`internal/apim/application/legacy.go`). Its `ToDTO` also sets an empty metadata `format` to `STRING`, which the SDK would send as `""`. Both go once the SDK declares the flag and omits an empty format.
 - A resource whose context is optional (ApiV4Definition without `contextRef`) returns a nil client and a nil error from its client factory: `Upsert`, `DryRun`, `GetRemote` and `Delete` then do nothing remote (`internal/apim/apiv4/`).
 - Drift-only normalisation (rules for the comparison, never for the payload) goes in `AdmissionLifecycle.DriftDTO`, applied to the old, new and remote DTOs: see `apiv4.DriftDTO`, which compares v4 listeners as a free-form map and reads a boolean the GET leaves out as false, so the report reads as it did on GKO's former model.
 - A migration keeps every existing test as on master: only the edits the compiler forces (a removed function replaced by its successor, `NewAdmissionCtrl()`, the test manager wiring). A test that fails after the move is fixed in production code. To keep what users see:
@@ -150,11 +151,10 @@ Resources created before APIM 4.12 are still UUID-addressed. The service branche
 
 `internal/apim/model/` types are the **Automation API request and response bodies**, not comparison helpers. `SharedPolicyGroup.createOrUpdate` builds `model.ToSharePolicyGroupDTO(...)` and `PUT`s it; `GetByHRID` unmarshals the response into the same `SharedPolicyGroupDTO`. Drift detection is a *second consumer* of these types — that is the only reason `drift:` struct tags live on them.
 
-Mappers are plain functions in `internal/apim/model/` (`ToApplicationDTO`, `ToAPIV4DTO`, `ToSharePolicyGroupDTO`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
+Mappers are plain functions in `internal/apim/model/` (`ToAPIV4DTO`, `ToSharePolicyGroupDTO`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
 
-Two deviations worth knowing before copying a pattern:
+One deviation worth knowing before copying a pattern:
 
-- **Application** `PUT`s `app.Spec` directly; `ApplicationDTO` exists for the typed `GET` response and for drift.
 - **Subscription** `PUT`s `AutomationSubscriptionDTO` (`apiHrid`/`applicationHrid`/`planHrid`) but compares on `SubscriptionDTO` (`apiId`/`applicationId`/`planId`).
 
 ### Drift detection
