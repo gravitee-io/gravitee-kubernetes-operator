@@ -44,12 +44,13 @@ type Reconciler struct {
 }
 
 // resourceLifecycle wires the reconcile steps of portals.
+// ResolveRefs runs the delete guard itself, before the context lookup: a lifecycle DeleteGuard would run
+// after it, and so never for a context deleted first.
 var resourceLifecycle = lifecycle.NewResourceLifecycle(Lifecycle{
 	Finalizer:     core.PortalFinalizer,
 	ResolveRefs:   apimportal.ResolveRefs,
 	ClientFactory: apimportal.CreateAPIMClient,
 	ToDTO:         apimportal.ToDTO,
-	DeleteGuard:   apimportal.DeleteGuard,
 	Delete:        apimportal.Delete,
 	Upsert:        apimportal.Upsert,
 	PostUpsert:    apimportal.UpdateStatus,
