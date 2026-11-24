@@ -68,7 +68,10 @@ func Delete(ctx context.Context, client *apim.SDKClient, dto DTO) error {
 // UpdateStatus copies the upsert response into the CR status. An application upserted by its hrid becomes
 // Automation API managed; a legacy application, upserted by its UUID, stays as it is. The subscription count
 // is left alone: the subscription controller owns it. A response without an id keeps the one the status has.
+// The deprecated processing status is cleared: the lifecycle reports through the conditions, and a value left by
+// the controller before it would never change again.
 func UpdateStatus(_ context.Context, obj *v1alpha1.Application, resp Response) error {
+	obj.Status.ProcessingStatus = ""
 	if resp.State.Id != nil {
 		obj.Status.ID = *resp.State.Id
 	}
