@@ -49,7 +49,7 @@ func NewLifecycle() Lifecycle {
 		Finalizer:     core.GroupFinalizer,
 		ResolveRefs:   nil,
 		ClientFactory: apimgroup.CreateAPIMClient,
-		ToDTO:         apimgroup.ToDTO,
+		ToDTO:         lifecycle.WithoutContext(apimgroup.ToDTO),
 		Delete:        apimgroup.Delete,
 		Upsert:        apimgroup.Upsert,
 		PostUpsert:    apimgroup.UpdateStatus,

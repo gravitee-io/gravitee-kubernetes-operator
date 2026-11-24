@@ -232,7 +232,7 @@ func (l ResourceLifecycle[T, D, C, R]) clientAndDTO(ctx context.Context, dc T) (
 	if err != nil {
 		return zeroC, zeroD, gerrors.NewResolveRefError(err)
 	}
-	dto, err := l.ToDTO(dc)
+	dto, err := l.ToDTO(ctx, dc)
 	if err != nil {
 		// retrying cannot fix a mapping error
 		return zeroC, zeroD, gerrors.NewIllegalStateError(err)

@@ -39,7 +39,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
 			ClientFactory: am.AdmissionSubResourceClient[*v1alpha1.AMCertificate],
 			PreCheck:      internal.PreCheck,
-			ToDTO:         internal.ToCertificateDTOForDrift,
+			ToDTO:         lifecycle.WithoutContext(internal.ToCertificateDTOForDrift),
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
 			DeleteGuard:   search.AssertNoAMCertificateRef,

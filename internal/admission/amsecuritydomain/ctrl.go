@@ -41,7 +41,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			PreCheck:      internal.ValidateKey,
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
-			ToDTO:         internal.ToDomainDTO,
+			ToDTO:         lifecycle.WithoutContext(internal.ToDomainDTO),
 		}),
 	}
 }

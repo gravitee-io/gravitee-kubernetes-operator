@@ -53,7 +53,7 @@ func NewLifecycle() Lifecycle {
 		ResolveRefs:   application.ResolveRefs,
 		Owner:         am.GetSubResourceOwner[*v1alpha1.AMApplication],
 		ClientFactory: am.CreateSubResourceClient[*v1alpha1.AMApplication],
-		ToDTO:         application.ToApplicationDTO,
+		ToDTO:         lifecycle.WithoutContext(application.ToApplicationDTO),
 		Delete:        application.Delete,
 		Upsert:        application.Upsert,
 		PostUpsert:    application.UpdateStatus,

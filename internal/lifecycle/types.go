@@ -35,7 +35,14 @@ type ClientFactoryFunc[T core.ContextAwareObject, C core.APIClient] func(ctx con
 // ToDTOFunc maps a CR to the wire payload. Do not fetch refs or call the API.
 // Identity() must be set so Delete and GetRemote can address the remote object.
 // An error means the CR cannot be mapped: nothing is sent, rather than a partial payload.
-type ToDTOFunc[T core.ContextAwareObject, D store.Identifiable] func(obj T) (D, error)
+type ToDTOFunc[T core.ContextAwareObject, D store.Identifiable] func(ctx context.Context, obj T) (D, error)
+
+// WithoutContext adapts a mapper that does not need the request context.
+func WithoutContext[T core.ContextAwareObject, D store.Identifiable](toDTO func(T) (D, error)) ToDTOFunc[T, D] {
+	return func(_ context.Context, obj T) (D, error) {
+		return toDTO(obj)
+	}
+}
 
 // UpsertFunc PUT/creates the remote resource from dto. Never sees the CR.
 type UpsertFunc[C any, D store.Identifiable, R any] func(ctx context.Context, client C, dto D) (R, error)

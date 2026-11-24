@@ -47,7 +47,7 @@ func NewV4Lifecycle() V4Lifecycle {
 		Finalizer:     core.ApiDefinitionFinalizer,
 		ResolveRefs:   apiv4.ResolveRefs,
 		ClientFactory: apiv4.CreateAPIMClient,
-		ToDTO:         apiv4.ToDTO,
+		ToDTO:         lifecycle.WithoutContext(apiv4.ToDTO),
 		DeleteGuard:   apiv4.DeleteGuard,
 		Delete:        apiv4.Delete,
 		Upsert:        apiv4.Upsert,

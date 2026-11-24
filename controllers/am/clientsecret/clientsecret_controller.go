@@ -52,7 +52,7 @@ func NewLifecycle() Lifecycle {
 		ResolveRefs:   clientsecret.ResolveRefs,
 		Owner:         clientsecret.GetOwner,
 		ClientFactory: clientsecret.CreateClient,
-		ToDTO:         clientsecret.ToClientSecretDTO,
+		ToDTO:         lifecycle.WithoutContext(clientsecret.ToClientSecretDTO),
 		Delete:        clientsecret.Delete,
 		Upsert:        clientsecret.Upsert,
 		PostUpsert:    clientsecret.UpdateStatus,

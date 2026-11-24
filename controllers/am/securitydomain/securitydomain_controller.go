@@ -51,7 +51,7 @@ func NewLifecycle() Lifecycle {
 		Finalizer:     core.AMSecurityDomainFinalizer,
 		ResolveRefs:   nil,
 		ClientFactory: am.ClientForDomain,
-		ToDTO:         internal.ToDomainDTO,
+		ToDTO:         lifecycle.WithoutContext(internal.ToDomainDTO),
 		Delete:        internal.Delete,
 		Upsert:        internal.Upsert,
 		PostUpsert:    internal.UpdateStatus,

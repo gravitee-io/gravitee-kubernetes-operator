@@ -44,7 +44,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			ResolveRefs:    apiv4.ResolveRefsForAdmission,
 			ClientFactory:  admissionClient,
 			PreCheck:       preCheck,
-			ToDTO:          apiv4.ToDTO,
+			ToDTO:          lifecycle.WithoutContext(apiv4.ToDTO),
 			DryRun:         apiv4.DryRun,
 			PayloadChanged: everyUpdate,
 			GetRemote:      apiv4.GetRemote,

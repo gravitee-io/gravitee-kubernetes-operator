@@ -38,7 +38,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
 			ClientFactory: am.AdmissionSubResourceClient[*v1alpha1.AMApplication],
 			PreCheck:      internal.PreCheck,
-			ToDTO:         internal.ToApplicationDTO,
+			ToDTO:         lifecycle.WithoutContext(internal.ToApplicationDTO),
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
 		}),

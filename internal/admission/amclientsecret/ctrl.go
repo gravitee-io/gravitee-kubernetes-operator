@@ -39,7 +39,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			ResolveRefs:   internal.ResolveAdmissionRefs,
 			ClientFactory: internal.AdmissionClient,
 			PreCheck:      internal.PreCheck,
-			ToDTO:         internal.ToClientSecretDTO,
+			ToDTO:         lifecycle.WithoutContext(internal.ToClientSecretDTO),
 			DryRun:        internal.DryRun,
 			GetRemote:     internal.GetRemote,
 		}),

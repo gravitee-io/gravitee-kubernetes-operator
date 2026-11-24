@@ -39,7 +39,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
 			ClientFactory:  apimgroup.CreateAPIMClient,
 			PreCheck:       warnIgnoredMembers,
-			ToDTO:          apimgroup.ToDTO,
+			ToDTO:          lifecycle.WithoutContext(apimgroup.ToDTO),
 			DryRun:         apimgroup.DryRun,
 			PayloadChanged: apimgroup.PayloadChanged,
 			GetRemote:      apimgroup.GetRemote,

@@ -52,7 +52,7 @@ func NewLifecycle() Lifecycle {
 		Finalizer:     core.ApplicationFinalizer,
 		ResolveRefs:   apimapp.ResolveRefs,
 		ClientFactory: apimapp.CreateAPIMClient,
-		ToDTO:         apimapp.ToDTO,
+		ToDTO:         lifecycle.WithoutContext(apimapp.ToDTO),
 		Delete:        apimapp.Delete,
 		Upsert:        apimapp.Upsert,
 		PostUpsert:    apimapp.UpdateStatus,
