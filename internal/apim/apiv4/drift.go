@@ -17,11 +17,11 @@ package apiv4
 import (
 	"cmp"
 	"slices"
-	"strings"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
 )
 
@@ -91,6 +91,8 @@ func falseWhenUnset(value *bool) *bool {
 	return new(false)
 }
 
+// withResolvedVisibility resolves the visibility of each page navigation entry as APIM does, with the rule
+// the portal navigation resources share.
 func withResolvedVisibility(paths []sdk.NavigationPath) []sdk.NavigationPath {
 	if len(paths) == 0 {
 		return paths
@@ -98,35 +100,16 @@ func withResolvedVisibility(paths []sdk.NavigationPath) []sdk.NavigationPath {
 	declared := make(map[string]sdk.PortalVisibility, len(paths))
 	for _, entry := range paths {
 		if entry.Visibility != nil {
-			declared[normalizeNavigationPath(entry.Path)] = *entry.Visibility
+			declared[navigation.NormalizePath(entry.Path)] = *entry.Visibility
 		}
 	}
 	resolved := make([]sdk.NavigationPath, len(paths))
 	for i, entry := range paths {
-		visibility := resolveNavigationVisibility(entry.Path, declared)
+		visibility := navigation.ResolveVisibility(entry.Path, declared)
 		entry.Visibility = &visibility
 		resolved[i] = entry
 	}
 	return resolved
-}
-
-func resolveNavigationVisibility(path string, declared map[string]sdk.PortalVisibility) sdk.PortalVisibility {
-	segments := strings.Split(strings.Trim(normalizeNavigationPath(path), "/"), "/")
-	for i := len(segments); i > 0; i-- {
-		ancestor := "/" + strings.Join(segments[:i], "/")
-		if visibility, ok := declared[ancestor]; ok && visibility != "" {
-			return visibility
-		}
-	}
-	return sdk.PortalVisibilityPUBLIC
-}
-
-func normalizeNavigationPath(path string) string {
-	trimmed := strings.TrimRight(path, "/")
-	if trimmed == "" {
-		return "/"
-	}
-	return trimmed
 }
 
 func withNormalisedListeners(listeners []sdk.Listener) []sdk.Listener {
