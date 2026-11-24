@@ -74,6 +74,9 @@ type ImmutableFieldsFunc[T core.ContextAwareObject] func(oldValue, newValue T) *
 // Nil findings and nil error: nothing to report (for example no client yet).
 type DryRunFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) (*gerrors.AdmissionErrors, error)
 
+// DeferDryRunFunc returns why obj cannot be dry-run yet, reported as a warning, or "" to dry-run it.
+type DeferDryRunFunc[T core.ContextAwareObject] func(ctx context.Context, obj T) string
+
 // GetRemoteFunc returns the live remote object for dto.Identity().
 // Return the client error as-is, including 404.
 type GetRemoteFunc[C any, D store.Identifiable] func(ctx context.Context, client C, dto D) (D, error)
@@ -142,6 +145,10 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 
 	// DryRun runs on create, and on an update PayloadChanged reports, after ToDTO, before PostCheck. Required.
 	DryRun DryRunFunc[C, D]
+
+	// DeferDryRun skips the dry run while the remote cannot validate obj yet, so that an McpProxy applied
+	// together with its CatalogMcpServers is not refused. Runs before DryRun. Nil always dry-runs.
+	DeferDryRun DeferDryRunFunc[T]
 
 	// PayloadChanged reports whether an update changes what the controller sends, so admission dry-runs it.
 	// It sees the objects before template compile. Nil means a spec hash change; set it when the

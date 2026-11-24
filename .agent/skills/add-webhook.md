@@ -13,6 +13,8 @@ Section 3 is the part to get right.
 > See `internal/admission/group/` and AGENTS.md (APIM SDK). An update is dry-run only when the spec
 > hash changes: if the reconcile predicate also reacts to an annotation, set `PayloadChanged` to the
 > same condition, so admission dry-runs every change the controller sends (Group: `ignore-members`).
+> When the remote cannot validate the resource until a dependency syncs, set `DeferDryRun`: it warns
+> and skips the dry run, and the controller's `ResolveRefs` holds the resource (McpProxy: its CatalogMcpServers).
 
 ## 1. `internal/admission/<resource>/ctrl.go`
 

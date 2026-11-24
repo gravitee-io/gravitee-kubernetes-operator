@@ -16,6 +16,7 @@ package mcpproxy
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -24,8 +25,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
 // Response is what Upsert returns: the state the platform answers.
@@ -67,6 +70,33 @@ func upsert(ctx context.Context, client *apim.SDKClient, dto sdk.AimMcpProxy, dr
 		return sdk.AimMcpProxyState{}, errors.UnexpectedSDKResponse(resp.HTTPResponse)
 	}
 	return *resp.JSON200, nil
+}
+
+// ResolveRefs resolves the management context and, outside a delete, waits for the CatalogMcpServers a studio
+// selects (ResolvedRefs=False, requeued): the platform refuses a proxy whose servers are not in the catalog yet.
+// Admission resolves the context only, and defers its dry run instead of refusing.
+func ResolveRefs(ctx context.Context, obj *v1alpha1.McpProxy, ns string) error {
+	if err := apim.ResolveContextRef(ctx, obj, ns); err != nil {
+		return err
+	}
+	if obj.IsBeingDeleted() {
+		return nil
+	}
+	return dynamic.AssertCatalogMcpServersSynced(ctx, obj)
+}
+
+// OnUpsertError records the findings of a refused apply in the status. Admission ran the same checks as a dry
+// run, so a refusal here comes from a state that changed since (a tool gone upstream, a context path taken): it
+// stays recoverable (backoff) rather than terminal until the next spec change. Any other failure keeps the
+// lifecycle's classification.
+func OnUpsertError(_ context.Context, obj *v1alpha1.McpProxy, err error) error {
+	if !errors.IsBadRequest(err) {
+		return nil
+	}
+	if findings, refused := model.AutomationRefusal(err); refused {
+		obj.Status.Errors = findings
+	}
+	return fmt.Errorf("mcp proxy [%s] was refused by the automation api: %w", obj.GetName(), err)
 }
 
 // Delete removes the proxy. A proxy already gone counts as deleted.

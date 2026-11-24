@@ -693,6 +693,31 @@ var _ = Describe("MCP proxy", func() {
 		})
 	})
 
+	Describe("a refused apply", func() {
+		refusedWith := func(statusCode int, body string) error {
+			return xErrors.ServerError{StatusCode: statusCode, Body: body}
+		}
+
+		It("records the findings in the status and stays recoverable", func() {
+			proxy := newMcpProxy(nil)
+
+			err := apimmcpproxy.OnUpsertError(context.Background(), proxy,
+				refusedWith(http.StatusBadRequest, `{"errors": {"severe": ["context path already used"]}}`))
+
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf("mcp proxy [%s] was refused by the automation api", proxy.Name))))
+			Expect(xErrors.IsRecoverable(err)).To(BeTrue())
+			Expect(proxy.Status.Errors.Severe).To(ConsistOf("context path already used"))
+		})
+
+		It("leaves any other failure to the lifecycle", func() {
+			err := apimmcpproxy.OnUpsertError(context.Background(), newMcpProxy(nil),
+				refusedWith(http.StatusInternalServerError, `{"errors": {"severe": ["boom"]}}`))
+
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
 	Describe("refusal findings", func() {
 		refusedWith := func(statusCode int, body string) error {
 			return xErrors.ServerError{StatusCode: statusCode, Body: body}
