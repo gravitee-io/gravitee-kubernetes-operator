@@ -86,8 +86,14 @@ func (s *SubscriptionStatus) DeepCopyTo(obj client.Object) error {
 	return nil
 }
 
+// IsFailed reports a condition set to False. The deprecated processingStatus is no longer written.
 func (s *SubscriptionStatus) IsFailed() bool {
-	return s.ProcessingStatus == core.ProcessingStatusFailed
+	for _, condition := range s.Conditions {
+		if condition.Status == metav1.ConditionFalse {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *SubscriptionStatus) SetProcessingStatus(status core.ProcessingStatus) {

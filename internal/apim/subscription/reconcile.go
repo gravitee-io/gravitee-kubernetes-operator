@@ -50,7 +50,8 @@ func Delete(ctx context.Context, client *apim.SDKClient, dto DTO) error {
 
 // UpdateStatus copies the upsert response into the CR status. A subscription upserted by its hrid becomes
 // Automation API managed; a legacy subscription, upserted by its UUID, stays as it is. A response without an id
-// keeps the one the status has.
+// keeps the one the status has. The deprecated processing status is cleared: the lifecycle reports through the
+// conditions, and a value left by the controller before it would never change again.
 func UpdateStatus(obj *v1alpha1.Subscription, resp Response) error {
 	if resp.State.StartingAt == nil {
 		return fmt.Errorf("subscription [%s] has no start date in APIM", resp.State.Hrid)
@@ -60,6 +61,7 @@ func UpdateStatus(obj *v1alpha1.Subscription, resp Response) error {
 		return fmt.Errorf("parse the start date of subscription [%s]: %w", resp.State.Hrid, err)
 	}
 
+	obj.Status.ProcessingStatus = ""
 	if resp.State.Id != nil {
 		obj.Status.ID = *resp.State.Id
 	}
