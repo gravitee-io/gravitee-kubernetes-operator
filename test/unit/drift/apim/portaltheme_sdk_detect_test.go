@@ -43,6 +43,20 @@ var _ = Describe("Portal theme Drift detection on the APIM SDK types", func() {
 		),
 	)
 
+	It("detects drift when the remote custom CSS differs", func() {
+		remote := sdkCompletePortalThemeDTO()
+		remote.Definition.CustomCss = new(".console-edit {}")
+		result := drift.DetectWithNamespace(sdkPortalThemeToDTO(sdkCompletePortalThemeCRD()), remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
+
+	It("detects drift when the remote name differs", func() {
+		remote := sdkCompletePortalThemeDTO()
+		remote.Name += " (edited in the console)"
+		result := drift.DetectWithNamespace(sdkPortalThemeToDTO(sdkCompletePortalThemeCRD()), remote, "")
+		Expect(result.DriftDetected()).To(BeTrue())
+	})
+
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
 			expectedEquivalentNotHavingAnyZeroValue(sdkCompletePortalThemeDTO(), sdkCompletePortalThemeDTO())

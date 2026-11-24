@@ -34,8 +34,9 @@ import (
 )
 
 // The portal navigation payloads GKO sent before the APIM SDK, one golden file per example manifest.
-// They were written once from the hand-written mappers, since removed, and are never regenerated: the SDK
-// mappers must send the same JSON, except for the differences declared below.
+// They were written once from the hand-written mappers (still in the tree for master's tests only, see
+// AGENTS.md) and are never regenerated: the SDK mappers must send the same JSON, except for the differences
+// declared below.
 
 const (
 	portalExamplesDir   = "../../../examples/apim/portal"
