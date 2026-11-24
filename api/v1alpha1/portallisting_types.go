@@ -27,6 +27,7 @@ import (
 )
 
 var _ core.Object = &PortalListing{}
+var _ core.ContextAwareObject = &PortalListing{}
 var _ core.Spec = &PortalListingSpec{}
 var _ core.Status = &PortalListingStatus{}
 var _ core.ConditionAware = &PortalListing{}
@@ -139,4 +140,29 @@ func (p *PortalListing) GetConditions() map[string]metav1.Condition {
 
 func (p *PortalListing) SetConditions(conditions []metav1.Condition) {
 	p.Status.Conditions = conditions
+}
+
+// ContextRef is nil: the management context comes from the portal the PortalListing belongs to.
+func (p *PortalListing) ContextRef() core.ObjectRef {
+	return nil
+}
+
+func (p *PortalListing) HasContext() bool {
+	return false
+}
+
+func (p *PortalListing) GetID() string {
+	return p.Status.ID
+}
+
+func (p *PortalListing) GetOrgID() string {
+	return p.Status.OrgID
+}
+
+func (p *PortalListing) GetEnvID() string {
+	return p.Status.EnvID
+}
+
+func (p *PortalListing) PopulateIDs(_ core.ContextModel, _ bool) {
+	// HRID-addressed through the Automation API only, no HRID/UUID migration.
 }
