@@ -16,11 +16,11 @@ package catalogmcpserver
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimcatalog "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -41,24 +41,47 @@ func validateUpdate(
 			return errs
 		}
 	}
-	errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemoteCatalogMcpServer,
-		drift.MapDTO(model.ToCatalogMcpServerDTO)))
+	errs.MergeWith(validateDrift(ctx, oldObj, newObj))
 	return errs
 }
 
+// validateDrift compares through the SDK client, not the APIM facade: the resolver builds that client,
+// only once drift is known to be enabled, and hands no facade to the getter.
+func validateDrift(
+	ctx context.Context,
+	oldObj *v1alpha1.CatalogMcpServer,
+	newObj *v1alpha1.CatalogMcpServer,
+) *errors.AdmissionErrors {
+	var client *apim.SDKClient
+	resolveContext := func(ctx context.Context) (*apim.APIM, error) {
+		var err error
+		client, err = apimcatalog.CreateAPIMClient(ctx, newObj)
+		return nil, err
+	}
+	getRemote := func(_ *apim.APIM, srv *v1alpha1.CatalogMcpServer) (any, error) {
+		dto, err := apimcatalog.ToDTO(srv)
+		if err != nil {
+			return nil, err
+		}
+		return apimcatalog.GetRemote(ctx, client, dto)
+	}
+	return drift.ValidateDriftWithContext(ctx, oldObj, newObj, resolveContext, resolveRefs, getRemote,
+		drift.MapDTO(toDTO))
+}
+
 // resolveRefs has nothing to resolve: the shared drift path compiles templates on both sides.
-// Credential values are ignored by the DTO's drift tags, whatever form the spec supplied them in.
+// Credential values are ignored by the payload's drift tags, whatever form the spec supplied them in.
 func resolveRefs(context.Context, *v1alpha1.CatalogMcpServer) error {
 	return nil
 }
 
-// getRemoteCatalogMcpServer reads the platform's copy and returns the payload half only: what
-// the platform discovered lives in the state and is never compared.
-func getRemoteCatalogMcpServer(apimClient *apim.APIM, srv *v1alpha1.CatalogMcpServer) (any, error) {
-	hrid := refs.NewNamespacedNameFromObject(srv).HRID()
-	remote, err := apimClient.CatalogMcpServers.GetByHRID(hrid)
+// toDTO maps the CRD to the payload compared with the remote. CEL pairs every auth type with its block,
+// so a mapping error is not expected here; should one occur, the empty payload is reported as drift
+// rather than silently admitted.
+func toDTO(srv *v1alpha1.CatalogMcpServer) sdk.AimCatalogMcpServer {
+	dto, err := apimcatalog.ToDTO(srv)
 	if err != nil {
-		return nil, err
+		return sdk.AimCatalogMcpServer{}
 	}
-	return remote.CatalogMcpServerDTO, nil
+	return dto
 }
