@@ -26,12 +26,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzpolicy"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -80,11 +82,35 @@ func newPdp(name string, contextRef refs.NamespacedName, scope string) *v1alpha1
 // cluster registers a fake client holding objects, AuthzPolicy indexed as the manager's cache
 // indexes it.
 func cluster(objects ...client.Object) {
+	clusterWith(interceptor.Funcs{}, objects...)
+}
+
+// syncedFromSecondRead answers the first read of an AuthzPdp as stored, and every later one with scope as its
+// routing scope: an AuthzPdp that syncs between two reads.
+func syncedFromSecondRead(scope string) interceptor.Funcs {
+	reads := 0
+	return interceptor.Funcs{
+		Get: func(ctx context.Context, c client.WithWatch, key client.ObjectKey, obj client.Object,
+			opts ...client.GetOption) error {
+			if err := c.Get(ctx, key, obj, opts...); err != nil {
+				return err
+			}
+			if pdp, isPdp := obj.(*v1alpha1.AuthzPdp); isPdp {
+				if reads++; reads > 1 {
+					pdp.Status.RoutingScope = scope
+				}
+			}
+			return nil
+		},
+	}
+}
+
+func clusterWith(funcs interceptor.Funcs, objects ...client.Object) {
 	c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
 	Expect(search.InitCache(context.Background(), c)).To(Succeed())
 	scheme := runtime.NewScheme()
 	Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
-	builder := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...)
+	builder := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...).WithInterceptorFuncs(funcs)
 	for _, field := range []search.IndexField{search.AuthzPolicyContextField, search.AuthzPolicyAuthzPdpField} {
 		builder = builder.WithIndex(&v1alpha1.AuthzPolicy{}, field.String(), c.indexers[field.String()])
 	}
@@ -99,7 +125,7 @@ func mustJSON(v any) string {
 
 var _ = Describe("Validating an AuthzPolicy", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 
 	BeforeEach(func() {
 		platform.reset()
@@ -117,18 +143,34 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
+	// resolveRefs reads the AuthzPdp unsynced and leaves the pdpRef as written; deferDryRun reads it
+	// synced. Dry-running would map an unresolved pdpRef, which ToDTO refuses.
+	It("skips the dry run when an AuthzPdp syncs during admission", func() {
+		clusterWith(syncedFromSecondRead("orders@eu"), newPdp("orders-eu", devCtx, ""))
+
+		warnings, err := ctrl.ValidateCreate(ctx, newPolicy("hotel-booking-read", "policy.hotel-booking-read",
+			byRef("orders-eu"), authzpdp.Target{Scope: "default"}))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("platform checks deferred (an AuthzPdp synced during admission)"))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
 	// The controller's own finalizer and annotation writes go through the webhook: refusing them
 	// while an AuthzPdp is pending would stop the controller from saving its finalizer.
 	It("admits a metadata-only update while an AuthzPdp is pending", func() {
 		cluster()
 		oldObj := newPolicy("hotel-booking-read", "policy.hotel-booking-read", byRef("orders-eu"))
 		oldObj.Status.ID = "5f1c"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
 		newObj := oldObj.DeepCopy()
 		newObj.Finalizers = []string{"finalizers.gravitee.io/authzpolicies"}
 
-		_, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
 
 		Expect(err).ToNot(HaveOccurred())
+		// Drift is skipped too: the targets cannot be compared before they resolve.
+		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
@@ -156,6 +198,39 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 
 		Expect(err).To(MatchError(ContainSubstring(
 			"targets[1].pdpRef [travel/orders-eu]: kind must be AuthzPdp, got [McpProxy]")))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	It("refuses every pdpRef naming another kind in one message", func() {
+		cluster()
+		mcp := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu", Kind: "McpProxy"}}
+		schema := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "travel", Namespace: "shared", Kind: "AuthzSchema"}}
+
+		_, err := ctrl.ValidateCreate(ctx,
+			newPolicy("hotel-booking-read", "policy.hotel-booking-read", mcp, authzpdp.Target{Scope: "default"}, schema))
+
+		Expect(err).To(MatchError(ContainSubstring(
+			"targets[0].pdpRef [travel/orders-eu]: kind must be AuthzPdp, got [McpProxy]; " +
+				"targets[2].pdpRef [shared/travel]: kind must be AuthzPdp, got [AuthzSchema]")))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	// A Kubernetes name may hold a dot, which the automation API refuses in a hrid.
+	It("refuses a create or an update whose namespace and name give an invalid hrid, before the dry run", func() {
+		cluster()
+		dotted := newPolicy("hotel.booking-read", "policy.hotel-booking-read", authzpdp.Target{Scope: "default"})
+		hridFinding := "hrid [travel-hotel.booking-read] derived from the resource namespace and name must match"
+
+		_, err := ctrl.ValidateCreate(ctx, dotted)
+
+		Expect(err).To(MatchError(ContainSubstring(hridFinding)))
+
+		edited := dotted.DeepCopy()
+		edited.Spec.PolicyText = "permit(principal, action, resource);"
+
+		_, err = ctrl.ValidateUpdate(ctx, dotted, edited)
+
+		Expect(err).To(MatchError(ContainSubstring(hridFinding)))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
@@ -225,7 +300,7 @@ var _ = Describe("Validating an AuthzPolicy", func() {
 
 var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 
 	BeforeEach(func() {
 		platform.reset()
@@ -315,9 +390,10 @@ var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 		fixed := refused.DeepCopy()
 		fixed.Spec.PolicyText = `permit(principal, action == Action::"read", resource);`
 
-		_, err := ctrl.ValidateUpdate(ctx, refused, fixed)
+		warnings, err := ctrl.ValidateUpdate(ctx, refused, fixed)
 
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the platform refused the last apply"))
 	})
 
 	// The usual cause is a deleted AuthzPdp, whose scope the platform has already removed from the
@@ -329,8 +405,10 @@ var _ = Describe("Detecting drift on an AuthzPolicy", func() {
 		orphaned := retargeted.DeepCopy()
 		orphaned.Spec.Targets = []authzpdp.Target{byRef("orders-eu")}
 
-		_, err := ctrl.ValidateUpdate(ctx, orphaned, retargeted)
+		warnings, err := ctrl.ValidateUpdate(ctx, orphaned, retargeted)
 
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the previous targets no longer resolve: " +
+			"authz pdp not found: [travel/orders-eu]"))
 	})
 })

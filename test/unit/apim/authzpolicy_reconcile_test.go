@@ -75,7 +75,9 @@ var _ = Describe("Authz policy reconcile", func() {
 			}).
 			Build()
 		k8s.RegisterClient(cli)
-		return &authzpolicy.Reconciler{Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20)}, cli
+		return &authzpolicy.Reconciler{
+			Scheme: scheme, Client: cli, Recorder: record.NewFakeRecorder(20), Lifecycle: authzpolicy.NewLifecycle(),
+		}, cli
 	}
 
 	stored := func(cli client.Client) *v1alpha1.AuthzPolicy {
@@ -106,9 +108,9 @@ var _ = Describe("Authz policy reconcile", func() {
 		return pdp
 	}
 
-	// Resolving runs before templates compile: a waiting policy records no reference on the
-	// Secrets it reads.
-	It("waits on ResolvedRefs=False naming every pending AuthzPdp, recording no template reference", func() {
+	// Templates compile before refs resolve, so a waiting policy records a reference on the Secrets it
+	// reads: the finalizer is saved first, and the delete releases it.
+	It("waits on ResolvedRefs=False naming every pending AuthzPdp, releasing its template references on delete", func() {
 		policy := twoPdps()
 		policy.Spec.Name = `[[ secret "hotel-booking/name" ]]`
 		r, cli := setup(policy, unsynced("orders-us"), &corev1.Secret{
@@ -130,7 +132,13 @@ var _ = Describe("Authz policy reconcile", func() {
 
 		secret := &corev1.Secret{}
 		Expect(cli.Get(context.Background(), secretKey, secret)).To(Succeed())
-		Expect(secret.Annotations).ToNot(HaveKey("gravitee.io/authzpolicies"))
+		Expect(secret.Finalizers).To(ContainElement(core.TemplatingFinalizer))
+
+		Expect(cli.Delete(context.Background(), stored(cli))).To(Succeed())
+		_, err = r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(cli.Get(context.Background(), secretKey, secret)).To(Succeed())
+		Expect(secret.Finalizers).ToNot(ContainElement(core.TemplatingFinalizer))
 	})
 
 	// Both contexts are immutable: only a change to the pdpRef fixes it, and that change reconciles
@@ -173,6 +181,28 @@ var _ = Describe("Authz policy reconcile", func() {
 		Expect(condition(cli, k8s.ConditionAccepted).Status).To(Equal(metav1.ConditionFalse))
 		Expect(p.Status.ID).To(BeEmpty())
 		Expect(p.Status.PolicyStatus).To(BeEmpty())
+	})
+
+	// A token without ENVIRONMENT_AUTHZ_PDP[UPDATE] cannot withdraw a deployed policy: the delete is
+	// retried, the finalizer kept, and Accepted names the reason until the token is granted it.
+	It("keeps the finalizer of a delete the platform forbids, naming the reason on Accepted", func() {
+		policy := newAuthzPolicy()
+		policy.Spec.Context = &refs.NamespacedName{Name: "refusing-ctx"}
+		policy.Spec.Targets = []authzpdp.Target{{Scope: "default"}}
+		r, cli := setup(policy)
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).To(HaveOccurred())
+		Expect(cli.Delete(context.Background(), stored(cli))).To(Succeed())
+
+		_, err = r.Reconcile(context.Background(), req)
+		Expect(err).To(HaveOccurred())
+
+		p := stored(cli)
+		Expect(p.Finalizers).To(ContainElement(core.AuthzPolicyFinalizer))
+		accepted := condition(cli, k8s.ConditionAccepted)
+		Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+		Expect(accepted.Message).To(ContainSubstring(forbiddenDelete))
 	})
 
 	It("records in status the deployment and the identifiers the platform answers", func() {
@@ -231,6 +261,27 @@ var _ = Describe("Authz policy reconcile", func() {
 		// goes, and the policy with it. The delete needs no target.
 		_, err = r.Reconcile(context.Background(), req)
 		Expect(err).ToNot(HaveOccurred())
+		Expect(apierrors.IsNotFound(cli.Get(context.Background(), key, &v1alpha1.AuthzPolicy{}))).To(BeTrue())
+	})
+
+	// ToDTO refuses an unresolved pdpRef, and a delete does not resolve it: the delete drops the
+	// targets, so an applied policy is deleted on the platform, by hrid.
+	It("deletes an applied policy whose targets name an AuthzPdp from the platform", func() {
+		policy := newAuthzPolicy()
+		policy.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}
+		pdp := newAuthzPdp()
+		pdp.Spec.Context = &refs.NamespacedName{Name: "accepting-ctx"}
+		pdp.Status.RoutingScope = "orders@eu"
+		r, cli := setup(policy, pdp)
+
+		_, err := r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(stored(cli).Status.ID).To(Equal("5f1c"))
+		Expect(cli.Delete(context.Background(), stored(cli))).To(Succeed())
+
+		_, err = r.Reconcile(context.Background(), req)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(wasDeleted("/authz/policies/gravitee-hotel-booking-read")).To(BeTrue())
 		Expect(apierrors.IsNotFound(cli.Get(context.Background(), key, &v1alpha1.AuthzPolicy{}))).To(BeTrue())
 	})
 })
