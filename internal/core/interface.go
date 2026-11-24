@@ -143,8 +143,8 @@ type Status interface {
 
 type SubscribableStatus interface {
 	Status
-	AddSubscription()
-	RemoveSubscription()
+	GetSubscriptionCount() uint
+	SetSubscriptionCount(count uint)
 }
 
 // +k8s:deepcopy-gen=false

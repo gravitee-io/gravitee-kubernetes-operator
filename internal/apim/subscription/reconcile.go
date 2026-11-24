@@ -74,3 +74,12 @@ func UpdateStatus(obj *v1alpha1.Subscription, resp Response) error {
 	}
 	return nil
 }
+
+// UpdateStatusAndRecount copies the upsert response into the CR status, then recounts the subscriptions of the
+// API and the application the subscription references.
+func UpdateStatusAndRecount(ctx context.Context, sub *v1alpha1.Subscription, resp Response) error {
+	if err := UpdateStatus(sub, resp); err != nil {
+		return err
+	}
+	return RecountParents(ctx, sub)
+}

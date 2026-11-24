@@ -17,13 +17,11 @@
 package subscription
 
 import (
-	"context"
 	"fmt"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/mapper"
@@ -58,14 +56,18 @@ func ToDTO(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.Ap
 	return dto, nil
 }
 
-// CreateAPIMClient builds the SDK client of the management context the API references: the subscription
-// has no context of its own.
-func CreateAPIMClient(ctx context.Context, api core.ApiDefinitionObject) (*apim.SDKClient, error) {
-	return apim.SDKFromContextRef(ctx, api.ContextRef(), api.GetNamespace())
-}
-
 // Response is what Upsert returns: the subscription state APIM answers, and the flags the upsert was sent with.
 type Response struct {
 	State  sdk.SubscriptionState
 	Legacy Legacy
+}
+
+// GetOrgID is empty: a subscription response carries no organization.
+func (Response) GetOrgID() string {
+	return ""
+}
+
+// GetEnvID is empty: a subscription response carries no environment.
+func (Response) GetEnvID() string {
+	return ""
 }

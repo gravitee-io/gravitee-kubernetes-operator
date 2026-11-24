@@ -23,7 +23,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -32,23 +31,13 @@ import (
 
 var allowedPlanSecurities = []string{"API_KEY", "JWT", "OAUTH2", "MTLS"}
 
-func validateUpdate(
-	ctx context.Context,
-	oldSub *v1alpha1.Subscription,
-	newSub *v1alpha1.Subscription,
-) *errors.AdmissionErrors {
+// validateUpdate holds the checks of an update the lifecycle does not run: templates, references and immutable
+// fields are checked before it, drift after it.
+func validateUpdate(ctx context.Context, sub *v1alpha1.Subscription) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	errs.Add(admission.CompileAndValidateTemplate(ctx, newSub))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.MergeWith(validateImmutableProperties(oldSub, newSub))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.Add(validateEndingAt(newSub.GetEndingAt()))
+	errs.Add(validateEndingAt(sub.GetEndingAt()))
 
-	api, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
+	_, app, plan := resolveDependencies(ctx, sub, sub.GetNamespace(), errs)
 	if errs.IsSevere() {
 		return errs
 	}
@@ -56,32 +45,26 @@ func validateUpdate(
 	if plan == nil {
 		errs.AddSeveref(
 			"unable to subscribe to API [%s] because plan [%s] cannot be found",
-			newSub.GetApiRef(), newSub.GetPlan(),
+			sub.GetApiRef(), sub.GetPlan(),
 		)
 		return errs
 	}
 
-	errs.Add(validateApiKeys(plan, newSub.GetApiKeys()))
+	errs.Add(validateApiKeys(plan, sub.GetApiKeys()))
 	if errs.IsSevere() {
 		return errs
 	}
 
-	errs.Add(validateConsumerConfiguration(plan, newSub))
+	errs.Add(validateConsumerConfiguration(plan, sub))
 	if errs.IsSevere() {
 		return errs
 	}
 
-	validateMTLS(newSub, plan, app, errs)
-
-	mergeDriftValidation(ctx, oldSub, newSub, api, app, errs)
-
+	validateMTLS(sub, plan, app, errs)
 	return errs
 }
 
-func validateImmutableProperties(
-	oldSub core.SubscriptionObject,
-	newSub core.SubscriptionObject,
-) *errors.AdmissionErrors {
+func validateImmutableProperties(oldSub, newSub *v1alpha1.Subscription) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 	if newSub.GetApiRef().String() != oldSub.GetApiRef().String() {
 		errs.AddSeveref(
@@ -107,13 +90,10 @@ func validateImmutableProperties(
 	return errs
 }
 
+// validateCreate holds the checks of a create the lifecycle does not run: templates and references are checked
+// before it.
 func validateCreate(ctx context.Context, sub *v1alpha1.Subscription) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	errs.Add(admission.CompileAndValidateTemplate(ctx, sub))
-	if errs.IsSevere() {
-		return errs
-	}
-
 	ns := sub.GetNamespace()
 
 	errs.Add(validateApiKind(sub))

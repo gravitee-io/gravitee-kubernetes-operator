@@ -236,10 +236,11 @@ func start() {
 	)
 
 	runtimeUtil.Must((&subscription.Reconciler{
-		Scheme:   mgr.GetScheme(),
-		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.SubscriptionList{}),
+		Scheme:    mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Lifecycle: subscription.NewLifecycle(),
+		Recorder:  mgr.GetEventRecorderFor("subscription-controller"),
+		Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.SubscriptionList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&group.Reconciler{

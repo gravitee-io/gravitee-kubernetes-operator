@@ -400,15 +400,14 @@ func (s *ApiV4DefinitionStatus) DeepCopyTo(api client.Object) error {
 	return nil
 }
 
-func (s *ApiV4DefinitionStatus) AddSubscription() {
-	s.SubscriptionCount++
+// GetSubscriptionCount implements core.SubscribableStatus.
+func (s *ApiV4DefinitionStatus) GetSubscriptionCount() uint {
+	return s.SubscriptionCount
 }
 
-// RemoveSubscription implements core.SubscribableStatus.
-func (s *ApiV4DefinitionStatus) RemoveSubscription() {
-	if s.SubscriptionCount > 0 {
-		s.SubscriptionCount--
-	}
+// SetSubscriptionCount implements core.SubscribableStatus.
+func (s *ApiV4DefinitionStatus) SetSubscriptionCount(count uint) {
+	s.SubscriptionCount = count
 }
 
 // ApiV4DefinitionList contains a list of ApiV4Definition.

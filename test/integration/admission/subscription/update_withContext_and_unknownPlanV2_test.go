@@ -34,7 +34,7 @@ import (
 // v2 GetPlan returns an untyped nil and the MTLS check read its security type.
 var _ = Describe("Validate update", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := adm.AdmissionCtrl{}
+	admissionCtrl := adm.NewAdmissionCtrl()
 
 	fixtures := fixture.
 		Builder().
@@ -63,7 +63,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 			return assert.Equals(
 				"error",
 				errors.NewSeveref(
-					"unable to subscribe to API [%s] because plan [unresolved] cannot be found",
+					"could not resolve references: unable to subscribe to API [%s] because plan [unresolved] cannot be found",
 					fixtures.API.GetRef(),
 				),
 				err,

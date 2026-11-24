@@ -27,6 +27,7 @@ import (
 )
 
 var _ core.SubscriptionObject = &Subscription{}
+var _ core.ContextAwareObject = &Subscription{}
 var _ core.Spec = &SubscriptionSpec{}
 var _ core.Status = &SubscriptionStatus{}
 var _ core.ConditionAware = &Subscription{}
@@ -123,6 +124,33 @@ func (s *Subscription) GetRef() core.ObjectRef {
 		Name:      s.Name,
 		Namespace: s.Namespace,
 	}
+}
+
+// ContextRef is nil: the management context comes from the API.
+func (s *Subscription) ContextRef() core.ObjectRef {
+	return nil
+}
+
+func (s *Subscription) HasContext() bool {
+	return false
+}
+
+func (s *Subscription) GetID() string {
+	return s.Status.ID
+}
+
+// GetOrgID is empty: the status holds no organization.
+func (s *Subscription) GetOrgID() string {
+	return ""
+}
+
+// GetEnvID is empty: the status holds no environment.
+func (s *Subscription) GetEnvID() string {
+	return ""
+}
+
+// PopulateIDs does nothing: the subscription payload takes its identities from ToDTO.
+func (s *Subscription) PopulateIDs(_ core.ContextModel, _ bool) {
 }
 
 func (s *Subscription) GetSpec() core.Spec {

@@ -49,3 +49,8 @@ func GetState(ctx context.Context, client *apim.SDKClient, dto DTO) (sdk.Subscri
 	}
 	return *resp.JSON200, nil
 }
+
+// DryRun checks nothing: the SDK declares no subscription dry run.
+func DryRun(context.Context, *apim.SDKClient, DTO) (*errors.AdmissionErrors, error) {
+	return nil, nil
+}
