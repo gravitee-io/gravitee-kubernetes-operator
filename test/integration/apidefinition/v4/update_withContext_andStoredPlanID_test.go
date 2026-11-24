@@ -88,7 +88,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			plan.Plan = &base.Plan{}
 		}
 		plan.ID = storedPlanID
-		_, err := client.APIs.ImportV4(existing)
+		err := client.UpsertAPIV4(ctx, existing)
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(planIDInAPIM(client, apiHRID)).To(Equal(storedPlanID))

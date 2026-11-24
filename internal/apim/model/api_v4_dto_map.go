@@ -18,7 +18,6 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 )
 
@@ -35,30 +34,6 @@ func ToAPIV4DTO(api *v4.Api) APIV4DTO {
 	dto.Plans = inSendOrder(mapAPIV4Plans(api.Plans))
 
 	return dto
-}
-
-// ToAPIV4DriftDTO maps the spec the way drift compares it with the remote API, plans aligned by HRID.
-// When every plan sets an order and is published, each plan's order is its rank in the send order,
-// which is the order APIM stores. Otherwise the orders are cleared, which leaves the plan order out of
-// the comparison.
-func ToAPIV4DriftDTO(api *v4.Api) APIV4DTO {
-	dto := ToAPIV4DTO(api)
-	if slices.ContainsFunc(dto.Plans, orderNotComparable) {
-		for _, plan := range dto.Plans {
-			plan.Order = nil
-		}
-	} else {
-		setOrderFromPosition(dto.Plans)
-	}
-	return dto.Canonicalize()
-}
-
-// orderNotComparable tells whether the GET list position may differ from the plan's rank in the send order:
-// a plan without an order, or one not published (APIM renumbers published plans only, so a deprecated or
-// staging plan can share an order with another, and the GET breaks that tie by status).
-func orderNotComparable(plan *APIV4PlanDTO) bool {
-	published := plan.Status == "" || plan.Status == base.PublishedPlanStatus
-	return plan.Order == nil || !published
 }
 
 // inSendOrder sorts plans by order, unset orders last, then by HRID.

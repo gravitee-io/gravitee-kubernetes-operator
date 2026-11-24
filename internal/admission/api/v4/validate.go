@@ -24,8 +24,8 @@ import (
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -148,27 +148,22 @@ func validateDryRun(ctx context.Context, api *v1alpha1.ApiV4Definition) *errors.
 		return errs
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	client, err := apiv4.CreateAPIMClient(ctx, cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-
-	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
-	status, err := apimClient.APIs.DryRunImportV4(cp)
+	dto, err := apiv4.ToDTO(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
-	}
-	if errs.IsSevere() {
+	findings, err := apiv4.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
 		return errs
 	}
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
+	errs.MergeWith(findings)
 	return errs
 }
 

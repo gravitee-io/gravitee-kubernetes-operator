@@ -15,7 +15,6 @@
 package apim
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 )
@@ -24,8 +23,8 @@ import (
 var _ = Describe("API v4 Drift detection on what APIM normalises", func() {
 	DescribeTable("no drift",
 		func(crd, remote string) {
-			crdDTO := crdDriftAPIV4DTO(crd)
-			remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
+			crdDTO := crdDriftV4(crd)
+			remoteDTO := remoteDriftV4(crdDTO, remote)
 			expectNoDrift(drift.DetectWithNamespace(crdDTO, remoteDTO, ""))
 		},
 		Entry("lowercase default flow mode against the uppercase APIM stores",

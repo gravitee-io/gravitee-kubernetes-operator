@@ -16,16 +16,14 @@ package v4
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func mergeDriftValidation(
@@ -38,65 +36,49 @@ func mergeDriftValidation(
 		return
 	}
 
-	errs.MergeWith(drift.ValidateDrift(ctx, oldApi, newApi, resolveApiV4Refs, getRemoteApiV4,
-		drift.MapDTO(toAPIV4DTO)))
+	// The API talks to APIM through its SDK client: the resolver builds that client, only once drift is known
+	// to be enabled, and hands its APIM facade to the drift framework.
+	var client *apiv4.Client
+	resolveContext := func(ctx context.Context) (*apim.APIM, error) {
+		var err error
+		client, err = apiv4.CreateAPIMClient(ctx, newApi)
+		if err != nil || client == nil {
+			return nil, err
+		}
+		return client.APIM, nil
+	}
+	getRemote := func(_ *apim.APIM, api *v1alpha1.ApiV4Definition) (any, error) {
+		dto, err := apiv4.ToDTO(api)
+		if err != nil {
+			return nil, err
+		}
+		remote, err := apiv4.GetRemote(ctx, client, dto)
+		if err != nil {
+			return nil, err
+		}
+		return apiv4.DriftDTO(remote), nil
+	}
+	errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldApi, newApi, resolveContext, resolveApiV4Refs, getRemote,
+		drift.MapDTO(toDriftDTO)))
 }
 
+// resolveApiV4Refs also maps each copy, so that a mapping error refuses the update here: toDriftDTO, whose
+// signature has no error, then maps a copy known to map.
 func resolveApiV4Refs(ctx context.Context, api *v1alpha1.ApiV4Definition) error {
 	if err := apidefinition.PrepareV4SpecForAutomation(ctx, api, false); err != nil {
 		return err
 	}
-	var mgmtContext core.ContextModel
-	if api.HasContext() {
-		apimClient, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
-		if err != nil {
-			return err
-		}
-		mgmtContext = apimClient.Context
+	if _, err := apiv4.ToDTO(api); err != nil {
+		return fmt.Errorf("could not map the API: %w", err)
 	}
-	api.PopulateIDs(mgmtContext, k8s.IsAutomationAPIManaged(api))
 	return nil
 }
 
-func toAPIV4DTO(api *v1alpha1.ApiV4Definition) model.APIV4DTO {
-	dto := model.ToAPIV4DriftDTO(&api.Spec.Api).ForDrift()
-	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) {
-		dto.Groups = nil
-	}
-	return dto
-}
-
-// getRemoteApiV4 leaves the remote groups out of the comparison when the platform owns them.
-func getRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (any, error) {
-	remote, err := fetchRemoteApiV4(apimClient, api)
+func toDriftDTO(api *v1alpha1.ApiV4Definition) apiv4.DTO {
+	dto, err := apiv4.ToDTO(api)
 	if err != nil {
-		return nil, err
+		// unreachable: resolveApiV4Refs refused a copy that does not map
+		return apiv4.DTO{}
 	}
-	if k8s.HasTrueAnnotation(api, core.IgnoreGroupsAnnotation) {
-		remote.Groups = nil
-	}
-	return remote, nil
-}
-
-func fetchRemoteApiV4(apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) (model.APIV4DTO, error) {
-	if !k8s.IsAutomationAPIManaged(api) && api.GetID() != "" {
-		remote, err := apimClient.APIs.GetV4WithUUID(api.GetID())
-		if err != nil {
-			return model.APIV4DTO{}, err
-		}
-		return remote.Canonicalize().ForDrift(), nil
-	}
-	hrid := apiHRID(api)
-	remote, err := apimClient.APIs.GetV4ByHRID(hrid)
-	if err != nil {
-		return model.APIV4DTO{}, err
-	}
-	return remote.Canonicalize().ForDrift(), nil
-}
-
-func apiHRID(api *v1alpha1.ApiV4Definition) string {
-	if api.Spec.HRID != "" {
-		return api.Spec.HRID
-	}
-	return refs.NewNamespacedNameFromObject(api).HRID()
+	return apiv4.DriftDTO(dto)
 }

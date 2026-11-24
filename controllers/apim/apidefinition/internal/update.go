@@ -19,13 +19,12 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
@@ -67,7 +66,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 			return gerrors.NewIllegalStateError(
 				gerrors.NewUnrecoverableError("a context is required when setting local to false"))
 		}
-		if err := updateConfigMap(ctx, apiDefinition); err != nil {
+		if err := apidefinition.UpdateConfigMap(ctx, apiDefinition); err != nil {
 			return err
 		}
 		apiDefinition.Status.State = spec.State
@@ -91,7 +90,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	if spec.IsLocal {
 		retrieveMgmtPlanIds(spec, status)
-		return updateConfigMap(ctx, apiDefinition)
+		return apidefinition.UpdateConfigMap(ctx, apiDefinition)
 	}
 
 	log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
@@ -100,8 +99,6 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 }
 
 func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
-	spec := &apiDefinition.Spec
-
 	apidefinition.LogUnsyncedGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs())
 
 	if err := apidefinition.PrepareV4SpecForAutomation(ctx, apiDefinition, true); err != nil {
@@ -109,34 +106,35 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		return err
 	}
 
-	if spec.Context != nil {
+	client, err := apiv4.CreateAPIMClient(ctx, apiDefinition)
+	if err != nil {
+		return err
+	}
+	dto, err := apiv4.ToDTO(apiDefinition)
+	if err != nil {
+		return err
+	}
+
+	if client != nil {
 		log.Debug(ctx, "Syncing API definition with control plane", log.KeyValues(apiDefinition)...)
-		apimClient, err := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
-		if err != nil {
-			return err
+	}
+	resp, err := apiv4.Upsert(ctx, client, dto)
+	if accepted, ok := apiv4.AcceptedResponse(err); ok {
+		// APIM accepted the API: keep its ID and plans in the status, then report the ConfigMap error.
+		if stErr := apiv4.UpdateStatus(ctx, apiDefinition, accepted); stErr != nil {
+			return stErr
 		}
-		apiDefinition.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(apiDefinition))
-
-		status, err := apimClient.APIs.ImportV4(apiDefinition)
-
-		if err != nil {
-			return gerrors.NewControlPlaneError(err)
-		}
-
-		status.DeepCopyTo(&apiDefinition.Status.Status)
+		return err
+	}
+	if err != nil {
+		return gerrors.NewControlPlaneError(err)
+	}
+	if client != nil {
 		log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
-	} else {
-		apiDefinition.PopulateIDs(nil, k8s.IsAutomationAPIManaged(apiDefinition))
 	}
-
-	if spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {
-		return updateConfigMap(ctx, apiDefinition)
-	}
-
-	return nil
+	return apiv4.UpdateStatus(ctx, apiDefinition, resp)
 }
 
-// Retrieve the plan ids from the API CRD status.
 func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, status *base.Status) {
 	plans := spec.Plans
 	planIds := status.Plans
