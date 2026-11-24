@@ -44,12 +44,13 @@ type Reconciler struct {
 }
 
 // resourceLifecycle wires the reconcile steps of portal themes.
+// ResolveRefs runs the delete guard itself, before the context lookup: a lifecycle DeleteGuard would run
+// after it, and so never for a context deleted first.
 var resourceLifecycle = lifecycle.NewResourceLifecycle(Lifecycle{
 	Finalizer:     core.PortalThemeFinalizer,
 	ResolveRefs:   apimportaltheme.ResolveRefs,
 	ClientFactory: apimportaltheme.CreateAPIMClient,
 	ToDTO:         apimportaltheme.ToDTO,
-	DeleteGuard:   apimportaltheme.DeleteGuard,
 	Delete:        apimportaltheme.Delete,
 	Upsert:        apimportaltheme.Upsert,
 	PostUpsert:    apimportaltheme.UpdateStatus,
