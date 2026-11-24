@@ -20,6 +20,7 @@ import (
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authz"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -36,7 +37,7 @@ func DryRun(ctx context.Context, client *apim.SDKClient, dto sdk.AuthzEntity) (*
 		}
 		return nil, err
 	}
-	return errors.NewAdmissionErrorsFromStatus(ToStatusErrors(state.Errors)), nil
+	return errors.NewAdmissionErrorsFromStatus(authz.ToStatusErrors(state.Errors)), nil
 }
 
 // GetRemote reads the entity as the payload a PUT would send, for drift detection.

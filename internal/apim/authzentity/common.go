@@ -17,7 +17,6 @@ package authzentity
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-automation-sdk/common/pkg/unstructured"
@@ -25,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authz"
 )
 
 // ToDTO maps an entity whose refs dynamic.ResolveAuthzEntityRefs has resolved onto the payload a PUT sends: each
@@ -33,7 +33,7 @@ import (
 // answers {} and [] for absent ones: the SDK's drift tags compare none of them by position. active is always
 // sent, so that an unset one reads as true. An unresolved pdpRef is an error: it has no scope to send.
 func ToDTO(obj *v1alpha1.AuthzEntity) (sdk.AuthzEntity, error) {
-	targets, err := toTargets(obj)
+	targets, err := authz.ToTargets(obj, obj.Spec.Targets)
 	if err != nil {
 		return sdk.AuthzEntity{}, err
 	}
@@ -53,21 +53,6 @@ func ToDTO(obj *v1alpha1.AuthzEntity) (sdk.AuthzEntity, error) {
 		Active:     new(obj.Spec.IsActive()),
 		Targets:    targets,
 	}, nil
-}
-
-func toTargets(obj *v1alpha1.AuthzEntity) ([]string, error) {
-	var targets []string
-	for i, target := range obj.Spec.Targets {
-		if target.PdpRef != nil {
-			ref := *target.PdpRef
-			if ref.Namespace == "" {
-				ref.Namespace = obj.GetNamespace()
-			}
-			return nil, fmt.Errorf("targets[%d].pdpRef [%s] is not resolved", i, ref.String())
-		}
-		targets = append(targets, target.Scope)
-	}
-	return targets, nil
 }
 
 func toAttributes(attributes *utils.GenericStringMap) *unstructured.Unstructured {

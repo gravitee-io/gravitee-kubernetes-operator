@@ -18,12 +18,12 @@ package authzschema
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authz"
 )
 
 // ToDTO maps a schema whose refs dynamic.ResolveAuthzSchemaRefs has resolved onto the payload a PUT sends: its
@@ -31,26 +31,17 @@ import (
 // and reads nothing from the cluster. The platform stores schema and target as sent, so both compare exactly.
 // An unresolved pdpRef is an error: sent as no target, it would publish the document to the default engine.
 func ToDTO(obj *v1alpha1.AuthzSchema) (sdk.AuthzSchema, error) {
-	dto := sdk.AuthzSchema{
+	target, err := authz.ToTarget(obj, obj.Spec.Target)
+	if err != nil {
+		return sdk.AuthzSchema{}, err
+	}
+
+	return sdk.AuthzSchema{
 		Hrid:   refs.NewNamespacedNameFromObject(obj).HRID(),
 		Name:   obj.Spec.Name,
 		Schema: obj.Spec.Schema,
-	}
-
-	target := obj.Spec.Target
-	switch {
-	case target == nil:
-	case target.PdpRef != nil:
-		ref := *target.PdpRef
-		if ref.Namespace == "" {
-			ref.Namespace = obj.GetNamespace()
-		}
-		return sdk.AuthzSchema{}, fmt.Errorf("target.pdpRef [%s] is not resolved", ref.String())
-	case target.Scope != "":
-		dto.Target = new(target.Scope)
-	}
-
-	return dto, nil
+		Target: target,
+	}, nil
 }
 
 // CreateAPIMClient builds the SDK client of the management context the schema references.

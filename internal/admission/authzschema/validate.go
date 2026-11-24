@@ -21,7 +21,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -42,7 +41,7 @@ func preCheck(_ context.Context, schema *v1alpha1.AuthzSchema) *errors.Admission
 // warning. The controller waits for the AuthzPdp before applying. Any other error, an AuthzPdp of another
 // context for instance, refuses the schema.
 func resolveRefs(ctx context.Context, schema *v1alpha1.AuthzSchema, ns string) error {
-	if err := validateTargetKind(schema); err != nil {
+	if err := dynamic.ValidateAuthzTargetKind(schema, schema.Spec.Target); err != nil {
 		return err
 	}
 	if err := apim.ResolveContextRef(ctx, schema, ns); err != nil {
@@ -50,24 +49,6 @@ func resolveRefs(ctx context.Context, schema *v1alpha1.AuthzSchema, ns string) e
 	}
 	if err := dynamic.ResolveAuthzSchemaRefs(ctx, schema); err != nil && !dynamic.IsAuthzPdpPending(err) {
 		return err
-	}
-	return nil
-}
-
-// validateTargetKind refuses a pdpRef that names a kind other than AuthzPdp. It runs before the target resolves,
-// which replaces the pdpRef with a scope.
-func validateTargetKind(schema *v1alpha1.AuthzSchema) error {
-	target := schema.Spec.Target
-	if target == nil || target.PdpRef == nil {
-		return nil
-	}
-
-	ref := *target.PdpRef
-	if ref.Namespace == "" {
-		ref.Namespace = schema.GetNamespace()
-	}
-	if ref.Kind != "" && dynamic.ResourceFromKind(ref.Kind) != core.CRDAuthzPdpResource {
-		return fmt.Errorf("target.pdpRef [%s]: kind must be AuthzPdp, got [%s]", ref.String(), ref.Kind)
 	}
 	return nil
 }
