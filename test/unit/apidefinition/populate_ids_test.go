@@ -185,15 +185,27 @@ var _ = Describe("PopulateIDs", func() {
 			"", nil, uuid.FromStrings("exported-api-uuid", "k")),
 	)
 
-	It("keeps the spec plan id without a management context", func() {
-		plans := map[string]*v4.Plan{
-			"k": {Plan: &base.Plan{ID: "X"}, Name: "Test Plan"},
-		}
-		api := legacyAPI(&plans, nil)
-		api.Status = v1alpha1.ApiV4DefinitionStatus{}
+	// Without a management context, the API id is derived from its HRID and plans follow the spec.id rule.
+	DescribeTable("chooses the plan id without a management context",
+		func(specPlanID string, statusPlans map[string]string, expectedID string) {
+			plans := map[string]*v4.Plan{
+				"k": {Plan: &base.Plan{ID: specPlanID}, Name: "Test Plan"},
+			}
+			api := legacyAPI(&plans, nil)
+			api.Status = v1alpha1.ApiV4DefinitionStatus{}
+			api.Status.Plans = statusPlans
 
-		api.PopulateIDs(nil, false)
+			api.PopulateIDs(nil, false)
 
-		Expect((*api.Spec.Plans)["k"].ID).To(Equal("X"))
-	})
+			apiID := uuid.FromStrings(api.GetNamespacedName().HRID())
+			Expect(api.Spec.ID).To(Equal(apiID))
+			if expectedID == "" {
+				expectedID = uuid.FromStrings(apiID, "k")
+			}
+			Expect((*api.Spec.Plans)["k"].ID).To(Equal(expectedID))
+		},
+		Entry("the spec plan id is kept", "X", nil, "X"),
+		Entry("the status plan id wins", "X", map[string]string{"k": "S"}, "S"),
+		Entry("no plan id anywhere: an id is generated from the API id", "", nil, ""),
+	)
 })
