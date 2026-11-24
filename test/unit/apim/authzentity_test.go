@@ -15,18 +15,24 @@
 package apim_test
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimauthzentity "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authzentity"
+	xErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 const ownershipFinding = `entityId [agents] is held by Group::"agents", which this manifest did not create ` +
@@ -52,6 +58,35 @@ func newAuthzEntity() *v1alpha1.AuthzEntity {
 		},
 	}
 }
+
+// resolvedAuthzEntity is newAuthzEntity with its pdpRef resolved, as dynamic.ResolveAuthzEntityRefs leaves it.
+func resolvedAuthzEntity() *v1alpha1.AuthzEntity {
+	entity := newAuthzEntity()
+	entity.Spec.Targets = []authzpdp.Target{{Scope: "orders@eu"}, {Scope: "default"}}
+	return entity
+}
+
+func toAuthzEntityDTO(entity *v1alpha1.AuthzEntity) sdk.AuthzEntity {
+	GinkgoHelper()
+	dto, err := apimauthzentity.ToDTO(entity)
+	Expect(err).ToNot(HaveOccurred())
+	return dto
+}
+
+// authzEntityState is what the platform answers for agents-group: the payload, its lists sorted, the ids and the
+// findings.
+const authzEntityState = `{
+	"hrid": "gravitee-agents-group",
+	"entityId": "agents",
+	"kind": "PRINCIPAL",
+	"entityType": "Group",
+	"attributes": {"department": "travel"},
+	"parents": [{"entityType": "Group", "entityId": "travel"}],
+	"active": true,
+	"targets": ["default", "orders@eu"],
+	"id": "3b9d0c2b", "organizationId": "DEFAULT", "environmentId": "DEFAULT",
+	"errors": {"warning": ["attribute [department] is not declared by the schema of Group"]}
+}`
 
 var _ = Describe("Authz entity", func() {
 	Describe("spec hash", func() {
@@ -82,16 +117,11 @@ var _ = Describe("Authz entity", func() {
 
 	Describe("wire mapping", func() {
 		It("derives the hrid from the namespace and name", func() {
-			Expect(model.ToAuthzEntityDTO(newAuthzEntity()).HRID).To(Equal("gravitee-agents-group"))
+			Expect(toAuthzEntityDTO(resolvedAuthzEntity()).Hrid).To(Equal("gravitee-agents-group"))
 		})
 
-		// dynamic.ResolveAuthzEntityRefs has replaced each pdpRef with its AuthzPdp's routing scope.
 		It("sends each target's scope, in declaration order", func() {
-			entity := newAuthzEntity()
-			entity.Spec.Targets = []authzpdp.Target{{Scope: "orders@eu"}, {Scope: "default"}}
-			raw, err := json.Marshal(model.ToAuthzEntityDTO(entity))
-			Expect(err).ToNot(HaveOccurred())
-			Expect(string(raw)).To(MatchJSON(`{
+			Expect(marshalJSON(toAuthzEntityDTO(resolvedAuthzEntity()))).To(MatchJSON(`{
 				"hrid": "gravitee-agents-group",
 				"entityId": "agents",
 				"kind": "PRINCIPAL",
@@ -108,9 +138,8 @@ var _ = Describe("Authz entity", func() {
 			entity.Spec.Attributes = nil
 			entity.Spec.Parents = nil
 			entity.Spec.Targets = nil
-			raw, err := json.Marshal(model.ToAuthzEntityDTO(entity))
-			Expect(err).ToNot(HaveOccurred())
-			Expect(string(raw)).To(MatchJSON(`{
+
+			Expect(marshalJSON(toAuthzEntityDTO(entity))).To(MatchJSON(`{
 				"hrid": "gravitee-agents-group",
 				"entityId": "agents",
 				"kind": "PRINCIPAL",
@@ -120,56 +149,202 @@ var _ = Describe("Authz entity", func() {
 		})
 
 		It("sends an unset active as true", func() {
-			entity := newAuthzEntity()
+			entity := resolvedAuthzEntity()
 			entity.Spec.Active = nil
-			Expect(model.ToAuthzEntityDTO(entity).Active).To(BeTrue())
+
+			Expect(toAuthzEntityDTO(entity).Active).To(HaveValue(BeTrue()))
 		})
 
 		It("sends active false", func() {
-			entity := newAuthzEntity()
+			entity := resolvedAuthzEntity()
 			entity.Spec.Active = new(false)
-			raw, err := json.Marshal(model.ToAuthzEntityDTO(entity))
-			Expect(err).ToNot(HaveOccurred())
-			Expect(string(raw)).To(ContainSubstring(`"active":false`))
+
+			Expect(marshalJSON(toAuthzEntityDTO(entity))).To(ContainSubstring(`"active":false`))
 		})
 
 		It("does not share the attributes with the resource", func() {
-			entity := newAuthzEntity()
-			dto := model.ToAuthzEntityDTO(entity)
+			entity := resolvedAuthzEntity()
+			dto := toAuthzEntityDTO(entity)
 			dto.Attributes.Put("department", "sales")
+
 			Expect(entity.Spec.Attributes.GetString("department")).To(Equal("travel"))
+		})
+
+		// A pdpRef has no scope to send until its AuthzPdp's routing scope replaces it.
+		It("refuses a pdpRef left unresolved, naming its index", func() {
+			_, err := apimauthzentity.ToDTO(newAuthzEntity())
+
+			Expect(err).To(MatchError("targets[0].pdpRef [gravitee/orders-eu] is not resolved"))
 		})
 	})
 
-	Describe("state decoding", func() {
-		It("decodes the payload, the ids and the findings", func() {
-			body := `{
+	Describe("status", func() {
+		It("copies the ids and the findings", func() {
+			var state sdk.AuthzEntityState
+			Expect(json.Unmarshal([]byte(authzEntityState), &state)).To(Succeed())
+			entity := newAuthzEntity()
+
+			Expect(apimauthzentity.UpdateStatus(context.Background(), entity,
+				apimauthzentity.Response{State: state})).To(Succeed())
+
+			Expect(entity.Status.ID).To(Equal("3b9d0c2b"))
+			Expect(entity.Status.OrgID).To(Equal("DEFAULT"))
+			Expect(entity.Status.EnvID).To(Equal("DEFAULT"))
+			Expect(entity.Status.HRID).To(Equal("gravitee-agents-group"))
+			Expect(entity.Status.Errors.Warning).To(ConsistOf("attribute [department] is not declared by the schema of Group"))
+			Expect(k8s.IsAutomationAPIManaged(entity)).To(BeTrue())
+		})
+	})
+
+	Describe("calls", func() {
+		const collection = "/automation/organizations/org1/environments/env1/authz/entities"
+
+		var (
+			ctx    context.Context
+			fake   *fakeAutomationAPI
+			client *apim.SDKClient
+		)
+
+		BeforeEach(func() {
+			ctx = context.Background()
+			fake = newFakeAutomationAPI()
+			fake.response = authzEntityState
+			DeferCleanup(fake.Close)
+			var err error
+			client, err = apim.NewSDKClient(ctx, managementContext(fake.URL, bearer("token")))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("puts the payload on the entities collection and answers the state", func() {
+			resp, err := apimauthzentity.Upsert(ctx, client, toAuthzEntityDTO(resolvedAuthzEntity()))
+			Expect(err).ToNot(HaveOccurred())
+
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodPut))
+			Expect(req.Path).To(Equal(collection))
+			Expect(req.Query.Get("dryRun")).To(Equal("false"))
+			Expect(marshalJSON(req.Body)).To(MatchJSON(marshalJSON(toAuthzEntityDTO(resolvedAuthzEntity()))))
+			Expect(resp.State.Id).To(HaveValue(Equal("3b9d0c2b")))
+			Expect(resp.GetOrgID()).To(Equal("DEFAULT"))
+			Expect(resp.GetEnvID()).To(Equal("DEFAULT"))
+		})
+
+		It("dry runs and returns the findings of the state", func() {
+			fake.response = `{"hrid": "gravitee-agents-group", "entityId": "agents", "kind": "PRINCIPAL",
+				"entityType": "Group", "errors": {"severe": [` + mustJSON(ownershipFinding) + `]}}`
+
+			findings, err := apimauthzentity.DryRun(ctx, client, toAuthzEntityDTO(resolvedAuthzEntity()))
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(fake.lastRequest().Query.Get("dryRun")).To(Equal("true"))
+			Expect(findings.Severe).To(HaveLen(1))
+			Expect(findings.Severe[0].Message).To(Equal(ownershipFinding))
+		})
+
+		It("returns the findings of a refused dry run", func() {
+			fake.status = http.StatusBadRequest
+			fake.errorResponse = `{"hrid": "gravitee-agents-group",
+				"errors": {"severe": ["attribute key [_owner] is reserved"]}}`
+
+			findings, err := apimauthzentity.DryRun(ctx, client, toAuthzEntityDTO(resolvedAuthzEntity()))
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(findings.Severe).To(HaveLen(1))
+			Expect(findings.Severe[0].Message).To(Equal("attribute key [_owner] is reserved"))
+		})
+
+		It("returns a 400 that carries no findings as the error", func() {
+			fake.status = http.StatusBadRequest
+			fake.errorResponse = `{"message": "hrid is required", "http_status": 400}`
+
+			_, err := apimauthzentity.DryRun(ctx, client, toAuthzEntityDTO(resolvedAuthzEntity()))
+
+			Expect(xErrors.IsBadRequest(err)).To(BeTrue())
+		})
+
+		It("gets the remote as the payload a PUT sends, its lists as the platform sorts them", func() {
+			remote, err := apimauthzentity.GetRemote(ctx, client, toAuthzEntityDTO(resolvedAuthzEntity()))
+			Expect(err).ToNot(HaveOccurred())
+
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodGet))
+			Expect(req.Path).To(Equal(collection + "/gravitee-agents-group"))
+			Expect(marshalJSON(remote)).To(MatchJSON(`{
 				"hrid": "gravitee-agents-group",
 				"entityId": "agents",
 				"kind": "PRINCIPAL",
 				"entityType": "Group",
 				"attributes": {"department": "travel"},
 				"parents": [{"entityType": "Group", "entityId": "travel"}],
-				"active": false,
-				"targets": ["default", "orders@eu"],
-				"id": "3b9d0c2b", "organizationId": "DEFAULT", "environmentId": "DEFAULT",
-				"errors": {"severe": [` + mustJSON(ownershipFinding) + `]}
-			}`
-			state := new(model.AuthzEntityState)
-			Expect(json.Unmarshal([]byte(body), state)).To(Succeed())
+				"active": true,
+				"targets": ["default", "orders@eu"]
+			}`))
+		})
 
-			Expect(state.HRID).To(Equal("gravitee-agents-group"))
-			Expect(state.EntityID).To(Equal("agents"))
-			Expect(state.Kind).To(Equal("PRINCIPAL"))
-			Expect(state.EntityType).To(Equal("Group"))
-			Expect(state.Attributes.GetString("department")).To(Equal("travel"))
-			Expect(state.Parents).To(Equal([]model.AuthzEntityParentDTO{{EntityType: "Group", EntityID: "travel"}}))
-			Expect(state.Active).To(BeFalse())
-			Expect(state.Targets).To(Equal([]string{"default", "orders@eu"}))
-			Expect(state.ID).To(Equal("3b9d0c2b"))
-			Expect(state.OrgID).To(Equal("DEFAULT"))
-			Expect(state.EnvID).To(Equal("DEFAULT"))
-			Expect(state.Errors.Severe).To(ConsistOf(ownershipFinding))
+		It("reports a remote that is gone as not found", func() {
+			fake.status = http.StatusNotFound
+
+			_, err := apimauthzentity.GetRemote(ctx, client, toAuthzEntityDTO(resolvedAuthzEntity()))
+
+			Expect(xErrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("deletes by hrid and treats an entity already gone as deleted", func() {
+			dto := toAuthzEntityDTO(resolvedAuthzEntity())
+
+			Expect(apimauthzentity.Delete(ctx, client, dto)).To(Succeed())
+			req := fake.lastRequest()
+			Expect(req.Method).To(Equal(http.MethodDelete))
+			Expect(req.Path).To(Equal(collection + "/gravitee-agents-group"))
+			Expect(req.Query.Has("dryRun")).To(BeFalse())
+
+			fake.status = http.StatusNotFound
+			Expect(apimauthzentity.Delete(ctx, client, dto)).To(Succeed())
+		})
+
+		// The lifecycle retries a failed delete, keeping the finalizer until the cascade fits.
+		It("returns the 413 of a cascade over the platform's limit", func() {
+			fake.status = http.StatusRequestEntityTooLarge
+			fake.errorResponse = `{"message": "deleting agents would delete 1200 entities, over the limit of 1000",
+				"http_status": 413}`
+
+			err := apimauthzentity.Delete(ctx, client, toAuthzEntityDTO(resolvedAuthzEntity()))
+
+			Expect(err).To(MatchError(ContainSubstring("over the limit of 1000")))
+		})
+	})
+
+	Describe("a refused apply", func() {
+		refusedWith := func(statusCode int, body string) error {
+			return xErrors.ServerError{StatusCode: statusCode, Body: body}
+		}
+
+		It("records the findings in the status and stays recoverable", func() {
+			entity := newAuthzEntity()
+
+			err := apimauthzentity.OnUpsertError(context.Background(), entity, refusedWith(http.StatusBadRequest,
+				`{"errors": {"severe": [`+mustJSON(ownershipFinding)+`]}}`))
+
+			Expect(err).To(MatchError(ContainSubstring("authz entity [agents-group] was refused by the automation api")))
+			Expect(xErrors.IsRecoverable(err)).To(BeTrue())
+			Expect(entity.Status.Errors.Severe).To(ConsistOf(ownershipFinding))
+		})
+
+		It("stays recoverable when the 400 carries no findings", func() {
+			entity := newAuthzEntity()
+
+			err := apimauthzentity.OnUpsertError(context.Background(), entity,
+				refusedWith(http.StatusBadRequest, `{"message": "hrid is required", "http_status": 400}`))
+
+			Expect(xErrors.IsRecoverable(err)).To(BeTrue())
+			Expect(entity.Status.Errors.Severe).To(BeEmpty())
+		})
+
+		It("leaves any other failure to the lifecycle", func() {
+			err := apimauthzentity.OnUpsertError(context.Background(), newAuthzEntity(),
+				refusedWith(http.StatusInternalServerError, `{"errors": {"severe": ["boom"]}}`))
+
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 })

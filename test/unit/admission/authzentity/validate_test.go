@@ -25,12 +25,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzentity"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzentity"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -73,11 +75,35 @@ func newPdp(name string, contextRef refs.NamespacedName, scope string) *v1alpha1
 // cluster registers a fake client holding objects, AuthzEntity indexed as the manager's cache
 // indexes it.
 func cluster(objects ...client.Object) {
+	clusterWith(interceptor.Funcs{}, objects...)
+}
+
+// syncedFromSecondRead answers the first read of an AuthzPdp as stored, and every later one with scope as its
+// routing scope: an AuthzPdp that syncs between two reads.
+func syncedFromSecondRead(scope string) interceptor.Funcs {
+	reads := 0
+	return interceptor.Funcs{
+		Get: func(ctx context.Context, c client.WithWatch, key client.ObjectKey, obj client.Object,
+			opts ...client.GetOption) error {
+			if err := c.Get(ctx, key, obj, opts...); err != nil {
+				return err
+			}
+			if pdp, isPdp := obj.(*v1alpha1.AuthzPdp); isPdp {
+				if reads++; reads > 1 {
+					pdp.Status.RoutingScope = scope
+				}
+			}
+			return nil
+		},
+	}
+}
+
+func clusterWith(funcs interceptor.Funcs, objects ...client.Object) {
 	c := &recordingCache{indexers: map[string]client.IndexerFunc{}}
 	Expect(search.InitCache(context.Background(), c)).To(Succeed())
 	scheme := runtime.NewScheme()
 	Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
-	builder := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...)
+	builder := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...).WithInterceptorFuncs(funcs)
 	for _, field := range []search.IndexField{
 		search.AuthzEntityContextField, search.AuthzEntityAuthzPdpField, search.AuthzEntityParentField,
 	} {
@@ -88,7 +114,7 @@ func cluster(objects ...client.Object) {
 
 var _ = Describe("Validating an AuthzEntity", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 
 	BeforeEach(func() {
 		platform.reset()
@@ -112,12 +138,45 @@ var _ = Describe("Validating an AuthzEntity", func() {
 		cluster()
 		oldObj := newEntity("agents-group", "agents", byRef("orders-eu"))
 		oldObj.Status.ID = "3b9d0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
 		newObj := oldObj.DeepCopy()
 		newObj.Finalizers = []string{"finalizers.gravitee.io/authzentities"}
 
-		_, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
 
 		Expect(err).ToNot(HaveOccurred())
+		// Drift is skipped too: the targets cannot be compared before they resolve.
+		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	// resolveRefs reads the AuthzPdp unsynced and leaves the pdpRef as written; deferDryRun reads it
+	// synced. Dry-running would map an unresolved pdpRef, which ToDTO refuses.
+	It("skips the dry run when an AuthzPdp syncs during admission", func() {
+		clusterWith(syncedFromSecondRead("orders@eu"), newPdp("orders-eu", devCtx, ""))
+
+		warnings, err := ctrl.ValidateCreate(ctx,
+			newEntity("agents-group", "agents", byRef("orders-eu"), authzpdp.Target{Scope: "default"}))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("platform checks deferred (an AuthzPdp synced during admission)"))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	// The dry run and drift both skip on the same reason: the API server shows a warning once.
+	It("skips the dry run and drift of a spec change while an AuthzPdp is pending", func() {
+		cluster()
+		oldObj := newEntity("agents-group", "agents", byRef("orders-eu"))
+		oldObj.Status.ID = "3b9d0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
+		newObj := oldObj.DeepCopy()
+		newObj.Spec.EntityType = "Team"
+
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(HaveLen(2))
+		Expect(warnings).To(HaveEach("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
@@ -129,6 +188,20 @@ var _ = Describe("Validating an AuthzEntity", func() {
 
 		Expect(err).To(MatchError(ContainSubstring(
 			"targets[1].pdpRef [travel/orders-eu]: kind must be AuthzPdp, got [McpProxy]")))
+		Expect(platform.requests()).To(BeEmpty())
+	})
+
+	It("refuses every pdpRef naming another kind in one message", func() {
+		cluster()
+		mcp := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "orders-eu", Kind: "McpProxy"}}
+		schema := authzpdp.Target{PdpRef: &refs.NamespacedName{Name: "travel", Namespace: "shared", Kind: "AuthzSchema"}}
+
+		_, err := ctrl.ValidateCreate(ctx,
+			newEntity("agents-group", "agents", mcp, authzpdp.Target{Scope: "default"}, schema))
+
+		Expect(err).To(MatchError(ContainSubstring(
+			"targets[0].pdpRef [travel/orders-eu]: kind must be AuthzPdp, got [McpProxy]; " +
+				"targets[2].pdpRef [shared/travel]: kind must be AuthzPdp, got [AuthzSchema]")))
 		Expect(platform.requests()).To(BeEmpty())
 	})
 
@@ -173,7 +246,7 @@ var _ = Describe("Validating an AuthzEntity", func() {
 
 var _ = Describe("Deleting an AuthzEntity", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 
 	child := func(name string, contextRef refs.NamespacedName, parents ...authzentity.Parent) *v1alpha1.AuthzEntity {
 		entity := newEntity(name, name)
@@ -235,7 +308,7 @@ var _ = Describe("Deleting an AuthzEntity", func() {
 
 var _ = Describe("Detecting drift on an AuthzEntity the platform does not hold", func() {
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 	notFound := `{"message":"entity not found"}`
 
 	BeforeEach(func() {
@@ -269,9 +342,10 @@ var _ = Describe("Detecting drift on an AuthzEntity the platform does not hold",
 			`with its parent, so declare the parent first or drop it from parents`}
 		cluster(refused)
 
-		_, err := ctrl.ValidateUpdate(ctx, refused, withoutParents(refused))
+		warnings, err := ctrl.ValidateUpdate(ctx, refused, withoutParents(refused))
 
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the platform refused the last apply"))
 		Expect(platform.requests()).To(HaveLen(1), "the new spec is dry-run")
 	})
 
@@ -302,9 +376,11 @@ var _ = Describe("Detecting drift on an AuthzEntity the platform does not hold",
 		retargeted := applied.DeepCopy()
 		retargeted.Spec.Targets = []authzpdp.Target{{Scope: "default"}}
 
-		_, err := ctrl.ValidateUpdate(ctx, applied, retargeted)
+		warnings, err := ctrl.ValidateUpdate(ctx, applied, retargeted)
 
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the previous targets no longer resolve: " +
+			"authz pdp not found: [travel/orders-eu]"))
 		Expect(platform.requests()).To(HaveLen(1), "the new spec is dry-run")
 	})
 })

@@ -7,7 +7,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gravitee-io/gravitee-automation-sdk/am-mock-server v1.7.0
 	github.com/gravitee-io/gravitee-automation-sdk/am-sdk/v2 v2.6.2
-	github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.2-0.20261123181008-f1d0b0473800
+	github.com/gravitee-io/gravitee-automation-sdk/apim-sdk v0.2.2-0.20261123182746-d6a8a9f845ba
 	github.com/gravitee-io/gravitee-automation-sdk/common v1.4.0
 	github.com/moby/moby v27.5.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.28.0

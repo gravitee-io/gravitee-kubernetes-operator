@@ -16,67 +16,51 @@ package authzentity
 
 import (
 	"context"
+	"fmt"
+	"slices"
+	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-// validateCreate runs the checks in order: the context, the derived HRID, the pdpRef kinds, then
-// the platform dry run with the resolved targets, which refuses an entityId another source holds
-// (AUTHZ-5), reserved attribute keys, duplicate or cyclic parents, an Action with targets and an
-// entity off a strict schema. The CRD schema and CEL own the spec-only rules (the pdpRef/scope
-// union, the scope and type grammars, immutability).
-func validateCreate(ctx context.Context, entity *v1alpha1.AuthzEntity) *errors.AdmissionErrors {
-	errs := validateContext(ctx, entity)
-	if errs.IsSevere() {
-		return errs
-	}
-
+// preCheck validates the HRID derived from the namespace and name.
+func preCheck(_ context.Context, entity *v1alpha1.AuthzEntity) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
 	if err := hrid.Validate(refs.NewNamespacedNameFromObject(entity).HRID()); err != nil {
 		errs.AddSevere(err.Error())
-		return errs
 	}
-
-	errs.MergeWith(validateTargetKinds(entity))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	targetErrs, resolved := resolveTargets(ctx, entity)
-	errs.MergeWith(targetErrs)
-	if !resolved {
-		return errs
-	}
-
-	errs.MergeWith(validateDryRun(ctx, entity))
 	return errs
 }
 
-// validateContext requires a context that resolves. Resolving also compiles templates, so a dry
-// run that follows carries resolved values.
-func validateContext(ctx context.Context, entity *v1alpha1.AuthzEntity) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	if !entity.HasContext() {
-		errs.AddSevere("a management context reference (spec.contextRef) is required")
-		return errs
+// resolveRefs checks the pdpRef kinds, resolves the management context and, when every AuthzPdp they name is
+// synced, the targets onto their routing scopes. A missing, deleting or unsynced AuthzPdp is a normal state when a
+// directory is applied at once: the targets are left as written, and deferDryRun and deferDrift skip the platform
+// checks with a warning naming every pending one. The controller waits for them before applying. Any other
+// error, an AuthzPdp of another context for instance, refuses the entity.
+func resolveRefs(ctx context.Context, entity *v1alpha1.AuthzEntity, ns string) error {
+	if err := validateTargetKinds(entity); err != nil {
+		return err
 	}
-
-	errs.Add(ctxref.Validate(ctx, entity))
-	return errs
+	if err := apim.ResolveContextRef(ctx, entity, ns); err != nil {
+		return err
+	}
+	if err := dynamic.ResolveAuthzEntityRefs(ctx, entity); err != nil && !dynamic.IsAuthzPdpPending(err) {
+		return err
+	}
+	return nil
 }
 
-// validateTargetKinds refuses a pdpRef that names a kind other than AuthzPdp, naming its index.
-func validateTargetKinds(entity *v1alpha1.AuthzEntity) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
+// validateTargetKinds refuses each pdpRef that names a kind other than AuthzPdp, naming its index. It runs before
+// the targets resolve, which replaces the pdpRefs with scopes.
+func validateTargetKinds(entity *v1alpha1.AuthzEntity) error {
+	var wrong []string
 	for i, target := range entity.Spec.Targets {
 		if target.PdpRef == nil {
 			continue
@@ -86,62 +70,53 @@ func validateTargetKinds(entity *v1alpha1.AuthzEntity) *errors.AdmissionErrors {
 			ref.Namespace = entity.GetNamespace()
 		}
 		if ref.Kind != "" && dynamic.ResourceFromKind(ref.Kind) != core.CRDAuthzPdpResource {
-			errs.AddSeveref("targets[%d].pdpRef [%s]: kind must be AuthzPdp, got [%s]", i, ref.String(), ref.Kind)
+			wrong = append(wrong, fmt.Sprintf("targets[%d].pdpRef [%s]: kind must be AuthzPdp, got [%s]",
+				i, ref.String(), ref.Kind))
 		}
 	}
-	return errs
+	if len(wrong) > 0 {
+		return fmt.Errorf("%s", strings.Join(wrong, "; "))
+	}
+	return nil
 }
 
-// resolveTargets replaces the entity's targets with the scopes the dry run sends, and tells whether
-// they resolved. An AuthzPdp that does not exist or has not synced yet is a normal state when a
-// directory is applied at once: it is a warning naming every pending one, and the dry run is
-// skipped. The controller waits for them before applying. Any other error, an AuthzPdp of another
-// context for instance, is severe.
-func resolveTargets(ctx context.Context, entity *v1alpha1.AuthzEntity) (*errors.AdmissionErrors, bool) {
-	errs := errors.NewAdmissionErrors()
+// syncedDuringAdmission is why deferDryRun skips the dry run of targets whose AuthzPdps synced after resolveRefs
+// read them.
+const syncedDuringAdmission = "platform checks deferred (an AuthzPdp synced during admission)"
 
-	err := dynamic.ResolveAuthzEntityRefs(ctx, entity)
-	switch {
-	case err == nil:
-		return errs, true
-	case dynamic.IsAuthzPdpPending(err):
-		errs.AddWarningf("platform checks deferred (%s)", err)
-	default:
-		errs.AddSevere(err.Error())
+// deferDryRun skips the dry run while resolveRefs has left the pdpRefs as written, which it does for a pending
+// AuthzPdp only: the platform has no routing scope to check the entity against yet. The AuthzPdps are read again
+// to name every pending one. Targets whose AuthzPdps synced since resolveRefs read them still defer: ToDTO cannot
+// map an unresolved pdpRef.
+func deferDryRun(ctx context.Context, entity *v1alpha1.AuthzEntity) string {
+	if !slices.ContainsFunc(entity.Spec.Targets, func(t authzpdp.Target) bool { return t.PdpRef != nil }) {
+		return ""
 	}
-	return errs, false
+	if _, err := dynamic.ResolveAuthzTargets(ctx, entity, entity.Spec.Targets); err != nil {
+		return fmt.Sprintf("platform checks deferred (%s)", err)
+	}
+	return syncedDuringAdmission
 }
 
-func validateDryRun(ctx context.Context, entity *v1alpha1.AuthzEntity) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	apimClient, err := apim.FromContextRef(ctx, entity.ContextRef(), entity.GetNamespace())
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
+// deferDrift skips drift while the stored entity is not what the platform holds, or cannot be mapped as it:
+//   - A pending target gives the dry run's reason, which the API server shows once.
+//   - The platform refused the last apply: the stored spec is not what it holds, and this edit is how the entity
+//     gets fixed. A RESOURCE the platform deleted with its parent is one: applied again, it is refused for that
+//     parent, and the edit dropping it would read the missing remote as drift. The dry run has checked the new
+//     spec. An out-of-band edit made while the entity is refused goes undetected. The skip ends with the next
+//     successful apply, which clears status.errors.
+//   - An old target that no longer resolves is usually a deleted AuthzPdp, whose scope the platform has already
+//     removed from the entity: comparing the old targets against it would refuse the edit that retargets the
+//     entity.
+func deferDrift(ctx context.Context, oldObj, newObj *v1alpha1.AuthzEntity) string {
+	if reason := deferDryRun(ctx, newObj); reason != "" {
+		return reason
 	}
-
-	// A dry run answers 200 with its findings; a refusal body is only expected from a real apply,
-	// but is read the same way should the platform answer one.
-	state, err := apimClient.AuthzEntities.DryRunCreateOrUpdate(model.ToAuthzEntityDTO(entity))
-	if err != nil {
-		errs.MergeWith(refusalToAdmissionErrors(err))
-		return errs
+	if len(oldObj.Status.Errors.Severe) > 0 {
+		return "drift detection skipped, the platform refused the last apply"
 	}
-
-	errs.MergeWith(errors.NewAdmissionErrorsFromStatus(state.Errors))
-
-	return errs
-}
-
-// refusalToAdmissionErrors reports a platform refusal finding by finding; anything else is
-// reported as the request error.
-func refusalToAdmissionErrors(err error) *errors.AdmissionErrors {
-	if findings, refused := model.AutomationRefusal(err); refused {
-		return errors.NewAdmissionErrorsFromStatus(findings)
+	if _, err := dynamic.ResolveAuthzTargets(ctx, oldObj, oldObj.Spec.Targets); err != nil {
+		return "drift detection skipped, the previous targets no longer resolve: " + err.Error()
 	}
-
-	errs := errors.NewAdmissionErrors()
-	errs.AddSevere(err.Error())
-	return errs
+	return ""
 }
