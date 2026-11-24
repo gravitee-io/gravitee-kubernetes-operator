@@ -17,32 +17,47 @@ package catalogmcpserver
 import (
 	"context"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/catalogmcpserver/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimcatalog "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/catalogmcpserver"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+type Lifecycle = lifecycle.ResourceLifecycle[
+	*v1alpha1.CatalogMcpServer, sdk.AimCatalogMcpServer, *apim.SDKClient, apimcatalog.Response,
+]
+
 type Reconciler struct {
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
-	Watcher  watch.Interface
-	Client   client.Client
+	Scheme    *runtime.Scheme
+	Recorder  record.EventRecorder
+	Watcher   watch.Interface
+	Client    client.Client
+	Lifecycle Lifecycle
+}
+
+// NewLifecycle wires the CatalogMcpServer reconcile steps.
+func NewLifecycle() Lifecycle {
+	return lifecycle.NewResourceLifecycle(Lifecycle{
+		Finalizer:     core.CatalogMcpServerFinalizer,
+		ResolveRefs:   apim.ResolveContextRef[*v1alpha1.CatalogMcpServer],
+		ClientFactory: apimcatalog.CreateAPIMClient,
+		ToDTO:         apimcatalog.ToDTO,
+		Delete:        apimcatalog.Delete,
+		Upsert:        apimcatalog.Upsert,
+		PostUpsert:    apimcatalog.UpdateStatus,
+		OnUpsertError: apimcatalog.OnUpsertError,
+	})
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=catalogmcpservers,verbs=get;list;watch;create;update;patch;delete;deletecollection
@@ -50,68 +65,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=catalogmcpservers/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	srv := &v1alpha1.CatalogMcpServer{}
-	if err := r.Client.Get(ctx, req.NamespacedName, srv); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	srv.SetNamespace(req.Namespace)
-
-	events := event.NewRecorder(r.Recorder)
-
-	k8s.ResetConditionsExceptAutomationAPI(srv)
-	dc := srv.DeepCopy()
-
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), srv, func() error {
-		util.AddFinalizer(srv, core.CatalogMcpServerFinalizer)
-		k8s.AddAnnotation(srv, core.LastSpecHashAnnotation, hash.Calculate(&srv.Spec))
-
-		if srv.IsBeingDeleted() {
-			if err := template.ReleaseReferences(ctx, srv); err != nil {
-				return err
-			}
-		} else if err := template.Compile(ctx, dc, true); err != nil {
-			return err
-		}
-
-		var err error
-		if srv.IsBeingDeleted() {
-			err = events.Record(event.Delete, srv, func() error {
-				if err := internal.Delete(ctx, dc); err != nil {
-					return err
-				}
-				util.RemoveFinalizer(srv, core.CatalogMcpServerFinalizer)
-				return nil
-			})
-		} else {
-			err = events.Record(event.Update, srv, func() error {
-				return internal.CreateOrUpdate(ctx, dc)
-			})
-		}
-
-		return err
-	})
-
-	if err := dc.GetStatus().DeepCopyTo(srv); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err == nil {
-		log.InfoEndReconcile(ctx, srv)
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, srv)
-	}
-
-	if err := internal.UpdateStatusFailure(ctx, srv, err); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if errors.ShouldRetry(err, srv.IsBeingDeleted()) {
-		log.ErrorRequeuingReconcile(ctx, err, srv)
-		return ctrl.Result{}, err
-	}
-
-	log.ErrorAbortingReconcile(ctx, err, srv)
-	return ctrl.Result{}, nil
+	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.CatalogMcpServer{})
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {

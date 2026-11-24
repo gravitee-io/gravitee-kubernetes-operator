@@ -24,6 +24,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
+// validateDelete admits every deletion, with a warning naming the McpProxies that still select the server:
+// refusing would make pruning a directory depend on the order resources are deleted in.
 func validateDelete(ctx context.Context, srv *v1alpha1.CatalogMcpServer) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 

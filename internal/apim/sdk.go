@@ -26,6 +26,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	ghttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // probeHRID is the group hrid Probe gets. A Group named probe-not-found in namespace gko has it too: the
@@ -81,6 +83,25 @@ func SDKFromContextRef(ctx context.Context, ref core.ObjectRef, parentNs string)
 		return nil, err
 	}
 	return NewSDKClient(ctx, mctx)
+}
+
+// errNoContextRef is a NotFound, as a deleted context is: nothing reached APIM without a context either.
+var errNoContextRef = &apierrors.StatusError{ErrStatus: metav1.Status{
+	Status:  metav1.StatusFailure,
+	Code:    http.StatusNotFound,
+	Reason:  metav1.StatusReasonNotFound,
+	Message: "a management context reference (spec.contextRef) is required",
+}}
+
+// ResolveContextRef is the lifecycle ResolveRefs of a resource that requires a management context.
+// An unset or deleted context is NotFound, so deleting the resource releases its finalizer instead of
+// retrying a call APIM can no longer receive.
+func ResolveContextRef[T core.ContextAwareObject](ctx context.Context, obj T, ns string) error {
+	if !obj.HasContext() {
+		return errNoContextRef
+	}
+	_, err := dynamic.ResolveContext(ctx, obj.ContextRef(), ns)
+	return err
 }
 
 // newSDKClient builds the SDK client of a context whose secrets are already injected.
