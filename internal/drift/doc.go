@@ -143,7 +143,7 @@
 //
 // Where the operator can see the whole ancestor chain — Portal.structure.topNavbar,
 // ApiV4Definition.portalNavigation — the expected visibility is resolved instead, by
-// [github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model.PortalDTO.WithResolvedVisibility],
+// [github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation.WithResolvedTopNavbar],
 // and the field is compared exactly with no tag at all.
 //
 // ### ignore-only

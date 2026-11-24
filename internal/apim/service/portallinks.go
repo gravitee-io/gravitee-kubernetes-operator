@@ -38,6 +38,8 @@ type LinkParent struct {
 	API core.ApiDefinitionObject
 }
 
+// Links is the hand-written client GKO used before the APIM SDK. Production code goes through
+// internal/apim/portallink; this one is kept for the existing tests only.
 type Links struct {
 	*client.Client
 }

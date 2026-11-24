@@ -25,6 +25,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
+// Portals is the hand-written client GKO used before the APIM SDK. Production code goes through
+// internal/apim/portal; this one is kept for the existing tests only.
 type Portals struct {
 	*client.Client
 }
