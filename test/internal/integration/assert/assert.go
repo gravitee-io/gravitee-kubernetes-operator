@@ -170,7 +170,7 @@ func SharedPolicyGroupFailed(sub *v1alpha1.SharedPolicyGroup) error {
 }
 
 func GroupCompleted(group *v1alpha1.Group) error {
-	return GroupAccepted(group)
+	return Equals(reconcileStatus, core.ProcessingStatusCompleted, group.Status.ProcessingStatus)
 }
 
 func GroupAccepted(group *v1alpha1.Group) error {
@@ -179,7 +179,7 @@ func GroupAccepted(group *v1alpha1.Group) error {
 }
 
 func GroupFailed(group *v1alpha1.Group) error {
-	return Equals(reconcileCondition, true, group.Status.IsFailed())
+	return Equals(reconcileStatus, core.ProcessingStatusFailed, group.Status.ProcessingStatus)
 }
 
 func DictionaryAccepted(dict *v1alpha1.Dictionary) error {
