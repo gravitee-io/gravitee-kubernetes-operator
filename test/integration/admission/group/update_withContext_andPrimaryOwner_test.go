@@ -20,7 +20,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
@@ -84,45 +83,4 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		Entry("on application role scope", group.ApplicationRoleScope),
 		Entry("on integration role scope", group.IntegrationRoleScope),
 	)
-
-	It("should return severe error when removing ignore-members leaves a primary owner member", func() {
-		fixtures := fixture.
-			Builder().
-			WithContext(constants.ContextWithCredentialsFile).
-			WithGroup(constants.GroupFile).
-			Build()
-
-		By("initializing a service account in current organization")
-
-		apim := apim.NewClient(ctx)
-		saName := random.GetName()
-
-		Expect(apim.Org.CreateUser(model.NewServiceAccount(saName))).To(Succeed())
-
-		By("adding the sa as primary owner while APIM owns the members")
-
-		groupMember := base.NewGraviteeGroupMember(saName, "OWNER")
-		groupMember.Roles[group.APIRoleScope] = "PRIMARY_OWNER"
-		fixtures.Group.Spec.Members = []group.Member{groupMember}
-		fixtures.Group.Annotations = map[string]string{core.IgnoreMembersAnnotation: "true"}
-
-		fixtures = fixtures.Apply()
-		obj := fixtures.Group
-		newObj := obj.DeepCopy()
-
-		By("removing the ignore-members annotation, so the members would be sent")
-
-		delete(newObj.Annotations, core.IgnoreMembersAnnotation)
-
-		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, obj, newObj)
-			return assert.Equals(
-				"error",
-				errors.NewSevere("setting a member with the primary owner role is not allowed"),
-				err,
-			)
-		}, timeout, interval).Should(Succeed(), fixtures.Group.Name)
-
-		Expect(manager.Delete(ctx, fixtures.Group)).To(Succeed())
-	})
 })

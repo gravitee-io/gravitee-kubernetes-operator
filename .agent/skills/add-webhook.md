@@ -10,9 +10,7 @@ Section 3 is the part to get right.
 
 > **APIM resource on the SDK?** Use `lifecycle.AdmissionLifecycle` instead of a hand-written
 > `validate.go`: it runs the same checks in order (templates, context, pre-check, dry run, drift).
-> See `internal/admission/group/` and AGENTS.md (APIM SDK). An update is dry-run only when the spec
-> hash changes: if the reconcile predicate also reacts to an annotation, set `PayloadChanged` to the
-> same condition, so admission dry-runs every change the controller sends (Group: `ignore-members`).
+> See `internal/admission/group/` and AGENTS.md (APIM SDK).
 
 ## 1. `internal/admission/<resource>/ctrl.go`
 
@@ -284,8 +282,8 @@ func validateUpdate(
 }
 ```
 
-`dictionary` and `portal` are the minimal form of this — literally
-`errs := validateCreate(ctx, newObj)` then drift, with no immutability step. Note that those two
+`dictionary`, `group` and `portal` are the minimal form of this — literally
+`errs := validateCreate(ctx, newObj)` then drift, with no immutability step. Note that those three
 keep `validateUpdate` in `drift.go` rather than `validate.go`, since drift is all it adds.
 
 **The three that do not delegate to `validateCreate`** — `application`, `policygroups` and
