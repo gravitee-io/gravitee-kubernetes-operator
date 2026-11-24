@@ -198,8 +198,7 @@ func (l ResourceLifecycle[T, D, C, R]) delete(ctx context.Context, obj, dc T) er
 	if err := l.resolveRefs(ctx, dc); err != nil {
 		if apierrors.IsNotFound(err) {
 			// A reference deleted first (a Secret, a parent CR) leaves nothing to clean up here.
-			l.removeFinalizer(obj)
-			return nil
+			return l.releaseFinalizer(ctx, obj, dc)
 		}
 		return err
 	}
@@ -214,6 +213,15 @@ func (l ResourceLifecycle[T, D, C, R]) delete(ctx context.Context, obj, dc T) er
 	}
 	if err := wrapUnexpectedAsControlPlane(l.Delete(ctx, api, dto)); err != nil {
 		return err
+	}
+	return l.releaseFinalizer(ctx, obj, dc)
+}
+
+func (l ResourceLifecycle[T, D, C, R]) releaseFinalizer(ctx context.Context, obj, dc T) error {
+	if l.PostDelete != nil {
+		if err := l.PostDelete(ctx, dc); err != nil {
+			return err
+		}
 	}
 	l.removeFinalizer(obj)
 	return nil

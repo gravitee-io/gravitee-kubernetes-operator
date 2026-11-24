@@ -56,6 +56,9 @@ type DeleteGuardFunc[T core.ContextAwareObject] func(ctx context.Context, obj T)
 // PostUpsertFunc mutates the CR after a successful Upsert (status, annotations).
 type PostUpsertFunc[T core.ContextAwareObject, R any] func(ctx context.Context, obj T, response R) error
 
+// PostDeleteFunc runs once the remote resource is gone, before the finalizer is released.
+type PostDeleteFunc[T core.ContextAwareObject] func(ctx context.Context, obj T) error
+
 // UpsertErrorFunc records a failed Upsert on the CR (for example the remote's refusal findings in its status).
 // It mutates obj only. A non-nil error is returned by the reconcile as-is and decides the requeue, without
 // the lifecycle's classification; nil keeps the lifecycle's.
@@ -123,6 +126,10 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 
 	// Delete runs on delete, after DeleteGuard. Required.
 	Delete DeleteFunc[C, D]
+
+	// PostDelete runs on delete after a successful Delete, and when ResolveRefs reported a missing reference.
+	// Nil skips. An error keeps the finalizer: the delete is retried, so it must be idempotent.
+	PostDelete PostDeleteFunc[T]
 
 	// Upsert runs on create/update, after ToDTO. Required.
 	Upsert UpsertFunc[C, D, R]

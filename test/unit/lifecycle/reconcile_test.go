@@ -327,6 +327,71 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 		})
 	})
 
+	Describe("PostDelete", func() {
+		// postDelete records the remote deletes already made each time PostDelete runs.
+		postDelete := func(l *groupLifecycle, deletesSeen *[]int, err *error) {
+			l.PostDelete = func(_ context.Context, g *v1alpha1.Group) error {
+				Expect(g.Name).To(Equal("g1"))
+				*deletesSeen = append(*deletesSeen, len(r.deleted))
+				return *err
+			}
+		}
+
+		It("runs after Delete, then releases the finalizer", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			var deletesSeen []int
+			var postDeleteErr error
+			postDelete(&l, &deletesSeen, &postDeleteErr)
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(deletesSeen).To(Equal([]int{1}))
+			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("runs when a reference is already gone, without Delete", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = func(context.Context, *v1alpha1.Group, string) error {
+				return apierrors.NewNotFound(corev1.Resource("secrets"), "token")
+			}
+			var deletesSeen []int
+			var postDeleteErr error
+			postDelete(&l, &deletesSeen, &postDeleteErr)
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(deletesSeen).To(Equal([]int{0}))
+			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+		})
+
+		It("keeps the finalizer when it fails, and releases it once a retry succeeds", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			var deletesSeen []int
+			postDeleteErr := errors.New("cannot recount")
+			postDelete(&l, &deletesSeen, &postDeleteErr)
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(err).To(MatchError("cannot recount"))
+			Expect(fetch(cli, "g1").Finalizers).To(ContainElement(testFinalizer))
+
+			postDeleteErr = nil
+			_, err = reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(deletesSeen).To(Equal([]int{1, 2}))
+			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+		})
+	})
+
 	It("does not delete when its finalizer is already gone", func() {
 		cli := newCluster(deletingGroup("g1", "other/finalizer"))
 
