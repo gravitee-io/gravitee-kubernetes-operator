@@ -148,13 +148,6 @@ var _ = Describe("Group status", func() {
 		Expect(grp.Status.EnvID).To(Equal("env1"))
 	})
 
-	It("clears the deprecated processing status", func() {
-		grp := developers()
-		grp.Status.ProcessingStatus = core.ProcessingStatusCompleted
-		Expect(apimgroup.UpdateStatus(ctx, grp, apimgroup.Response{})).To(Succeed())
-		Expect(grp.Status.ProcessingStatus).To(BeEmpty())
-	})
-
 	It("defaults a missing member count to zero", func() {
 		grp := developers()
 		grp.Status.Members = 3

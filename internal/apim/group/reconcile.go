@@ -74,10 +74,8 @@ func Delete(ctx context.Context, client *apim.SDKClient, dto DTO) error {
 }
 
 // UpdateStatus copies the upsert response into the CR status. A group upserted by its hrid becomes
-// Automation API managed; a legacy group, upserted by its UUID, stays as it is. The deprecated
-// processingStatus is cleared, so a value written before the lifecycle does not go stale.
+// Automation API managed; a legacy group, upserted by its UUID, stays as it is.
 func UpdateStatus(_ context.Context, obj *v1alpha1.Group, resp Response) error {
-	obj.Status.ProcessingStatus = ""
 	obj.Status.ID = ""
 	if resp.State.Id != nil {
 		obj.Status.ID = *resp.State.Id
