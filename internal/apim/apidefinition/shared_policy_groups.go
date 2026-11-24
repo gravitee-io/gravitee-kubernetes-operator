@@ -83,7 +83,7 @@ func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep, u
 
 	if err := k8s.GetClient().Get(ctx, client.ObjectKey{Namespace: ns.Namespace, Name: ns.Name}, spg); err != nil {
 		return gerrors.NewResolveRefError(
-			notFoundRef(err, "unable to get Shared Policy Group [%s] in namespace [%s]", ns.Name, ns.Namespace),
+			gerrors.NotFoundRef(err, "unable to get Shared Policy Group [%s] in namespace [%s]", ns.Name, ns.Namespace),
 		)
 	}
 

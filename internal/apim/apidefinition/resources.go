@@ -56,7 +56,7 @@ func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef, update
 
 	if err := k8s.GetClient().Get(ctx, namespacedName, resource); err != nil {
 		if wordNotFound {
-			err = notFoundRef(err, "api references resource [%s] that does not exist in the cluster", resourceOrRef.Ref)
+			err = gerrors.NotFoundRef(err, "api references resource [%s] that does not exist in the cluster", resourceOrRef.Ref)
 		}
 		return gerrors.NewResolveRefError(err)
 	}

@@ -51,7 +51,7 @@ func resolveConsoleNotificationRefs(ctx context.Context, api core.ApiDefinitionO
 				return err
 			}
 			return gerrors.NewResolveRefError(
-				notFoundRef(err, "api references notification [%s] that does not exist in the cluster", ref),
+				gerrors.NotFoundRef(err, "api references notification [%s] that does not exist in the cluster", ref),
 			)
 		}
 		// take the first one ignore the rest
