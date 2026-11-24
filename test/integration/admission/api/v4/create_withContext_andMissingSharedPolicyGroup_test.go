@@ -32,7 +32,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := admissionv4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.NewAdmissionCtrl()
 
 	It("should return error on api creation with missing Shared Policy Group", func() {
 		fixtures := fixture.

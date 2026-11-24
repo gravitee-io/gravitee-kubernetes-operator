@@ -31,7 +31,7 @@ import (
 
 var _ = Describe("Validate create", labels.WithoutContext, func() {
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	It("should return error when an endpoint inherits configuration from an EndpointGroup "+
 		"with no sharedConfiguration", func() {

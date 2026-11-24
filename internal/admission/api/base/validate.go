@@ -37,12 +37,21 @@ func ValidateCreate(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 
 	errs.Add(ctxref.Validate(ctx, api))
 
+	errs.MergeWith(ValidateSpec(ctx, api))
+
+	return errs
+}
+
+// ValidateSpec runs the checks ValidateCreate runs after the templates and the context ref: plans, path
+// conflicts, resources, pages and notifications. A resource on internal/lifecycle, which compiles templates and
+// resolves the context itself, calls it from its PreCheck.
+func ValidateSpec(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
 	errs.Add(validatePlans(api))
 	errs.Add(ValidateNoConflictingPath(ctx, api))
 	errs.MergeWith(validateResourceOrRefs(ctx, api))
 	errs.MergeWith(validatePages(api))
 	errs.MergeWith(validateNotifications(ctx, api))
-
 	return errs
 }
 

@@ -86,7 +86,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 		// we unfortunately rely on a side effect in admission controller
 		// to delete the config map
-		admCtrl := addmissionv4.AdmissionCtrl{}
+		admCtrl := addmissionv4.NewAdmissionCtrl()
 		_, err := admCtrl.ValidateUpdate(ctx, fixtures.APIv4, updated)
 		Expect(err).ToNot(HaveOccurred())
 		By("expecting config map to be deleted")

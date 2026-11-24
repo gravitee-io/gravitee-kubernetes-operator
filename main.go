@@ -327,10 +327,11 @@ func registerAPIMControllers(mgr manager.Manager) {
 
 func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 	if err := (&apidefinition.V4Reconciler{
-		Client:   k8s.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
+		Lifecycle: apidefinition.NewV4Lifecycle(),
+		Client:    k8s.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("apiv4definition-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for API v4 definitions")
 		os.Exit(1)

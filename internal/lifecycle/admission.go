@@ -129,7 +129,7 @@ func (a AdmissionLifecycle[T, D, C]) templateAndRefs(
 		return
 	}
 	if err := a.resolveRefs(ctx, obj); err != nil {
-		errs.AddSeveref("could not resolve references: %s", err.Error())
+		errs.AddSevere(a.resolveErrorMessage("could not resolve references: ", err))
 	}
 }
 
@@ -145,10 +145,17 @@ func (a AdmissionLifecycle[T, D, C]) resolveContext(
 	}
 	api, err := a.ClientFactory(ctx, obj)
 	if err != nil {
-		errs.AddSeveref("could not resolve context: %s", err.Error())
+		errs.AddSevere(a.resolveErrorMessage("could not resolve context: ", err))
 		return zero, false
 	}
 	return api, true
+}
+
+func (a AdmissionLifecycle[T, D, C]) resolveErrorMessage(prefix string, err error) string {
+	if a.UnprefixedResolveErrors {
+		return err.Error()
+	}
+	return prefix + err.Error()
 }
 
 func (a AdmissionLifecycle[T, D, C]) payloadChanged(oldObj, newObj T) bool {
@@ -245,6 +252,9 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 
+	if a.DriftDTO != nil {
+		oldDTO, newDTO, remote = a.DriftDTO(oldDTO), a.DriftDTO(newDTO), a.DriftDTO(remote)
+	}
 	admissiondrift.CompareWithRemote(newCopy, oldDTO, newDTO, remote, secrets(), errs)
 }
 

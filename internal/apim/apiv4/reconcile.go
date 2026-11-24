@@ -25,8 +25,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 )
 
 // Upsert sends the API to APIM when it has a management context, then writes or deletes its gateway ConfigMap.
@@ -94,6 +96,16 @@ func put(ctx context.Context, client *Client, dto DTO, dryRun bool) (*sdk.ApiV4S
 	return resp.JSON200, nil
 }
 
+// KeepAcceptedStatus is the lifecycle's OnUpsertError. When APIM accepted the API and only its gateway ConfigMap
+// failed, it copies what APIM returned into the status, so the API and plan IDs are kept. It returns nil: the
+// lifecycle classifies the error as for any other failed upsert.
+func KeepAcceptedStatus(ctx context.Context, obj *v1alpha1.ApiV4Definition, err error) error {
+	if accepted, ok := AcceptedResponse(err); ok {
+		return UpdateStatus(ctx, obj, accepted)
+	}
+	return nil
+}
+
 // syncGateway writes the gateway ConfigMap of an API that syncs from Kubernetes (deletes it while the API is
 // stopped). As before the SDK, it carries the organization and environment APIM returned, if any.
 func syncGateway(ctx context.Context, gateway *v1alpha1.ApiV4Definition, resp Response) error {
@@ -108,9 +120,25 @@ func syncGateway(ctx context.Context, gateway *v1alpha1.ApiV4Definition, resp Re
 	return apidefinition.UpdateConfigMap(ctx, api)
 }
 
+// DeleteGuard refuses to delete an API a Documentation, PortalListing or PortalLink still references.
+func DeleteGuard(ctx context.Context, obj *v1alpha1.ApiV4Definition) error {
+	if err := search.AssertNoApiDocumentationRef(ctx, obj); err != nil {
+		return err
+	}
+	if err := search.AssertNoApiPortalListingRef(ctx, obj); err != nil {
+		return err
+	}
+	return search.AssertNoApiPortalLinkRef(ctx, obj)
+}
+
 // Delete deletes the API in APIM. An API without a management context has nothing to delete.
 func Delete(ctx context.Context, client *Client, dto DTO) error {
 	if client == nil {
+		return nil
+	}
+	// A spec.id GKO never synced (no status.id) names an API GKO did not write: it is left in APIM. The finalizer
+	// is saved before the first upsert, so a CR whose first upsert failed reaches this delete.
+	if dto.DeleteHridContainsUUID && !dto.Synced {
 		return nil
 	}
 	resp, err := client.DeleteApiWithResponse(ctx, dto.DeleteID,
@@ -120,9 +148,18 @@ func Delete(ctx context.Context, client *Client, dto DTO) error {
 	}))
 }
 
+// SetProcessingStatus writes the deprecated processingStatus, as before the lifecycle: Completed after a successful
+// reconcile, Failed after a failed one.
+func SetProcessingStatus(obj *v1alpha1.ApiV4Definition, err error) {
+	if err != nil {
+		obj.Status.ProcessingStatus = core.ProcessingStatusFailed
+		return
+	}
+	obj.Status.ProcessingStatus = core.ProcessingStatusCompleted
+}
+
 // UpdateStatus copies the APIM state into the status. The subscription count is not APIM's and is kept.
 func UpdateStatus(_ context.Context, obj *v1alpha1.ApiV4Definition, resp Response) error {
-	obj.Status.ProcessingStatus = ""
 	if resp.State == nil {
 		return nil
 	}

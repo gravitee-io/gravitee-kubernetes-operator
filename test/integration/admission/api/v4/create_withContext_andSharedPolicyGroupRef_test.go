@@ -31,7 +31,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := admissionv4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.NewAdmissionCtrl()
 
 	It("should pass validation of an API referencing a Shared Policy Group", func() {
 		// applied first so that the API carries the CRD defaults the webhook receives

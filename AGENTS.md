@@ -60,7 +60,7 @@ Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core inte
 ### Controllers (controllers/)
 
 Three controller families, each under `controllers/`:
-- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group` runs on `internal/lifecycle`, like the AM controllers; the others still have a hand-written loop
+- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group` and apidefinition v4 run on `internal/lifecycle`, like the AM controllers; the others (apidefinition v2 included) still have a hand-written loop
 - **`am/`** — `amcontext`, `securitydomain` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
@@ -85,7 +85,7 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
 | `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
 | `internal/apim/sdk.go` | The APIM SDK client `apim.SDKClient` (`*sdk.APIMClient` + its context, `Probe`), built by `NewSDKClient` / `SDKFromContextRef` with the same URL, auth, org/env and cloud rules as `FromContext` |
-| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/` |
+| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `apiv4/` |
 | `internal/apim/service/` | One file per resource not yet on the SDK: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
 | `internal/apim/model/` | The **wire payloads** (`*DTO`, or generated `sdk.*` types for migrated resources) sent to and received from APIM, plus their mappers |
 
@@ -93,7 +93,7 @@ Controllers and webhooks never build a URL or a payload themselves. For a resour
 
 #### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
 
-Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**.
+Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **ApiV4Definition**.
 
 - Each migrated resource gets an `internal/apim/<resource>/` package laid out like `internal/am/<resource>/`, with the `internal/lifecycle` signatures (see `internal/apim/group/`):
   - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields;
@@ -107,7 +107,13 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
 - Wrap every SDK call in `errors.FromSDKResponse(err, func() (*http.Response, []byte) { return resp.HTTPResponse, resp.Body })` (keep the closure: the SDK returns no response on a transport error) and treat a nil `JSON200` as `errors.UnexpectedSDKResponse`.
 - Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). **Never call `WithDefaults()` on the CRD side.**
 - Drift compares the PUT type on both sides: turn the GET state into it first with its `Spec()` (`GroupState.Spec()` returns the `sdk.Group` a PUT sends; every `XxxState` has one). Comparing `GroupState` with `Group` panics. `Spec()` is a shallow copy: reassign its fields, never mutate shared slices or maps. The SDK types carry their own `drift:` tags; resource types and list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
-- Keep GKO's HTTP client only for calls the SDK spec does not declare yet (e.g. a `hridContainsUUID` it lacks).
+- Keep GKO's HTTP client only for calls the SDK spec does not declare yet (e.g. a `hridContainsUUID` it lacks): `APIs.UpsertV4Legacy` is the example, the PUT of a v4 API created before the Automation API.
+- A resource whose context is optional (ApiV4Definition without `contextRef`) returns a nil client and a nil error from its client factory: `Upsert`, `DryRun`, `GetRemote` and `Delete` then do nothing remote (`internal/apim/apiv4/`).
+- Drift-only normalisation (rules for the comparison, never for the payload) goes in `AdmissionLifecycle.DriftDTO`, applied to the old, new and remote DTOs: see `apiv4.DriftDTO`, which compares v4 listeners as a free-form map and reads a boolean the GET leaves out as false, so the report reads as it did on GKO's former model.
+- A migration keeps every existing test as on master: only the edits the compiler forces (a removed function replaced by its successor, `NewAdmissionCtrl()`, the test manager wiring). A test that fails after the move is fixed in production code. To keep what users see:
+  - `AdmissionLifecycle.UnprefixedResolveErrors` reports reference and context errors without the lifecycle's `could not resolve …:` prefix (ApiV4Definition);
+  - `ResourceLifecycle.Status` sets the status fields the lifecycle does not manage, such as the deprecated `processingStatus` (`apiv4.SetProcessingStatus`);
+  - checks a resource ran before its references on master run in its own webhook before the lifecycle (the v4 API type and subscribed plans in `internal/admission/api/v4/ctrl.go`).
 
 ### AM client (internal/am/)
 
@@ -251,7 +257,7 @@ version that ships it** (PR body `## Release note` section and the Jira ticket).
 
 Unit only, in `test/unit/drift/apim/` (`test/unit/drift/am/` for AM): table-driven `drift.Detect` tests over your DTO, covering each tag you added and `To*DTO` parity. Do not re-test the framework. Call `drift.Init()` in the suite `BeforeSuite`. Behaviour against a live APIM belongs in the e2e repo (see [Testing](#testing)).
 
-Reference implementations: `internal/admission/application/drift.go`, `internal/admission/subscription/drift.go`, `test/unit/drift/apim/`, `test/unit/drift/am/`.
+Reference implementations: `internal/admission/application/drift.go`, `internal/admission/subscription/drift.go`, `internal/apim/apiv4/admission.go` and `drift.go` (on `internal/lifecycle`), `test/unit/drift/apim/`, `test/unit/drift/am/`.
 
 ### Internal Packages (internal/)
 

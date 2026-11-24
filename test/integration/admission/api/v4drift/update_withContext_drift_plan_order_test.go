@@ -36,7 +36,7 @@ import (
 // GKO-3452: plans are sent in the order of plans.<key>.order, which APIM keeps.
 var _ = Describe("Validate drift on the plan order", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := admissionv4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.NewAdmissionCtrl()
 
 	It("should keep plan orders that are the reverse of the plan keys, without drift", func() {
 		api := applyAPIWithPlanOrders(1, 2)
