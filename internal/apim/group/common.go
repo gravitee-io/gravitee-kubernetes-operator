@@ -36,9 +36,6 @@ type DTO struct {
 	HridContainsUUID bool `json:"-" drift:"ignore"`
 	// IgnoreMembers is set by the gravitee.io/ignore-members annotation.
 	IgnoreMembers bool `json:"-" drift:"ignore"`
-	// Unadopted is set for a legacy group known only by the spec.id the user set: the CR never synced it, so
-	// Delete leaves it in APIM rather than delete a group the operator does not own.
-	Unadopted bool `json:"-" drift:"ignore"`
 }
 
 // ToDTO maps a Group CRD to the Automation API payload. SDK defaults are not applied: they differ from
@@ -57,7 +54,6 @@ func ToDTO(obj *v1alpha1.Group) (DTO, error) {
 	if id := legacyID(obj); id != "" {
 		dto.Hrid = id
 		dto.HridContainsUUID = true
-		dto.Unadopted = obj.Status.ID == ""
 	} else {
 		dto.Hrid = refs.NewNamespacedNameFromObject(obj).HRID()
 	}
@@ -96,4 +92,13 @@ func (r Response) GetOrgID() string {
 
 func (r Response) GetEnvID() string {
 	return r.EnvID
+}
+
+// WithoutIgnoredMembers drops the members when ignore-members is set: APIM does not apply them, so drift
+// detection leaves them out on both sides.
+func (d DTO) WithoutIgnoredMembers() DTO {
+	if d.IgnoreMembers {
+		d.Members = nil
+	}
+	return d
 }

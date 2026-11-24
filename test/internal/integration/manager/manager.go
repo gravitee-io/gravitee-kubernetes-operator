@@ -241,11 +241,10 @@ func start() {
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&group.Reconciler{
-		Scheme:    mgr.GetScheme(),
-		Client:    mgr.GetClient(),
-		Lifecycle: group.NewLifecycle(),
-		Recorder:  mgr.GetEventRecorderFor("group-controller"),
-		Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.GroupList{}),
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("group-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.GroupList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&policygroups.Reconciler{

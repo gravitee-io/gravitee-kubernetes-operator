@@ -357,11 +357,10 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 	}
 
 	if err := (&group.Reconciler{
-		Scheme:    mgr.GetScheme(),
-		Client:    mgr.GetClient(),
-		Lifecycle: group.NewLifecycle(),
-		Recorder:  mgr.GetEventRecorderFor("group-controller"),
-		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.GroupList{}),
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("group-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.GroupList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for groups")
 		os.Exit(1)

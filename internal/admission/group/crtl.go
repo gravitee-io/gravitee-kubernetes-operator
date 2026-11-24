@@ -12,68 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package group
 
 import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var _ admission.Validator[*v1alpha1.Group] = AdmissionCtrl{}
 var _ admission.Defaulter[*v1alpha1.Group] = AdmissionCtrl{}
 
-type Lifecycle = lifecycle.AdmissionLifecycle[*v1alpha1.Group, apimgroup.DTO, *apim.SDKClient]
-
-type AdmissionCtrl struct {
-	Lifecycle Lifecycle
-}
-
-func NewAdmissionCtrl() AdmissionCtrl {
-	return AdmissionCtrl{
-		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
-			ClientFactory: apimgroup.CreateAPIMClient,
-			PreCheck:      warnIgnoredMembers,
-			ToDTO:         apimgroup.ToDTO,
-			DryRun:        apimgroup.DryRun,
-			GetRemote:     apimgroup.GetRemote,
-		}),
-	}
-}
-
-// SetupWithManager keeps the no-op defaulter: Helm registers a mutating webhook for groups.
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
-	a = NewAdmissionCtrl()
 	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.Group{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
 }
 
+type AdmissionCtrl struct{}
+
 func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.Group) error {
 	return nil
 }
 
 func (a AdmissionCtrl) ValidateCreate(
-	ctx context.Context, newObj *v1alpha1.Group,
+	ctx context.Context, obj *v1alpha1.Group,
 ) (admission.Warnings, error) {
-	return a.Lifecycle.ValidateCreate(ctx, newObj).Map()
+	return validateCreate(ctx, obj).Map()
+}
+
+func (a AdmissionCtrl) ValidateDelete(
+	_ context.Context, _ *v1alpha1.Group,
+) (admission.Warnings, error) {
+	return admission.Warnings{}, nil
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
 	ctx context.Context, oldObj *v1alpha1.Group, newObj *v1alpha1.Group,
 ) (admission.Warnings, error) {
-	return a.Lifecycle.ValidateUpdate(ctx, oldObj, newObj).Map()
-}
+	if newObj.IsBeingDeleted() {
+		return admission.Warnings{}, nil
+	}
 
-func (a AdmissionCtrl) ValidateDelete(
-	ctx context.Context, obj *v1alpha1.Group,
-) (admission.Warnings, error) {
-	return a.Lifecycle.ValidateDelete(ctx, obj).Map()
+	return validateUpdate(ctx, oldObj, newObj).Map()
 }

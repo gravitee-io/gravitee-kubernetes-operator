@@ -257,13 +257,11 @@ func (l ResourceLifecycle[T, D, C, R]) updateStatusSuccess(ctx context.Context, 
 	}
 	k8s.AddSuccessfulConditions(asConditionAware(obj))
 	l.dropResolvedRefsWhenUnused(obj)
-	setProcessingStatus(obj, core.ProcessingStatusCompleted)
 	return cli.Status().Update(ctx, obj)
 }
 
 func (l ResourceLifecycle[T, D, C, R]) updateStatusFailure(ctx context.Context, cli client.Client, obj T, err error) error {
 	k8s.ErrorToCondition(obj, err)
-	setProcessingStatus(obj, core.ProcessingStatusFailed)
 	if l.ResolveRefs == nil {
 		// ErrorToCondition may leave the reason on ResolvedRefs only, which is dropped below.
 		l.setAcceptedMessage(obj, err.Error())
@@ -292,14 +290,6 @@ func (l ResourceLifecycle[T, D, C, R]) dropResolvedRefsWhenUnused(obj T) {
 	ca.SetConditions(slices.SortedFunc(maps.Values(conditions), func(a, b metav1.Condition) int {
 		return strings.Compare(a.Type, b.Type)
 	}))
-}
-
-// setProcessingStatus keeps the deprecated status.processingStatus that APIM resources such as Group still
-// expose. AM statuses implement SetProcessingStatus as a no-op.
-func setProcessingStatus[T core.ContextAwareObject](obj T, status core.ProcessingStatus) {
-	if st := obj.GetStatus(); st != nil {
-		st.SetProcessingStatus(status)
-	}
 }
 
 func asConditionAware[T core.ContextAwareObject](obj T) core.ConditionAwareObject {

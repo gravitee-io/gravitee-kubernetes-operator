@@ -12,49 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package group
 
 import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-type Lifecycle = lifecycle.ResourceLifecycle[*v1alpha1.Group, apimgroup.DTO, *apim.SDKClient, apimgroup.Response]
-
-// Reconciler reconciles a Group object.
 type Reconciler struct {
-	client.Client
-	Lifecycle Lifecycle
-	Scheme    *runtime.Scheme
-	Recorder  record.EventRecorder
-	Watcher   watch.Interface
-}
-
-// NewLifecycle wires the Group reconcile steps. Group has no references to resolve, so its status reports
-// Accepted only, without a ResolvedRefs condition.
-func NewLifecycle() Lifecycle {
-	return lifecycle.NewResourceLifecycle(Lifecycle{
-		Finalizer:     core.GroupFinalizer,
-		ResolveRefs:   nil,
-		ClientFactory: apimgroup.CreateAPIMClient,
-		ToDTO:         apimgroup.ToDTO,
-		Delete:        apimgroup.Delete,
-		Upsert:        apimgroup.Upsert,
-		PostUpsert:    apimgroup.UpdateStatus,
-	})
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
+	Watcher  watch.Interface
+	Client   client.Client
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=groups,verbs=get;list;watch;create;update;patch;delete;deletecollection
@@ -62,7 +48,71 @@ func NewLifecycle() Lifecycle {
 // +kubebuilder:rbac:groups=gravitee.io,resources=groups/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.Group{})
+	group := &v1alpha1.Group{}
+	if err := r.Client.Get(ctx, req.NamespacedName, group); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	group.SetNamespace(req.Namespace)
+
+	events := event.NewRecorder(r.Recorder)
+
+	k8s.ResetConditionsExceptAutomationAPI(group)
+
+	dc := group.DeepCopy()
+
+	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), group, func() error {
+		util.AddFinalizer(group, core.GroupFinalizer)
+		k8s.AddAnnotation(group, core.LastSpecHashAnnotation, hash.Calculate(&group.Spec))
+
+		if group.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, group); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
+			group.Status.ProcessingStatus = core.ProcessingStatusFailed
+			return err
+		}
+
+		var err error
+		if group.IsBeingDeleted() {
+			err = events.Record(event.Delete, group, func() error {
+				if err := internal.Delete(ctx, dc); err != nil {
+					return err
+				}
+				util.RemoveFinalizer(group, core.GroupFinalizer)
+				return nil
+			})
+		} else {
+			err = events.Record(event.Update, group, func() error {
+				return internal.CreateOrUpdate(ctx, dc)
+			})
+		}
+
+		return err
+	})
+
+	if err := dc.GetStatus().DeepCopyTo(group); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if err == nil {
+		log.InfoEndReconcile(ctx, group)
+		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, group)
+	}
+
+	// An error occurred during the reconcile
+	if err := internal.UpdateStatusFailure(ctx, group, err); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if errors.ShouldRetry(err, group.IsBeingDeleted()) {
+		log.ErrorRequeuingReconcile(ctx, err, group)
+		return ctrl.Result{}, err
+	}
+
+	log.ErrorAbortingReconcile(ctx, err, group)
+	return ctrl.Result{}, nil
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
