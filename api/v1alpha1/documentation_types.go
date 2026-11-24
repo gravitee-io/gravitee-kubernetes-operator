@@ -27,6 +27,7 @@ import (
 )
 
 var _ core.Object = &Documentation{}
+var _ core.ContextAwareObject = &Documentation{}
 var _ core.Spec = &DocumentationSpec{}
 var _ core.Status = &DocumentationStatus{}
 var _ core.ConditionAware = &Documentation{}
@@ -150,4 +151,29 @@ func (d *Documentation) GetConditions() map[string]metav1.Condition {
 
 func (d *Documentation) SetConditions(conditions []metav1.Condition) {
 	d.Status.Conditions = conditions
+}
+
+// ContextRef is nil: the management context comes from the portal or API the Documentation belongs to.
+func (d *Documentation) ContextRef() core.ObjectRef {
+	return nil
+}
+
+func (d *Documentation) HasContext() bool {
+	return false
+}
+
+func (d *Documentation) GetID() string {
+	return d.Status.ID
+}
+
+func (d *Documentation) GetOrgID() string {
+	return d.Status.OrgID
+}
+
+func (d *Documentation) GetEnvID() string {
+	return d.Status.EnvID
+}
+
+func (d *Documentation) PopulateIDs(_ core.ContextModel, _ bool) {
+	// HRID-addressed through the Automation API only, no HRID/UUID migration.
 }
