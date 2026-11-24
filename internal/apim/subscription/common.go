@@ -18,6 +18,7 @@ package subscription
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -44,7 +45,7 @@ type DTO struct {
 func ToDTO(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) (DTO, error) {
 	payload, err := mapper.MapViaJSON[sdk.Subscription](sub.Spec.Type)
 	if err != nil {
-		return DTO{}, err
+		return DTO{}, fmt.Errorf("map subscription [%s] to the APIM payload: %w", sub.Name, err)
 	}
 
 	dto := DTO{Subscription: payload, ApiHrid: refs.NewNamespacedNameFromObject(api).HRID()}
