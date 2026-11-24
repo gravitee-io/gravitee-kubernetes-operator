@@ -210,6 +210,12 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 	if !drift.IsDriftEnabled(newObj) {
 		return
 	}
+	if a.DeferDrift != nil {
+		if reason := a.DeferDrift(ctx, oldObj, newObj); reason != "" {
+			errs.AddWarning(reason)
+			return
+		}
+	}
 
 	oldCopy, ok := oldObj.DeepCopyObject().(T)
 	if !ok {

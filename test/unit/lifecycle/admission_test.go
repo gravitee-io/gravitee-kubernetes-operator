@@ -618,6 +618,91 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 		Expect(c).To(Equal(calls{}))
 	})
 
+	It("dry-runs and skips drift with the reason DeferDrift gives", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		var c calls
+		recording(&a, &c, "")
+		var stored *v1alpha1.Group
+		a.DeferDrift = func(_ context.Context, oldG, _ *v1alpha1.Group) string {
+			stored = oldG
+			return "the last apply was refused"
+		}
+		g := synced(newGroup("g1", "ns"))
+
+		errs := a.ValidateUpdate(ctx, g, withSpecChange(g))
+
+		Expect(errs.IsSevere()).To(BeFalse())
+		Expect(errs.Warning).To(ConsistOf(MatchError("the last apply was refused")))
+		Expect(c).To(Equal(calls{dryRun: true}))
+		Expect(stored).To(BeIdenticalTo(g))
+	})
+
+	It("gives DeferDrift the new object with its templates compiled and its refs resolved", func() {
+		templating := env.Config.EnableTemplating
+		env.Config.EnableTemplating = true
+		DeferCleanup(func() { env.Config.EnableTemplating = templating })
+		newCluster(&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: "client", Namespace: "ns"},
+			Data:       map[string][]byte{"token": []byte("s3cr3t")},
+		})
+		a := withRemote(testDTO{Key: "g1", Name: "g1"}, nil)
+		a.ResolveRefs = func(_ context.Context, g *v1alpha1.Group, _ string) error {
+			g.Annotations = map[string]string{"resolved": "true"}
+			return nil
+		}
+		var received *v1alpha1.Group
+		a.DeferDrift = func(_ context.Context, _, newG *v1alpha1.Group) string {
+			received = newG.DeepCopy()
+			return "deferred"
+		}
+		g := synced(newGroup("g1", "ns"))
+		edited := g.DeepCopy()
+		edited.Spec.Type = &group.Type{Name: "[[ secret `client/token` ]]"}
+
+		a.ValidateUpdate(ctx, g, edited)
+
+		Expect(received).ToNot(BeNil())
+		Expect(received.Spec.Type.Name).To(Equal("s3cr3t"))
+		Expect(received.Annotations).To(HaveKeyWithValue("resolved", "true"))
+	})
+
+	It("does not call DeferDrift for an object without an ID or with drift detection disabled", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "g1"}, nil)
+		called := false
+		a.DeferDrift = func(context.Context, *v1alpha1.Group, *v1alpha1.Group) string {
+			called = true
+			return "deferred"
+		}
+		unsynced := newGroup("g1", "ns")
+
+		errs := a.ValidateUpdate(ctx, unsynced, unsynced.DeepCopy())
+
+		Expect(errs.Warning).To(BeEmpty())
+		Expect(called).To(BeFalse())
+
+		env.Config.DriftDetection.Enabled = false
+		g := synced(newGroup("g1", "ns"))
+
+		errs = a.ValidateUpdate(ctx, g, g.DeepCopy())
+
+		Expect(errs.Warning).To(BeEmpty())
+		Expect(called).To(BeFalse())
+	})
+
+	It("compares with the remote when DeferDrift gives no reason", func() {
+		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
+		var c calls
+		recording(&a, &c, "")
+		a.DeferDrift = func(context.Context, *v1alpha1.Group, *v1alpha1.Group) string { return "" }
+		g := synced(newGroup("g1", "ns"))
+
+		errs := a.ValidateUpdate(ctx, g, g.DeepCopy())
+
+		Expect(errs.IsSevere()).To(BeTrue())
+		Expect(errs.Severe[0].Error()).To(ContainSubstring("drift detected"))
+		Expect(c).To(Equal(calls{getRemote: true}))
+	})
+
 	It("skips drift with a warning when a Secret of the previous version no longer exists", func() {
 		templating := env.Config.EnableTemplating
 		env.Config.EnableTemplating = true

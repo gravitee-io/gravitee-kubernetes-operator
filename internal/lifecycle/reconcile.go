@@ -197,13 +197,19 @@ func (l ResourceLifecycle[T, D, C, R]) delete(ctx context.Context, obj, dc T) er
 	if err := l.resolveRefs(ctx, dc); err != nil {
 		if apierrors.IsNotFound(err) {
 			// A reference deleted first (a Secret, a parent CR) leaves nothing to clean up here.
-			l.removeFinalizer(obj)
+			l.releaseWithoutDelete(ctx, obj, err)
 			return nil
 		}
 		return err
 	}
 	api, dto, err := l.clientAndDTO(ctx, dc)
 	if err != nil {
+		if clientNotFound(err) {
+			// The same holds for what the client factory reads: the Secret of a context, deleted first in
+			// a namespace teardown, leaves no credentials to clean up with.
+			l.releaseWithoutDelete(ctx, obj, err)
+			return nil
+		}
 		return err
 	}
 	if l.DeleteGuard != nil {
@@ -218,10 +224,30 @@ func (l ResourceLifecycle[T, D, C, R]) delete(ctx context.Context, obj, dc T) er
 	return nil
 }
 
+// releaseWithoutDelete removes the finalizer of a delete that cannot reach the platform. The resource may stay
+// there, so the release is logged as a warning naming what was missing.
+func (l ResourceLifecycle[T, D, C, R]) releaseWithoutDelete(ctx context.Context, obj T, err error) {
+	log.Info(ctx, "Releasing the finalizer without deleting the resource from the platform: a reference is gone",
+		log.KeyValues(obj,
+			"kind", obj.GetObjectKind().GroupVersionKind().GroupKind().String(),
+			"severity", "warning",
+			"error", err.Error(),
+		)...,
+	)
+	l.removeFinalizer(obj)
+}
+
 func (l ResourceLifecycle[T, D, C, R]) removeFinalizer(obj T) {
 	if l.Finalizer != "" {
 		util.RemoveFinalizer(obj, l.Finalizer)
 	}
+}
+
+// clientNotFound tells whether clientAndDTO failed because the client factory read a reference that does not
+// exist. A mapping error is an IllegalStateError, never this.
+func clientNotFound(err error) bool {
+	var re gerrors.ReconcileError
+	return errors.As(err, &re) && re.Type == gerrors.ResolveRefError && apierrors.IsNotFound(err)
 }
 
 func (l ResourceLifecycle[T, D, C, R]) clientAndDTO(ctx context.Context, dc T) (C, D, error) {
@@ -247,6 +273,9 @@ func (l ResourceLifecycle[T, D, C, R]) resolveRefs(ctx context.Context, obj T) e
 	}
 	if err == nil {
 		return nil
+	}
+	if gerrors.IsIllegalState(err) {
+		return err
 	}
 	return gerrors.NewResolveRefError(err)
 }

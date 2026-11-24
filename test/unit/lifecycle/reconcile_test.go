@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/funcr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -103,6 +105,26 @@ func deletingGroup(name string, finalizers ...string) *v1alpha1.Group {
 func reconcile(l groupLifecycle, cli client.Client, name string) (ctrl.Result, error) {
 	req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: testNs, Name: name}}
 	return l.Reconcile(context.Background(), cli, record.NewFakeRecorder(20), req, &v1alpha1.Group{})
+}
+
+// reconcileLogged reconciles name and returns what was logged on the way.
+func reconcileLogged(l groupLifecycle, cli client.Client, name string) ([]string, error) {
+	var lines []string
+	logger := funcr.New(func(prefix, args string) { lines = append(lines, args) }, funcr.Options{})
+	req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: testNs, Name: name}}
+	_, err := l.Reconcile(logr.NewContext(context.Background(), logger), cli, record.NewFakeRecorder(20), req,
+		&v1alpha1.Group{})
+	return lines, err
+}
+
+// expectReleaseWarning asserts that a delete released without reaching the platform logged why.
+func expectReleaseWarning(lines []string) {
+	GinkgoHelper()
+	Expect(lines).To(ContainElement(And(
+		ContainSubstring("Releasing the finalizer without deleting the resource from the platform"),
+		ContainSubstring(`"severity"="warning"`),
+		ContainSubstring(`secrets \"token\" not found`),
+	)))
 }
 
 func fetch(cli client.Client, name string) *v1alpha1.Group {
@@ -345,12 +367,13 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 				return fmt.Errorf("resolve secret: %w", notFound)
 			}
 
-			_, err := reconcile(l, cli, "g1")
+			lines, err := reconcileLogged(l, cli, "g1")
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(r.deleted).To(BeEmpty())
 			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
 			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			expectReleaseWarning(lines)
 		})
 
 		It("still requeues on any other resolution error", func() {
@@ -405,6 +428,40 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			_, err := reconcile(l, cli, "g1")
 
 			Expect(reconcileErrorType(err)).To(Equal(gerrors.ResolveRefError))
+			Expect(r.deleted).To(BeEmpty())
+			Expect(fetch(cli, "g1").Finalizers).To(ContainElement(testFinalizer))
+		})
+
+		// The context resolves, but its Secret was deleted first, in a namespace teardown for instance.
+		It("releases the finalizer of a delete without calling Delete when what it reads is gone", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			l.ClientFactory = func(context.Context, *v1alpha1.Group) (*testClient, error) {
+				notFound := apierrors.NewNotFound(corev1.Resource("secrets"), "token")
+				return nil, fmt.Errorf("resolve secret: %w", notFound)
+			}
+
+			lines, err := reconcileLogged(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(r.deleted).To(BeEmpty())
+			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			expectReleaseWarning(lines)
+		})
+
+		// The error wraps a NotFound: only the class tells a mapping error from a missing reference.
+		It("still requeues a delete when ToDTO cannot map the resource", func() {
+			cli := newCluster(deletingGroup("g1", testFinalizer))
+			l := newGroupLifecycle(r)
+			l.ToDTO = func(*v1alpha1.Group) (testDTO, error) {
+				notFound := apierrors.NewNotFound(corev1.Resource("secrets"), "token")
+				return testDTO{}, fmt.Errorf("map members: %w", notFound)
+			}
+
+			_, err := reconcile(l, cli, "g1")
+
+			Expect(reconcileErrorType(err)).To(Equal(gerrors.IllegalStateError))
 			Expect(r.deleted).To(BeEmpty())
 			Expect(fetch(cli, "g1").Finalizers).To(ContainElement(testFinalizer))
 		})
@@ -649,6 +706,27 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			refs := condition(fetch(cli, "g1"), k8s.ConditionResolvedRefs)
 			Expect(refs.Status).To(Equal(metav1.ConditionFalse))
 			Expect(refs.Message).To(ContainSubstring("secret missing"))
+		})
+
+		It("reports an IllegalStateError on Accepted without requeueing or upserting", func() {
+			cli := newCluster(newGroup("g1", testNs))
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = func(context.Context, *v1alpha1.Group, string) error {
+				return gerrors.NewIllegalStateError(errors.New("ref of another context"))
+			}
+
+			result, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result).To(Equal(ctrl.Result{}))
+			Expect(r.upserted).To(BeEmpty())
+			g := fetch(cli, "g1")
+			accepted := condition(g, k8s.ConditionAccepted)
+			Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+			Expect(accepted.Message).To(ContainSubstring("ref of another context"))
+			// k8s.ErrorToCondition sets ResolvedRefs=False for a ResolveRefError only, as the AuthZ
+			// controllers have always reported a ref of another context.
+			Expect(condition(g, k8s.ConditionResolvedRefs).Status).To(Equal(metav1.ConditionTrue))
 		})
 	})
 

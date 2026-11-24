@@ -195,6 +195,13 @@ func IgnoreNotFound(err error) error {
 	return err
 }
 
+// IsIllegalState reports whether the outermost ReconcileError of err is an IllegalStateError: a state only a
+// spec change can fix.
+func IsIllegalState(err error) bool {
+	e := &ReconcileError{}
+	return errors.As(err, e) && e.Type == IllegalStateError
+}
+
 func IsRecoverable(err error) bool {
 	errs := make([]error, 0)
 
