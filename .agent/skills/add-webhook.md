@@ -8,10 +8,6 @@ The webhook is the operator's only chance to reject bad input *before* it reache
 the ordering of the checks is not cosmetic: each step depends on the previous one having succeeded.
 Section 3 is the part to get right.
 
-> **APIM resource on the SDK?** Use `lifecycle.AdmissionLifecycle` instead of a hand-written
-> `validate.go`: it runs the same checks in order (templates, context, pre-check, dry run, drift).
-> See `internal/admission/group/` and AGENTS.md (APIM SDK).
-
 ## 1. `internal/admission/<resource>/ctrl.go`
 
 A thin typed adapter. No logic lives here — it delegates to the private functions in `validate.go`
