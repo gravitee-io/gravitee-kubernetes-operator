@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apidefinition
+package errors
 
 import (
 	"fmt"
@@ -20,21 +20,25 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-// refNotFoundError words a reference the cluster does not hold as the admission webhook always has, and
+// RefNotFoundError words a reference the cluster does not hold as the admission webhook always has, and
 // unwraps to the Kubernetes NotFound, so apierrors.IsNotFound still holds (drift on an old version, delete).
-type refNotFoundError struct {
+type RefNotFoundError struct {
 	msg string
 	err error
 }
 
-func (e refNotFoundError) Error() string { return e.msg }
+func NewRefNotFoundError(msg string, err error) error {
+	return RefNotFoundError{msg: msg, err: err}
+}
 
-func (e refNotFoundError) Unwrap() error { return e.err }
+func (e RefNotFoundError) Error() string { return e.msg }
 
-// notFoundRef words err with format when it is a NotFound, and returns any other error as is.
-func notFoundRef(err error, format string, args ...any) error {
+func (e RefNotFoundError) Unwrap() error { return e.err }
+
+// NotFoundRef words err with format when it is a NotFound, and returns any other error as is.
+func NotFoundRef(err error, format string, args ...any) error {
 	if !apierrors.IsNotFound(err) {
 		return err
 	}
-	return refNotFoundError{msg: fmt.Sprintf(format, args...), err: err}
+	return NewRefNotFoundError(fmt.Sprintf(format, args...), err)
 }
