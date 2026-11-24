@@ -18,57 +18,11 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
-
-func validateCreate(ctx context.Context, listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	errs.Add(admission.CompileAndValidateTemplate(ctx, listing))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validateApiKinds(listing))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	prtl := validatePortal(ctx, listing, errs)
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validateApis(ctx, listing, prtl))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validateDryRun(ctx, listing))
-	return errs
-}
-
-func validateUpdate(ctx context.Context, oldListing, newListing *v1alpha1.PortalListing) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	errs.MergeWith(validateImmutableFields(oldListing, newListing))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	// validateCreate compiles templates, resolve portal and runs the dry-run validation.
-	errs.MergeWith(validateCreate(ctx, newListing))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	mergeDriftValidation(ctx, oldListing, newListing, errs)
-	return errs
-}
 
 func validateImmutableFields(oldListing *v1alpha1.PortalListing, newListing *v1alpha1.PortalListing) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
@@ -99,29 +53,14 @@ func validateApiKinds(listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
 	return errs
 }
 
-func validateDryRun(ctx context.Context, listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
+// validateApis checks each listed API exists, has a management context, and the same one as the portal.
+func validateApis(ctx context.Context, listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	client, err := apimportallisting.CreateAPIMClient(ctx, listing)
+	portal, err := apimportallisting.ResolvePortal(ctx, listing)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-	dto, err := apimportallisting.ToDTO(listing)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-	findings, err := apimportallisting.DryRun(ctx, client, dto)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-	errs.MergeWith(findings)
-	return errs
-}
-
-func validateApis(ctx context.Context, listing *v1alpha1.PortalListing, portal *v1alpha1.Portal) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
 	ns := listing.GetNamespace()
 	for _, apiRef := range listing.GetApiRefs() {
 		api, err := dynamic.ResolveAPI(ctx, apiRef, ns)
@@ -147,27 +86,6 @@ func validateApis(ctx context.Context, listing *v1alpha1.PortalListing, portal *
 		}
 	}
 	return errs
-}
-
-func validatePortal(ctx context.Context, listing *v1alpha1.PortalListing, errs *errors.AdmissionErrors) *v1alpha1.Portal {
-	ns := listing.GetNamespace()
-	prtl, err := dynamic.ResolvePortal(ctx, listing.GetPortalRef(), ns)
-	if err != nil {
-		errs.AddSeveref(
-			"portal listing [%s] references portal [%v] that can't be resolved",
-			listing.GetName(), listing.GetPortalRef(),
-		)
-		return nil
-	}
-
-	if !prtl.HasContext() {
-		errs.AddSeveref(
-			"referenced portal [%v] has no management context (spec.contextRef)",
-			listing.GetPortalRef(),
-		)
-		return nil
-	}
-	return prtl
 }
 
 // sameContext reports whether two management context refs point to the same object.

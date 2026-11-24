@@ -18,45 +18,10 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
-
-func validateCreate(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	errs.MergeWith(validateNavigation(prtl))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validateThemeKind(prtl))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	if !prtl.HasContext() {
-		errs.AddSevere("a management context reference (spec.contextRef) is required")
-		return errs
-	}
-
-	errs.Add(ctxref.Validate(ctx, prtl))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	_, themeErrs := resolveThemeRef(ctx, prtl)
-	errs.MergeWith(themeErrs)
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validateDryRun(ctx, prtl))
-	return errs
-}
 
 // validateThemeKind rejects a themeRef pointing at anything but a PortalTheme,
 // an empty kind meaning PortalTheme.
@@ -78,27 +43,23 @@ func validateThemeKind(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	return errs
 }
 
-// resolveThemeRef reads the referenced PortalTheme, which the automation dry run
-// echoes back without resolving. It returns a nil theme when the portal activates none.
-func resolveThemeRef(
-	ctx context.Context, prtl *v1alpha1.Portal,
-) (*v1alpha1.PortalTheme, *errors.AdmissionErrors) {
+// resolveThemeRef checks the referenced PortalTheme exists, which the automation dry run echoes back
+// without resolving.
+func resolveThemeRef(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	if !prtl.HasThemeRef() {
-		return nil, errs
+		return errs
 	}
 
-	thm, err := dynamic.ResolvePortalTheme(ctx, prtl.GetThemeRef(), prtl.GetNamespace())
-	if err != nil {
+	if _, err := dynamic.ResolvePortalTheme(ctx, prtl.GetThemeRef(), prtl.GetNamespace()); err != nil {
 		errs.AddSeveref(
 			"portal [%s] references theme [%v] that can't be resolved",
 			prtl.GetName(), prtl.GetThemeRef(),
 		)
-		return nil, errs
 	}
 
-	return thm, errs
+	return errs
 }
 
 func validateNavigation(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
@@ -115,26 +76,5 @@ func validateNavigation(prtl *v1alpha1.Portal) *errors.AdmissionErrors {
 
 	errs.AddWarning("spec.navigation is deprecated, use spec.structure.topNavbar instead")
 
-	return errs
-}
-
-func validateDryRun(ctx context.Context, prtl *v1alpha1.Portal) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-	client, err := apimportal.CreateAPIMClient(ctx, prtl)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-	dto, err := apimportal.ToDTO(prtl)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-	findings, err := apimportal.DryRun(ctx, client, dto)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-	errs.MergeWith(findings)
 	return errs
 }

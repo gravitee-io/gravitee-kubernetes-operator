@@ -16,24 +16,46 @@ package portaltheme
 
 import (
 	"context"
+	"errors"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	ctrl "sigs.k8s.io/controller-runtime"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
+	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 )
 
 var _ admission.Validator[*v1alpha1.PortalTheme] = AdmissionCtrl{}
 var _ admission.Defaulter[*v1alpha1.PortalTheme] = AdmissionCtrl{}
 
+type Lifecycle = lifecycle.AdmissionLifecycle[*v1alpha1.PortalTheme, sdk.PortalTheme, *apim.SDKClient]
+
+// AdmissionCtrl needs no setup: AdmissionCtrl{} is ready to use.
+type AdmissionCtrl struct{}
+
+var admissionLifecycle = lifecycle.NewAdmissionLifecycle(Lifecycle{
+	ClientFactory:  admissionClient,
+	ToDTO:          apimportaltheme.ToDTO,
+	DryRun:         navigation.FindingsOnError(apimportaltheme.DryRun),
+	PayloadChanged: everyUpdate,
+	GetRemote:      apimportaltheme.GetRemote,
+	DeleteGuard:    apimportaltheme.DeleteGuard,
+	// The messages are the ones the webhook reported before the lifecycle.
+	UnprefixedResolveErrors: true,
+})
+
+// SetupWithManager keeps the no-op defaulter: Helm registers a mutating webhook for themes.
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.PortalTheme{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
 }
-
-type AdmissionCtrl struct{}
 
 func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.PortalTheme) error {
 	return nil
@@ -42,21 +64,38 @@ func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.PortalTheme) error
 func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context, obj *v1alpha1.PortalTheme,
 ) (admission.Warnings, error) {
-	return validateCreate(ctx, obj).Map()
+	return admissionLifecycle.ValidateCreate(ctx, obj).Map()
 }
 
+// ValidateDelete keeps a theme that portals still activate from being deleted, so that the rejection is
+// reported to whoever runs the delete rather than to the reconcile loop.
 func (a AdmissionCtrl) ValidateDelete(
 	ctx context.Context, obj *v1alpha1.PortalTheme,
 ) (admission.Warnings, error) {
-	return validateDelete(ctx, obj).Map()
+	return admissionLifecycle.ValidateDelete(ctx, obj).Map()
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
 	ctx context.Context, oldObj *v1alpha1.PortalTheme, newObj *v1alpha1.PortalTheme,
 ) (admission.Warnings, error) {
-	if newObj.IsBeingDeleted() {
-		return admission.Warnings{}, nil
-	}
+	return admissionLifecycle.ValidateUpdate(ctx, oldObj, newObj).Map()
+}
 
-	return validateUpdate(ctx, oldObj, newObj).Map()
+var errNoContext = errors.New("a management context reference (spec.contextRef) is required")
+
+// admissionClient refuses a theme without context, or with a context the cluster does not hold, with the
+// messages the webhook reported before the lifecycle, then builds the client.
+func admissionClient(ctx context.Context, thm *v1alpha1.PortalTheme) (*apim.SDKClient, error) {
+	if !thm.HasContext() {
+		return nil, errNoContext
+	}
+	if err := ctxref.Validate(ctx, thm); err != nil {
+		return nil, err
+	}
+	return apimportaltheme.CreateAPIMClient(ctx, thm)
+}
+
+// everyUpdate dry-runs every update, as before the lifecycle.
+func everyUpdate(_, _ *v1alpha1.PortalTheme) bool {
+	return true
 }
