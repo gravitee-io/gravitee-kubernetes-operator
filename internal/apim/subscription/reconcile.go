@@ -56,7 +56,7 @@ func UpdateStatus(obj *v1alpha1.Subscription, resp Response) error {
 	}
 	startedAt, err := time.Parse(time.RFC3339, *resp.State.StartingAt)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse the start date of subscription [%s]: %w", resp.State.Hrid, err)
 	}
 
 	obj.Status.ID = ""
