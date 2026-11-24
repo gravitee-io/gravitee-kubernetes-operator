@@ -18,25 +18,22 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallink/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+type Lifecycle = lifecycle.ResourceLifecycle[*v1alpha1.PortalLink, apimportallink.DTO, *apim.SDKClient, apimportallink.Response]
 
 type Reconciler struct {
 	Scheme   *runtime.Scheme
@@ -45,73 +42,23 @@ type Reconciler struct {
 	Client   client.Client
 }
 
+// resourceLifecycle wires the reconcile steps of portal links.
+var resourceLifecycle = lifecycle.NewResourceLifecycle(Lifecycle{
+	Finalizer:     core.PortalLinkFinalizer,
+	ResolveRefs:   apimportallink.ResolveRefs,
+	ClientFactory: apimportallink.CreateAPIMClient,
+	ToDTO:         apimportallink.ToDTO,
+	Delete:        apimportallink.Delete,
+	Upsert:        apimportallink.Upsert,
+	PostUpsert:    apimportallink.UpdateStatus,
+})
+
 // +kubebuilder:rbac:groups=gravitee.io,resources=portallinks,verbs=get;list;watch;create;update;patch;delete;deletecollection
 // +kubebuilder:rbac:groups=gravitee.io,resources=portallinks/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=gravitee.io,resources=portallinks/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	link := &v1alpha1.PortalLink{}
-	if err := r.Client.Get(ctx, req.NamespacedName, link); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	link.SetNamespace(req.Namespace)
-
-	events := event.NewRecorder(r.Recorder)
-
-	k8s.ResetConditionsExceptAutomationAPI(link)
-	dc := link.DeepCopy()
-
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), link, func() error {
-		util.AddFinalizer(link, core.PortalLinkFinalizer)
-		k8s.AddAnnotation(link, core.LastSpecHashAnnotation, hash.Calculate(&link.Spec))
-
-		if link.IsBeingDeleted() {
-			if err := template.ReleaseReferences(ctx, link); err != nil {
-				return err
-			}
-		} else if err := template.Compile(ctx, dc, true); err != nil {
-			return err
-		}
-
-		var err error
-		if link.IsBeingDeleted() {
-			err = events.Record(event.Delete, link, func() error {
-				if err := internal.Delete(ctx, dc); err != nil {
-					return err
-				}
-				util.RemoveFinalizer(link, core.PortalLinkFinalizer)
-				return nil
-			})
-		} else {
-			err = events.Record(event.Update, link, func() error {
-				return internal.CreateOrUpdate(ctx, dc)
-			})
-		}
-
-		return err
-	})
-
-	if err := dc.GetStatus().DeepCopyTo(link); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err == nil {
-		log.InfoEndReconcile(ctx, link)
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, link)
-	}
-
-	if err := internal.UpdateStatusFailure(ctx, link, err); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if errors.ShouldRetry(err, link.IsBeingDeleted()) {
-		log.ErrorRequeuingReconcile(ctx, err, link)
-		return ctrl.Result{}, err
-	}
-
-	log.ErrorAbortingReconcile(ctx, err, link)
-	return ctrl.Result{}, nil
+	return resourceLifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.PortalLink{})
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
