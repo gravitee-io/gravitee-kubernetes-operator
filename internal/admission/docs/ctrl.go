@@ -17,23 +17,43 @@ package docs
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	ctrl "sigs.k8s.io/controller-runtime"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	internaladmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 )
 
 var _ admission.Validator[*v1alpha1.Documentation] = AdmissionCtrl{}
 var _ admission.Defaulter[*v1alpha1.Documentation] = AdmissionCtrl{}
 
+type Lifecycle = lifecycle.AdmissionLifecycle[*v1alpha1.Documentation, apimdocs.DTO, *apim.SDKClient]
+
+// AdmissionCtrl needs no setup: AdmissionCtrl{} is ready to use.
+type AdmissionCtrl struct{}
+
+var admissionLifecycle = lifecycle.NewAdmissionLifecycle(Lifecycle{
+	ClientFactory:  admissionClient,
+	ToDTO:          apimdocs.ToDTO,
+	DryRun:         navigation.FindingsOnError(apimdocs.DryRun),
+	PayloadChanged: everyUpdate,
+	GetRemote:      apimdocs.GetRemote,
+	// The messages are the ones the webhook reported before the lifecycle.
+	UnprefixedResolveErrors: true,
+})
+
+// SetupWithManager keeps the no-op defaulter: Helm registers a mutating webhook for documentation pages.
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.Documentation{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
 }
-
-type AdmissionCtrl struct{}
 
 func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.Documentation) error {
 	return nil
@@ -42,7 +62,7 @@ func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.Documentation) err
 func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context, obj *v1alpha1.Documentation,
 ) (admission.Warnings, error) {
-	return validateCreate(ctx, obj).Map()
+	return admissionLifecycle.ValidateCreate(ctx, obj).Map()
 }
 
 func (a AdmissionCtrl) ValidateDelete(
@@ -57,6 +77,37 @@ func (a AdmissionCtrl) ValidateUpdate(
 	if newObj.IsBeingDeleted() {
 		return admission.Warnings{}, nil
 	}
+	errs := preLifecycleUpdate(ctx, oldObj, newObj)
+	if errs.IsSevere() {
+		return errs.Map()
+	}
+	errs.MergeWith(admissionLifecycle.ValidateUpdate(ctx, oldObj, newObj))
+	return errs.Map()
+}
 
-	return validateUpdate(ctx, oldObj, newObj).Map()
+// admissionClient checks the parent references and reads the parent, with the messages the webhook
+// reported before the lifecycle, then builds the client of the parent's context. Done here rather than in
+// the lifecycle's ResolveRefs, which drift would also run on the previous version.
+func admissionClient(ctx context.Context, obj *v1alpha1.Documentation) (*apim.SDKClient, error) {
+	if err := apimdocs.ResolveRefsForAdmission(ctx, obj, obj.GetNamespace()); err != nil {
+		return nil, err
+	}
+	return apimdocs.CreateAPIMClient(ctx, obj)
+}
+
+// everyUpdate dry-runs every update, as before the lifecycle.
+func everyUpdate(_, _ *v1alpha1.Documentation) bool {
+	return true
+}
+
+// preLifecycleUpdate compiles templates and refuses a change of parent first, as before the lifecycle: the
+// move is the error to report, not the reference errors it leads to.
+func preLifecycleUpdate(ctx context.Context, oldObj, newObj *v1alpha1.Documentation) *gerrors.AdmissionErrors {
+	errs := gerrors.NewAdmissionErrors()
+	errs.Add(internaladmission.CompileAndValidateTemplate(ctx, newObj))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(verifyImmutableFields(oldObj, newObj))
+	return errs
 }

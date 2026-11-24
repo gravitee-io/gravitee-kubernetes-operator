@@ -15,6 +15,8 @@
 package navigation
 
 import (
+	"context"
+
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -32,4 +34,21 @@ func Findings(stateErrors *sdk.Errors) *errors.AdmissionErrors {
 		errs.AddWarning(warning)
 	}
 	return errs
+}
+
+// FindingsOnError reports a dry run that fails (transport, HTTP error, undecodable answer) as a severe
+// finding with the error's own message, the way the webhooks always have, rather than as an error the
+// lifecycle would prefix with "dry run failed: ".
+func FindingsOnError[C any, D any](
+	dryRun func(ctx context.Context, client C, dto D) (*errors.AdmissionErrors, error),
+) func(ctx context.Context, client C, dto D) (*errors.AdmissionErrors, error) {
+	return func(ctx context.Context, client C, dto D) (*errors.AdmissionErrors, error) {
+		findings, err := dryRun(ctx, client, dto)
+		if err != nil {
+			errs := errors.NewAdmissionErrors()
+			errs.AddSevere(err.Error())
+			return errs, nil
+		}
+		return findings, nil
+	}
 }

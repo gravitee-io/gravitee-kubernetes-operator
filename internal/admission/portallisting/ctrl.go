@@ -17,23 +17,44 @@ package portallisting
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	ctrl "sigs.k8s.io/controller-runtime"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	internaladmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
+	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 )
 
 var _ admission.Validator[*v1alpha1.PortalListing] = AdmissionCtrl{}
 var _ admission.Defaulter[*v1alpha1.PortalListing] = AdmissionCtrl{}
 
+type Lifecycle = lifecycle.AdmissionLifecycle[*v1alpha1.PortalListing, apimportallisting.DTO, *apim.SDKClient]
+
+// AdmissionCtrl needs no setup: AdmissionCtrl{} is ready to use.
+type AdmissionCtrl struct{}
+
+var admissionLifecycle = lifecycle.NewAdmissionLifecycle(Lifecycle{
+	ClientFactory:  admissionClient,
+	PreCheck:       validateApis,
+	ToDTO:          apimportallisting.ToDTO,
+	DryRun:         navigation.FindingsOnError(apimportallisting.DryRun),
+	PayloadChanged: everyUpdate,
+	GetRemote:      apimportallisting.GetRemote,
+	// The messages are the ones the webhook reported before the lifecycle.
+	UnprefixedResolveErrors: true,
+})
+
+// SetupWithManager keeps the no-op defaulter: Helm registers a mutating webhook for portal listings.
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.PortalListing{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
 }
-
-type AdmissionCtrl struct{}
 
 func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.PortalListing) error {
 	return nil
@@ -42,7 +63,12 @@ func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.PortalListing) err
 func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context, obj *v1alpha1.PortalListing,
 ) (admission.Warnings, error) {
-	return validateCreate(ctx, obj).Map()
+	errs := preLifecycle(ctx, obj)
+	if errs.IsSevere() {
+		return errs.Map()
+	}
+	errs.MergeWith(admissionLifecycle.ValidateCreate(ctx, obj))
+	return errs.Map()
 }
 
 func (a AdmissionCtrl) ValidateDelete(
@@ -57,6 +83,42 @@ func (a AdmissionCtrl) ValidateUpdate(
 	if newObj.IsBeingDeleted() {
 		return admission.Warnings{}, nil
 	}
+	// A change of portal is refused first, as before the lifecycle: the move is the error to report, not the
+	// reference errors it leads to.
+	errs := validateImmutableFields(oldObj, newObj)
+	if errs.IsSevere() {
+		return errs.Map()
+	}
+	errs.MergeWith(preLifecycle(ctx, newObj))
+	if errs.IsSevere() {
+		return errs.Map()
+	}
+	errs.MergeWith(admissionLifecycle.ValidateUpdate(ctx, oldObj, newObj))
+	return errs.Map()
+}
 
-	return validateUpdate(ctx, oldObj, newObj).Map()
+// preLifecycle compiles templates and checks the API kinds before the portal, as before the lifecycle.
+func preLifecycle(ctx context.Context, listing *v1alpha1.PortalListing) *gerrors.AdmissionErrors {
+	errs := gerrors.NewAdmissionErrors()
+	errs.Add(internaladmission.CompileAndValidateTemplate(ctx, listing))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateApiKinds(listing))
+	return errs
+}
+
+// admissionClient reads the portal and checks it has a management context, with the messages the webhook
+// reported before the lifecycle, then builds the client of the portal's context. Done here rather than in
+// the lifecycle's ResolveRefs, which drift would also run on the previous version.
+func admissionClient(ctx context.Context, obj *v1alpha1.PortalListing) (*apim.SDKClient, error) {
+	if err := apimportallisting.ResolveRefsForAdmission(ctx, obj, obj.GetNamespace()); err != nil {
+		return nil, err
+	}
+	return apimportallisting.CreateAPIMClient(ctx, obj)
+}
+
+// everyUpdate dry-runs every update, as before the lifecycle.
+func everyUpdate(_, _ *v1alpha1.PortalListing) bool {
+	return true
 }

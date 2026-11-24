@@ -17,23 +17,42 @@ package portallink
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	ctrl "sigs.k8s.io/controller-runtime"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
+	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 )
 
 var _ admission.Validator[*v1alpha1.PortalLink] = AdmissionCtrl{}
 var _ admission.Defaulter[*v1alpha1.PortalLink] = AdmissionCtrl{}
 
+type Lifecycle = lifecycle.AdmissionLifecycle[*v1alpha1.PortalLink, apimportallink.DTO, *apim.SDKClient]
+
+// AdmissionCtrl needs no setup: AdmissionCtrl{} is ready to use.
+type AdmissionCtrl struct{}
+
+var admissionLifecycle = lifecycle.NewAdmissionLifecycle(Lifecycle{
+	ClientFactory:  admissionClient,
+	ToDTO:          apimportallink.ToDTO,
+	DryRun:         navigation.FindingsOnError(apimportallink.DryRun),
+	PayloadChanged: everyUpdate,
+	GetRemote:      apimportallink.GetRemote,
+	// The messages are the ones the webhook reported before the lifecycle.
+	UnprefixedResolveErrors: true,
+})
+
+// SetupWithManager keeps the no-op defaulter: Helm registers a mutating webhook for portal links.
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.PortalLink{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
 }
-
-type AdmissionCtrl struct{}
 
 func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.PortalLink) error {
 	return nil
@@ -42,7 +61,7 @@ func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.PortalLink) error 
 func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context, obj *v1alpha1.PortalLink,
 ) (admission.Warnings, error) {
-	return validateCreate(ctx, obj).Map()
+	return admissionLifecycle.ValidateCreate(ctx, obj).Map()
 }
 
 func (a AdmissionCtrl) ValidateDelete(
@@ -57,6 +76,31 @@ func (a AdmissionCtrl) ValidateUpdate(
 	if newObj.IsBeingDeleted() {
 		return admission.Warnings{}, nil
 	}
+	errs := preLifecycleUpdate(ctx, oldObj, newObj)
+	if errs.IsSevere() {
+		return errs.Map()
+	}
+	errs.MergeWith(admissionLifecycle.ValidateUpdate(ctx, oldObj, newObj))
+	return errs.Map()
+}
 
-	return validateUpdate(ctx, oldObj, newObj).Map()
+// admissionClient checks the parent references and reads the parent, with the messages the webhook
+// reported before the lifecycle, then builds the client of the parent's context. Done here rather than in
+// the lifecycle's ResolveRefs, which drift would also run on the previous version.
+func admissionClient(ctx context.Context, obj *v1alpha1.PortalLink) (*apim.SDKClient, error) {
+	if err := apimportallink.ResolveRefsForAdmission(ctx, obj, obj.GetNamespace()); err != nil {
+		return nil, err
+	}
+	return apimportallink.CreateAPIMClient(ctx, obj)
+}
+
+// everyUpdate dry-runs every update, as before the lifecycle.
+func everyUpdate(_, _ *v1alpha1.PortalLink) bool {
+	return true
+}
+
+// preLifecycleUpdate refuses a change of parent first, as before the lifecycle: the move is the error to
+// report, not the reference errors it leads to.
+func preLifecycleUpdate(_ context.Context, oldObj, newObj *v1alpha1.PortalLink) *gerrors.AdmissionErrors {
+	return verifyImmutableFields(oldObj, newObj)
 }
