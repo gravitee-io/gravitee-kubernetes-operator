@@ -32,8 +32,13 @@ func mergeDriftValidation(
 ) {
 	errs.MergeWith(drift.ValidateDrift(ctx, oldApp, newApp, resolveAppRefs, remoteAppGetter(ctx),
 		drift.MapDTO(func(app *v1alpha1.Application) apimapp.DTO {
-			// ToDTO only fails on a spec the dry run refuses as severe, and the dry run runs first.
+			// ToDTO fails only on a spec that does not fit the SDK payload, which the dry run refuses on create
+			// and on each spec change. A CR admitted before that check maps to an empty DTO and shows as drift.
 			dto, _ := apimapp.ToDTO(app)
+			if dto.IgnoreGroups {
+				// APIM owns the groups under ignore-groups: leave them out, on each copy that has the annotation.
+				dto.Groups = nil
+			}
 			return dto
 		}),
 	))

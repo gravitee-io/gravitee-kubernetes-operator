@@ -56,7 +56,7 @@ func DryRun(ctx context.Context, client *apim.SDKClient, dto DTO) (*errors.Admis
 }
 
 // GetRemote fetches the application from APIM as the payload a PUT would send, for drift detection.
-// With ignore-groups, it carries the CR groups in place of the remote ones, so groups never drift.
+// With ignore-groups, APIM owns the groups: they are left out, as the drift mapper leaves out the CR's.
 func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error) {
 	state, err := GetState(ctx, client, dto)
 	if err != nil {
@@ -65,8 +65,7 @@ func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error
 	// Spec is a shallow copy of the state: only reassign its fields, never mutate shared slices or maps.
 	remote := DTO{Application: state.Spec(), Legacy: dto.Legacy, IgnoreGroups: dto.IgnoreGroups}
 	if dto.IgnoreGroups {
-		// APIM owns the groups under ignore-groups: report the CR's own, so they are never compared.
-		remote.Groups = dto.Groups
+		remote.Groups = nil
 	}
 	return remote, nil
 }
