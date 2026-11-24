@@ -26,6 +26,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
+// Listings is the hand-written client GKO used before the APIM SDK. Production code goes through
+// internal/apim/portallisting; this one is kept for the existing tests only.
 type Listings struct {
 	*client.Client
 }

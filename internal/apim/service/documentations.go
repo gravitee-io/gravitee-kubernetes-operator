@@ -38,6 +38,8 @@ type DocumentationParent struct {
 	API core.ApiDefinitionObject
 }
 
+// Documentations is the hand-written client GKO used before the APIM SDK. Production code goes through
+// internal/apim/docs; this one is kept for the existing tests only.
 type Documentations struct {
 	*client.Client
 }

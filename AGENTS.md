@@ -93,7 +93,7 @@ Controllers and webhooks never build a URL or a payload themselves. For a resour
 
 #### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
 
-Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **ApiV4Definition**.
+Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **ApiV4Definition**, **PortalTheme**, **Portal**, **PortalLink**, **PortalListing**, **Documentation**. The portal kinds' hand-written services (`internal/apim/service/{portals,portalthemes,portallinks,portallistings,documentations}.go`) and DTOs (`internal/apim/model/`) stay for master's tests only: production code does not use them.
 
 - Each migrated resource gets an `internal/apim/<resource>/` package laid out like `internal/am/<resource>/`, with the `internal/lifecycle` signatures (see `internal/apim/group/`):
   - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields;
@@ -206,9 +206,9 @@ Do **not** define a DTO for drift. Reuse the resource's existing `internal/apim/
 Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of the **spec payload**; if APIM returns a field the mapper never sets and both sides end up empty, comparison is a no-op — explicit `ignore` is optional belt-and-suspenders.
 
 Prefer resolving the expected value on the operator side over tagging, when the CRD carries
-enough information to predict it: `PortalDTO`/`APIV4DTO` navigation `visibility` is resolved by
-`WithResolvedVisibility()` in the admission drift mappers (`internal/apim/model/navigation_visibility.go`)
-and compared exactly. Apply such normalisation **in the drift mapper only** — the payload the
+enough information to predict it: navigation `visibility` is resolved in the admission drift mappers,
+by `portal.DriftDTO` for `sdk.Portal` (through `internal/apim/navigation`) and by
+`APIV4DTO.WithResolvedVisibility()` (`internal/apim/model/navigation_visibility.go`), and compared exactly. Apply such normalisation **in the drift mapper only** — the payload the
 service sends must keep the field omitted, or APIM loses its own resolution step.
 
 Add drift tags on nested `api/model/` types when the same struct is embedded in the DTO (e.g. TLS certificate fields on `application.ClientCertificate`).

@@ -26,18 +26,16 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	apimdocs "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/docs"
 	apimportal "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portal"
 	apimportallink "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallink"
 	apimportallisting "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portallisting"
 	apimportaltheme "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/portaltheme"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 )
 
 // The portal navigation payloads GKO sent before the APIM SDK, one golden file per example manifest.
-// They were written once from the hand-written mappers (UPDATE_GOLDEN=1) and are never regenerated: the
-// SDK mappers must send the same JSON, except for the differences each kind declares below.
+// They were written once from the hand-written mappers, since removed, and are never regenerated: the SDK
+// mappers must send the same JSON, except for the differences declared below.
 
 const (
 	portalExamplesDir   = "../../../examples/apim/portal"
@@ -112,24 +110,6 @@ func setPortalGoldenNamespace(obj any) {
 	}
 }
 
-// legacyPortalPayload is the body the hand-written services PUT.
-func legacyPortalPayload(obj any) any {
-	switch o := obj.(type) {
-	case *v1alpha1.PortalTheme:
-		return model.ToPortalThemeDTO(o)
-	case *v1alpha1.Portal:
-		return model.ToPortalDTO(o.Spec.Type, refs.NewNamespacedNameFromObject(o).HRID(), o.ActiveThemeHRID())
-	case *v1alpha1.PortalLink:
-		return model.ToPortalLinkDTO(o.Spec.Type, refs.NewNamespacedNameFromObject(o).HRID())
-	case *v1alpha1.PortalListing:
-		return service.ToPortalListingDTO(o)
-	case *v1alpha1.Documentation:
-		return model.ToDocumentationDTO(o)
-	}
-	Fail("unexpected object")
-	return nil
-}
-
 // sdkPortalPayload is the body the SDK packages PUT.
 func sdkPortalPayload(obj any) any {
 	switch o := obj.(type) {
@@ -187,26 +167,15 @@ func marshalPortalPayload(payload any) map[string]any {
 
 func readPortalGolden(name string) map[string]any {
 	data, err := os.ReadFile(filepath.Join(portalGoldenDir, name+".json"))
-	Expect(err).ToNot(HaveOccurred(), "missing golden file, run once with UPDATE_GOLDEN=1")
+	Expect(err).ToNot(HaveOccurred(), "missing golden file")
 	out := map[string]any{}
 	Expect(json.Unmarshal(data, &out)).To(Succeed())
 	return out
 }
 
-func writePortalGolden(name string, payload any) {
-	data, err := json.MarshalIndent(payload, "", "  ")
-	Expect(err).ToNot(HaveOccurred())
-	Expect(os.MkdirAll(portalGoldenDir, 0o755)).To(Succeed())
-	Expect(os.WriteFile(filepath.Join(portalGoldenDir, name+".json"), append(data, '\n'), 0o600)).To(Succeed())
-}
-
 var _ = Describe("Portal navigation payloads", func() {
 	It("should match the golden payloads GKO sent before the APIM SDK", func() {
 		for _, example := range loadPortalPayloadExamples() {
-			if os.Getenv("UPDATE_GOLDEN") == "1" {
-				writePortalGolden(example.name, legacyPortalPayload(example.obj))
-				continue
-			}
 			golden := withAllowedDifferences(example, readPortalGolden(example.name))
 			Expect(marshalPortalPayload(sdkPortalPayload(example.obj))).To(Equal(golden), example.name)
 		}
