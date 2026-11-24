@@ -33,7 +33,7 @@ import (
 
 var _ = Describe("Validate drift policies", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := admission.AdmissionCtrl{}
+	admissionCtrl := admission.NewAdmissionCtrl()
 
 	var original env.DriftDetection
 	var originalTimeout int

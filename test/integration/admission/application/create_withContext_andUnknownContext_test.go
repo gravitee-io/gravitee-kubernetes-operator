@@ -31,7 +31,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := application.AdmissionCtrl{}
+	admissionCtrl := application.NewAdmissionCtrl()
 
 	It("should return error on application creation with missing management context", func() {
 		fixtures := fixture.

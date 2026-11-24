@@ -32,7 +32,7 @@ import (
 var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := admission.AdmissionCtrl{}
+	admissionCtrl := admission.NewAdmissionCtrl()
 
 	It("should return error on update when changing oauth application type", func() {
 		fixtures := fixture.
