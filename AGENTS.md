@@ -60,7 +60,7 @@ Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core inte
 ### Controllers (controllers/)
 
 Three controller families, each under `controllers/`:
-- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group`, `catalogmcpserver`, `mcpproxy` and `authzpdp` run on `internal/lifecycle`, like the AM controllers; the others still have a hand-written loop
+- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group`, `catalogmcpserver`, `mcpproxy`, `authzpdp` and `authzschema` run on `internal/lifecycle`, like the AM controllers; the others still have a hand-written loop
 - **`am/`** — `amcontext`, `securitydomain` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
@@ -85,7 +85,7 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
 | `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
 | `internal/apim/sdk.go` | The APIM SDK client `apim.SDKClient` (`*sdk.APIMClient` + its context, `Probe`), built by `NewSDKClient` / `SDKFromContextRef` with the same URL, auth, org/env and cloud rules as `FromContext` |
-| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `catalogmcpserver/`, `mcpproxy/`, `authzpdp/` |
+| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `catalogmcpserver/`, `mcpproxy/`, `authzpdp/`, `authzschema/` |
 | `internal/apim/service/` | One file per resource not yet on the SDK: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
 | `internal/apim/model/` | The **wire payloads** (`*DTO`, or generated `sdk.*` types for migrated resources) sent to and received from APIM, plus their mappers |
 
@@ -93,7 +93,7 @@ Controllers and webhooks never build a URL or a payload themselves. For a resour
 
 #### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
 
-Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **CatalogMcpServer**, **McpProxy**, **AuthzPdp**.
+Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **CatalogMcpServer**, **McpProxy**, **AuthzPdp**, **AuthzSchema**.
 
 - Each migrated resource gets an `internal/apim/<resource>/` package laid out like `internal/am/<resource>/`, with the `internal/lifecycle` signatures (see `internal/apim/group/`):
   - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields;

@@ -54,10 +54,33 @@ var acceptedStates = map[string]string{
 // suffix.
 var lastReceived sync.Map
 
+// deletedPaths holds the path of every DELETE the accepting APIM answered during the current spec.
+var deletedPaths sync.Map
+
+var _ = BeforeEach(func() {
+	deletedPaths.Clear()
+})
+
+// wasDeleted tells whether the accepting APIM answered a DELETE on a path ending with suffix.
+func wasDeleted(suffix string) bool {
+	found := false
+	deletedPaths.Range(func(path, _ any) bool {
+		found = strings.HasSuffix(path.(string), suffix)
+		return !found
+	})
+	return found
+}
+
 // answering accepts every PUT, recording its body in lastReceived, and answers the state states
-// holds for its collection path suffix.
+// holds for its collection path suffix. It answers every DELETE with a 204, recording its path in
+// deletedPaths.
 func answering(states map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			deletedPaths.Store(r.URL.Path, true)
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPut {
 			for suffix, state := range states {

@@ -23,7 +23,7 @@ import (
 
 // ResolveAuthzSchemaRefs replaces the schema's target with what it sends on the wire: a scope as
 // written, a pdpRef as the routing scope of the AuthzPdp it names, no target as none.
-// ToAuthzSchemaDTO then only maps. The reconcile, the admission dry run and drift detection all
+// authzschema.ToDTO then only maps. The reconcile, the admission dry run and drift detection all
 // resolve with it. Its errors are those of ResolveAuthzTarget, and leave the target as it was.
 func ResolveAuthzSchemaRefs(ctx context.Context, schema *v1alpha1.AuthzSchema) error {
 	scope, err := ResolveAuthzTarget(ctx, schema, schema.Spec.Target)

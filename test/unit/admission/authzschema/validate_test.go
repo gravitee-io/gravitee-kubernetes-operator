@@ -23,19 +23,21 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzpdp"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/authzschema"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 var _ = Describe("Validating an AuthzSchema target", func() {
 	const ns = "travel"
 	ctx := context.Background()
-	ctrl := admission.AdmissionCtrl{}
+	ctrl := admission.NewAdmissionCtrl()
 	devCtx := refs.NamespacedName{Name: "dev-ctx"}
 
 	schema := func(target *authzpdp.Target) *v1alpha1.AuthzSchema {
@@ -68,6 +70,7 @@ var _ = Describe("Validating an AuthzSchema target", func() {
 
 	BeforeEach(func() {
 		platformCalls.Store(0)
+		platformAnswer.Store(nil)
 	})
 
 	It("warns and skips the dry run when the AuthzPdp does not exist yet", func() {
@@ -97,13 +100,84 @@ var _ = Describe("Validating an AuthzSchema target", func() {
 		cluster()
 		oldObj := schema(byRef(refs.NamespacedName{Name: "orders-eu"}))
 		oldObj.Status.ID = "7a1e0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
 		newObj := oldObj.DeepCopy()
 		newObj.Finalizers = []string{"finalizers.gravitee.io/authzschemas"}
 
-		_, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
 
 		Expect(err).ToNot(HaveOccurred())
+		// Drift is skipped too: the target cannot be compared before it resolves.
+		Expect(warnings).To(ConsistOf("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
 		Expect(platformCalls.Load()).To(BeZero())
+	})
+
+	// The dry run and drift both skip on the same reason: the API server shows a warning once.
+	It("skips the dry run and drift of a spec change while the AuthzPdp is pending", func() {
+		cluster()
+		oldObj := schema(byRef(refs.NamespacedName{Name: "orders-eu"}))
+		oldObj.Status.ID = "7a1e0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
+		newObj := oldObj.DeepCopy()
+		newObj.Spec.Name = "Travel schema v2"
+
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(HaveLen(2))
+		Expect(warnings).To(HaveEach("platform checks deferred (authz pdp not found: [travel/orders-eu])"))
+		Expect(platformCalls.Load()).To(BeZero())
+	})
+
+	// resolveRefs reads the AuthzPdp unsynced and leaves the pdpRef as written; deferDryRun reads it
+	// synced. Dry-running would map an unresolved pdpRef, which ToDTO refuses.
+	It("skips the dry run when the AuthzPdp syncs during admission", func() {
+		scheme := runtime.NewScheme()
+		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
+		reads := 0
+		k8s.RegisterClient(fake.NewClientBuilder().
+			WithScheme(scheme).
+			WithObjects(pdp(devCtx, "")).
+			WithInterceptorFuncs(interceptor.Funcs{
+				Get: func(ctx context.Context, c client.WithWatch, key client.ObjectKey, obj client.Object,
+					opts ...client.GetOption) error {
+					if err := c.Get(ctx, key, obj, opts...); err != nil {
+						return err
+					}
+					if synced, isPdp := obj.(*v1alpha1.AuthzPdp); isPdp {
+						if reads++; reads > 1 {
+							synced.Status.RoutingScope = "orders@eu"
+						}
+					}
+					return nil
+				},
+			}).
+			Build())
+
+		warnings, err := ctrl.ValidateCreate(ctx, schema(byRef(refs.NamespacedName{Name: "orders-eu"})))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("platform checks deferred (an AuthzPdp synced during admission)"))
+		Expect(platformCalls.Load()).To(BeZero())
+	})
+
+	// The AuthzPdp the stored schema targets was deleted, and the platform removed its scope from the
+	// document: comparing the old target would refuse the edit that retargets the schema.
+	It("dry-runs a retarget away from a deleted AuthzPdp and skips drift", func() {
+		cluster()
+		platformAnswer.Store(new(`{"hrid":"travel-travel-schema"}`))
+		oldObj := schema(byRef(refs.NamespacedName{Name: "orders-eu"}))
+		oldObj.Status.ID = "7a1e0c2b"
+		oldObj.Annotations = map[string]string{core.DriftDetectionAnnotation: "true"}
+		newObj := oldObj.DeepCopy()
+		newObj.Spec.Target = &authzpdp.Target{Scope: "default"}
+
+		warnings, err := ctrl.ValidateUpdate(ctx, oldObj, newObj)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ConsistOf("drift detection skipped, the previous target no longer resolves: " +
+			"authz pdp not found: [travel/orders-eu]"))
+		Expect(platformCalls.Load()).To(BeEquivalentTo(1), "the new spec is dry-run, the remote is not read")
 	})
 
 	It("refuses a pdpRef naming another kind", func() {

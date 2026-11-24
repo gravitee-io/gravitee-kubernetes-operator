@@ -15,8 +15,9 @@
 package apim
 
 import (
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimauthzschema "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/authzschema"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -29,16 +30,21 @@ var _ = Describe("Authz schema Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
-			model.AuthzSchemaDTO{},
-			model.AuthzSchemaDTO{},
+			sdk.AuthzSchema{},
+			sdk.AuthzSchema{},
 		),
 		Entry("equal struct",
 			completeAuthzSchemaDTO(),
 			completeAuthzSchemaDTO(),
 		),
 		Entry("minimal CRD, no target, against what the platform stores for it",
-			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD()),
-			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD()),
+			minimalAuthzSchemaDTO(),
+			minimalAuthzSchemaDTO(),
+		),
+		// GKO's DTO held the target as a string: left out and "" compare equal.
+		Entry("target left out against an empty target",
+			minimalAuthzSchemaDTO(),
+			withAuthzSchemaEmptyTarget(minimalAuthzSchemaDTO()),
 		),
 		Entry("hrid is identity, not payload",
 			withAuthzSchemaHRID(completeAuthzSchemaDTO(), "default-drift-full"),
@@ -72,8 +78,8 @@ var _ = Describe("Authz schema Drift detection", func() {
 			withAuthzSchemaTarget(completeAuthzSchemaDTO(), ""),
 		),
 		Entry("target added on the platform to a schema declared without one",
-			model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD()),
-			withAuthzSchemaTarget(model.ToAuthzSchemaDTO(minimalAuthzSchemaCRD()), "default"),
+			minimalAuthzSchemaDTO(),
+			withAuthzSchemaTarget(minimalAuthzSchemaDTO(), "default"),
 		),
 	)
 
@@ -84,9 +90,9 @@ var _ = Describe("Authz schema Drift detection", func() {
 	})
 })
 
-func completeAuthzSchemaDTO() model.AuthzSchemaDTO {
+func completeAuthzSchemaDTO() sdk.AuthzSchema {
 	GinkgoHelper()
-	return loadFixture[model.AuthzSchemaDTO]("authzschema_full_dto.json")
+	return loadFixture[sdk.AuthzSchema]("authzschema_full_dto.json")
 }
 
 func minimalAuthzSchemaCRD() *v1alpha1.AuthzSchema {
@@ -95,22 +101,39 @@ func minimalAuthzSchemaCRD() *v1alpha1.AuthzSchema {
 	return &fixture
 }
 
-func withAuthzSchemaHRID(dto model.AuthzSchemaDTO, hrid string) model.AuthzSchemaDTO {
-	dto.HRID = hrid
+func minimalAuthzSchemaDTO() sdk.AuthzSchema {
+	GinkgoHelper()
+	dto, err := apimauthzschema.ToDTO(minimalAuthzSchemaCRD())
+	Expect(err).ToNot(HaveOccurred())
 	return dto
 }
 
-func withAuthzSchemaName(dto model.AuthzSchemaDTO, name string) model.AuthzSchemaDTO {
+func withAuthzSchemaHRID(dto sdk.AuthzSchema, hrid string) sdk.AuthzSchema {
+	dto.Hrid = hrid
+	return dto
+}
+
+func withAuthzSchemaName(dto sdk.AuthzSchema, name string) sdk.AuthzSchema {
 	dto.Name = name
 	return dto
 }
 
-func withAuthzSchemaText(dto model.AuthzSchemaDTO, text string) model.AuthzSchemaDTO {
+func withAuthzSchemaText(dto sdk.AuthzSchema, text string) sdk.AuthzSchema {
 	dto.Schema = text
 	return dto
 }
 
-func withAuthzSchemaTarget(dto model.AuthzSchemaDTO, target string) model.AuthzSchemaDTO {
-	dto.Target = target
+// withAuthzSchemaTarget sets the target, or leaves it out when target is empty.
+func withAuthzSchemaTarget(dto sdk.AuthzSchema, target string) sdk.AuthzSchema {
+	dto.Target = nil
+	if target != "" {
+		dto.Target = new(target)
+	}
+	return dto
+}
+
+// withAuthzSchemaEmptyTarget sets the target to "", as a platform answering an empty string would.
+func withAuthzSchemaEmptyTarget(dto sdk.AuthzSchema) sdk.AuthzSchema {
+	dto.Target = new("")
 	return dto
 }

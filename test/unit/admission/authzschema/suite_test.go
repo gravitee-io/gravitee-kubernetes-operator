@@ -36,11 +36,19 @@ func TestAuthzSchemaAdmission(t *testing.T) {
 // skipped asserts none arrived.
 var platformCalls atomic.Int32
 
+// platformAnswer is the body the APIM stub answers with a 200. Left nil, the stub answers 500.
+var platformAnswer atomic.Pointer[string]
+
 // The dynamic client resolves ManagementContexts: it answers the dev-ctx context of the travel
 // namespace, pointing at the APIM stub, and 404 for anything else.
 var _ = BeforeSuite(func() {
 	platform := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		platformCalls.Add(1)
+		if body := platformAnswer.Load(); body != nil {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(*body))
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	DeferCleanup(platform.Close)
