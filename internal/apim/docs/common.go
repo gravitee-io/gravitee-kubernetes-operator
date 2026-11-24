@@ -51,15 +51,15 @@ func ToDTO(obj *v1alpha1.Documentation) (DTO, error) {
 }
 
 // CreateAPIMClient builds the SDK client of the management context of the portal or API the page belongs
-// to. A parent without a context is refused.
+// to. Without a context nothing was synced: the
+// client is nil, Delete and DryRun then do nothing, and ResolveRefs refuses an upsert first.
 func CreateAPIMClient(ctx context.Context, obj *v1alpha1.Documentation) (*apim.SDKClient, error) {
 	parent, err := navigation.ResolveParent(ctx, obj.Spec.Portal, obj.Spec.API, obj.GetNamespace())
 	if err != nil {
 		return nil, err
 	}
 	if !parent.HasContext() {
-		return nil, fmt.Errorf("documentation %s parent [%s] has no management context",
-			navigation.ParentKind(parent), parent.GetName())
+		return nil, nil
 	}
 	return apim.SDKFromContextRef(ctx, parent.ContextRef(), parent.GetNamespace())
 }

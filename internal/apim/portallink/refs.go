@@ -1,0 +1,49 @@
+// Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//         http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package portallink
+
+import (
+	"context"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
+)
+
+// ResolveRefsForAdmission checks the link's parent references and reads the parent, with the messages the
+// webhook always reported.
+func ResolveRefsForAdmission(ctx context.Context, obj *v1alpha1.PortalLink, _ string) error {
+	_, err := parentRefs(obj).Resolve(ctx, false)
+	return err
+}
+
+// ResolveRefs resolves the parent and its management context for the reconcile. A parent or a context
+// deleted first is a NotFound; a parent without a context, while deleting, means nothing was synced.
+func ResolveRefs(ctx context.Context, obj *v1alpha1.PortalLink, _ string) error {
+	parent, err := parentRefs(obj).Resolve(ctx, obj.IsBeingDeleted())
+	if err != nil || !parent.HasContext() {
+		return err
+	}
+	return navigation.ResolveContext(ctx, parent)
+}
+
+func parentRefs(obj *v1alpha1.PortalLink) navigation.ParentRefs {
+	return navigation.ParentRefs{
+		Kind:      "portal link",
+		Name:      obj.GetName(),
+		Namespace: obj.GetNamespace(),
+		Portal:    obj.Spec.Portal,
+		API:       obj.Spec.API,
+	}
+}

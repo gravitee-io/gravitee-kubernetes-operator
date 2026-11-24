@@ -48,6 +48,9 @@ func GetRemote(ctx context.Context, client *apim.SDKClient, dto sdk.PortalTheme)
 
 // GetState fetches the theme state from APIM, including the server-managed fields.
 func GetState(ctx context.Context, client *apim.SDKClient, dto sdk.PortalTheme) (sdk.PortalThemeState, error) {
+	if client == nil {
+		return sdk.PortalThemeState{}, navigation.ErrNoClient
+	}
 	resp, err := client.GetPortalThemeWithResponse(ctx, dto.Identity())
 	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body

@@ -48,6 +48,9 @@ func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error
 
 // GetState fetches the listing state from APIM, including the server-managed fields.
 func GetState(ctx context.Context, client *apim.SDKClient, dto DTO) (sdk.PortalListingState, error) {
+	if client == nil {
+		return sdk.PortalListingState{}, navigation.ErrNoClient
+	}
 	resp, err := client.GetPortalListingWithResponse(ctx, dto.PortalHrid, dto.Identity())
 	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body

@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -36,6 +37,9 @@ func Upsert(ctx context.Context, client *apim.SDKClient, dto DTO) (Response, err
 }
 
 func put(ctx context.Context, client *apim.SDKClient, dto DTO, dryRun bool) (sdk.PortalLinkState, error) {
+	if client == nil {
+		return sdk.PortalLinkState{}, navigation.ErrNoClient
+	}
 	var (
 		state    *sdk.PortalLinkState
 		httpResp func() (*http.Response, []byte)
