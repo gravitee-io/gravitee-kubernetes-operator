@@ -31,7 +31,7 @@ import (
 var _ = Describe("Validate drift", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := admission.NewAdmissionCtrl()
+	admissionCtrl := admission.AdmissionCtrl{}
 
 	It("should not drift on a simple update", func() {
 		fixtures := fixture.

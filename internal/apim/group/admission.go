@@ -43,7 +43,7 @@ func DryRun(ctx context.Context, client *apim.SDKClient, dto DTO) (*errors.Admis
 }
 
 // GetRemote fetches the group from APIM as the payload a PUT would send, for drift detection.
-// With ignore-members, it carries the CR members in place of the remote ones, so members never drift.
+// With ignore-members, the members are left out on both sides of the comparison.
 func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error) {
 	state, err := GetState(ctx, client, dto)
 	if err != nil {
@@ -51,11 +51,7 @@ func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error
 	}
 	// Spec is a shallow copy of the state: only reassign its fields, never mutate shared slices or maps.
 	remote := DTO{Group: state.Spec(), HridContainsUUID: dto.HridContainsUUID, IgnoreMembers: dto.IgnoreMembers}
-	if dto.IgnoreMembers {
-		// APIM owns the members under ignore-members: report the CR's own, so they are never compared.
-		remote.Members = dto.Members
-	}
-	return remote, nil
+	return remote.WithoutIgnoredMembers(), nil
 }
 
 // GetState fetches the group state from APIM, including the server-managed fields (id, member count).

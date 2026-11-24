@@ -38,7 +38,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	ctx := context.Background()
 
-	admissionCtrl := adm.NewAdmissionCtrl()
+	admissionCtrl := adm.AdmissionCtrl{}
 
 	DescribeTable("should return severe error with primary owner role",
 		func(roleScope group.RoleScope) {

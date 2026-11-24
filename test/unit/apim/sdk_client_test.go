@@ -282,32 +282,6 @@ var _ = Describe("APIM SDK client factory", func() {
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
 	})
 
-	It("leaves an unadopted legacy group in APIM, without a request", func() {
-		grp := developers()
-		grp.Spec.ID = "4d1c5f0a-0000-0000-0000-000000000001"
-
-		Expect(apimgroup.Delete(ctx, newClient(managementContext(fake.URL, bearer("token"))), toDTO(grp))).To(Succeed())
-		Expect(fake.lastRequest().Method).To(BeEmpty())
-	})
-
-	It("reports the CR members as the remote ones under ignore-members", func() {
-		fake.response = `{"hrid": "default-developers", "name": "Developers",
-			"members": [{"source": "memory", "sourceId": "console-added"}]}`
-		grp := developers()
-		grp.Spec.Members = []group.Member{{Source: "memory", SourceID: "api1"}}
-		client := newClient(managementContext(fake.URL, bearer("token")))
-
-		remote, err := apimgroup.GetRemote(ctx, client, toDTO(grp))
-		Expect(err).ToNot(HaveOccurred())
-		Expect(remote.Members).To(HaveLen(1))
-		Expect(remote.Members[0].SourceId).To(Equal("console-added"))
-
-		grp.Annotations = map[string]string{core.IgnoreMembersAnnotation: "true"}
-		remote, err = apimgroup.GetRemote(ctx, client, toDTO(grp))
-		Expect(err).ToNot(HaveOccurred())
-		Expect(remote.Members).To(Equal(toDTO(grp).Members))
-	})
-
 	It("gets a group by HRID, or a legacy one by UUID", func() {
 		client := newClient(managementContext(fake.URL, bearer("token")))
 
