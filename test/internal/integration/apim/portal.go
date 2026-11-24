@@ -106,3 +106,13 @@ func (a *APIM) ImportDocumentation(ctx context.Context, doc *v1alpha1.Documentat
 	_, err = apimdocs.Upsert(ctx, a.SDK, dto)
 	return err
 }
+
+// DeletePortal deletes a portal in APIM outside the operator. A portal already gone counts as deleted.
+func (a *APIM) DeletePortal(ctx context.Context, hrid string) error {
+	return apimportal.Delete(ctx, a.SDK, sdk.Portal{Hrid: hrid})
+}
+
+// DeletePortalLink deletes a link in APIM outside the operator. A link already gone counts as deleted.
+func (a *APIM) DeletePortalLink(ctx context.Context, parent navigation.Parent, hrid string) error {
+	return apimportallink.Delete(ctx, a.SDK, apimportallink.DTO{PortalLink: sdk.PortalLink{Hrid: hrid}, Parent: parent})
+}
