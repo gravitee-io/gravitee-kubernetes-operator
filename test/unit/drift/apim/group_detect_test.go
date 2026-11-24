@@ -15,19 +15,12 @@
 package apim
 
 import (
-	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func roles(api string) *sdk.GroupDefaultMemberRoles {
-	return &sdk.GroupDefaultMemberRoles{Api: &api}
-}
 
 var _ = Describe("Group Drift detection", func() {
 
@@ -36,189 +29,107 @@ var _ = Describe("Group Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
-			sdk.Group{},
-			sdk.Group{},
+			model.GroupDTO{},
+			model.GroupDTO{},
 		),
 		Entry("equal struct",
-			completeGroup(),
-			completeGroup(),
+			completeGroupDTO(),
+			completeGroupDTO(),
 		),
 		Entry("notifyMembers ignored and empty members equivalent to nil",
-			sdk.Group{
-				Hrid: "my-group",
+			model.GroupDTO{
+				ID:   "123456",
+				HRID: "my-group",
 				Name: "My Group",
 			},
-			sdk.Group{
-				Hrid:          "my-group",
+			model.GroupDTO{
+				ID:            "123456",
+				HRID:          "my-group",
 				Name:          "My Group",
-				NotifyMembers: new(true),
-				Members:       make([]sdk.GroupMember, 0),
+				NotifyMembers: true,
+				Members:       make([]model.Member, 0),
 			},
 		),
-		Entry("crd-only members ignored, paired through their identity",
-			sdk.Group{
+		Entry("crd-only members ignored",
+			model.GroupDTO{
 				Name: "My Group",
-				Members: []sdk.GroupMember{
-					{Source: "gravitee", SourceId: "admin"},
-					{Source: "memory", SourceId: "local-only"},
+				Members: []model.Member{
+					{Source: "gravitee", SourceID: "admin"},
+					{Source: "memory", SourceID: "local-only"},
 				},
 			},
-			sdk.Group{
+			model.GroupDTO{
 				Name: "My Group",
-				Members: []sdk.GroupMember{
-					{Source: "gravitee", SourceId: "admin"},
-				},
-			},
-		),
-		Entry("crd-only member listed first is ignored",
-			sdk.Group{
-				Name: "My Group",
-				Members: []sdk.GroupMember{
-					{Source: "memory", SourceId: "local-only"},
-					{Source: "gravitee", SourceId: "admin"},
-				},
-			},
-			sdk.Group{
-				Name: "My Group",
-				Members: []sdk.GroupMember{
-					{Source: "gravitee", SourceId: "admin"},
+				Members: []model.Member{
+					{Source: "gravitee", SourceID: "admin"},
 				},
 			},
 		),
 		Entry("undeclared default member roles accept any remote defaults",
-			sdk.Group{Name: "My Group"},
-			sdk.Group{Name: "My Group", DefaultMemberRoles: roles("USER")},
+			model.GroupDTO{Name: "My Group"},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{API: "USER"}},
 		),
 		Entry("empty default member roles match a group without defaults",
-			sdk.Group{Name: "My Group", DefaultMemberRoles: &sdk.GroupDefaultMemberRoles{}},
-			sdk.Group{Name: "My Group"},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{}},
+			model.GroupDTO{Name: "My Group"},
 		),
 		Entry("empty default member roles match the empty object APIM answers",
-			sdk.Group{Name: "My Group", DefaultMemberRoles: &sdk.GroupDefaultMemberRoles{}},
-			sdk.Group{Name: "My Group", DefaultMemberRoles: &sdk.GroupDefaultMemberRoles{}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{}},
 		),
 		Entry("undeclared default member roles accept the empty object APIM answers",
-			sdk.Group{Name: "My Group"},
-			sdk.Group{Name: "My Group", DefaultMemberRoles: &sdk.GroupDefaultMemberRoles{}},
+			model.GroupDTO{Name: "My Group"},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{}},
 		),
 		Entry("crd members against empty remote are ignored",
-			sdk.Group{
+			model.GroupDTO{
 				Name: "e2e-group-no-roles",
-				Members: []sdk.GroupMember{
-					{Source: "gravitee", SourceId: "admin"},
+				Members: []model.Member{
+					{Source: "gravitee", SourceID: "admin"},
 				},
 			},
-			sdk.Group{
+			model.GroupDTO{
 				Name:    "e2e-group-no-roles",
-				Members: []sdk.GroupMember{},
-			},
-		),
-		Entry("member roles defaulted to {} by the CRD match a remote member without roles",
-			sdk.Group{
-				Name:    "My Group",
-				Members: []sdk.GroupMember{{Source: "gravitee", SourceId: "admin", Roles: map[string]string{}}},
-			},
-			sdk.Group{
-				Name:    "My Group",
-				Members: []sdk.GroupMember{{Source: "gravitee", SourceId: "admin"}},
+				Members: []model.Member{},
 			},
 		),
 	)
 
-	DescribeTable("drifted values",
-		func(crd, remote sdk.Group) {
+	DescribeTable("drifted default member roles",
+		func(crd, remote model.GroupDTO) {
 			result := drift.DetectWithNamespace(crd, remote, "")
 			Expect(result.DriftDetected()).To(BeTrue())
 		},
 		Entry("changed role",
-			sdk.Group{Name: "My Group", DefaultMemberRoles: roles("USER")},
-			sdk.Group{Name: "My Group", DefaultMemberRoles: roles("OWNER")},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{API: "USER"}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{API: "OWNER"}},
 		),
 		Entry("scope added in APIM",
-			sdk.Group{Name: "My Group", DefaultMemberRoles: roles("USER")},
-			sdk.Group{Name: "My Group", DefaultMemberRoles: &sdk.GroupDefaultMemberRoles{
-				Api: new("USER"), Application: new("USER"),
-			}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{API: "USER"}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{API: "USER", Application: "USER"}},
 		),
 		Entry("removed in APIM",
-			sdk.Group{Name: "My Group", DefaultMemberRoles: roles("USER")},
-			sdk.Group{Name: "My Group"},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{API: "USER"}},
+			model.GroupDTO{Name: "My Group"},
 		),
 		Entry("removed in APIM, which answers an empty object",
-			sdk.Group{Name: "My Group", DefaultMemberRoles: roles("USER")},
-			sdk.Group{Name: "My Group", DefaultMemberRoles: &sdk.GroupDefaultMemberRoles{}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{API: "USER"}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{}},
 		),
 		Entry("added in APIM while the CRD declares none",
-			sdk.Group{Name: "My Group", DefaultMemberRoles: &sdk.GroupDefaultMemberRoles{}},
-			sdk.Group{Name: "My Group", DefaultMemberRoles: roles("USER")},
-		),
-		Entry("role of a shared member changed in APIM",
-			sdk.Group{
-				Name:    "My Group",
-				Members: []sdk.GroupMember{{Source: "gravitee", SourceId: "admin", Roles: map[string]string{"API": "USER"}}},
-			},
-			sdk.Group{
-				Name:    "My Group",
-				Members: []sdk.GroupMember{{Source: "gravitee", SourceId: "admin", Roles: map[string]string{"API": "OWNER"}}},
-			},
-		),
-		Entry("member removed in APIM is not hidden by a crd-only member",
-			sdk.Group{
-				Name: "My Group",
-				Members: []sdk.GroupMember{
-					{Source: "gravitee", SourceId: "admin", Roles: map[string]string{"API": "USER"}},
-				},
-			},
-			sdk.Group{
-				Name: "My Group",
-				Members: []sdk.GroupMember{
-					{Source: "gravitee", SourceId: "admin", Roles: map[string]string{"API": "OWNER"}},
-					{Source: "memory", SourceId: "remote-only"},
-				},
-			},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{}},
+			model.GroupDTO{Name: "My Group", DefaultMemberRoles: &group.DefaultMemberRoles{API: "USER"}},
 		),
 	)
 
-	Describe("State turned into the payload type by Spec()", func() {
-		It("matches the CRD it was synced from, state-only fields dropped", func() {
-			crd, err := model.ToGroup(&v1alpha1.Group{
-				ObjectMeta: metav1.ObjectMeta{Name: "developers", Namespace: "default"},
-				Spec: v1alpha1.GroupSpec{Type: &group.Type{
-					HRID:          "default-developers",
-					Name:          "Developers",
-					NotifyMembers: true,
-					Members: []group.Member{{
-						Source: "memory", SourceID: "api1",
-						Roles: map[group.RoleScope]string{group.APIRoleScope: "OWNER"},
-					}},
-				}},
-			})
-			Expect(err).ToNot(HaveOccurred())
-
-			state := parseJSON[sdk.GroupState](`{
-				"id": "4d1c5f0a-0000-0000-0000-000000000001",
-				"organizationId": "DEFAULT",
-				"environmentId": "DEFAULT",
-				"hrid": "default-developers",
-				"name": "Developers",
-				"notifyMembers": true,
-				"memberCount": 1,
-				"errors": {"warning": ["something defaulted"]},
-				"defaultMemberRoles": {},
-				"members": [{"source": "memory", "sourceId": "api1", "roles": {"API": "OWNER"}}]
-			}`)
-			expectNoDrift(drift.DetectWithNamespace(crd, state.Spec(), ""))
-		})
-	})
-
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
-			expectedEquivalentNotHavingAnyZeroValue(completeGroup(), completeGroup())
+			expectedEquivalentNotHavingAnyZeroValue(completeGroupDTO(), completeGroupDTO())
 		})
 	})
 })
 
-func completeGroup() sdk.Group {
+func completeGroupDTO() model.GroupDTO {
 	GinkgoHelper()
-	return loadFixture[sdk.Group]("group_dto.json")
+	return loadFixture[model.GroupDTO]("group_dto.json")
 }

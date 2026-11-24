@@ -15,17 +15,16 @@
 package service
 
 import (
-	"context"
-	"net/http"
+	"strconv"
 
-	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	httputil "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
@@ -49,67 +48,51 @@ func (svc *Env) CreateCategory(category *model.Category) error {
 	return svc.HTTP.Post(url.String(), category, category)
 }
 
-func (svc *Env) DryRunImportGroup(ctx context.Context, grp *v1alpha1.Group) (*group.Status, error) {
-	return svc.importGroup(ctx, grp, true)
+func (svc *Env) DryRunImportGroup(grp *v1alpha1.Group) (*group.Status, error) {
+	return svc.importGroup(grp, true)
 }
 
-func (svc *Env) ImportGroup(ctx context.Context, grp *v1alpha1.Group) (*group.Status, error) {
-	return svc.importGroup(ctx, grp, false)
+func (svc *Env) ImportGroup(grp *v1alpha1.Group) (*group.Status, error) {
+	return svc.importGroup(grp, false)
 }
 
-func (svc *Env) importGroup(ctx context.Context, grp *v1alpha1.Group, dryRun bool) (*group.Status, error) {
-	body, err := model.ToGroup(grp)
-	if err != nil {
-		return nil, err
-	}
+func (svc *Env) importGroup(grp *v1alpha1.Group, dryRun bool) (*group.Status, error) {
+	url := svc.AutomationTarget("groups").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	params := &sdk.UpsertGroupParams{DryRun: &dryRun}
+	dto := model.ToGroupDTO(*grp.Spec.Type)
 
-	// A group created before the Automation API is addressed by its UUID, sent as the hrid.
 	setHridWithUUID := grp.Spec.ID != "" && !k8s.IsAutomationAPIManaged(grp)
 	if setHridWithUUID {
-		body.Hrid = grp.Spec.ID
-		params.HridContainsUUID = new(true)
+		dto.HRID = grp.Spec.ID
+		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
 	}
 
 	if k8s.HasTrueAnnotation(grp, core.IgnoreMembersAnnotation) {
-		params.IgnoreMembers = new(true)
+		url = url.WithQueryParam("ignoreMembers", env.TrueString)
 	}
 
-	client, err := svc.SDK()
-	if err != nil {
+	state := new(model.GroupState)
+	if err := svc.HTTP.Put(url.String(), dto, state); err != nil {
 		return nil, err
-	}
-
-	resp, err := client.UpsertGroupWithResponse(ctx, params, body)
-	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
-		return resp.HTTPResponse, resp.Body
-	}); err != nil {
-		return nil, err
-	}
-	if resp.JSON200 == nil {
-		return nil, errors.UnexpectedSDKResponse(resp.HTTPResponse)
 	}
 
 	if !setHridWithUUID {
 		k8s.AddAutomationAPIManagedCondition(grp)
 	}
 
-	return model.ToGroupStatus(*resp.JSON200), nil
+	return &group.Status{
+		ID:      state.ID,
+		Members: state.MemberCount,
+		Errors:  state.Errors,
+	}, nil
 }
 
-func (svc *Env) DeleteGroup(ctx context.Context, grp *v1alpha1.Group) error {
+func (svc *Env) DeleteGroup(grp *v1alpha1.Group) error {
 	id, hridContainsUUID := GetGroupID(grp)
-
-	client, err := svc.SDK()
-	if err != nil {
-		return err
-	}
-
-	resp, err := client.DeleteGroupWithResponse(ctx, id, &sdk.DeleteGroupParams{HridContainsUUID: &hridContainsUUID})
-	return errors.FromSDKResponse(err, func() (*http.Response, []byte) {
-		return resp.HTTPResponse, resp.Body
-	})
+	url := svc.AutomationTarget("groups").
+		WithPath(id).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(hridContainsUUID))
+	return svc.HTTP.Delete(url.String(), nil)
 }
 
 func GetGroupID(grp *v1alpha1.Group) (string, bool) {
@@ -128,29 +111,22 @@ func (svc *Env) Get() (*model.Env, error) {
 }
 
 // GetGroupByHRID gets a group by HRID from the Automation API.
-func (svc *Env) GetGroupByHRID(ctx context.Context, hrid string) (sdk.GroupState, error) {
-	return svc.getGroup(ctx, hrid, false)
+func (svc *Env) GetGroupByHRID(hrid string) (model.GroupState, error) {
+	url := svc.AutomationTarget("groups").WithPath(hrid)
+	return svc.getGroup(url)
 }
 
 // GetGroupWithUUID gets a pre-Automation group by UUID from the Automation API.
-func (svc *Env) GetGroupWithUUID(ctx context.Context, id string) (sdk.GroupState, error) {
-	return svc.getGroup(ctx, id, true)
+func (svc *Env) GetGroupWithUUID(id string) (model.GroupState, error) {
+	url := svc.AutomationTarget("groups").WithPath(id).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	return svc.getGroup(url)
 }
 
-func (svc *Env) getGroup(ctx context.Context, hrid string, hridContainsUUID bool) (sdk.GroupState, error) {
-	client, err := svc.SDK()
-	if err != nil {
-		return sdk.GroupState{}, err
+func (svc *Env) getGroup(url *httputil.URL) (model.GroupState, error) {
+	grp := new(model.GroupState)
+	if err := svc.HTTP.Get(url.String(), grp); err != nil {
+		return model.GroupState{}, err
 	}
-
-	resp, err := client.GetGroupWithResponse(ctx, hrid, &sdk.GetGroupParams{HridContainsUUID: &hridContainsUUID})
-	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
-		return resp.HTTPResponse, resp.Body
-	}); err != nil {
-		return sdk.GroupState{}, err
-	}
-	if resp.JSON200 == nil {
-		return sdk.GroupState{}, errors.UnexpectedSDKResponse(resp.HTTPResponse)
-	}
-	return *resp.JSON200, nil
+	return *grp, nil
 }

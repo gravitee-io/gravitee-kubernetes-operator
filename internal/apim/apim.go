@@ -17,7 +17,6 @@ package apim
 import (
 	"context"
 
-	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -90,7 +89,6 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		HTTP: newClient,
 		URLs: urls,
 	}
-	c.SetSDKBuilder(func() (*sdk.APIMClient, error) { return newSDKClient(context) })
 
 	return &APIM{
 		APIs:              service.NewAPIs(c),
