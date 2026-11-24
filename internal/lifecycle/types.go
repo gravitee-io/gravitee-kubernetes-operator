@@ -62,9 +62,6 @@ type RefResolverFunc[T any] func(ctx context.Context, obj T, namespace string) e
 // Severe errors reject; warnings admit.
 type AdmissionCheckFunc[T core.ContextAwareObject] func(ctx context.Context, obj T) *gerrors.AdmissionErrors
 
-// PayloadChangedFunc reports whether an update changes the payload the controller sends.
-type PayloadChangedFunc[T core.ContextAwareObject] func(oldValue, newValue T) bool
-
 // ImmutableFieldsFunc returns severe errors when frozen spec fields changed between old and new.
 type ImmutableFieldsFunc[T core.ContextAwareObject] func(oldValue, newValue T) *gerrors.AdmissionErrors
 
@@ -140,13 +137,8 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 	// Required. Use the same func as ResourceLifecycle.ToDTO.
 	ToDTO ToDTOFunc[T, D]
 
-	// DryRun runs on create, and on an update PayloadChanged reports, after ToDTO, before PostCheck. Required.
+	// DryRun runs on create, and on an update that changes the spec, after ToDTO, before PostCheck. Required.
 	DryRun DryRunFunc[C, D]
-
-	// PayloadChanged reports whether an update changes what the controller sends, so admission dry-runs it.
-	// It sees the objects before template compile. Nil means a spec hash change; set it when the
-	// reconcile predicate also reacts to something outside the spec, such as an annotation.
-	PayloadChanged PayloadChangedFunc[T]
 
 	// PostCheck runs on create/update after DryRun, before drift. Nil skips.
 	PostCheck AdmissionCheckFunc[T]
