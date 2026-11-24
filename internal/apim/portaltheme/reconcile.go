@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -36,6 +37,9 @@ func Upsert(ctx context.Context, client *apim.SDKClient, dto sdk.PortalTheme) (R
 }
 
 func put(ctx context.Context, client *apim.SDKClient, dto sdk.PortalTheme, dryRun bool) (sdk.PortalThemeState, error) {
+	if client == nil {
+		return sdk.PortalThemeState{}, navigation.ErrNoClient
+	}
 	resp, err := client.UpsertPortalThemeWithResponse(ctx, &sdk.UpsertPortalThemeParams{DryRun: &dryRun}, dto)
 	if err = errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body

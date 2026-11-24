@@ -48,6 +48,9 @@ func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error
 
 // GetState fetches the page state from APIM, including the server-managed fields.
 func GetState(ctx context.Context, client *apim.SDKClient, dto DTO) (sdk.DocumentationState, error) {
+	if client == nil {
+		return sdk.DocumentationState{}, navigation.ErrNoClient
+	}
 	var (
 		state    *sdk.DocumentationState
 		httpResp func() (*http.Response, []byte)

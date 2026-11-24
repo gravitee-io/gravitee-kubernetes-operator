@@ -55,7 +55,12 @@ func DriftDTO(dto sdk.Portal) sdk.Portal {
 }
 
 // CreateAPIMClient builds the SDK client of the management context the portal references.
+// Without a context nothing was synced: the client is nil, Delete and DryRun then do nothing, and
+// ResolveRefs refuses an upsert first.
 func CreateAPIMClient(ctx context.Context, obj *v1alpha1.Portal) (*apim.SDKClient, error) {
+	if !obj.HasContext() {
+		return nil, nil
+	}
 	return apim.SDKFromContextRef(ctx, obj.ContextRef(), obj.GetNamespace())
 }
 
