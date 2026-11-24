@@ -33,8 +33,10 @@
 // The optional arguments after the colon are passed to the equivalence function via
 // [DriftContext.FuncArgs]. Property names in the output tree come from the json struct
 // tag (or the lower-cased field name when no json tag is present). Embedded structs are
-// flattened into their parent. Pointer fields are dereferenced before the equivalence
-// kind is resolved.
+// flattened into their parent. A generated SDK union (a struct of variant pointers tagged
+// `oneof`) is compared in the flat shape the wire carries: its type, then every property of
+// every variant, each once. Pointer fields are dereferenced before the equivalence kind is
+// resolved.
 //
 // [DetectWithNamespace] walks two values of the same struct type recursively and builds a
 // [Result] tree. Leaf nodes that are inequivalent are formatted as pseudo-YAML by

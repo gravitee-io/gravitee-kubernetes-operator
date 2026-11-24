@@ -81,6 +81,7 @@ func detectStruct(crd any, remote any, this *Result, ordered bool) {
 	if bothNil {
 		return
 	}
+	t, crd, remote = asWireShape(t, crd, remote)
 
 	for i := 0; i < t.NumField(); i++ {
 		// get info to find an Equivalence func

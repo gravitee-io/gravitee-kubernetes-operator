@@ -85,7 +85,7 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
 | `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
 | `internal/apim/sdk.go` | The APIM SDK client `apim.SDKClient` (`*sdk.APIMClient` + its context, `Probe`), built by `NewSDKClient` / `SDKFromContextRef` with the same URL, auth, org/env and cloud rules as `FromContext` |
-| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/` |
+| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `catalogmcpserver/`, `mcpproxy/` |
 | `internal/apim/service/` | One file per resource not yet on the SDK: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
 | `internal/apim/model/` | The **wire payloads** (`*DTO`, or generated `sdk.*` types for migrated resources) sent to and received from APIM, plus their mappers |
 
@@ -93,7 +93,7 @@ Controllers and webhooks never build a URL or a payload themselves. For a resour
 
 #### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
 
-Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **CatalogMcpServer**.
+Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **CatalogMcpServer**, **McpProxy**.
 
 - Each migrated resource gets an `internal/apim/<resource>/` package laid out like `internal/am/<resource>/`, with the `internal/lifecycle` signatures (see `internal/apim/group/`):
   - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields;
@@ -105,7 +105,7 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
   3. tests: unit in `test/unit/`, APIM behaviour in `test/integration/`. APIM stays off envtest until every resource is migrated;
   4. the hand-written DTO, mapper and service methods deleted.
 - Wrap every SDK call in `errors.FromSDKResponse(err, func() (*http.Response, []byte) { return resp.HTTPResponse, resp.Body })` (keep the closure: the SDK returns no response on a transport error) and treat a nil `JSON200` as `errors.UnexpectedSDKResponse`.
-- Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). A CRD that nests each union variant under its own key (`header: {name, value}`) cannot round-trip into the SDK's flat `OneOf*` types: map it field by field and set the variant's `Type`, which drift compares (see `internal/apim/catalogmcpserver/`). **Never call `WithDefaults()` on the CRD side.**
+- Payloads are the SDK's PUT types (`sdk.Group`), mapped from the CRD with `mapper.MapViaJSON` (error-returning). A CRD that nests each union variant under its own key (`header: {name, value}`) cannot round-trip into the SDK's flat `OneOf*` types: map it field by field and set the variant's `Type` (see `internal/apim/catalogmcpserver/`). Drift compares a union in the flat shape the wire carries, its type taken from the `oneof` tag of the variant set and each variant property once, so reports and admission read like the old flat DTOs. **Never call `WithDefaults()` on the CRD side.**
 - Drift compares the PUT type on both sides: turn the GET state into it first with its `Spec()` (`GroupState.Spec()` returns the `sdk.Group` a PUT sends; every `XxxState` has one). Comparing `GroupState` with `Group` panics. `Spec()` is a shallow copy: reassign its fields, never mutate shared slices or maps. The SDK types carry their own `drift:` tags; resource types and list items with an identity implement `store.Identifiable`, which `ignore-only` pairs on.
 - Keep GKO's HTTP client only for calls the SDK spec does not declare yet (e.g. a `hridContainsUUID` it lacks).
 
