@@ -207,5 +207,23 @@ var _ = Describe("Portal navigation reference resolution", func() {
 			Entry("a v2 API", nil, &refs.NamespacedName{Name: "orders", Kind: "ApiDefinition"},
 				"apiRef [orders] must be of kind ApiV4Definition (next-gen portal only supports those)"),
 		)
+
+		DescribeTable("release the finalizer of parent refs that fail the shape check while deleting",
+			func(portal, api *refs.NamespacedName, message string) {
+				portalCluster()
+				linkErr := apimportallink.ResolveRefs(ctx, deleting(refLink(portal, api)), "default")
+				Expect(linkErr).To(MatchError(ContainSubstring(message)))
+				Expect(apierrors.IsNotFound(linkErr)).To(BeTrue())
+				doc := refDoc(portal)
+				doc.Spec.API = api
+				docErr := apimdocs.ResolveRefs(ctx, deleting(doc), "default")
+				Expect(docErr).To(MatchError(ContainSubstring(message)))
+				Expect(apierrors.IsNotFound(docErr)).To(BeTrue())
+			},
+			Entry("both", mainPortalRef(), &refs.NamespacedName{Name: "orders"}, "but both were provided"),
+			Entry("neither", nil, nil, "but neither was provided"),
+			Entry("a v2 API", nil, &refs.NamespacedName{Name: "orders", Kind: "ApiDefinition"},
+				"must be of kind ApiV4Definition"),
+		)
 	})
 })

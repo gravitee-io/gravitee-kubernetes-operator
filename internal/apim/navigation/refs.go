@@ -19,6 +19,9 @@ import (
 	"errors"
 	"fmt"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -39,8 +42,17 @@ type ParentRefs struct {
 // parent and checks it has a management context, with the messages the webhooks always reported. A
 // parent the cluster does not hold stays a NotFound. A parent without a context is returned without
 // error while deleting: nothing was ever synced.
+//
+// While deleting, refs that fail the shape check are a NotFound too: they name no parent GKO could have
+// synced the resource under, so the lifecycle releases the finalizer instead of retrying forever.
 func (r ParentRefs) Resolve(ctx context.Context, deleting bool) (core.ContextAwareObject, error) {
 	if err := r.checkShape(); err != nil {
+		if deleting {
+			return nil, gerrors.NewRefNotFoundError(
+				fmt.Sprintf("%s [%s]: %v, nothing to delete in APIM", r.Kind, r.Name, err),
+				apierrors.NewNotFound(schema.GroupResource{Group: core.CRDGroup}, r.Name),
+			)
+		}
 		return nil, err
 	}
 	if r.API != nil {
