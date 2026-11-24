@@ -60,7 +60,7 @@ Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core inte
 ### Controllers (controllers/)
 
 Three controller families, each under `controllers/`:
-- **`apim/`** — 9 controllers (apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription). `group` and apidefinition v4 run on `internal/lifecycle`, like the AM controllers; the others (apidefinition v2 included) still have a hand-written loop
+- **`apim/`** — controllers for apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription, and the portal navigation kinds (portaltheme, portal, portallink, portallisting, docs). `group`, apidefinition v4 and the five portal navigation controllers run on `internal/lifecycle`, like the AM controllers; the others (apidefinition v2 included) still have a hand-written loop
 - **`am/`** — `amcontext`, `securitydomain` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
@@ -85,7 +85,8 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
 | `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
 | `internal/apim/sdk.go` | The APIM SDK client `apim.SDKClient` (`*sdk.APIMClient` + its context, `Probe`), built by `NewSDKClient` / `SDKFromContextRef` with the same URL, auth, org/env and cloud rules as `FromContext` |
-| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `apiv4/` |
+| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `apiv4/`, `portaltheme/`, `portal/`, `portallink/`, `portallisting/`, `docs/` |
+| `internal/apim/navigation/` | Shared by the portal navigation packages: APIM's navigation visibility rule (v4 pages use it too), the portal-or-API `Parent` of a PortalLink or Documentation (`ParentRefs.Resolve` checks and reads it with the webhook's messages), the dry-run findings |
 | `internal/apim/service/` | One file per resource not yet on the SDK: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
 | `internal/apim/model/` | The **wire payloads** (`*DTO`, or generated `sdk.*` types for migrated resources) sent to and received from APIM, plus their mappers |
 
@@ -113,7 +114,9 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
 - A migration keeps every existing test as on master: only the edits the compiler forces (a removed function replaced by its successor, `NewAdmissionCtrl()`, the test manager wiring). A test that fails after the move is fixed in production code. To keep what users see:
   - `AdmissionLifecycle.UnprefixedResolveErrors` reports reference and context errors without the lifecycle's `could not resolve …:` prefix (ApiV4Definition);
   - `ResourceLifecycle.Status` sets the status fields the lifecycle does not manage, such as the deprecated `processingStatus` (`apiv4.SetProcessingStatus`);
-  - checks a resource ran before its references on master run in its own webhook before the lifecycle (the v4 API type and subscribed plans in `internal/admission/api/v4/ctrl.go`).
+  - checks a resource ran before its references on master run in its own webhook before the lifecycle (the v4 API type and subscribed plans in `internal/admission/api/v4/ctrl.go`; the portal navigation kinds' parent changes and Portal's deprecated navigation);
+  - a webhook whose drift did not resolve the previous version on master leaves `AdmissionLifecycle.ResolveRefs` unset and checks its references in the admission client factory (`internal/admission/portallink/ctrl.go`), and wraps its dry run in `navigation.FindingsOnError` to keep a failing dry run's own message.
+- The portal navigation kinds change no existing test at all, `test/internal/` included: each controller and webhook keeps its lifecycle in a package variable, so `AdmissionCtrl{}` and the `Reconciler` wiring of `main.go` and the test manager stay as on master, and their hand-written APIM client stays for the existing tests (see [APIM SDK](#apim-sdk-gravitee-automation-sdkapim-sdk)).
 
 ### AM client (internal/am/)
 
