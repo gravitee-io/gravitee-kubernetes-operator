@@ -282,15 +282,12 @@ var _ = Describe("APIM SDK client factory", func() {
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
 	})
 
-	It("deletes a legacy group known only by its spec id, by that UUID", func() {
+	It("leaves an unadopted legacy group in APIM, without a request", func() {
 		grp := developers()
 		grp.Spec.ID = "4d1c5f0a-0000-0000-0000-000000000001"
 
 		Expect(apimgroup.Delete(ctx, newClient(managementContext(fake.URL, bearer("token"))), toDTO(grp))).To(Succeed())
-		req := fake.lastRequest()
-		Expect(req.Method).To(Equal(http.MethodDelete))
-		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/" + grp.Spec.ID))
-		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
+		Expect(fake.lastRequest().Method).To(BeEmpty())
 	})
 
 	It("reports the CR members as the remote ones under ignore-members", func() {
