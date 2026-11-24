@@ -59,6 +59,7 @@ type Type struct {
 	Structure *NavigationStructure `json:"structure,omitempty"`
 	// Deprecated: use structure.topNavbar instead, the two cannot be set at the same time.
 	// Still synced for portals created before navigation was grouped by area.
+	// The order field of these entries is not sent: APIM orders them by their position in the list.
 	// +kubebuilder:validation:Optional
 	// +listType=map
 	// +listMapKey=path
