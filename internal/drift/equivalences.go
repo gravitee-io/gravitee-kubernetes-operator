@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gravitee-io/gravitee-automation-sdk/common/pkg/store"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/dates"
 )
 
@@ -191,7 +190,7 @@ const (
 )
 
 // IgnoreOnlyArgs ignores items present only on one side, chosen by ctx.FuncArgs[0]
-// ("remote" or "crd"). Items must implement Keyed or store.Identifiable, or be strings.
+// ("remote" or "crd"). Items must implement Keyed.
 // If FuncArgs contain "strip-ns", keys are compared after stripping
 // the namespace prefix and remaining membership is compared as a set.
 // If FuncArgs contain "expired" and/or "scheduled", items implementing
@@ -418,14 +417,10 @@ func asKeyed(items any) ([]Keyed, bool) {
 	return keyed, true
 }
 
-// toKeyed returns item as Keyed; a store.Identifiable item (the generated SDK models) is keyed by its
-// Identity, and a string, or a named string type, is its own key.
+// toKeyed returns item as Keyed; a string, or a named string type, is its own key.
 func toKeyed(item any) (Keyed, bool) {
 	if keyed, ok := item.(Keyed); ok {
 		return keyed, true
-	}
-	if identifiable, ok := item.(store.Identifiable); ok {
-		return keyedString(identifiable.Identity()), true
 	}
 	if v := reflect.ValueOf(item); v.Kind() == reflect.String {
 		return keyedString(v.String()), true
