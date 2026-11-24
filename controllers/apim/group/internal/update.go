@@ -18,25 +18,30 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
-	client, err := apimgroup.CreateAPIMClient(ctx, group)
+	ns := group.Namespace
+
+	apim, err := apim.FromContextRef(ctx, group.ContextRef(), ns)
 	if err != nil {
 		return err
 	}
 
-	dto, err := apimgroup.ToDTO(group)
-	if err != nil {
-		return err
-	}
+	group.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(group))
 
-	resp, err := apimgroup.Upsert(ctx, client, dto)
+	status, err := apim.Env.ImportGroup(ctx, group)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
-	return apimgroup.UpdateStatus(ctx, group, resp)
+	group.Status.ID = status.ID
+	group.Status.OrgID = apim.Context.GetOrgID()
+	group.Status.EnvID = apim.Context.GetEnvID()
+	group.Status.Members = status.Members
+
+	return nil
 }

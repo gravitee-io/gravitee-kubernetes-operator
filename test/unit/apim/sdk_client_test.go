@@ -32,8 +32,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	apimgroup "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
@@ -111,13 +111,6 @@ func bearer(token string) *management.Auth {
 	return &management.Auth{BearerToken: token}
 }
 
-func toDTO(grp *v1alpha1.Group) apimgroup.DTO {
-	GinkgoHelper()
-	dto, err := apimgroup.ToDTO(grp)
-	Expect(err).ToNot(HaveOccurred())
-	return dto
-}
-
 func developers() *v1alpha1.Group {
 	return &v1alpha1.Group{
 		ObjectMeta: metav1.ObjectMeta{Name: "developers", Namespace: "default"},
@@ -149,20 +142,15 @@ var _ = Describe("APIM SDK client factory", func() {
 		DeferCleanup(fake.Close)
 	})
 
-	newClient := func(mctx *v1alpha1.ManagementContext) *apim.SDKClient {
+	importGroup := func(mctx *v1alpha1.ManagementContext, grp *v1alpha1.Group) (*group.Status, error) {
 		GinkgoHelper()
-		client, err := apim.NewSDKClient(ctx, mctx)
+		client, err := apim.FromContext(ctx, mctx, "default")
 		Expect(err).ToNot(HaveOccurred())
-		return client
-	}
-
-	upsertGroup := func(mctx *v1alpha1.ManagementContext, grp *v1alpha1.Group) (apimgroup.Response, error) {
-		GinkgoHelper()
-		return apimgroup.Upsert(ctx, newClient(mctx), toDTO(grp))
+		return client.Env.ImportGroup(ctx, grp)
 	}
 
 	It("targets the context's automation URL, organization and environment with its bearer token", func() {
-		resp, err := upsertGroup(managementContext(fake.URL, bearer("token")), developers())
+		status, err := importGroup(managementContext(fake.URL, bearer("token")), developers())
 		Expect(err).ToNot(HaveOccurred())
 
 		req := fake.lastRequest()
@@ -174,15 +162,13 @@ var _ = Describe("APIM SDK client factory", func() {
 		Expect(req.Body).To(HaveKeyWithValue("hrid", "default-developers"))
 		Expect(req.Body).To(HaveKeyWithValue("name", "Developers"))
 
-		Expect(*resp.State.Id).To(Equal("4d1c5f0a-0000-0000-0000-000000000001"))
-		Expect(resp.GetOrgID()).To(Equal("org1"))
-		Expect(resp.GetEnvID()).To(Equal("env1"))
-		Expect(resp.HridContainsUUID).To(BeFalse())
+		Expect(status.ID).To(Equal("4d1c5f0a-0000-0000-0000-000000000001"))
+		Expect(status.Members).To(Equal(uint(2)))
 	})
 
 	It("sends basic credentials when the context has no bearer token", func() {
 		auth := &management.Auth{Credentials: &management.BasicAuth{Username: "admin", Password: "secret"}}
-		_, err := upsertGroup(managementContext(fake.URL, auth), developers())
+		_, err := importGroup(managementContext(fake.URL, auth), developers())
 		Expect(err).ToNot(HaveOccurred())
 
 		basic := "Basic " + base64.StdEncoding.EncodeToString([]byte("admin:secret"))
@@ -191,7 +177,7 @@ var _ = Describe("APIM SDK client factory", func() {
 
 	It("sends only the bearer token when secret injection also left empty credentials", func() {
 		auth := &management.Auth{BearerToken: "token", Credentials: &management.BasicAuth{}}
-		_, err := upsertGroup(managementContext(fake.URL, auth), developers())
+		_, err := importGroup(managementContext(fake.URL, auth), developers())
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fake.lastRequest().Authorization).To(Equal("Bearer token"))
 	})
@@ -199,19 +185,18 @@ var _ = Describe("APIM SDK client factory", func() {
 	It("uses the context path instead of the automation base path", func() {
 		mctx := managementContext(fake.URL, bearer("token"))
 		mctx.Spec.Path = new("/custom")
-		_, err := upsertGroup(mctx, developers())
+		_, err := importGroup(mctx, developers())
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fake.lastRequest().Path).To(Equal("/custom/organizations/org1/environments/env1/groups"))
 	})
 
-	It("fails only the SDK client, not the APIM client, for a context with no usable auth", func() {
-		mctx := managementContext(fake.URL, &management.Auth{})
-
-		_, err := apim.FromContext(ctx, mctx, "default")
+	It("does not fail the context for resources that do not use the SDK when it has no usable auth", func() {
+		client, err := apim.FromContext(ctx, managementContext(fake.URL, &management.Auth{}), "default")
 		Expect(err).ToNot(HaveOccurred())
 
-		_, err = apim.NewSDKClient(ctx, mctx)
-		Expect(err).To(MatchError(ContainSubstring("APIM SDK client")))
+		_, err = client.Env.ImportGroup(ctx, developers())
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("APIM SDK client"))
 	})
 
 	It("reads org and env from a cloud token and uses the cloud automation path", func() {
@@ -220,7 +205,7 @@ var _ = Describe("APIM SDK client factory", func() {
 		mctx.Spec.Cloud = &management.Cloud{Token: token}
 		mctx.Spec.OrgID, mctx.Spec.EnvID = "cloud-org", "cloud-env"
 
-		_, err := upsertGroup(mctx, developers())
+		_, err := importGroup(mctx, developers())
 		Expect(err).ToNot(HaveOccurred())
 
 		req := fake.lastRequest()
@@ -233,69 +218,84 @@ var _ = Describe("APIM SDK client factory", func() {
 		mctx := managementContext(fake.URL, auth)
 		mctx.Spec.Cloud = &management.Cloud{}
 
-		_, err := upsertGroup(mctx, developers())
+		_, err := importGroup(mctx, developers())
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fake.lastRequest().Authorization).To(HavePrefix("Basic "))
 	})
 
 	It("addresses a group created before the Automation API by its UUID", func() {
 		grp := developers()
-		// a legacy group carries its UUID in status
+		// a legacy group carries its UUID in status; PopulateIDs copies it into the spec
 		grp.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+		grp.Spec.ID = grp.Status.ID
 
-		resp, err := upsertGroup(managementContext(fake.URL, bearer("token")), grp)
+		_, err := importGroup(managementContext(fake.URL, bearer("token")), grp)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(resp.HridContainsUUID).To(BeTrue())
 
 		req := fake.lastRequest()
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
-		Expect(req.Body).To(HaveKeyWithValue("hrid", grp.Status.ID))
+		Expect(req.Body).To(HaveKeyWithValue("hrid", grp.Spec.ID))
+		Expect(k8s.IsAutomationAPIManaged(grp)).To(BeFalse())
+	})
+
+	It("marks a group synced by HRID as Automation API managed", func() {
+		grp := developers()
+		_, err := importGroup(managementContext(fake.URL, bearer("token")), grp)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(k8s.IsAutomationAPIManaged(grp)).To(BeTrue())
 	})
 
 	It("asks APIM to leave members alone when the ignore-members annotation is set", func() {
 		grp := developers()
 		grp.Annotations = map[string]string{core.IgnoreMembersAnnotation: "true"}
-		_, err := upsertGroup(managementContext(fake.URL, bearer("token")), grp)
+		_, err := importGroup(managementContext(fake.URL, bearer("token")), grp)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fake.lastRequest().Query.Get("ignoreMembers")).To(Equal("true"))
 	})
 
 	It("returns the dry run errors APIM reports", func() {
-		mctx := managementContext(fake.URL, bearer("token"))
-		errs, err := apimgroup.DryRun(ctx, newClient(mctx), toDTO(developers()))
+		client, err := apim.FromContext(ctx, managementContext(fake.URL, bearer("token")), "default")
+		Expect(err).ToNot(HaveOccurred())
+
+		status, err := client.Env.DryRunImportGroup(ctx, developers())
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fake.lastRequest().Query.Get("dryRun")).To(Equal("true"))
-		Expect(errs.Severe).To(ConsistOf(MatchError("severe one")))
-		Expect(errs.Warning).To(ConsistOf(MatchError("warning one")))
+		Expect(status.Errors.Severe).To(ConsistOf("severe one"))
+		Expect(status.Errors.Warning).To(ConsistOf("warning one"))
 	})
 
-	It("deletes a legacy group by UUID and treats a group already gone as deleted", func() {
+	It("deletes a legacy group by UUID and reports a missing one as not found", func() {
 		grp := developers()
+		// a legacy group carries its UUID in status; PopulateIDs copies it into the spec
 		grp.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
+		grp.Spec.ID = grp.Status.ID
 		fake.status = http.StatusNotFound
 
-		Expect(apimgroup.Delete(ctx, newClient(managementContext(fake.URL, bearer("token"))), toDTO(grp))).To(Succeed())
+		client, err := apim.FromContext(ctx, managementContext(fake.URL, bearer("token")), "default")
+		Expect(err).ToNot(HaveOccurred())
+
+		err = client.Env.DeleteGroup(ctx, grp)
+		Expect(gerrors.IsNotFound(err)).To(BeTrue())
 
 		req := fake.lastRequest()
 		Expect(req.Method).To(Equal(http.MethodDelete))
-		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/" + grp.Status.ID))
+		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/" + grp.Spec.ID))
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("true"))
 	})
 
 	It("gets a group by HRID, or a legacy one by UUID", func() {
-		client := newClient(managementContext(fake.URL, bearer("token")))
-
-		remote, err := apimgroup.GetRemote(ctx, client, toDTO(developers()))
+		client, err := apim.FromContext(ctx, managementContext(fake.URL, bearer("token")), "default")
 		Expect(err).ToNot(HaveOccurred())
-		Expect(remote.Name).To(Equal("Developers"))
+
+		state, err := client.Env.GetGroupByHRID(ctx, "default-developers")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(state.Name).To(Equal("Developers"))
 		req := fake.lastRequest()
 		Expect(req.Method).To(Equal(http.MethodGet))
 		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/default-developers"))
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("false"))
 
-		legacy := developers()
-		legacy.Status.ID = "4d1c5f0a-0000-0000-0000-000000000001"
-		_, err = apimgroup.GetRemote(ctx, client, toDTO(legacy))
+		_, err = client.Env.GetGroupWithUUID(ctx, "4d1c5f0a-0000-0000-0000-000000000001")
 		Expect(err).ToNot(HaveOccurred())
 		req = fake.lastRequest()
 		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/4d1c5f0a-0000-0000-0000-000000000001"))
@@ -304,12 +304,13 @@ var _ = Describe("APIM SDK client factory", func() {
 
 	It("reports a successful response without a JSON body as unexpected", func() {
 		fake.contentType = "text/plain"
-		client := newClient(managementContext(fake.URL, bearer("token")))
+		client, err := apim.FromContext(ctx, managementContext(fake.URL, bearer("token")), "default")
+		Expect(err).ToNot(HaveOccurred())
 
-		_, err := apimgroup.Upsert(ctx, client, toDTO(developers()))
+		_, err = client.Env.ImportGroup(ctx, developers())
 		Expect(err).To(MatchError(ContainSubstring(`unexpected response: status 200, content type "text/plain"`)))
 
-		_, err = apimgroup.GetRemote(ctx, client, toDTO(developers()))
+		_, err = client.Env.GetGroupByHRID(ctx, "default-developers")
 		Expect(err).To(MatchError(ContainSubstring("unexpected response: status 200")))
 	})
 
@@ -318,45 +319,12 @@ var _ = Describe("APIM SDK client factory", func() {
 		k8s.AddAutomationAPIManagedCondition(grp)
 		fake.status = http.StatusNoContent
 
-		client := newClient(managementContext(fake.URL, bearer("token")))
-		Expect(apimgroup.Delete(ctx, client, toDTO(grp))).To(Succeed())
+		client, err := apim.FromContext(ctx, managementContext(fake.URL, bearer("token")), "default")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(client.Env.DeleteGroup(ctx, grp)).To(Succeed())
 
 		req := fake.lastRequest()
 		Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/default-developers"))
 		Expect(req.Query.Get("hridContainsUUID")).To(Equal("false"))
-	})
-
-	Describe("Probe", func() {
-		probe := func() error {
-			return newClient(managementContext(fake.URL, bearer("token"))).Probe(ctx)
-		}
-
-		It("gets the probe group, and treats not found as reachable", func() {
-			fake.status = http.StatusNotFound
-			Expect(probe()).To(Succeed())
-
-			req := fake.lastRequest()
-			Expect(req.Method).To(Equal(http.MethodGet))
-			Expect(req.Path).To(Equal("/automation/organizations/org1/environments/env1/groups/gko-probe-not-found"))
-		})
-
-		It("succeeds when APIM answers the group", func() {
-			Expect(probe()).To(Succeed())
-		})
-
-		It("fails when APIM refuses the credentials", func() {
-			fake.status = http.StatusUnauthorized
-			Expect(probe()).ToNot(Succeed())
-		})
-
-		It("fails when APIM rejects the org or env", func() {
-			fake.status = http.StatusBadRequest
-			Expect(probe()).ToNot(Succeed())
-		})
-
-		It("fails when APIM answers with a server error", func() {
-			fake.status = http.StatusInternalServerError
-			Expect(probe()).ToNot(Succeed())
-		})
 	})
 })

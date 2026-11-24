@@ -53,7 +53,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		hrid := refs.NewNamespacedNameFromObject(fixtures.Group).HRID()
 
 		Eventually(func(g Gomega) {
-			remote, err := apim.GetGroup(ctx, hrid)
+			remote, err := apim.Env.GetGroupByHRID(ctx, hrid)
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(remote.Name).To(Equal(fixtures.Group.Spec.Name))
 			g.Expect(remote.Id).ToNot(BeNil())

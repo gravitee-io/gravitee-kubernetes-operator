@@ -33,7 +33,6 @@ type APIM struct {
 	Org           *service.Org
 	Export        *Export
 	Notification  *Notification
-	SDK           *apim.SDKClient
 }
 
 func NewClient(ctx context.Context) *APIM {
@@ -41,9 +40,6 @@ func NewClient(ctx context.Context) *APIM {
 		WithContext(constants.ContextWithCredentialsFile).
 		Build().
 		Context
-
-	sdkClient, err := apim.NewSDKClient(ctx, context)
-	Expect(err).ToNot(HaveOccurred())
 
 	apim, err := apim.FromContext(ctx, context, context.GetNamespace())
 	Expect(err).ToNot(HaveOccurred())
@@ -61,6 +57,5 @@ func NewClient(ctx context.Context) *APIM {
 		Org:           org,
 		Export:        export,
 		Notification:  notification,
-		SDK:           sdkClient,
 	}
 }
