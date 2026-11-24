@@ -70,7 +70,7 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Application:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec) ||
-			t.Status.ProcessingStatus != core.ProcessingStatusCompleted
+			t.Status.IsFailed()
 	case *v1alpha1.Subscription:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.SharedPolicyGroup:

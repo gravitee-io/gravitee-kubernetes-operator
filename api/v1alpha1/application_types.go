@@ -185,6 +185,12 @@ func (s *ApplicationStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.Status.ProcessingStatus = status
 }
 
+// IsFailed reports a condition set to False. The deprecated processingStatus is no longer written.
 func (s *ApplicationStatus) IsFailed() bool {
-	return s.ProcessingStatus == core.ProcessingStatusFailed
+	for _, condition := range s.Conditions {
+		if condition.Status == metav1.ConditionFalse {
+			return true
+		}
+	}
+	return false
 }
