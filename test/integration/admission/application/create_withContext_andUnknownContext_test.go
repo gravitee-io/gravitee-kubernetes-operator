@@ -16,11 +16,9 @@ package application
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
@@ -41,19 +39,15 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		By("checking that application does not pass validation")
 
-		Consistently(func() error {
-			unknownContext := refs.NewNamespacedName("", "unknown")
-			fixtures.Application.Spec.Context = &unknownContext
+		unknownContext := refs.NewNamespacedName("", "unknown")
+		fixtures.Application.Spec.Context = &unknownContext
 
+		Consistently(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Application)
-			return assert.Equals(
-				"error",
-				fmt.Errorf(
-					"resource [%s] references management context [default/dev-ctx] that doesn't exist in the cluster",
-					fixtures.Application.Name,
-				),
-				err,
-			)
-		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
+			return err
+		}, constants.ConsistentTimeout, interval).Should(MatchError(SatisfyAll(
+			ContainSubstring("could not resolve context"),
+			ContainSubstring(`"unknown" not found`),
+		)))
 	})
 })
