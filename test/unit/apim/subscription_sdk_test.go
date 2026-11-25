@@ -168,6 +168,18 @@ var _ = Describe("Subscription UpdateStatus", func() {
 		Expect(sub.Status.EndingAt).To(BeEmpty())
 	})
 
+	It("keeps the id it has when APIM answers none", func() {
+		sub := newSub("sub", "828be2ec-78e7-3306-8f70-a4a8fc94b384", false)
+		resp := apimsubscription.Response{
+			State:  sdk.SubscriptionState{Hrid: "default-sub", StartingAt: new("2026-11-23T15:50:02Z")},
+			Legacy: apimsubscription.Legacy{HridContainsUUID: true},
+		}
+
+		Expect(apimsubscription.UpdateStatus(sub, resp)).To(Succeed())
+
+		Expect(sub.Status.ID).To(Equal("828be2ec-78e7-3306-8f70-a4a8fc94b384"))
+	})
+
 	It("leaves a subscription upserted by its UUID addressed by its UUID", func() {
 		sub := newSub("sub", "828be2ec-78e7-3306-8f70-a4a8fc94b384", false)
 		resp := apimsubscription.Response{
