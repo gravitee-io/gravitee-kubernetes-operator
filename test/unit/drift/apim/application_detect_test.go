@@ -16,6 +16,7 @@ package apim
 
 import (
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
@@ -116,18 +117,19 @@ var _ = Describe("Application Drift detection", func() {
 			}},
 		),
 		Entry("listed certificates equivalent, ref ignored",
-			apimapp.DTO{Application: sdk.Application{
-				Settings: &sdk.ApplicationSettings{
-					Tls: &sdk.ApplicationTLSSettings{
-						ClientCertificates: []sdk.ClientCertificate{
+			toApplicationDTO(&v1alpha1.Application{Spec: v1alpha1.ApplicationSpec{Application: application.Application{
+				Settings: &application.Setting{
+					TLS: &application.TLSSettings{
+						ClientCertificates: []application.ClientCertificate{
 							{
 								Content: `-----BEGIN CERTIFICATE-----
 -----END CERTIFICATE-----`,
+								Ref: &application.CertificateRef{Name: "client-cert", Key: "tls.crt"},
 							},
 						},
 					},
 				},
-			}},
+			}}}),
 			apimapp.DTO{Application: sdk.Application{
 				Settings: &sdk.ApplicationSettings{
 					Tls: &sdk.ApplicationTLSSettings{
