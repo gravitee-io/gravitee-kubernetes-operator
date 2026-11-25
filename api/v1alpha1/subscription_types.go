@@ -60,7 +60,7 @@ type SubscriptionStatus struct {
 	// +kubebuilder:validation:MaxItems=8
 	// +kubebuilder:default={}
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-	// This value is `Completed` if the sync with APIM succeeded, Failed otherwise. *** DEPRECATED ***
+	// The processing status of the Subscription. *** DEPRECATED ***
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 }
 

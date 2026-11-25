@@ -1952,7 +1952,7 @@ _Appears in:_
 | `startedAt` _string_ | When the subscription was started and made available |  |  |
 | `endingAt` _string_ | The expiry date for the subscription (no date means no expiry) |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Subscription.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | This value is `Completed` if the sync with APIM succeeded, Failed otherwise. *** DEPRECATED *** |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Subscription. *** DEPRECATED *** |  |  |
 
 
 

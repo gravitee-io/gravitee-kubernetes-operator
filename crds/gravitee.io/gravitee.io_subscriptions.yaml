@@ -178,8 +178,7 @@ spec:
                   description: Subscription ID
                   type: string
                 processingStatus:
-                  description: This value is `Completed` if the sync with APIM succeeded, Failed
-                    otherwise. *** DEPRECATED ***
+                  description: The processing status of the Subscription. *** DEPRECATED ***
                   type: string
                 startedAt:
                   description: When the subscription was started and made available
