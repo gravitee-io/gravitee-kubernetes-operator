@@ -212,30 +212,6 @@ var _ = Describe("ToSubscriptionDTO", func() {
 	})
 })
 
-var _ = Describe("ToSubscriptionDTOForDrift", func() {
-	It("uses all UUIDs when the remote GET is Management v2", func() {
-		dto := toSubscriptionDriftDTO(
-			newSub("e2e-sub-jwt-v4", "sub-uuid-1", false),
-			newAPIWithPlan(true, "plan-uuid"),
-			newApp(true),
-		)
-
-		Expect(dto.Hrid).To(Equal("sub-uuid-1"))
-		Expect(dto.ApiHrid).To(Equal("d1912aa8-3051-3e80-bbd4-c0097781bb97"))
-		Expect(dto.ApplicationHrid).To(Equal("f0848adf-3c29-300f-93bf-b8906295b0d2"))
-		Expect(dto.PlanHrid).To(Equal("plan-uuid"))
-	})
-
-	It("keeps the mixed Import shape when the remote GET is Automation", func() {
-		write := toSubscriptionDTO(newSub("e2e-sub-jwt-v2", "", false), newV2API(), newApp(true))
-		drift := toSubscriptionDriftDTO(newSub("e2e-sub-jwt-v2", "", false), newV2API(), newApp(true))
-
-		Expect(drift).To(Equal(write))
-		Expect(drift.ApiHrid).To(Equal("v2-api-uuid"))
-		Expect(drift.Hrid).To(Equal("default-e2e-sub-jwt-v2"))
-	})
-})
-
 func emptyV4API() *v1alpha1.ApiV4Definition {
 	api := &v1alpha1.ApiV4Definition{
 		ObjectMeta: metav1.ObjectMeta{Name: "e2e-v4-jwt-api", Namespace: "default"},
@@ -253,13 +229,6 @@ func emptyApp() *v1alpha1.Application {
 func toSubscriptionDTO(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) apimsubscription.DTO {
 	GinkgoHelper()
 	dto, err := apimsubscription.ToDTO(sub, api, app)
-	Expect(err).ToNot(HaveOccurred())
-	return dto
-}
-
-func toSubscriptionDriftDTO(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) apimsubscription.DTO {
-	GinkgoHelper()
-	dto, err := apimsubscription.ToDriftDTO(sub, api, app)
 	Expect(err).ToNot(HaveOccurred())
 	return dto
 }

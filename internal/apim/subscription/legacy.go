@@ -15,8 +15,8 @@
 package subscription
 
 // This file holds the addressing of resources created before APIM 4.12, by their UUID. Removing it leaves
-// these to fix: the applyLegacy call in ToDTO, the params of the SDK calls (nil), UpdateStatus (always
-// Automation API managed), and the drift mapper (ToDTO in place of ToDriftDTO).
+// these to fix: the applyLegacy call in ToDTO, the params of the SDK calls (nil) and UpdateStatus (always
+// Automation API managed).
 
 import (
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -78,23 +78,6 @@ func applyLegacy(dto *DTO, sub *v1alpha1.Subscription, api core.ApiDefinitionObj
 		dto.ApplicationHrid = app.GetID()
 		dto.Legacy.HridContainsAppUUID = true
 	}
-}
-
-// ToDriftDTO maps a Subscription CRD to what GetRemote returns. A subscription created before the Automation
-// API is read back with UUIDs only; any other is read back as ToDTO maps it.
-func ToDriftDTO(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) (DTO, error) {
-	dto, err := ToDTO(sub, api, app)
-	if err != nil || !SubscriptionUsesUUID(sub) {
-		return dto, err
-	}
-	dto.ApiHrid = api.GetID()
-	dto.ApplicationHrid = app.GetID()
-	dto.Legacy = Legacy{HridContainsUUID: true, HridContainsApiUUID: true, HridContainsAppUUID: true}
-	dto.PlanHrid = ""
-	if plan := api.GetPlan(sub.Spec.Plan); plan != nil {
-		dto.PlanHrid = plan.GetID()
-	}
-	return dto, nil
 }
 
 // SubscriptionUsesUUID is true only for a subscription created before the Automation API (UUID in status, no

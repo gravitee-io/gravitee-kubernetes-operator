@@ -97,8 +97,6 @@ func validateCreate(ctx context.Context, sub *v1alpha1.Subscription) *errors.Adm
 	errs := errors.NewAdmissionErrors()
 	ns := sub.GetNamespace()
 
-	errs.Add(validateApiKind(sub))
-
 	api, app, plan := resolveDependencies(ctx, sub, ns, errs)
 
 	if errs.IsSevere() {
@@ -338,21 +336,6 @@ func validateClientID(app core.ApplicationObject) *errors.AdmissionError {
 		return errors.NewSeveref(
 			"unable to subscribe from application [%s] because it does not have any client id",
 			app.GetRef(),
-		)
-	}
-	return nil
-}
-
-func validateApiKind(sub core.SubscriptionObject) *errors.AdmissionError {
-	apiKind := sub.GetApiRef().GetKind()
-	if apiKind == "" {
-		return nil // will be defaulted later on
-	}
-	kind := dynamic.ResourceFromKind(apiKind)
-	if kind != core.CRDApiDefinitionResource && kind != core.CRDApiV4DefinitionResource {
-		return errors.NewSeveref(
-			"API kind is required and should be either ApiDefinition or ApiV4Definition, got [%s]",
-			kind,
 		)
 	}
 	return nil
