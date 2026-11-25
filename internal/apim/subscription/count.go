@@ -34,7 +34,7 @@ import (
 func RecountParents(ctx context.Context, sub *v1alpha1.Subscription) error {
 	ns := sub.GetNamespace()
 
-	api, err := dynamic.ResolveAPI(ctx, sub.GetApiRef(), ns)
+	api, err := dynamic.ResolveAPI(ctx, APIRef(sub), ns)
 	if client.IgnoreNotFound(err) != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func RecountParents(ctx context.Context, sub *v1alpha1.Subscription) error {
 		}
 	}
 
-	app, err := dynamic.ResolveApplication(ctx, sub.GetAppRef(), ns)
+	app, err := dynamic.ResolveApplication(ctx, AppRef(sub), ns)
 	if apierrors.IsNotFound(err) {
 		return nil
 	}

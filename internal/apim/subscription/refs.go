@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -30,11 +31,12 @@ import (
 // On delete, only the API is required: it carries the management context, so a missing API (NotFound) releases
 // the subscription without calling APIM, while a missing application still lets the delete reach APIM.
 func ResolveRefs(ctx context.Context, sub *v1alpha1.Subscription, ns string) error {
-	api, err := resolveAPI(ctx, sub, ns)
+	apiRef := APIRef(sub)
+	api, err := resolveAPI(ctx, apiRef, ns)
 	if err != nil {
 		return err
 	}
-	_, err = resolveApplication(ctx, sub, ns)
+	_, err = resolveApplication(ctx, AppRef(sub), ns)
 	if sub.IsBeingDeleted() {
 		if apierrors.IsNotFound(err) {
 			return nil
@@ -46,7 +48,7 @@ func ResolveRefs(ctx context.Context, sub *v1alpha1.Subscription, ns string) err
 	}
 	if api.GetPlan(sub.GetPlan()) == nil {
 		return fmt.Errorf(
-			"unable to subscribe to API [%s] because plan [%s] cannot be found", sub.GetApiRef(), sub.GetPlan(),
+			"unable to subscribe to API [%s] because plan [%s] cannot be found", apiRef, sub.GetPlan(),
 		)
 	}
 	return nil
@@ -55,7 +57,7 @@ func ResolveRefs(ctx context.Context, sub *v1alpha1.Subscription, ns string) err
 // CreateAPIMClient builds the SDK client of the management context the subscribed API references: the
 // subscription has no context of its own.
 func CreateAPIMClient(ctx context.Context, sub *v1alpha1.Subscription) (*apim.SDKClient, error) {
-	api, err := resolveAPI(ctx, sub, sub.GetNamespace())
+	api, err := resolveAPI(ctx, APIRef(sub), sub.GetNamespace())
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func CreateAPIMClient(ctx context.Context, sub *v1alpha1.Subscription) (*apim.SD
 // with ToDTO. On delete, a missing application leaves it out of the payload.
 func ToResolvedDTO(ctx context.Context, sub *v1alpha1.Subscription) (DTO, error) {
 	ns := sub.GetNamespace()
-	api, err := resolveAPI(ctx, sub, ns)
+	api, err := resolveAPI(ctx, APIRef(sub), ns)
 	if err != nil {
 		return DTO{}, err
 	}
@@ -81,7 +83,7 @@ func ToResolvedDTO(ctx context.Context, sub *v1alpha1.Subscription) (DTO, error)
 	}
 	api.PopulateIDs(mctx, k8s.IsAutomationAPIManaged(api))
 
-	app, err := resolveApplication(ctx, sub, ns)
+	app, err := resolveApplication(ctx, AppRef(sub), ns)
 	if sub.IsBeingDeleted() && apierrors.IsNotFound(err) {
 		app, err = nil, nil
 	}
@@ -91,21 +93,37 @@ func ToResolvedDTO(ctx context.Context, sub *v1alpha1.Subscription) (DTO, error)
 	return ToDTO(sub, api, app)
 }
 
-func resolveAPI(ctx context.Context, sub *v1alpha1.Subscription, ns string) (core.ApiDefinitionObject, error) {
-	api, err := dynamic.ResolveAPI(ctx, sub.GetApiRef(), ns)
+// APIRef returns a copy of the API reference of sub, in the namespace of sub when it names none. The dynamic
+// resolvers write that namespace into the reference they get: resolving a copy leaves the Subscription spec as
+// written, which admission compares with the previous one.
+func APIRef(sub *v1alpha1.Subscription) *refs.NamespacedName {
+	return inNamespace(sub.Spec.API, sub.GetNamespace())
+}
+
+// AppRef returns a copy of the application reference of sub, as APIRef does.
+func AppRef(sub *v1alpha1.Subscription) *refs.NamespacedName {
+	return inNamespace(sub.Spec.App, sub.GetNamespace())
+}
+
+func inNamespace(ref refs.NamespacedName, ns string) *refs.NamespacedName {
+	if ref.Namespace == "" {
+		ref.Namespace = ns
+	}
+	return &ref
+}
+
+func resolveAPI(ctx context.Context, ref core.ObjectRef, ns string) (core.ApiDefinitionObject, error) {
+	api, err := dynamic.ResolveAPI(ctx, ref, ns)
 	if err != nil {
-		return nil, unresolvedRef{message: fmt.Sprintf("unable to resolve API [%s]", sub.GetApiRef()), cause: err}
+		return nil, unresolvedRef{message: fmt.Sprintf("unable to resolve API [%s]", ref), cause: err}
 	}
 	return api, nil
 }
 
-func resolveApplication(ctx context.Context, sub *v1alpha1.Subscription, ns string) (core.ApplicationObject, error) {
-	app, err := dynamic.ResolveApplication(ctx, sub.GetAppRef(), ns)
+func resolveApplication(ctx context.Context, ref core.ObjectRef, ns string) (core.ApplicationObject, error) {
+	app, err := dynamic.ResolveApplication(ctx, ref, ns)
 	if err != nil {
-		return nil, unresolvedRef{
-			message: fmt.Sprintf("unable to resolve application [%s]", sub.GetAppRef()),
-			cause:   err,
-		}
+		return nil, unresolvedRef{message: fmt.Sprintf("unable to resolve application [%s]", ref), cause: err}
 	}
 	return app, nil
 }

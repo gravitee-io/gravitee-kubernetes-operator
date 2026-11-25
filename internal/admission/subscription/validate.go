@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimsubscription "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -45,7 +46,7 @@ func validateUpdate(ctx context.Context, sub *v1alpha1.Subscription) *errors.Adm
 	if plan == nil {
 		errs.AddSeveref(
 			"unable to subscribe to API [%s] because plan [%s] cannot be found",
-			sub.GetApiRef(), sub.GetPlan(),
+			apimsubscription.APIRef(sub), sub.GetPlan(),
 		)
 		return errs
 	}
@@ -151,12 +152,13 @@ func validateCreate(ctx context.Context, sub *v1alpha1.Subscription) *errors.Adm
 
 func resolveDependencies(
 	ctx context.Context,
-	sub core.SubscriptionObject,
+	sub *v1alpha1.Subscription,
 	ns string, errs *errors.AdmissionErrors) (core.ApiDefinitionObject, core.ApplicationObject, core.PlanModel) {
-	api, err := dynamic.ResolveAPI(ctx, sub.GetApiRef(), ns)
+	apiRef := apimsubscription.APIRef(sub)
+	api, err := dynamic.ResolveAPI(ctx, apiRef, ns)
 	if err != nil {
 		errs.AddSeveref(
-			"unable to resolve API [%s]", sub.GetApiRef(),
+			"unable to resolve API [%s]", apiRef,
 		)
 	}
 
@@ -164,10 +166,11 @@ func resolveDependencies(
 		return nil, nil, nil
 	}
 
-	app, err := dynamic.ResolveApplication(ctx, sub.GetAppRef(), ns)
+	appRef := apimsubscription.AppRef(sub)
+	app, err := dynamic.ResolveApplication(ctx, appRef, ns)
 	if err != nil {
 		errs.AddSeveref(
-			"unable to resolve application [%s]", sub.GetAppRef(),
+			"unable to resolve application [%s]", appRef,
 		)
 	}
 
@@ -179,7 +182,7 @@ func resolveDependencies(
 func ValidatePlan(sub *v1alpha1.Subscription, api core.ApiDefinitionModel) *errors.AdmissionError {
 	if !api.HasPlans() {
 		return errors.NewSeveref(
-			"unable to subscribe to API [%s] because it has no plan", sub.GetApiRef(),
+			"unable to subscribe to API [%s] because it has no plan", apimsubscription.APIRef(sub),
 		)
 	}
 
@@ -187,7 +190,7 @@ func ValidatePlan(sub *v1alpha1.Subscription, api core.ApiDefinitionModel) *erro
 	if plan == nil {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because plan [%s] cannot be found",
-			sub.GetApiRef(), sub.GetPlan(),
+			apimsubscription.APIRef(sub), sub.GetPlan(),
 		)
 	}
 	if err := validatePlanSecurityType(plan, sub.GetPlan()); err != nil {
