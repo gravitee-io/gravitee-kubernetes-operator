@@ -22,9 +22,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // ResolveRefs checks that the API, the application and the plan the subscription references exist.
@@ -66,31 +68,45 @@ func CreateAPIMClient(ctx context.Context, sub *v1alpha1.Subscription) (*apim.SD
 			"unable to subscribe to API [%s] because it does not reference a management context", api.GetRef(),
 		)
 	}
-	return apim.SDKFromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+	client, err := apim.SDKFromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+	if err != nil {
+		// The context may sit in another namespace than the subscription: its error stays in the operator log.
+		log.FromContext(ctx).Error(err, "Unable to build the APIM client of the API", "api", api.GetRef())
+		return nil, fmt.Errorf("unable to resolve management context [%s] of API [%s]", api.ContextRef(), api.GetRef())
+	}
+	return client, nil
 }
 
 // ToResolvedDTO resolves the API, with its IDs, and the application the subscription references, then maps them
-// with ToDTO. On delete, a missing application leaves it out of the payload.
+// with ToDTO. On delete, a missing application leaves it out of the payload. A failed lookup is a reference
+// error, which the reconcile retries.
 func ToResolvedDTO(ctx context.Context, sub *v1alpha1.Subscription) (DTO, error) {
+	api, app, err := resolveParents(ctx, sub)
+	if err != nil {
+		return DTO{}, gerrors.NewResolveRefError(err)
+	}
+	return ToDTO(sub, api, app)
+}
+
+func resolveParents(
+	ctx context.Context, sub *v1alpha1.Subscription,
+) (core.ApiDefinitionObject, core.ApplicationObject, error) {
 	ns := sub.GetNamespace()
 	api, err := resolveAPI(ctx, APIRef(sub), ns)
 	if err != nil {
-		return DTO{}, err
+		return nil, nil, err
 	}
 	mctx, err := dynamic.ResolveContext(ctx, api.ContextRef(), api.GetNamespace())
 	if err != nil {
-		return DTO{}, err
+		return nil, nil, err
 	}
 	api.PopulateIDs(mctx, k8s.IsAutomationAPIManaged(api))
 
 	app, err := resolveApplication(ctx, AppRef(sub), ns)
 	if sub.IsBeingDeleted() && apierrors.IsNotFound(err) {
-		app, err = nil, nil
+		return api, nil, nil
 	}
-	if err != nil {
-		return DTO{}, err
-	}
-	return ToDTO(sub, api, app)
+	return api, app, err
 }
 
 // APIRef returns a copy of the API reference of sub, in the namespace of sub when it names none. The dynamic

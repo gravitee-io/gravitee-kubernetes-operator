@@ -447,6 +447,19 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 		Expect(accepted.Message).To(ContainSubstring("cannot map"))
 	})
 
+	It("requeues, without upserting, when ToDTO fails to look up a reference", func() {
+		cli := newCluster(newGroup("g1", testNs))
+		l := newGroupLifecycle(r)
+		l.ToDTO = func(context.Context, *v1alpha1.Group) (testDTO, error) {
+			return testDTO{}, gerrors.NewResolveRefError(errors.New("api server unavailable"))
+		}
+
+		_, err := reconcile(l, cli, "g1")
+
+		Expect(reconcileErrorType(err)).To(Equal(gerrors.ResolveRefError))
+		Expect(r.upserted).To(BeEmpty())
+	})
+
 	Describe("client factory failure", func() {
 		It("requeues a create with a ResolveRef error and does not upsert", func() {
 			cli := newCluster(newGroup("g1", testNs))

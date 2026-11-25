@@ -242,10 +242,18 @@ func (l ResourceLifecycle[T, D, C, R]) clientAndDTO(ctx context.Context, dc T) (
 	}
 	dto, err := l.ToDTO(ctx, dc)
 	if err != nil {
-		// retrying cannot fix a mapping error
-		return zeroC, zeroD, gerrors.NewIllegalStateError(err)
+		return zeroC, zeroD, mappingError(err)
 	}
 	return api, dto, nil
+}
+
+// mappingError keeps the kind of an error a mapper already classified (a failed lookup is a reference error,
+// which a retry can fix). Retrying cannot fix any other mapping error.
+func mappingError(err error) error {
+	if errors.As(err, &gerrors.ReconcileError{}) {
+		return err
+	}
+	return gerrors.NewIllegalStateError(err)
 }
 
 func (l ResourceLifecycle[T, D, C, R]) resolveRefs(ctx context.Context, obj T) error {
