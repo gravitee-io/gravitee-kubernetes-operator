@@ -62,20 +62,13 @@ func apiSubscriptionsField(api core.ApiDefinitionObject) search.IndexField {
 }
 
 // recount updates the status inside a retry on conflict: the API and application controllers write the same
-// status.
+// status. Each attempt lists the Subscriptions again, so it never writes a count older than the object it read.
 func recount(ctx context.Context, parent core.Object, field search.IndexField) error {
-	subs, err := search.FindSubscriptionsReferencing(ctx, field, parent)
-	if err != nil {
-		return err
-	}
-	var count uint
-	for i := range subs.Items {
-		if !subs.Items[i].IsBeingDeleted() {
-			count++
-		}
-	}
-
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		count, err := countActiveSubscriptions(ctx, parent, field)
+		if err != nil {
+			return err
+		}
 		if err := k8s.GetClient().Get(ctx, client.ObjectKeyFromObject(parent), parent); err != nil {
 			return client.IgnoreNotFound(err)
 		}
@@ -86,4 +79,18 @@ func recount(ctx context.Context, parent core.Object, field search.IndexField) e
 		status.SetSubscriptionCount(count)
 		return k8s.GetClient().Status().Update(ctx, parent)
 	})
+}
+
+func countActiveSubscriptions(ctx context.Context, parent core.Object, field search.IndexField) (uint, error) {
+	subs, err := search.FindSubscriptionsReferencing(ctx, field, parent)
+	if err != nil {
+		return 0, err
+	}
+	var count uint
+	for i := range subs.Items {
+		if !subs.Items[i].IsBeingDeleted() {
+			count++
+		}
+	}
+	return count, nil
 }
