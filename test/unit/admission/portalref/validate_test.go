@@ -52,7 +52,8 @@ var _ = Describe("Validating a resource of a portal GKO has not synced yet", fun
 			}},
 		}
 	}
-	page := func(portal string) *v1alpha1.Documentation {
+	ref := func(name string) *refs.NamespacedName { return &refs.NamespacedName{Name: name} }
+	page := func(portal, api *refs.NamespacedName) *v1alpha1.Documentation {
 		return &v1alpha1.Documentation{
 			ObjectMeta: meta("travel-docs"),
 			Spec: v1alpha1.DocumentationSpec{Type: documentation.Type{
@@ -60,18 +61,20 @@ var _ = Describe("Validating a resource of a portal GKO has not synced yet", fun
 				PageType: documentation.GraviteeMarkdown,
 				Content:  "# Getting Started",
 				Location: &location,
-				Portal:   &refs.NamespacedName{Name: portal},
+				Portal:   portal,
+				API:      api,
 			}},
 		}
 	}
-	link := func(portal string) *v1alpha1.PortalLink {
+	link := func(portal, api *refs.NamespacedName) *v1alpha1.PortalLink {
 		return &v1alpha1.PortalLink{
 			ObjectMeta: meta("travel-link"),
 			Spec: v1alpha1.PortalLinkSpec{Type: portallink.Type{
 				Name:     "Status page",
 				Href:     "https://status.example.com",
 				Location: &location,
-				Portal:   &refs.NamespacedName{Name: portal},
+				Portal:   portal,
+				API:      api,
 			}},
 		}
 	}
@@ -92,7 +95,7 @@ var _ = Describe("Validating a resource of a portal GKO has not synced yet", fun
 	})
 
 	It("warns and skips the dry run of a Documentation", func() {
-		warnings, err := docsadm.AdmissionCtrl{}.ValidateCreate(ctx, page("unsynced"))
+		warnings, err := docsadm.AdmissionCtrl{}.ValidateCreate(ctx, page(ref("unsynced"), nil))
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(ConsistOf("platform checks deferred (portal not synced: [travel/unsynced])"))
@@ -100,17 +103,37 @@ var _ = Describe("Validating a resource of a portal GKO has not synced yet", fun
 	})
 
 	It("warns and skips the dry run of a PortalLink", func() {
-		warnings, err := linkadm.AdmissionCtrl{}.ValidateCreate(ctx, link("unsynced"))
+		warnings, err := linkadm.AdmissionCtrl{}.ValidateCreate(ctx, link(ref("unsynced"), nil))
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(ConsistOf("platform checks deferred (portal not synced: [travel/unsynced])"))
 		Expect(platformCalls.Load()).To(BeZero())
 	})
 
-	It("dry-runs a PortalListing once its portal has synced", func() {
-		_, err := listingadm.AdmissionCtrl{}.ValidateCreate(ctx, listing("synced"))
-
-		Expect(err).To(HaveOccurred())
-		Expect(platformCalls.Load()).ToNot(BeZero())
-	})
+	DescribeTable("dry-runs the resource once its portal has synced, and the resource of an API",
+		func(validate func() error) {
+			Expect(validate()).To(HaveOccurred())
+			Expect(platformCalls.Load()).ToNot(BeZero())
+		},
+		Entry("a PortalListing of a synced portal", func() error {
+			_, err := listingadm.AdmissionCtrl{}.ValidateCreate(ctx, listing("synced"))
+			return err
+		}),
+		Entry("a Documentation of a synced portal", func() error {
+			_, err := docsadm.AdmissionCtrl{}.ValidateCreate(ctx, page(ref("synced"), nil))
+			return err
+		}),
+		Entry("a PortalLink of a synced portal", func() error {
+			_, err := linkadm.AdmissionCtrl{}.ValidateCreate(ctx, link(ref("synced"), nil))
+			return err
+		}),
+		Entry("a Documentation of an API", func() error {
+			_, err := docsadm.AdmissionCtrl{}.ValidateCreate(ctx, page(nil, ref("orders")))
+			return err
+		}),
+		Entry("a PortalLink of an API", func() error {
+			_, err := linkadm.AdmissionCtrl{}.ValidateCreate(ctx, link(nil, ref("orders")))
+			return err
+		}),
+	)
 })
