@@ -18,8 +18,24 @@ import (
 	"context"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
+
+// WarnPortalNotSynced warns that the dry run of a listing, link or page is skipped while its portal is not
+// synced: CreateAPIMClient then gives no client, and the controller waits for the portal. A parent that
+// cannot be read was reported by the client factory, which runs first.
+func WarnPortalNotSynced(ctx context.Context, portalRef, apiRef *refs.NamespacedName, ns string) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	parent, err := ResolveParent(ctx, portalRef, apiRef, ns)
+	if err != nil {
+		return errs
+	}
+	if err = CheckPortalSynced(parent); err != nil {
+		errs.AddWarningf("platform checks deferred (%s)", err)
+	}
+	return errs
+}
 
 // Findings turns the errors of a dry-run state into admission findings: severe first, then warnings.
 func Findings(stateErrors *sdk.Errors) *errors.AdmissionErrors {

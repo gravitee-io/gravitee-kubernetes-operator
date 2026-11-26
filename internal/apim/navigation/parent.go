@@ -87,3 +87,12 @@ func ParentKind(parent core.ContextAwareObject) string {
 	}
 	return "API"
 }
+
+// CheckPortalSynced returns dynamic.ErrPortalNotSynced while parent is a portal GKO has not written to APIM
+// yet. An API parent always passes: APIM keeps a page or link of an API it does not hold until the API lands.
+func CheckPortalSynced(parent core.ContextAwareObject) error {
+	if prtl, ok := parent.(*v1alpha1.Portal); ok {
+		return dynamic.CheckPortalSynced(prtl)
+	}
+	return nil
+}

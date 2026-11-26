@@ -51,14 +51,14 @@ func ToDTO(obj *v1alpha1.PortalLink) (DTO, error) {
 }
 
 // CreateAPIMClient builds the SDK client of the management context of the portal or API the link belongs
-// to. Without a context nothing was synced: the
+// to. Without a context, or while its portal is not synced, nothing was synced: the
 // client is nil, Delete and DryRun then do nothing, and ResolveRefs refuses an upsert first.
 func CreateAPIMClient(ctx context.Context, obj *v1alpha1.PortalLink) (*apim.SDKClient, error) {
 	parent, err := navigation.ResolveParent(ctx, obj.Spec.Portal, obj.Spec.API, obj.GetNamespace())
 	if err != nil {
 		return nil, err
 	}
-	if !parent.HasContext() {
+	if !parent.HasContext() || navigation.CheckPortalSynced(parent) != nil {
 		return nil, nil
 	}
 	return apim.SDKFromContextRef(ctx, parent.ContextRef(), parent.GetNamespace())

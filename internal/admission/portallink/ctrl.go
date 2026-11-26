@@ -38,6 +38,7 @@ type AdmissionCtrl struct{}
 
 var admissionLifecycle = lifecycle.NewAdmissionLifecycle(Lifecycle{
 	ClientFactory:  admissionClient,
+	PreCheck:       warnPortalNotSynced,
 	ToDTO:          apimportallink.ToDTO,
 	DryRun:         navigation.FindingsOnError(apimportallink.DryRun),
 	PayloadChanged: everyUpdate,
@@ -92,6 +93,11 @@ func admissionClient(ctx context.Context, obj *v1alpha1.PortalLink) (*apim.SDKCl
 		return nil, err
 	}
 	return apimportallink.CreateAPIMClient(ctx, obj)
+}
+
+// warnPortalNotSynced admits a link of a portal applied in the same file, before the portal is synced.
+func warnPortalNotSynced(ctx context.Context, obj *v1alpha1.PortalLink) *gerrors.AdmissionErrors {
+	return navigation.WarnPortalNotSynced(ctx, obj.Spec.Portal, obj.Spec.API, obj.GetNamespace())
 }
 
 // everyUpdate dry-runs every update, as before the lifecycle.
