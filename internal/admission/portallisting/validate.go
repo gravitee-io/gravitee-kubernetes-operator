@@ -48,6 +48,11 @@ func validateCreate(ctx context.Context, listing *v1alpha1.PortalListing) *error
 		return errs
 	}
 
+	if err := dynamic.CheckPortalSynced(prtl); err != nil {
+		errs.AddWarningf("platform checks deferred (%s)", err)
+		return errs
+	}
+
 	errs.MergeWith(validateDryRun(ctx, listing, prtl))
 	return errs
 }
