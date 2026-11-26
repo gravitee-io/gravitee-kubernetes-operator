@@ -17,6 +17,7 @@ package apidefinition
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -43,7 +44,7 @@ func AdoptLegacyID(ctx context.Context, apimClient *apim.APIM, api *v1alpha1.Api
 		if errors.As(err, &serverErr) && serverErr.StatusCode < http.StatusInternalServerError {
 			return nil
 		}
-		return err
+		return fmt.Errorf("looking up the API GKO 4.11 created with id %s: %w", id, err)
 	}
 
 	if remote.CrossID != api.LegacyCrossID() {
