@@ -60,7 +60,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			if err := manager.GetLatest(ctx, listingCRD); err != nil {
 				return err
 			}
-			if err := assert.IsUnresolved(listingCRD); err != nil {
+			if err := assert.IsUnresolvedWith(listingCRD, "portal not synced"); err != nil {
 				return err
 			}
 			return assert.Equals("listing status id", "", listingCRD.Status.ID)
