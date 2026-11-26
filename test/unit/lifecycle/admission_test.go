@@ -268,10 +268,14 @@ var _ = Describe("AdmissionLifecycle", func() {
 			Expect(errs.IsSevere()).To(BeFalse())
 		})
 
-		It("runs ImmutableFields between PreCheck and DryRun", func() {
+		It("runs ImmutableFields before ResolveRefs, PreCheck and DryRun", func() {
 			tc := &testClient{}
 			var order []string
 			a := minimalAdmission(tc)
+			a.ResolveRefs = func(context.Context, *v1alpha1.Group, string) error {
+				order = append(order, "refs")
+				return nil
+			}
 			a.PreCheck = func(_ context.Context, _ *v1alpha1.Group) *gerrors.AdmissionErrors {
 				order = append(order, "precheck")
 				return gerrors.NewAdmissionErrors()
@@ -287,7 +291,7 @@ var _ = Describe("AdmissionLifecycle", func() {
 			oldG := newGroup("g1", "ns")
 			errs := a.ValidateUpdate(ctx, oldG, withSpecChange(oldG))
 			Expect(errs.IsSevere()).To(BeFalse())
-			Expect(order).To(Equal([]string{"precheck", "immutable", "dryrun"}))
+			Expect(order).To(Equal([]string{"immutable", "refs", "precheck", "dryrun"}))
 		})
 
 		It("stops on ImmutableFields severe error", func() {

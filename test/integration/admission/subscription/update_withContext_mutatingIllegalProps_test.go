@@ -82,8 +82,9 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 				cp.Spec.API.Name = "illegal"
 				return cp
 			},
-			errors.NewSevere(
-				"could not resolve references: unable to resolve API [default/illegal]",
+			errors.NewSeveref(
+				"API reference is immutable. Detected change from [%s] to [default/illegal]",
+				fixtures.APIv4.GetRef(),
 			),
 		),
 		Entry(
@@ -93,8 +94,9 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 				cp.Spec.App.Name = "illegal"
 				return cp
 			},
-			errors.NewSevere(
-				"could not resolve references: unable to resolve application [default/illegal]",
+			errors.NewSeveref(
+				"Application reference is immutable. Detected change from [%s] to [default/illegal]",
+				fixtures.Application.GetRef(),
 			),
 		),
 		Entry(
@@ -104,9 +106,8 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 				cp.Spec.Plan = "illegal"
 				return cp
 			},
-			errors.NewSeveref(
-				"could not resolve references: unable to subscribe to API [%s] because plan [illegal] cannot be found",
-				fixtures.APIv4.GetRef(),
+			errors.NewSevere(
+				"Plan is immutable. Detected change from [JWT] to [illegal]",
 			),
 		),
 	)
