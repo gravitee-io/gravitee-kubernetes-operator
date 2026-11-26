@@ -79,14 +79,14 @@ func toVisibility[V ~string](v *V) *sdk.PortalVisibility {
 }
 
 // CreateAPIMClient builds the SDK client of the management context of the portal the listing belongs to.
-// Without a context nothing was synced: the client is nil, Delete and DryRun then do nothing, and
-// ResolveRefs refuses an upsert first.
+// Without a context, or while the portal is not synced, nothing was synced: the client is nil, Delete and
+// DryRun then do nothing, and ResolveRefs refuses an upsert first.
 func CreateAPIMClient(ctx context.Context, obj *v1alpha1.PortalListing) (*apim.SDKClient, error) {
 	prtl, err := dynamic.ResolvePortal(ctx, obj.GetPortalRef(), obj.GetNamespace())
 	if err != nil {
 		return nil, err
 	}
-	if !prtl.HasContext() {
+	if !prtl.HasContext() || dynamic.CheckPortalSynced(prtl) != nil {
 		return nil, nil
 	}
 	return apim.SDKFromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())

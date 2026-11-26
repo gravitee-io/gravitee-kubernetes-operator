@@ -39,7 +39,7 @@ type AdmissionCtrl struct{}
 
 var admissionLifecycle = lifecycle.NewAdmissionLifecycle(Lifecycle{
 	ClientFactory:  admissionClient,
-	PreCheck:       validateApis,
+	PreCheck:       preCheck,
 	ToDTO:          apimportallisting.ToDTO,
 	DryRun:         navigation.FindingsOnError(apimportallisting.DryRun),
 	PayloadChanged: everyUpdate,
@@ -116,6 +116,17 @@ func admissionClient(ctx context.Context, obj *v1alpha1.PortalListing) (*apim.SD
 		return nil, err
 	}
 	return apimportallisting.CreateAPIMClient(ctx, obj)
+}
+
+// preCheck checks the listed APIs, then admits a listing of a portal applied in the same file, before the
+// portal is synced.
+func preCheck(ctx context.Context, listing *v1alpha1.PortalListing) *gerrors.AdmissionErrors {
+	errs := validateApis(ctx, listing)
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(navigation.WarnPortalNotSynced(ctx, &listing.Spec.Portal, nil, listing.GetNamespace()))
+	return errs
 }
 
 // everyUpdate dry-runs every update, as before the lifecycle.

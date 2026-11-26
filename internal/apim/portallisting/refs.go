@@ -33,13 +33,18 @@ func ResolveRefsForAdmission(ctx context.Context, obj *v1alpha1.PortalListing, _
 
 // ResolveRefs resolves the portal and its management context for the reconcile. A portal or a context
 // deleted first is a NotFound; a portal without a context, while deleting, means nothing was synced. The
-// API entries are mapped from their references, never resolved.
+// API entries are mapped from their references, never resolved. An upsert waits for a portal GKO has not
+// synced yet: APIM refuses a listing of a portal it does not hold while the environment holds another, its
+// default portal included.
 func ResolveRefs(ctx context.Context, obj *v1alpha1.PortalListing, _ string) error {
 	prtl, err := resolvePortal(ctx, obj, obj.IsBeingDeleted())
 	if err != nil || !prtl.HasContext() {
 		return err
 	}
-	return navigation.ResolveContext(ctx, prtl)
+	if err = navigation.ResolveContext(ctx, prtl); err != nil || obj.IsBeingDeleted() {
+		return err
+	}
+	return dynamic.CheckPortalSynced(prtl)
 }
 
 // ResolvePortal reads the listing's portal, with the message the webhook always reported.

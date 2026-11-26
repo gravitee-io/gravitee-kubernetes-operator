@@ -30,12 +30,17 @@ func ResolveRefsForAdmission(ctx context.Context, obj *v1alpha1.Documentation, _
 
 // ResolveRefs resolves the parent and its management context for the reconcile. A parent or a context
 // deleted first is a NotFound; a parent without a context, while deleting, means nothing was synced.
+// An upsert waits for a portal GKO has not synced yet: APIM refuses a page of a portal it does not hold
+// while the environment holds another, its default portal included.
 func ResolveRefs(ctx context.Context, obj *v1alpha1.Documentation, _ string) error {
 	parent, err := parentRefs(obj).Resolve(ctx, obj.IsBeingDeleted())
 	if err != nil || !parent.HasContext() {
 		return err
 	}
-	return navigation.ResolveContext(ctx, parent)
+	if err = navigation.ResolveContext(ctx, parent); err != nil || obj.IsBeingDeleted() {
+		return err
+	}
+	return navigation.CheckPortalSynced(parent)
 }
 
 func parentRefs(obj *v1alpha1.Documentation) navigation.ParentRefs {
