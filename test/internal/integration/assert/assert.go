@@ -81,6 +81,22 @@ func IsUnresolved(obj core.ConditionAwareObject) error {
 	return nil
 }
 
+// IsUnresolvedWith requires a ResolvedRefs condition set to False whose message contains reason.
+// Unlike IsUnresolved, an object that has not been reconciled yet does not pass.
+func IsUnresolvedWith(obj core.ConditionAwareObject, reason string) error {
+	refs := k8s.GetCondition(obj, k8s.ConditionResolvedRefs)
+	if refs == nil {
+		return newAssertEqualError("ResolvedRefs condition", k8s.ConditionStatusFalse, "absent")
+	}
+	if refs.Status != k8s.ConditionStatusFalse {
+		return newAssertEqualError("ResolvedRefs condition", k8s.ConditionStatusFalse, refs.Status)
+	}
+	if !strings.Contains(refs.Message, reason) {
+		return newAssertEqualError("ResolvedRefs message", reason, refs.Message)
+	}
+	return nil
+}
+
 func ApiAccepted(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileCondition, true,
 		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
