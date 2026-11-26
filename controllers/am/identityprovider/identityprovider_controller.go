@@ -53,7 +53,7 @@ func NewLifecycle() Lifecycle {
 		ResolveRefs:   am.ResolveSubResourceDomain[*v1alpha1.AMIdentityProvider],
 		Owner:         am.GetSubResourceOwner[*v1alpha1.AMIdentityProvider],
 		ClientFactory: am.CreateSubResourceClient[*v1alpha1.AMIdentityProvider],
-		ToDTO:         lifecycle.WithoutContext(identityprovider.ToIdentityProviderDTO),
+		ToDTO:         identityprovider.ToIdentityProviderDTO,
 		Delete:        identityprovider.Delete,
 		Upsert:        identityprovider.Upsert,
 		PostUpsert:    identityprovider.UpdateStatus,

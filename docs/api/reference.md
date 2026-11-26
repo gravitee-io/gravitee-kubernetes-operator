@@ -1913,6 +1913,8 @@ _Appears in:_
 | `status` _[SubscriptionStatus](#subscriptionstatus)_ |  |  |  |
 
 
+
+
 #### SubscriptionSpec
 
 

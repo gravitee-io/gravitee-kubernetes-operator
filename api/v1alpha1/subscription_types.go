@@ -111,6 +111,18 @@ type Subscription struct {
 
 	Spec   SubscriptionSpec   `json:"spec,omitempty"`
 	Status SubscriptionStatus `json:"status,omitempty"`
+
+	Resolved SubscriptionResolved `json:"-"`
+}
+
+// SubscriptionResolved holds how the APIM payload addresses the API, its plan and the application, read by the
+// reference resolver: by hrid, or by UUID for one created before the Automation API. It is never serialized.
+type SubscriptionResolved struct {
+	ApiHrid             string
+	PlanHrid            string
+	ApplicationHrid     string
+	ApiUsesUUID         bool
+	ApplicationUsesUUID bool
 }
 
 func (s *Subscription) GetApiRef() core.ObjectRef {

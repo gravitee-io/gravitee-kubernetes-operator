@@ -75,11 +75,11 @@ func synced(g *v1alpha1.Group) *v1alpha1.Group {
 	return g
 }
 
-func toDTO(_ context.Context, g *v1alpha1.Group) (testDTO, error) {
+func toDTO(g *v1alpha1.Group) (testDTO, error) {
 	return testDTO{Key: g.Name, Name: g.Name}, nil
 }
 
-func failToDTO(context.Context, *v1alpha1.Group) (testDTO, error) {
+func failToDTO(*v1alpha1.Group) (testDTO, error) {
 	return testDTO{}, fmt.Errorf("cannot map")
 }
 
@@ -520,7 +520,7 @@ var _ = Describe("AdmissionLifecycle drift", func() {
 			Data:       map[string][]byte{"token": []byte("s3cr3t")},
 		})
 		a := withRemote(testDTO{Key: "g1", Name: "changed remotely"}, nil)
-		a.ToDTO = func(_ context.Context, g *v1alpha1.Group) (testDTO, error) {
+		a.ToDTO = func(g *v1alpha1.Group) (testDTO, error) {
 			return testDTO{Key: g.Name, Name: g.Spec.Type.Name}, nil
 		}
 		g := synced(newGroup("g1", "ns"))

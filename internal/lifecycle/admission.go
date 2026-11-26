@@ -189,7 +189,7 @@ func (a AdmissionLifecycle[T, D, C]) dryRun(
 	if a.DryRun == nil {
 		return
 	}
-	dto, err := a.ToDTO(ctx, obj)
+	dto, err := a.ToDTO(obj)
 	if err != nil {
 		errs.AddSeveref("could not map the resource: %s", err.Error())
 		return
@@ -236,12 +236,12 @@ func (a AdmissionLifecycle[T, D, C]) detectDrift(
 		return
 	}
 
-	newDTO, err := a.ToDTO(ctx, newCopy)
+	newDTO, err := a.ToDTO(newCopy)
 	if err != nil {
 		errs.AddSeveref("could not map the resource: %s", err.Error())
 		return
 	}
-	oldDTO, err := a.ToDTO(ctx, oldCopy)
+	oldDTO, err := a.ToDTO(oldCopy)
 	if err != nil {
 		errs.AddSeveref("could not map the previous resource: %s", err.Error())
 		return

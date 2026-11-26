@@ -53,7 +53,7 @@ func NewLifecycle() Lifecycle {
 		ResolveRefs:   am.ResolveSubResourceDomain[*v1alpha1.AMCertificate],
 		Owner:         am.GetSubResourceOwner[*v1alpha1.AMCertificate],
 		ClientFactory: am.CreateSubResourceClient[*v1alpha1.AMCertificate],
-		ToDTO:         lifecycle.WithoutContext(certificate.ToCertificateDTO),
+		ToDTO:         certificate.ToCertificateDTO,
 		Delete:        certificate.Delete,
 		Upsert:        certificate.Upsert,
 		PostUpsert:    certificate.UpdateStatus,

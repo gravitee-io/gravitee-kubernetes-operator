@@ -53,7 +53,7 @@ func NewLifecycle() Lifecycle {
 		ResolveRefs:   am.ResolveSubResourceDomain[*v1alpha1.AMReporter],
 		Owner:         am.GetSubResourceOwner[*v1alpha1.AMReporter],
 		ClientFactory: am.CreateSubResourceClient[*v1alpha1.AMReporter],
-		ToDTO:         lifecycle.WithoutContext(reporter.ToReporterDTO),
+		ToDTO:         reporter.ToReporterDTO,
 		Delete:        reporter.Delete,
 		Upsert:        reporter.Upsert,
 		PostUpsert:    reporter.UpdateStatus,

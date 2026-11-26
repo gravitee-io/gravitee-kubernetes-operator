@@ -60,23 +60,43 @@ func (l Legacy) deleteParams() *sdk.DeleteApiSubscriptionParams {
 	}
 }
 
-// applyLegacy swaps in the UUID of each identity created before the Automation API, and flags it.
-// The plan of a UUID-addressed API is its UUID too, or its hrid when the API has no such plan.
-func applyLegacy(dto *DTO, sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) {
+// applyLegacy swaps in the UUID of a subscription created before the Automation API, and flags each identity
+// that is a UUID.
+func applyLegacy(dto *DTO, sub *v1alpha1.Subscription, parents v1alpha1.SubscriptionResolved) {
 	if SubscriptionUsesUUID(sub) {
 		dto.Hrid = sub.Status.ID
 		dto.Legacy.HridContainsUUID = true
 	}
+	dto.Legacy.HridContainsApiUUID = parents.ApiUsesUUID
+	dto.Legacy.HridContainsAppUUID = parents.ApplicationUsesUUID
+}
+
+// applyLegacyParents swaps in the UUID of the API and of the application created before the Automation API.
+// The plan of a UUID-addressed API is its UUID too, or its hrid when the API has no such plan.
+func applyLegacyParents(
+	parents *v1alpha1.SubscriptionResolved,
+	sub *v1alpha1.Subscription,
+	api core.ApiDefinitionObject,
+	app core.ApplicationObject,
+) {
 	if model.APIUsesUUID(api) {
-		dto.ApiHrid = api.GetID()
-		dto.Legacy.HridContainsApiUUID = true
+		parents.ApiHrid = api.GetID()
+		parents.ApiUsesUUID = true
 		if plan := api.GetPlan(sub.Spec.Plan); plan != nil {
-			dto.PlanHrid = plan.GetID()
+			parents.PlanHrid = plan.GetID()
 		}
 	}
 	if app != nil && ApplicationUsesUUID(app) {
-		dto.ApplicationHrid = app.GetID()
-		dto.Legacy.HridContainsAppUUID = true
+		parents.ApplicationHrid = app.GetID()
+		parents.ApplicationUsesUUID = true
+	}
+}
+
+// populateLegacyIDs fills the plan UUIDs of an API created before the Automation API. Its legacy branch does not
+// read the management context, which the client factory resolves and reports on.
+func populateLegacyIDs(api core.ApiDefinitionObject) {
+	if model.APIUsesUUID(api) {
+		api.PopulateIDs(nil, false)
 	}
 }
 

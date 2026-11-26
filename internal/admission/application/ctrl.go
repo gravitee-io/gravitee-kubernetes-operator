@@ -42,7 +42,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			ClientFactory:   apimapp.CreateAPIMClient,
 			PreCheck:        preCheck,
 			ImmutableFields: validateSettingsUpdate,
-			ToDTO:           lifecycle.WithoutContext(apimapp.ToDTO),
+			ToDTO:           apimapp.ToDTO,
 			DryRun:          apimapp.DryRun,
 			PayloadChanged:  apimapp.PayloadChanged,
 			PostCheck:       validateCertEndDatesVsSubscriptionEndDates,

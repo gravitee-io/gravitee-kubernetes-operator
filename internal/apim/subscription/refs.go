@@ -22,37 +22,35 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// ResolveRefs checks that the API, the application and the plan the subscription references exist.
-// On delete, only the API is required: it carries the management context, so a missing API (NotFound) releases
-// the subscription without calling APIM, while a missing application still lets the delete reach APIM.
+// ResolveRefs checks that the API, the application and the plan the subscription references exist, and records in
+// sub.Resolved how the payload addresses them. On delete, only the API is required: it carries the management
+// context, so a missing API (NotFound) releases the subscription without calling APIM, while a missing application
+// is left out of the payload and still lets the delete reach APIM.
 func ResolveRefs(ctx context.Context, sub *v1alpha1.Subscription, ns string) error {
 	apiRef := APIRef(sub)
 	api, err := resolveAPI(ctx, apiRef, ns)
 	if err != nil {
 		return err
 	}
-	_, err = resolveApplication(ctx, AppRef(sub), ns)
-	if sub.IsBeingDeleted() {
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-		return err
+	app, err := resolveApplication(ctx, AppRef(sub), ns)
+	if sub.IsBeingDeleted() && apierrors.IsNotFound(err) {
+		app, err = nil, nil
 	}
 	if err != nil {
 		return err
 	}
-	if api.GetPlan(sub.GetPlan()) == nil {
+	if !sub.IsBeingDeleted() && api.GetPlan(sub.GetPlan()) == nil {
 		return fmt.Errorf(
 			"unable to subscribe to API [%s] because plan [%s] cannot be found", apiRef, sub.GetPlan(),
 		)
 	}
+	populateLegacyIDs(api)
+	sub.Resolved = parentIdentities(sub, api, app)
 	return nil
 }
 
@@ -77,37 +75,6 @@ func CreateAPIMClient(ctx context.Context, sub *v1alpha1.Subscription) (*apim.SD
 	return client, nil
 }
 
-// ToResolvedDTO resolves the API, with its IDs, and the application the subscription references, then maps them
-// with ToDTO. On delete, a missing application leaves it out of the payload. A failed lookup is a reference
-// error, which the reconcile retries.
-func ToResolvedDTO(ctx context.Context, sub *v1alpha1.Subscription) (DTO, error) {
-	api, app, err := resolveParents(ctx, sub)
-	if err != nil {
-		return DTO{}, gerrors.NewResolveRefError(err)
-	}
-	return ToDTO(sub, api, app)
-}
-
-func resolveParents(
-	ctx context.Context, sub *v1alpha1.Subscription,
-) (core.ApiDefinitionObject, core.ApplicationObject, error) {
-	ns := sub.GetNamespace()
-	api, err := resolveAPI(ctx, APIRef(sub), ns)
-	if err != nil {
-		return nil, nil, err
-	}
-	mctx, err := dynamic.ResolveContext(ctx, api.ContextRef(), api.GetNamespace())
-	if err != nil {
-		return nil, nil, err
-	}
-	api.PopulateIDs(mctx, k8s.IsAutomationAPIManaged(api))
-
-	app, err := resolveApplication(ctx, AppRef(sub), ns)
-	if sub.IsBeingDeleted() && apierrors.IsNotFound(err) {
-		return api, nil, nil
-	}
-	return api, app, err
-}
 
 // APIRef returns a copy of the API reference of sub, in the namespace of sub when it names none. The dynamic
 // resolvers write that namespace into the reference they get: resolving a copy leaves the Subscription spec as
