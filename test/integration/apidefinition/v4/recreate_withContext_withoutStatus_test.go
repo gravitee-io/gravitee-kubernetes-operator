@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
@@ -47,6 +48,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 		api := fixtures.APIv4
 		fixtures.APIv4 = nil
 		fixtures = fixtures.Apply()
+
+		By("defaulting the CR the way the API server does for the webhook and the controller")
+
+		defaulted := api.DeepCopy()
+		Expect(manager.Client().Create(ctx, defaulted, crclient.DryRunAll)).To(Succeed())
+		api.Spec = defaulted.Spec
 
 		client := apim.NewClient(ctx)
 
