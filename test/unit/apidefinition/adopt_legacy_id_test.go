@@ -121,6 +121,16 @@ var _ = Describe("AdoptLegacyID", func() {
 		Expect(api.Status.CrossID).To(BeEmpty())
 	})
 
+	It("leaves the CR to the HRID sync when APIM answers 200 with no API in the body", func() {
+		fake.status = http.StatusOK
+		fake.body = `{}`
+
+		Expect(apidefinition.AdoptLegacyID(ctx, apimClient, api)).To(Succeed())
+
+		Expect(api.Status.ID).To(BeEmpty())
+		Expect(api.Status.CrossID).To(BeEmpty())
+	})
+
 	DescribeTable("leaves the CR to the HRID sync",
 		func(status int) {
 			fake.status = status
