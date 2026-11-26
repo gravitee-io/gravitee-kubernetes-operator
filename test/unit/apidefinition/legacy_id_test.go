@@ -44,6 +44,24 @@ var _ = Describe("LegacyID", func() {
 		Expect(api.LegacyID(mCtx)).To(Equal("964236d2-7b02-9a17-a40a-ab686e76433a"))
 	})
 
+	It("derives the id GKO 4.11 gave an API in another organization and environment", func() {
+		api := newAPI()
+
+		Expect(api.LegacyID(&management.Context{OrgID: "ORG-A", EnvID: "ENV-B"})).
+			To(Equal("b299b6f8-a0ae-eca1-c5e1-b3ec7d0e0b50"))
+	})
+
+	It("derives the plan ids GKO 4.11 gave an API once its id is back in the status", func() {
+		api := newAPI()
+		api.Spec.Plans = &map[string]*v4.Plan{"API_KEY": {Plan: &base.Plan{}}}
+		api.Status.ID = api.LegacyID(mCtx)
+
+		api.PopulateIDs(mCtx, false)
+
+		Expect(api.Spec.ID).To(Equal("964236d2-7b02-9a17-a40a-ab686e76433a"))
+		Expect((*api.Spec.Plans)["API_KEY"].ID).To(Equal("d0aedf31-859f-47dd-ad18-df485d2709f4"))
+	})
+
 	It("derives the id GKO 4.11 gave an API from its spec cross id", func() {
 		api := newAPI()
 		api.Spec.CrossID = "exported-cross-id"
