@@ -65,8 +65,8 @@ func MayHaveLegacyID(api *v1alpha1.ApiV4Definition) bool {
 
 // leavesCRToHRIDSync reports whether a lookup that answered status leaves the CR to the HRID sync. APIM answers an
 // unknown id with 404 to an organization admin and with 403 to other users. The PUT that follows reports any other
-// 4xx as GKO does today. A 408, a 429 or a 5xx may not last: it fails the reconcile, which is retried, and the
-// admission, because the CR synced by HRID would collide with the API GKO 4.11 created for it.
+// 4xx as GKO does today. A 408, a 429 or a 5xx may not last, so it fails the lookup: the reconcile is retried, and
+// the admission refuses the CR, which synced by HRID would collide with the API GKO 4.11 created for it.
 func leavesCRToHRIDSync(status int) bool {
 	if status == http.StatusRequestTimeout || status == http.StatusTooManyRequests {
 		return false
