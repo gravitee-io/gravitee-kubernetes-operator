@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -61,17 +62,25 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	return resourceLifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.PortalLink{})
 }
 
+// SetupWithManager filters events per watch rather than with a controller-wide event filter: a portal
+// becoming synced is a status-only update, which LastSpecHashPredicate would drop, leaving a link
+// waiting on that portal to its retry backoff.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	lastSpecHash := builder.WithPredicates(predicate.LastSpecHashPredicate{})
+
 	newController := ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.PortalLink{}).
-		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Watches(&v1alpha1.Portal{}, r.Watcher.WatchPortals(search.PortalLinkPortalField)).
-		Watches(&v1alpha1.ApiV4Definition{}, r.Watcher.WatchApis(search.PortalLinkApiField))
+		For(&v1alpha1.PortalLink{}, lastSpecHash).
+		Watches(
+			&v1alpha1.Portal{},
+			r.Watcher.WatchPortals(search.PortalLinkPortalField),
+			builder.WithPredicates(predicate.PortalChildPredicate()),
+		).
+		Watches(&v1alpha1.ApiV4Definition{}, r.Watcher.WatchApis(search.PortalLinkApiField), lastSpecHash)
 
 	if env.Config.EnableTemplating {
 		newController.
-			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("portallinks")).
-			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("portallinks"))
+			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("portallinks"), lastSpecHash).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("portallinks"), lastSpecHash)
 	}
 	return newController.Complete(r)
 }
