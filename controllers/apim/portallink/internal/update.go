@@ -99,6 +99,12 @@ func CreateOrUpdate(ctx context.Context, link *v1alpha1.PortalLink) error {
 		)
 	}
 
+	if parent.parent.Portal != nil {
+		if err = dynamic.CheckPortalSynced(parent.parent.Portal); err != nil {
+			return gerrors.NewResolveRefError(err)
+		}
+	}
+
 	apimClient, err := apim.FromContextRef(ctx, parent.contextRef, parent.contextNs)
 	if err != nil {
 		return err

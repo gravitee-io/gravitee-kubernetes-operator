@@ -38,6 +38,10 @@ func CreateOrUpdate(ctx context.Context, listing *v1alpha1.PortalListing) error 
 		)
 	}
 
+	if err = dynamic.CheckPortalSynced(prtl); err != nil {
+		return gerrors.NewResolveRefError(err)
+	}
+
 	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
 	if err != nil {
 		return err
