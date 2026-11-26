@@ -15,13 +15,13 @@
 package apim
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
@@ -34,27 +34,27 @@ var _ = Describe("API v4 Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, "gravitee"))
 		},
 		Entry("empty struct",
-			model.APIV4DTO{},
-			model.APIV4DTO{},
+			sdkV4(model.APIV4DTO{}),
+			sdkV4(model.APIV4DTO{}),
 		),
 		Entry("equal struct",
 			completeAPIV4DTO(),
 			completeAPIV4DTO(),
 		),
 		Entry("equal struct from CRD mapping",
-			completeAPIV4DTO(),
-			model.ToAPIV4DriftDTO(completeAPIV4Spec()),
+			remoteOfCRD(crdV4Spec(completeAPIV4Spec()), loadFixture[model.APIV4DTO]("api_v4_dto.json")),
+			crdDriftV4Spec(completeAPIV4Spec()),
 		),
 		Entry("empty collections equivalent to nil",
-			model.APIV4DTO{
+			sdkV4(model.APIV4DTO{
 				FlowExecution: &model.APIV4FlowExecutionDTO{},
 				Plans: []*model.APIV4PlanDTO{{
 					Security: &model.APIV4PlanSecurityDTO{
 						Type: "foo",
 					},
 				}},
-			},
-			model.APIV4DTO{
+			}),
+			sdkV4(model.APIV4DTO{
 				Tags:       []string{},
 				Labels:     []string{},
 				Properties: []*model.APIV4PropertyDTO{},
@@ -81,10 +81,10 @@ var _ = Describe("API v4 Drift detection", func() {
 					Events: []string{},
 					Groups: []model.APIGroup{},
 				},
-			},
+			}),
 		),
 		Entry("differing collections equivalences",
-			model.APIV4DTO{
+			sdkV4(model.APIV4DTO{
 				Groups: []model.APIGroup{
 					"other",
 					"developers",
@@ -95,8 +95,8 @@ var _ = Describe("API v4 Drift detection", func() {
 						"developers",
 					},
 				},
-			},
-			model.APIV4DTO{
+			}),
+			sdkV4(model.APIV4DTO{
 				Metadata: []*model.APIV4MetadataEntryDTO{
 					{
 						BaseMetadata: model.BaseMetadata{Name: "foo", Value: nil, DefaultValue: new("bar")},
@@ -112,90 +112,90 @@ var _ = Describe("API v4 Drift detection", func() {
 						"gravitee-developers",
 					},
 				},
-			},
+			}),
 		),
 		Entry("crd-only categories ignored",
-			model.APIV4DTO{
+			sdkV4(model.APIV4DTO{
 				Categories: []model.APICategory{"shared", "crd-only"},
-			},
-			model.APIV4DTO{
+			}),
+			sdkV4(model.APIV4DTO{
 				Categories: []model.APICategory{"shared"},
-			},
+			}),
 		),
 		Entry("crd-only members ignored",
-			model.APIV4DTO{
+			sdkV4(model.APIV4DTO{
 				Members: []*model.APIV4MemberDTO{
 					{Source: "memory", SourceID: "admin", Role: "OWNER"},
 					{Source: "memory", SourceID: "local-only", Role: "USER"},
 				},
-			},
-			model.APIV4DTO{
+			}),
+			sdkV4(model.APIV4DTO{
 				Members: []*model.APIV4MemberDTO{
 					{Source: "memory", SourceID: "admin", Role: "OWNER"},
 				},
-			},
+			}),
 		),
 		Entry("empty reporters equivalent to true",
-			model.APIV4DTO{
+			sdkV4(model.APIV4DTO{
 				Analytics: nil,
-			},
-			model.APIV4DTO{
+			}),
+			sdkV4(model.APIV4DTO{
 				Analytics: &model.APIV4AnalyticsDTO{
 					Enabled:                true,
 					ReporterMetricsEnabled: new(true),
 				},
-			},
+			}),
 		),
 		Entry("unset portal navigation visibility resolved to PUBLIC matches the remote",
-			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+			sdkV4(model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha"},
-			}}.ForDrift(),
-			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+			}}),
+			sdkV4(model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Public},
-			}}.ForDrift(),
+			}}),
 		),
 		Entry("unset portal navigation visibility under a PRIVATE parent matches the inherited remote",
-			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+			sdkV4(model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Private},
 				{Path: "/alpha/docs"},
-			}}.ForDrift(),
-			model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+			}}),
+			sdkV4(model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 				{Path: "/alpha", Visibility: nav.Private},
 				{Path: "/alpha/docs", Visibility: nav.Private},
-			}}.ForDrift(),
+			}}),
 		),
 		Entry("unset flow mode equivalent to the DEFAULT the remote resolves",
-			model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{}},
-			model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeDefault}},
+			sdkV4(model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{}}),
+			sdkV4(model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeDefault}}),
 		),
 	)
 
 	It("compares a flow mode the CRD sets against the remote default", func() {
-		crd := model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeBestMatch}}
-		remote := model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeDefault}}
+		crd := sdkV4(model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeBestMatch}})
+		remote := sdkV4(model.APIV4DTO{FlowExecution: &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeDefault}})
 		result := drift.DetectWithNamespace(crd, remote, "gravitee")
 		Expect(result.DriftDetected()).To(BeTrue())
 		Expect(result.String()).To(ContainSubstring(`mode: BEST_MATCH != DEFAULT`))
 	})
 
 	It("matches a hyphenated flow mode the CRD sets against the remote BEST_MATCH", func() {
-		crd := model.ToAPIV4DriftDTO(&v4.Api{V4BaseApi: &v4.V4BaseApi{
+		sent := model.ToAPIV4DTO(&v4.Api{V4BaseApi: &v4.V4BaseApi{
 			ApiBase:       &base.ApiBase{},
 			FlowExecution: &v4.FlowExecution{Mode: "best-match"},
 		}})
-		remote := crd
+		remote := sent
 		remote.FlowExecution = &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeBestMatch}
-		result := drift.DetectWithNamespace(crd, remote, "gravitee")
+		result := drift.DetectWithNamespace(sdkV4(sent), sdkV4(remote), "gravitee")
 		Expect(result.DriftDetected()).To(BeFalse(), result.String())
 	})
 
 	It("detects a console-side flip of a portal navigation entry the CRD leaves unset", func() {
-		crd := model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+		crd := sdkV4(model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 			{Path: "/alpha"},
-		}}.ForDrift()
-		remote := model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
+		}})
+		remote := sdkV4(model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 			{Path: "/alpha", Visibility: nav.Private},
-		}}
+		}})
 		result := drift.DetectWithNamespace(crd, remote, "")
 		Expect(result.DriftDetected()).To(BeTrue())
 		Expect(result.String()).To(ContainSubstring(`visibility: PUBLIC != PRIVATE`))
@@ -203,20 +203,19 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	It("compares native connection events as a set", func() {
 		events := []v4.ConnectionEvent{v4.ConnectionEventConnected, v4.ConnectionEventDisconnected}
-		crd := model.ToAPIV4DTO(&v4.Api{V4BaseApi: &v4.V4BaseApi{
+		crd := crdDriftV4Spec(&v4.Api{V4BaseApi: &v4.V4BaseApi{
 			ApiBase:   &base.ApiBase{},
 			Analytics: &v4.Analytics{Enabled: true, ConnectionEvents: &events},
 		}})
-		var remote model.APIV4DTO
-		Expect(json.Unmarshal([]byte(`{"analytics": {"enabled": true, "connectionEvents": ["DISCONNECTED", "CONNECTED"]}}`), &remote)).To(Succeed())
+		remote := remoteDriftV4JSON(`{"analytics": {"enabled": true, "connectionEvents": ["DISCONNECTED", "CONNECTED"]}}`)
 
 		expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 	})
 
 	DescribeTable("listener path overrideAccess is ignored",
 		func(crdPaths, remotePaths string) {
-			crd := apiV4WithListenerPaths(crdPaths).ForDrift()
-			remote := apiV4WithListenerPaths(remotePaths).ForDrift()
+			crd := apiV4WithListenerPaths(crdPaths)
+			remote := apiV4WithListenerPaths(remotePaths)
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("unset against false",
@@ -242,8 +241,8 @@ var _ = Describe("API v4 Drift detection", func() {
 	)
 
 	It("still detects drift on the other keys of a listener path", func() {
-		crd := apiV4WithListenerPaths(`[{"path": "/a", "overrideAccess": true}]`).ForDrift()
-		remote := apiV4WithListenerPaths(`[{"path": "/b", "overrideAccess": true}]`).ForDrift()
+		crd := apiV4WithListenerPaths(`[{"path": "/a", "overrideAccess": true}]`)
+		remote := apiV4WithListenerPaths(`[{"path": "/b", "overrideAccess": true}]`)
 		result := drift.DetectWithNamespace(crd, remote, "")
 		Expect(result.DriftDetected()).To(BeTrue())
 		Expect(result.String()).To(ContainSubstring(`path: "/a" != "/b"`))
@@ -253,8 +252,8 @@ var _ = Describe("API v4 Drift detection", func() {
 	// entrypoint, which it stores without qos whatever was sent.
 	DescribeTable("admits the entrypoint qos APIM stores",
 		func(listener, entrypointType, crdQos, remoteQos string) {
-			crd := apiV4WithEntrypoint(listener, entrypointType, crdQos).ForDrift()
-			remote := apiV4WithEntrypoint(listener, entrypointType, remoteQos).ForDrift()
+			crd := apiV4WithEntrypoint(listener, entrypointType, crdQos)
+			remote := apiV4WithEntrypoint(listener, entrypointType, remoteQos)
 			expectNoDrift(admissionDrift(crd, remote))
 		},
 		Entry("PROXY unset against AUTO", httpListener, "http-proxy", "", "AUTO"),
@@ -269,8 +268,8 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	DescribeTable("detects a qos that differs from the one APIM stores",
 		func(entrypointType, crdQos, remoteQos string) {
-			crd := apiV4WithEntrypoint(httpListener, entrypointType, crdQos).ForDrift()
-			remote := apiV4WithEntrypoint(httpListener, entrypointType, remoteQos).ForDrift()
+			crd := apiV4WithEntrypoint(httpListener, entrypointType, crdQos)
+			remote := apiV4WithEntrypoint(httpListener, entrypointType, remoteQos)
 			merged := admissionDrift(crd, remote)
 			Expect(merged.DriftDetected()).To(BeTrue())
 			Expect(merged.String()).To(ContainSubstring(`qos: "` + crdQos + `" != "` + remoteQos + `"`))
@@ -376,8 +375,8 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	DescribeTable("admits the defaults APIM saves in every plugin configuration",
 		func(apiWithConfiguration string) {
-			crd := parseJSON[model.APIV4DTO](fmt.Sprintf(apiWithConfiguration, `{"url": "https://example.com"}`))
-			remote := parseJSON[model.APIV4DTO](fmt.Sprintf(apiWithConfiguration, `{"url": "https://example.com", "useSystemProxy": false}`))
+			crd := sdkV4JSON(fmt.Sprintf(apiWithConfiguration, `{"url": "https://example.com"}`))
+			remote := sdkV4JSON(fmt.Sprintf(apiWithConfiguration, `{"url": "https://example.com", "useSystemProxy": false}`))
 
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
@@ -397,8 +396,8 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	DescribeTable("plans and pages are compared by HRID",
 		func(crd, remote string) {
-			crdDTO := crdDriftAPIV4DTO(crd)
-			remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
+			crdDTO := crdDriftV4(crd)
+			remoteDTO := remoteDriftV4(crdDTO, remote)
 			expectNoDrift(drift.DetectWithNamespace(crdDTO, remoteDTO, ""))
 		},
 		Entry("plans returned out of HRID order",
@@ -412,13 +411,13 @@ var _ = Describe("API v4 Drift detection", func() {
 	)
 
 	It("still detects a change on a plan returned out of order", func() {
-		crd := crdDriftAPIV4DTO(
+		crd := crdDriftV4(
 			`{"name": "api", "plans": {"JWTPlan": ` + apiV4JWTPlan + `, "OAuth2Plan": ` + apiV4OAuth2Plan + `}}`,
 		)
 		renamed := strings.Replace(apiV4OAuth2Plan, `"OAuth2 plan"`, `"OAuth2 plan v2"`, 1)
-		remote := parseJSON[model.APIV4DTO](
-			`{"name": "api", "plans": [` + renamed + `, ` + apiV4JWTPlan + `]}`,
-		).Canonicalize()
+		remote := remoteDriftV4(crd,
+			`{"name": "api", "plans": [`+renamed+`, `+apiV4JWTPlan+`]}`,
+		)
 
 		result := drift.DetectWithNamespace(crd, remote, "")
 		Expect(result.DriftDetected()).To(BeTrue())
@@ -429,8 +428,8 @@ var _ = Describe("API v4 Drift detection", func() {
 
 	DescribeTable("still detects drift on plans and pages returned out of order",
 		func(crd, remote string) {
-			crdDTO := crdDriftAPIV4DTO(crd)
-			remoteDTO := parseJSON[model.APIV4DTO](remote).Canonicalize()
+			crdDTO := crdDriftV4(crd)
+			remoteDTO := remoteDriftV4(crdDTO, remote)
 			result := drift.DetectWithNamespace(crdDTO, remoteDTO, "")
 			Expect(result.DriftDetected()).To(BeTrue())
 		},
@@ -461,41 +460,41 @@ func completeAPIV4Spec() *v4.Api {
 	return &fixture
 }
 
-func apiV4WithListenerPaths(paths string) model.APIV4DTO {
+func apiV4WithListenerPaths(paths string) apiv4.DTO {
 	GinkgoHelper()
-	return parseJSON[model.APIV4DTO](`{"listeners": [{"type": "HTTP", "paths": ` + paths + `}]}`)
+	return sdkV4JSON(`{"listeners": [{"type": "HTTP", "paths": ` + paths + `}]}`)
 }
 
-func apiV4WithSharedConfiguration(configuration string) model.APIV4DTO {
+func apiV4WithSharedConfiguration(configuration string) apiv4.DTO {
 	GinkgoHelper()
-	return parseJSON[model.APIV4DTO](`{"endpointGroups": [{"name": "default", "type": "http-proxy", "endpoints": [], ` +
+	return sdkV4JSON(`{"endpointGroups": [{"name": "default", "type": "http-proxy", "endpoints": [], ` +
 		`"sharedConfiguration": ` + configuration + `}]}`)
 }
 
-func apiV4WithRequestStep(step string) model.APIV4DTO {
+func apiV4WithRequestStep(step string) apiv4.DTO {
 	GinkgoHelper()
-	return parseJSON[model.APIV4DTO](`{"flows": [{"name": "default", "enabled": true, "request": [` + step + `]}]}`)
+	return sdkV4JSON(`{"flows": [{"name": "default", "enabled": true, "request": [` + step + `]}]}`)
 }
 
-func apiV4WithListenerCors(cors string) model.APIV4DTO {
+func apiV4WithListenerCors(cors string) apiv4.DTO {
 	GinkgoHelper()
-	return parseJSON[model.APIV4DTO](`{"listeners": [{"type": "HTTP", "paths": [{"path": "/a/"}], "cors": ` + cors + `}]}`)
+	return sdkV4JSON(`{"listeners": [{"type": "HTTP", "paths": [{"path": "/a/"}], "cors": ` + cors + `}]}`)
 }
 
 // apiV4WithEntrypoint adds one entrypoint to the listener, with the given qos unless it is empty.
-func apiV4WithEntrypoint(listener, entrypointType, qos string) model.APIV4DTO {
+func apiV4WithEntrypoint(listener, entrypointType, qos string) apiv4.DTO {
 	GinkgoHelper()
 	entrypoint := `{"type": "` + entrypointType + `"`
 	if qos != "" {
 		entrypoint += `, "qos": "` + qos + `"`
 	}
 	withEntrypoint := strings.TrimSuffix(listener, "}") + `, "entrypoints": [` + entrypoint + `}]}`
-	return parseJSON[model.APIV4DTO](`{"listeners": [` + withEntrypoint + `]}`)
+	return sdkV4JSON(`{"listeners": [` + withEntrypoint + `]}`)
 }
 
-func completeAPIV4DTO() model.APIV4DTO {
+func completeAPIV4DTO() apiv4.DTO {
 	GinkgoHelper()
-	return loadFixture[model.APIV4DTO]("api_v4_dto.json")
+	return sdkV4(loadFixture[model.APIV4DTO]("api_v4_dto.json"))
 }
 
 const (

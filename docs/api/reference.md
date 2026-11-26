@@ -3945,7 +3945,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `id` _string_ | Plan ID |  |  |
+| `id` _string_ | The plan ID, for an ApiV4Definition with spec.id set or without a management context.<br />Ignored by ApiDefinition (v2).<br />With spec.id set, it takes over the existing plan of the same API in the same<br />environment, as in an API exported from APIM. If not set, the ID is generated.<br />After the first apply, the ID stored in status.plans is used and a change here is ignored. |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The plan Cross ID.<br />This field is used to identify plans defined for an API<br />that has been promoted between different environments. |  |  |
 | `tags` _string array_ | List of plan tags | \{  \} | Optional: \{\} <br /> |
 | `status` _[PlanStatus](#planstatus)_ | The plan status | PUBLISHED | Enum: [PUBLISHED DEPRECATED STAGING] <br />Optional: \{\} <br /> |

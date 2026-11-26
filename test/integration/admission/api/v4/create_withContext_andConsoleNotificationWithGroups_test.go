@@ -32,7 +32,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v4.NewAdmissionCtrl()
 
 	It("should create an API with notification groups and no events without warnings", func() {
 

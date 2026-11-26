@@ -55,6 +55,10 @@ type PostUpsertFunc[T core.ContextAwareObject, R any] func(ctx context.Context, 
 // What it writes stays on the status until PostUpsert clears it.
 type UpsertErrorFunc[T core.ContextAwareObject] func(ctx context.Context, obj T, err error) error
 
+// StatusFunc sets the status fields the lifecycle does not manage, before it saves the status of a reconcile.
+// err is nil when the reconcile succeeded. It mutates obj only.
+type StatusFunc[T core.ContextAwareObject] func(obj T, err error)
+
 // RefResolverFunc writes resolved in-cluster refs onto obj (secrets, parent CRs). Mutates obj.
 type RefResolverFunc[T any] func(ctx context.Context, obj T, namespace string) error
 
@@ -67,6 +71,9 @@ type PayloadChangedFunc[T core.ContextAwareObject] func(oldValue, newValue T) bo
 
 // ImmutableFieldsFunc returns severe errors when frozen spec fields changed between old and new.
 type ImmutableFieldsFunc[T core.ContextAwareObject] func(oldValue, newValue T) *gerrors.AdmissionErrors
+
+// DriftDTOFunc normalises a DTO for drift comparison only (never for the payload sent to the remote).
+type DriftDTOFunc[D store.Identifiable] func(dto D) D
 
 // DryRunFunc validates dto against the remote API without persisting. Never maps the CR.
 // The findings are the remote's validation result (severe rejects, warnings admit); err is a call that
@@ -118,6 +125,10 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 
 	// OnUpsertError runs on create/update after a failed Upsert, before the error is returned. Nil skips.
 	OnUpsertError UpsertErrorFunc[T]
+
+	// Status runs before the lifecycle saves the status, after the conditions are set: on success (not while
+	// deleting) and on failure. Nil skips.
+	Status StatusFunc[T]
 }
 
 // AdmissionLifecycle is the admission holes for one CR kind.
@@ -154,11 +165,20 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 	// GetRemote runs on update after PostCheck, for drift, once the resource has an ID. Required.
 	GetRemote GetRemoteFunc[C, D]
 
+	// DriftDTO normalises the old, new and remote DTOs before drift compares them, for rules that apply to the
+	// comparison only. Nil compares the DTOs as ToDTO and GetRemote return them.
+	DriftDTO DriftDTOFunc[D]
+
 	// DeleteGuard runs on delete review only. Nil skips.
 	DeleteGuard DeleteGuardFunc[T]
 
 	// DeleteCheck runs on delete review after DeleteGuard. Severe rejects, warnings admit. Nil skips.
 	DeleteCheck AdmissionCheckFunc[T]
+
+	// UnprefixedResolveErrors reports a ResolveRefs or ClientFactory error as it is, without the
+	// "could not resolve references: " or "could not resolve context: " prefix, for a resource whose admission
+	// messages predate the lifecycle and must not change.
+	UnprefixedResolveErrors bool
 }
 
 // NewResourceLifecycle returns l, and panics on the first missing required hole.

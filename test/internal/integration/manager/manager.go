@@ -191,10 +191,11 @@ func start() {
 
 	runtimeUtil.Must(
 		(&apidefinition.V4Reconciler{
-			Client:   mgr.GetClient(),
-			Scheme:   mgr.GetScheme(),
-			Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
-			Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
+			Lifecycle: apidefinition.NewV4Lifecycle(),
+			Client:    mgr.GetClient(),
+			Scheme:    mgr.GetScheme(),
+			Recorder:  mgr.GetEventRecorderFor("apiv4definition-controller"),
+			Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
 		}).SetupWithManager(mgr),
 	)
 

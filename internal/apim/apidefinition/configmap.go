@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package apidefinition
 
 import (
 	"context"
@@ -39,7 +39,9 @@ const (
 	defaultOrgID  = "DEFAULT"
 )
 
-func updateConfigMap(
+// UpdateConfigMap writes the gateway ConfigMap of an API that syncs from Kubernetes, or deletes it while the API
+// is stopped.
+func UpdateConfigMap(
 	ctx context.Context,
 	api core.ApiDefinitionObject,
 ) error {

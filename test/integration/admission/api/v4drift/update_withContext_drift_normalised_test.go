@@ -30,7 +30,7 @@ import (
 // GKO-3433: what APIM stores differently from what the CRD sends is not drift.
 var _ = Describe("Validate drift on values APIM normalises", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := admissionv4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.NewAdmissionCtrl()
 
 	It("should not drift on a lowercase flow mode APIM stores in uppercase", func() {
 		fixtures := fixture.Builder().

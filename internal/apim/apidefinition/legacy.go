@@ -32,7 +32,7 @@ import (
 // When APIM holds an API with that id and this CR's cross id, the status gets the id, so that PopulateIDs
 // takes the legacy branch. Otherwise the API is new and is synced by HRID, as before.
 func AdoptLegacyID(ctx context.Context, apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) error {
-	if api.Status.ID != "" || api.Spec.ID != "" || k8s.IsAutomationAPIManaged(api) {
+	if !MayHaveLegacyID(api) {
 		return nil
 	}
 
@@ -54,4 +54,10 @@ func AdoptLegacyID(ctx context.Context, apimClient *apim.APIM, api *v1alpha1.Api
 	api.Status.CrossID = remote.CrossID
 	log.Info(ctx, "Re-attached API created before GKO 4.12", log.KeyValues(api, "id", id)...)
 	return nil
+}
+
+// MayHaveLegacyID reports whether the CR may belong to an API GKO 4.11 created: it has no status id, no spec id,
+// and was never synced by HRID.
+func MayHaveLegacyID(api *v1alpha1.ApiV4Definition) bool {
+	return api.Status.ID == "" && api.Spec.ID == "" && !k8s.IsAutomationAPIManaged(api)
 }

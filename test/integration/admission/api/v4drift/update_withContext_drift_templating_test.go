@@ -27,7 +27,7 @@ import (
 
 var _ = Describe("Validate drift for templated APIs", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := admissionv4.AdmissionCtrl{}
+	admissionCtrl := admissionv4.NewAdmissionCtrl()
 
 	It("should not drift when the CRD changes a templated value", func() {
 		fixtures := fixture.Builder().

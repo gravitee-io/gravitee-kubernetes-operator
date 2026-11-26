@@ -19,6 +19,7 @@ import (
 
 	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apiv4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -64,7 +65,10 @@ var _ = Describe("Create", labels.WithContext, func() {
 		legacy.Spec.ID = apiID
 		legacy.PopulateIDs(client.Context, false)
 		planID := (*legacy.Spec.Plans)[planKey].ID
-		_, err := client.APIs.ImportV4(legacy)
+		dto, err := apiv4.ToDTO(legacy)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dto.HridContainsUUID).To(BeTrue())
+		_, err = client.APIs.UpsertV4Legacy(dto.ApiV4, false, false)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("subscribing an application to its plan")
@@ -78,7 +82,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		By("admitting the CR re-created without status")
 
-		_, err = adm.AdmissionCtrl{}.ValidateCreate(ctx, api)
+		_, err = adm.NewAdmissionCtrl().ValidateCreate(ctx, api.DeepCopy())
 		Expect(err).ToNot(HaveOccurred())
 
 		By("re-creating the CR without status")

@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.20.0
-    gravitee.io/operator.version: 4.14.0-rc
+    gravitee.io/operator.version: 4.15.0-rc
   name: apiv4definitions.gravitee.io
 spec:
   group: gravitee.io
@@ -1532,7 +1532,8 @@ spec:
                       hrid:
                         type: string
                       id:
-                        description: Plan ID
+                        description: The plan ID, for an ApiV4Definition with spec.id set or without a
+                          management context.
                         type: string
                       mode:
                         allOf:

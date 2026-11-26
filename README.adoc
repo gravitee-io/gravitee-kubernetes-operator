@@ -34,7 +34,7 @@ The GKO API reference documentation is available https://github.com/gravitee-io/
 | Feature | Replace with | Off by default | Removed
 
 | `ApiDefinition` (v2 APIs)
-| `ApiV4Definition`
+| `ApiV4Definition`, see the link:docs/guides/v2-to-v4-migration/README.md[migration guide]
 | —
 | October 2027
 
