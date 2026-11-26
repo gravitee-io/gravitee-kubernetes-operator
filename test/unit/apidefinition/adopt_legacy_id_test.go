@@ -26,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -151,12 +152,20 @@ var _ = Describe("AdoptLegacyID", func() {
 		Entry("503", http.StatusServiceUnavailable),
 	)
 
-	It("does not call APIM for a CR that already has a status id", func() {
-		api.Status.ID = "an-id"
+	DescribeTable("does not call APIM for a CR that GKO 4.11 cannot have left without status",
+		func(prepare func(*v1alpha1.ApiV4Definition)) {
+			fake.status = http.StatusOK
+			fake.body = `{"id": "` + legacyID + `", "crossId": "` + legacyCrossID + `", "name": "my-api"}`
+			prepare(api)
+			statusID := api.Status.ID
 
-		Expect(apidefinition.AdoptLegacyID(ctx, apimClient, api)).To(Succeed())
+			Expect(apidefinition.AdoptLegacyID(ctx, apimClient, api)).To(Succeed())
 
-		Expect(fake.received()).To(BeEmpty())
-		Expect(api.Status.ID).To(Equal("an-id"))
-	})
+			Expect(fake.received()).To(BeEmpty())
+			Expect(api.Status.ID).To(Equal(statusID))
+		},
+		Entry("with a status id", func(api *v1alpha1.ApiV4Definition) { api.Status.ID = "an-id" }),
+		Entry("with a spec id", func(api *v1alpha1.ApiV4Definition) { api.Spec.ID = "an-id" }),
+		Entry("synced by HRID", func(api *v1alpha1.ApiV4Definition) { k8s.AddAutomationAPIManagedCondition(api) }),
+	)
 })
