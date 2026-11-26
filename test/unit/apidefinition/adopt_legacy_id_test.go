@@ -120,7 +120,7 @@ var _ = Describe("AdoptLegacyID", func() {
 		Expect(api.Status.CrossID).To(BeEmpty())
 	})
 
-	DescribeTable("leaves the CR to the HRID sync when APIM has no API at the 4.11 id",
+	DescribeTable("leaves the CR to the HRID sync",
 		func(status int) {
 			fake.status = status
 			fake.body = `{"message": "API not found"}`
@@ -129,19 +129,24 @@ var _ = Describe("AdoptLegacyID", func() {
 
 			Expect(api.Status.ID).To(BeEmpty())
 		},
-		Entry("404, as an organization admin gets it", http.StatusNotFound),
-		Entry("403, as a user without rights on the unknown id gets it", http.StatusForbidden),
+		Entry("on a 404, as an organization admin gets it for an unknown id", http.StatusNotFound),
+		Entry("on a 403, as a user without rights gets it for an unknown id", http.StatusForbidden),
+		Entry("on a 401, which the PUT that follows gets too", http.StatusUnauthorized),
 	)
 
-	It("returns a server error, which the PUT that follows would hit too", func() {
-		fake.status = http.StatusServiceUnavailable
-		fake.body = `{"message": "unavailable"}`
+	DescribeTable("fails the lookup on any other status, so that the reconcile is retried",
+		func(status int) {
+			fake.status = status
+			fake.body = `{"message": "unavailable"}`
 
-		err := apidefinition.AdoptLegacyID(ctx, apimClient, api)
+			err := apidefinition.AdoptLegacyID(ctx, apimClient, api)
 
-		Expect(err).To(MatchError(ContainSubstring(legacyID)))
-		Expect(api.Status.ID).To(BeEmpty())
-	})
+			Expect(err).To(MatchError(ContainSubstring(legacyID)))
+			Expect(api.Status.ID).To(BeEmpty())
+		},
+		Entry("429", http.StatusTooManyRequests),
+		Entry("503", http.StatusServiceUnavailable),
+	)
 
 	It("does not call APIM for a CR that already has a status id", func() {
 		api.Status.ID = "an-id"

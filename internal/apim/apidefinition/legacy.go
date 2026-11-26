@@ -41,7 +41,7 @@ func AdoptLegacyID(ctx context.Context, apimClient *apim.APIM, api *v1alpha1.Api
 	remote, err := apimClient.APIs.GetV4WithUUID(id)
 	if err != nil {
 		var serverErr gerrors.ServerError
-		if errors.As(err, &serverErr) && serverErr.StatusCode < http.StatusInternalServerError {
+		if errors.As(err, &serverErr) && leavesCRToHRIDSync(serverErr.StatusCode) {
 			return nil
 		}
 		return fmt.Errorf("looking up the API GKO 4.11 created with id %s: %w", id, err)
@@ -61,4 +61,17 @@ func AdoptLegacyID(ctx context.Context, apimClient *apim.APIM, api *v1alpha1.Api
 // and was never synced by HRID.
 func MayHaveLegacyID(api *v1alpha1.ApiV4Definition) bool {
 	return api.Status.ID == "" && api.Spec.ID == "" && !k8s.IsAutomationAPIManaged(api)
+}
+
+// leavesCRToHRIDSync reports whether a lookup that answered status leaves the CR to the HRID sync. APIM answers an
+// unknown id with 404 to an organization admin and with 403 to other users. A 401 fails the PUT that follows the
+// same way, and GKO reports it as it does today. Any other status, 429 included, fails the reconcile and the
+// admission: synced by HRID, the CR would collide with the API GKO 4.11 created for it.
+func leavesCRToHRIDSync(status int) bool {
+	switch status {
+	case http.StatusNotFound, http.StatusForbidden, http.StatusUnauthorized:
+		return true
+	default:
+		return false
+	}
 }
