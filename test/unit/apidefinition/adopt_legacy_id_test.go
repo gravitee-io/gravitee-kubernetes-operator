@@ -132,9 +132,10 @@ var _ = Describe("AdoptLegacyID", func() {
 		Entry("on a 404, as an organization admin gets it for an unknown id", http.StatusNotFound),
 		Entry("on a 403, as a user without rights gets it for an unknown id", http.StatusForbidden),
 		Entry("on a 401, which the PUT that follows gets too", http.StatusUnauthorized),
+		Entry("on a 400, which the PUT that follows reports", http.StatusBadRequest),
 	)
 
-	DescribeTable("fails the lookup on any other status, so that the reconcile is retried",
+	DescribeTable("fails the lookup on a status that may not last, so that the reconcile is retried",
 		func(status int) {
 			fake.status = status
 			fake.body = `{"message": "unavailable"}`
@@ -144,7 +145,9 @@ var _ = Describe("AdoptLegacyID", func() {
 			Expect(err).To(MatchError(ContainSubstring(legacyID)))
 			Expect(api.Status.ID).To(BeEmpty())
 		},
+		Entry("408", http.StatusRequestTimeout),
 		Entry("429", http.StatusTooManyRequests),
+		Entry("500", http.StatusInternalServerError),
 		Entry("503", http.StatusServiceUnavailable),
 	)
 
