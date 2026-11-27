@@ -15,73 +15,14 @@
 package policygroups
 
 import (
-	"context"
 	"fmt"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func validateCreate(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-	// Should be the first validation, it will also compile the templates internally
-	errs.Add(admission.CompileAndValidateTemplate(ctx, spg))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.Add(ctxref.Validate(ctx, spg))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.MergeWith(validateDryRun(ctx, spg))
-	return errs
-}
-
-func validateUpdate(
-	ctx context.Context,
-	oldSpg *v1alpha1.SharedPolicyGroup,
-	newSpg *v1alpha1.SharedPolicyGroup,
-) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-	if newSpg.IsBeingDeleted() {
-		return errs
-	}
-
-	// Should be the first validation, it will also compile the templates internally
-	errs.Add(admission.CompileAndValidateTemplate(ctx, newSpg))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.Add(ctxref.Validate(ctx, newSpg))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.Add(validateImmutableFields(ctx, oldSpg, newSpg))
-	if errs.IsSevere() {
-		return errs
-	}
-
-	errs.MergeWith(validateDryRun(ctx, newSpg))
-	if errs.IsSevere() {
-		return errs
-	}
-	mergeDriftValidation(ctx, oldSpg, newSpg, errs)
-
-	return errs
-}
-
-func validateImmutableFields(_ context.Context, oldSpg, newSpg *v1alpha1.SharedPolicyGroup) *errors.AdmissionError {
+func validateImmutableFields(oldSpg, newSpg *v1alpha1.SharedPolicyGroup) *errors.AdmissionError {
 	if utils.ToStringValue(oldSpg.Spec.CrossID) != utils.ToStringValue(newSpg.Spec.CrossID) {
 		return &errors.AdmissionError{
 			Severity: errors.Severe,
@@ -107,43 +48,4 @@ func validateImmutableFields(_ context.Context, oldSpg, newSpg *v1alpha1.SharedP
 	}
 
 	return nil
-}
-
-func validateDryRun(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	cp := spg.DeepCopy()
-
-	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
-	if err != nil {
-		errs.AddSevere(err.Error())
-	}
-
-	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(cp))
-
-	status, err := apim.SharedPolicyGroup.DryRunCreateOrUpdate(cp)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
-	}
-	if errs.IsSevere() {
-		return errs
-	}
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
-	}
-	return errs
-}
-
-func validateDelete(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	if err := search.AssertNoSharedPolicyGroupRef(ctx, spg); err != nil {
-		errs.AddSevere(err.Error())
-	}
-
-	return errs
 }
