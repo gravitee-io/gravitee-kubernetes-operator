@@ -30,7 +30,7 @@ import (
 
 // ParentRefs are the parent references of a link or documentation page, with what the messages name.
 type ParentRefs struct {
-	// Kind words the resource in the messages: "portal link", "documentation".
+	// Kind is the lowercase kind of the resource, named in the messages: portallink, documentation.
 	Kind      string
 	Name      string
 	Namespace string
@@ -49,7 +49,7 @@ func (r ParentRefs) Resolve(ctx context.Context, deleting bool) (core.ContextAwa
 	if err := r.checkShape(); err != nil {
 		if deleting {
 			return nil, gerrors.NewRefNotFoundError(
-				fmt.Sprintf("%s [%s]: %v, nothing to delete in APIM", r.Kind, r.Name, err),
+				fmt.Sprintf("%v, nothing to delete in APIM", err),
 				apierrors.NewNotFound(schema.GroupResource{Group: core.CRDGroup}, r.Name),
 			)
 		}
@@ -64,14 +64,21 @@ func (r ParentRefs) Resolve(ctx context.Context, deleting bool) (core.ContextAwa
 func (r ParentRefs) checkShape() error {
 	switch {
 	case r.Portal != nil && r.API != nil:
-		return errors.New("exactly one of portalRef / apiRef must be set, but both were provided")
+		return r.shapeError("exactly one of portalRef / apiRef must be set, but both were provided")
 	case r.Portal == nil && r.API == nil:
-		return errors.New("exactly one of portalRef / apiRef must be set, but neither was provided")
+		return r.shapeError("exactly one of portalRef / apiRef must be set, but neither was provided")
 	}
 	if r.API != nil && r.API.Kind != "" && dynamic.ResourceFromKind(r.API.Kind) != core.CRDApiV4DefinitionResource {
-		return fmt.Errorf("apiRef [%s] must be of kind ApiV4Definition (next-gen portal only supports those)", r.API.Name)
+		return r.shapeError(
+			fmt.Sprintf("apiRef [%s] must be of kind ApiV4Definition (next-gen portal only supports those)", r.API.Name),
+		)
 	}
 	return nil
+}
+
+// shapeError names the resource whose parent refs are wrong, as the other messages here do.
+func (r ParentRefs) shapeError(msg string) error {
+	return fmt.Errorf("%s [%s]: %s", r.Kind, r.Name, msg)
 }
 
 func (r ParentRefs) resolvePortal(ctx context.Context, deleting bool) (core.ContextAwareObject, error) {

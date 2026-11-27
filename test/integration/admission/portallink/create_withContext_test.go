@@ -53,7 +53,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			_, err := admissionCtrl.ValidateCreate(ctx, link.PortalLink)
 			return assert.SevereError(
 				errors.NewSeveref(
-					"portal link [%s] references portal [%v] that can't be resolved",
+					"portallink [%s] references portal [%v] that can't be resolved",
 					link.PortalLink.GetName(), resolvedRef,
 				),
 				err,

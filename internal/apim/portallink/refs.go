@@ -45,7 +45,7 @@ func ResolveRefs(ctx context.Context, obj *v1alpha1.PortalLink, _ string) error 
 
 func parentRefs(obj *v1alpha1.PortalLink) navigation.ParentRefs {
 	return navigation.ParentRefs{
-		Kind:      "portal link",
+		Kind:      "portallink",
 		Name:      obj.GetName(),
 		Namespace: obj.GetNamespace(),
 		Portal:    obj.Spec.Portal,

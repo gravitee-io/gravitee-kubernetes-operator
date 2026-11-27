@@ -196,12 +196,14 @@ var _ = Describe("Portal navigation reference resolution", func() {
 		DescribeTable("check the parent refs with the webhook's messages",
 			func(portal, api *refs.NamespacedName, message string) {
 				portalCluster()
-				Expect(apimportallink.ResolveRefsForAdmission(ctx, refLink(portal, api), "default")).To(MatchError(message))
-				Expect(apimportallink.ResolveRefs(ctx, refLink(portal, api), "default")).To(MatchError(message))
+				linkMessage := "portallink [docs-link]: " + message
+				Expect(apimportallink.ResolveRefsForAdmission(ctx, refLink(portal, api), "default")).To(MatchError(linkMessage))
+				Expect(apimportallink.ResolveRefs(ctx, refLink(portal, api), "default")).To(MatchError(linkMessage))
 				doc := refDoc(portal)
 				doc.Spec.API = api
-				Expect(apimdocs.ResolveRefsForAdmission(ctx, doc, "default")).To(MatchError(message))
-				Expect(apimdocs.ResolveRefs(ctx, doc, "default")).To(MatchError(message))
+				docMessage := "documentation [welcome]: " + message
+				Expect(apimdocs.ResolveRefsForAdmission(ctx, doc, "default")).To(MatchError(docMessage))
+				Expect(apimdocs.ResolveRefs(ctx, doc, "default")).To(MatchError(docMessage))
 			},
 			Entry("both", mainPortalRef(), &refs.NamespacedName{Name: "orders"},
 				"exactly one of portalRef / apiRef must be set, but both were provided"),
