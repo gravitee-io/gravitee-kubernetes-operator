@@ -53,3 +53,37 @@ func (PortalSyncedPredicate) Generic(event.GenericEvent) bool {
 func PortalChildPredicate() predicate.Predicate {
 	return predicate.Or(LastSpecHashPredicate{}, PortalSyncedPredicate{})
 }
+
+// PortalThemeSyncedPredicate passes the PortalTheme update a portal waiting on its theme needs: the one that
+// changes the APIM id. A portal synced before its theme is in APIM is refused, and that update touches the
+// status only, so LastSpecHashPredicate drops it. Any other event is dropped.
+type PortalThemeSyncedPredicate struct {
+	predicate.Funcs
+}
+
+func (PortalThemeSyncedPredicate) Create(event.CreateEvent) bool {
+	return false
+}
+
+func (PortalThemeSyncedPredicate) Update(e event.UpdateEvent) bool {
+	oldThm, oldOK := e.ObjectOld.(*v1alpha1.PortalTheme)
+	newThm, newOK := e.ObjectNew.(*v1alpha1.PortalTheme)
+	if !oldOK || !newOK {
+		return false
+	}
+	return oldThm.Status.ID != newThm.Status.ID
+}
+
+func (PortalThemeSyncedPredicate) Delete(event.DeleteEvent) bool {
+	return false
+}
+
+func (PortalThemeSyncedPredicate) Generic(event.GenericEvent) bool {
+	return false
+}
+
+// PortalThemeChildPredicate filters the PortalTheme events of the portal controller: a spec change, as for
+// any watch, or the theme becoming synced.
+func PortalThemeChildPredicate() predicate.Predicate {
+	return predicate.Or(LastSpecHashPredicate{}, PortalThemeSyncedPredicate{})
+}

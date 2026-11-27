@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -65,16 +66,21 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	lastSpecHash := builder.WithPredicates(predicate.LastSpecHashPredicate{})
+
 	newController := ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.Portal{}).
-		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.PortalContextField)).
-		Watches(&v1alpha1.PortalTheme{}, r.Watcher.WatchPortalThemes(search.PortalThemeField))
+		For(&v1alpha1.Portal{}, lastSpecHash).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.PortalContextField), lastSpecHash).
+		Watches(
+			&v1alpha1.PortalTheme{},
+			r.Watcher.WatchPortalThemes(search.PortalThemeField),
+			builder.WithPredicates(predicate.PortalThemeChildPredicate()),
+		)
 
 	if env.Config.EnableTemplating {
 		newController.
-			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("portals")).
-			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("portals"))
+			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("portals"), lastSpecHash).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("portals"), lastSpecHash)
 	}
 	return newController.Complete(r)
 }
