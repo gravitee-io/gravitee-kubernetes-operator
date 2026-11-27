@@ -19,9 +19,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Application Drift detection", func() {
@@ -250,6 +252,15 @@ var _ = Describe("Application Drift detection", func() {
 		)
 
 		Expect(merged.DriftDetected()).To(BeTrue(), merged.String())
+	})
+
+	It("leaves the CR's groups out of the payload under ignore-groups, as GetRemote leaves the remote ones", func() {
+		app := &v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{core.IgnoreGroupsAnnotation: "true"},
+		}}
+		app.Spec.Groups = []string{"developers"}
+
+		Expect(toApplicationDTO(app).Groups).To(BeNil())
 	})
 })
 

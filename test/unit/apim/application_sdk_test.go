@@ -139,6 +139,16 @@ var _ = Describe("Application SDK calls", func() {
 		Expect(findings.Warning).To(BeEmpty())
 	})
 
+	It("dry runs the application and returns its warnings when APIM finds nothing severe", func() {
+		fake.response = `{"hrid": "default-app", "name": "app", "errors": {"warning": ["warning one"]}}`
+
+		findings, err := apimapp.DryRun(ctx, client, applicationDTO(false, false))
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(findings.Severe).To(BeEmpty())
+		Expect(findings.Warning).To(ConsistOf(MatchError("warning one")))
+	})
+
 	DescribeTable("Delete removes the application by its hrid, or a legacy one by its UUID",
 		func(legacy bool, path string, query map[string]string) {
 			fake.status = http.StatusNoContent
@@ -179,7 +189,7 @@ var _ = Describe("Application SDK calls", func() {
 
 		_, err := apimapp.Upsert(ctx, client, applicationDTO(false, false))
 
-		Expect(err).To(HaveOccurred())
+		Expect(err).To(MatchError(ContainSubstring(`unexpected response: status 200, content type "text/plain"`)))
 	})
 })
 
@@ -217,5 +227,17 @@ var _ = Describe("Application UpdateStatus", func() {
 		Expect(apimapp.UpdateStatus(context.Background(), app, resp)).To(Succeed())
 
 		Expect(app.Status.ID).To(Equal(applicationUUID))
+	})
+
+	It("clears the errors of an earlier sync when APIM answers none", func() {
+		app := newApplication(applicationUUID, "", true)
+		app.Status.Errors.Severe = []string{"severe one"}
+		app.Status.Errors.Warning = []string{"warning one"}
+		resp := apimapp.Response{State: sdk.ApplicationState{Hrid: "default-app", Id: new(applicationUUID)}}
+
+		Expect(apimapp.UpdateStatus(context.Background(), app, resp)).To(Succeed())
+
+		Expect(app.Status.Errors.Severe).To(BeEmpty())
+		Expect(app.Status.Errors.Warning).To(BeEmpty())
 	})
 })

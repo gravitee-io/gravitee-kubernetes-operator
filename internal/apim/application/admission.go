@@ -56,7 +56,7 @@ func DryRun(ctx context.Context, client *apim.SDKClient, dto DTO) (*errors.Admis
 }
 
 // GetRemote fetches the application from APIM as the payload a PUT would send, for drift detection.
-// With ignore-groups, APIM owns the groups: they are left out, as the drift mapper leaves out the CR's.
+// With ignore-groups, APIM owns the groups: they are left out, as ToDTO leaves out the CR's.
 func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error) {
 	state, err := GetState(ctx, client, dto)
 	if err != nil {

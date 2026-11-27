@@ -61,6 +61,10 @@ func ToDTO(obj *v1alpha1.Application) (DTO, error) {
 		Application:  payload,
 		IgnoreGroups: k8s.HasTrueAnnotation(obj, core.IgnoreGroupsAnnotation),
 	}
+	if dto.IgnoreGroups {
+		// APIM owns the groups: it ignores them in the payload, and drift leaves them out.
+		dto.Groups = nil
+	}
 	dto.Hrid = refs.NewNamespacedNameFromObject(obj).HRID()
 	applyLegacy(&dto, obj)
 	return dto, nil
