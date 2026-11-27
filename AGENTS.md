@@ -94,10 +94,10 @@ Controllers and webhooks never build a URL or a payload themselves. For a resour
 
 #### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
 
-Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **ApiV4Definition**, **Application**, **PortalTheme**, **Portal**, **PortalLink**, **PortalListing**, **Documentation**. The portal kinds' hand-written services (`internal/apim/service/{portals,portalthemes,portallinks,portallistings,documentations}.go`) and DTOs (`internal/apim/model/`) stay for master's tests only: production code does not use them.
+Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **ApiV4Definition**, **Application**, **Subscription**, all on `internal/lifecycle`, and **PortalTheme**, **Portal**, **PortalLink**, **PortalListing**, **Documentation**. Subscription keeps its pre-4.12 UUID addressing in one file, `internal/apim/subscription/legacy.go`. The portal kinds' hand-written services (`internal/apim/service/{portals,portalthemes,portallinks,portallistings,documentations}.go`) and DTOs (`internal/apim/model/`) stay for master's tests only: production code does not use them.
 
 - Each migrated resource gets an `internal/apim/<resource>/` package laid out like `internal/am/<resource>/`, with the `internal/lifecycle` signatures (see `internal/apim/group/`):
-  - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields;
+  - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields. `ToDTO` takes only the CR and never fetches anything: what the payload needs from other CRs is written on the CR by `ResolveRefs`, which runs first on the same object, in a field tagged `json:"-"` (`Subscription.Resolved`, filled by `RecordRefs` with how the API, plan and application are addressed; `AMClientSecret.Resolved`);
   - `Upsert`, `DryRun`, `GetRemote`, `Delete` taking `(ctx, client *apim.SDKClient, dto)`, and `UpdateStatus(ctx, obj, response)`;
   - `CreateAPIMClient(ctx, obj)`, which calls `apim.SDKFromContextRef`. The SDK rejects a context without usable auth when the client is built, so build it only for resources on the SDK.
 - Steps per resource, one resource per PR:

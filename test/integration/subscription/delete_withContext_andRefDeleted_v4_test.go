@@ -86,6 +86,32 @@ var _ = Describe("Subscription deletion with a v4 API or an application deleted 
 		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 	})
 
+	It("should delete the subscription when its plan is gone from the API", func() {
+		fixtures := subscribed()
+
+		By("replacing the subscribed plan with another one on the API")
+
+		Eventually(func() error {
+			api := fixtures.APIv4.DeepCopy()
+			if err := manager.GetLatest(ctx, api); err != nil {
+				return err
+			}
+			plans := *api.Spec.Plans
+			other := plans[fixtures.Subscription.Spec.Plan].DeepCopy()
+			other.Name = "jwt-other"
+			delete(plans, fixtures.Subscription.Spec.Plan)
+			plans["JWT_OTHER"] = other
+			return manager.UpdateSafely(ctx, api)
+		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
+
+		By("deleting the subscription, expecting it to be gone")
+
+		Expect(manager.Delete(ctx, fixtures.Subscription)).To(Succeed())
+		Eventually(func() error {
+			return assert.Deleted(ctx, "subscription", fixtures.Subscription)
+		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
+	})
+
 	It("should delete the subscription when its API is gone", func() {
 		fixtures := subscribed()
 

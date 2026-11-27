@@ -46,15 +46,14 @@ type ApplicationStatus struct {
 	application.Status `json:",inline"`
 }
 
-// AddSubscription implements core.SubscribableStatus.
-func (s *ApplicationStatus) AddSubscription() {
-	s.SubscriptionCount++
+// GetSubscriptionCount implements core.SubscribableStatus.
+func (s *ApplicationStatus) GetSubscriptionCount() uint {
+	return s.SubscriptionCount
 }
 
-func (s *ApplicationStatus) RemoveSubscription() {
-	if s.SubscriptionCount > 0 {
-		s.SubscriptionCount--
-	}
+// SetSubscriptionCount implements core.SubscribableStatus.
+func (s *ApplicationStatus) SetSubscriptionCount(count uint) {
+	s.SubscriptionCount = count
 }
 
 // +kubebuilder:object:root=true

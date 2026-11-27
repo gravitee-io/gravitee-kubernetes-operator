@@ -354,14 +354,14 @@ func (s *ApiDefinitionStatus) DeepCopyTo(obj client.Object) error {
 	return nil
 }
 
-func (s *ApiDefinitionStatus) AddSubscription() {
-	s.SubscriptionCount++
+// GetSubscriptionCount implements core.SubscribableStatus.
+func (s *ApiDefinitionStatus) GetSubscriptionCount() uint {
+	return s.SubscriptionCount
 }
 
-func (s *ApiDefinitionStatus) RemoveSubscription() {
-	if s.SubscriptionCount > 0 {
-		s.SubscriptionCount--
-	}
+// SetSubscriptionCount implements core.SubscribableStatus.
+func (s *ApiDefinitionStatus) SetSubscriptionCount(count uint) {
+	s.SubscriptionCount = count
 }
 
 // ApiDefinitionList contains a list of ApiDefinition.

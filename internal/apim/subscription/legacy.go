@@ -1,0 +1,112 @@
+// Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//         http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package subscription
+
+// This file holds the addressing of resources created before APIM 4.12, by their UUID. Removing it leaves
+// these to fix: the applyLegacy call in ToDTO, the applyLegacyParents call in RecordRefs, the populateLegacyIDs
+// call in ResolveRefs, the params of the SDK calls (nil) and UpdateStatus (always Automation API managed).
+
+import (
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+)
+
+// Legacy flags the identities of a DTO that are UUIDs rather than hrids. Each identity (subscription, API,
+// application) is independently one or the other: a new subscription to an API created before 4.12 is a
+// valid mix. The fields are the SDK query parameters they set.
+type Legacy struct {
+	// HridContainsUUID is set when the subscription Hrid is its UUID.
+	HridContainsUUID bool
+	// HridContainsApiUUID is set when ApiHrid and PlanHrid are UUIDs.
+	HridContainsApiUUID bool
+	// HridContainsAppUUID is set when ApplicationHrid is a UUID.
+	HridContainsAppUUID bool
+}
+
+func (l Legacy) upsertParams() *sdk.UpsertApiSubscriptionParams {
+	return &sdk.UpsertApiSubscriptionParams{
+		HridContainsUUID:    &l.HridContainsUUID,
+		HridContainsApiUUID: &l.HridContainsApiUUID,
+		HridContainsAppUUID: &l.HridContainsAppUUID,
+	}
+}
+
+func (l Legacy) getParams() *sdk.GetApiSubscriptionParams {
+	return &sdk.GetApiSubscriptionParams{
+		HridContainsUUID:    &l.HridContainsUUID,
+		HridContainsApiUUID: &l.HridContainsApiUUID,
+	}
+}
+
+func (l Legacy) deleteParams() *sdk.DeleteApiSubscriptionParams {
+	return &sdk.DeleteApiSubscriptionParams{
+		HridContainsUUID:    &l.HridContainsUUID,
+		HridContainsApiUUID: &l.HridContainsApiUUID,
+	}
+}
+
+// applyLegacy swaps in the UUID of a subscription created before the Automation API, and flags each identity
+// that is a UUID.
+func applyLegacy(dto *DTO, sub *v1alpha1.Subscription) {
+	if SubscriptionUsesUUID(sub) {
+		dto.Hrid = sub.Status.ID
+		dto.Legacy.HridContainsUUID = true
+	}
+	dto.Legacy.HridContainsApiUUID = sub.Resolved.ApiUsesUUID
+	dto.Legacy.HridContainsAppUUID = sub.Resolved.ApplicationUsesUUID
+}
+
+// applyLegacyParents swaps in the UUID of the API and of the application created before the Automation API.
+// The plan of a UUID-addressed API is its UUID too, or its hrid when the API has no such plan.
+func applyLegacyParents(
+	parents *v1alpha1.SubscriptionResolved,
+	sub *v1alpha1.Subscription,
+	api core.ApiDefinitionObject,
+	app core.ApplicationObject,
+) {
+	if model.APIUsesUUID(api) {
+		parents.ApiHrid = api.GetID()
+		parents.ApiUsesUUID = true
+		if plan := api.GetPlan(sub.Spec.Plan); plan != nil {
+			parents.PlanHrid = plan.GetID()
+		}
+	}
+	if app != nil && ApplicationUsesUUID(app) {
+		parents.ApplicationHrid = app.GetID()
+		parents.ApplicationUsesUUID = true
+	}
+}
+
+// populateLegacyIDs fills the plan UUIDs of an API created before the Automation API. Its legacy branch does not
+// read the management context, which the client factory resolves and reports on.
+func populateLegacyIDs(api core.ApiDefinitionObject) {
+	if model.APIUsesUUID(api) {
+		api.PopulateIDs(nil, false)
+	}
+}
+
+// SubscriptionUsesUUID is true only for a subscription created before the Automation API (UUID in status, no
+// AutomationAPIManaged condition). A create that has not persisted the condition yet is still hrid-addressed.
+func SubscriptionUsesUUID(sub *v1alpha1.Subscription) bool {
+	return sub.Status.ID != "" && !k8s.IsAutomationAPIManaged(sub)
+}
+
+// ApplicationUsesUUID is true for an application created before the Automation API.
+func ApplicationUsesUUID(app core.ApplicationObject) bool {
+	return app.GetID() != "" && !k8s.IsAutomationAPIManaged(app)
+}

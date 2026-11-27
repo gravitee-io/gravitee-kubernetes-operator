@@ -18,22 +18,45 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimsubscription "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var _ admission.Validator[*v1alpha1.Subscription] = AdmissionCtrl{}
 var _ admission.Defaulter[*v1alpha1.Subscription] = AdmissionCtrl{}
 
+type Lifecycle = lifecycle.AdmissionLifecycle[*v1alpha1.Subscription, apimsubscription.DTO, *apim.SDKClient]
+
+// AdmissionCtrl validates Subscriptions. Its lifecycle runs the update checks; a create runs the same lifecycle
+// with the create checks, which also cover the state of the API and the application.
+type AdmissionCtrl struct {
+	Lifecycle Lifecycle
+}
+
+func NewAdmissionCtrl() AdmissionCtrl {
+	return AdmissionCtrl{
+		Lifecycle: lifecycle.NewAdmissionLifecycle(Lifecycle{
+			ResolveRefs:     apimsubscription.ResolveRefs,
+			ClientFactory:   apimsubscription.CreateAPIMClient,
+			PreCheck:        validateUpdate,
+			ImmutableFields: validateImmutableProperties,
+			ToDTO:           apimsubscription.ToDTO,
+			DryRun:          apimsubscription.DryRun,
+			GetRemote:       apimsubscription.GetRemote,
+		}),
+	}
+}
+
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
+	a = NewAdmissionCtrl()
 	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.Subscription{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
 }
-
-type AdmissionCtrl struct{}
 
 func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.Subscription) error {
 	return nil
@@ -42,21 +65,19 @@ func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.Subscription) erro
 func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context, obj *v1alpha1.Subscription,
 ) (admission.Warnings, error) {
-	return validateCreate(ctx, obj).Map()
-}
-
-func (a AdmissionCtrl) ValidateDelete(
-	_ context.Context, _ *v1alpha1.Subscription,
-) (admission.Warnings, error) {
-	return admission.Warnings{}, nil
+	create := a.Lifecycle
+	create.PreCheck = validateCreate
+	return create.ValidateCreate(ctx, obj).Map()
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
 	ctx context.Context, oldObj *v1alpha1.Subscription, newObj *v1alpha1.Subscription,
 ) (admission.Warnings, error) {
-	if newObj.IsBeingDeleted() {
-		return admission.Warnings{}, nil
-	}
+	return a.Lifecycle.ValidateUpdate(ctx, oldObj, newObj).Map()
+}
 
-	return validateUpdate(ctx, oldObj, newObj).Map()
+func (a AdmissionCtrl) ValidateDelete(
+	ctx context.Context, obj *v1alpha1.Subscription,
+) (admission.Warnings, error) {
+	return a.Lifecycle.ValidateDelete(ctx, obj).Map()
 }

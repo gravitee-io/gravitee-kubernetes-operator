@@ -27,6 +27,7 @@ import (
 )
 
 var _ core.SubscriptionObject = &Subscription{}
+var _ core.ContextAwareObject = &Subscription{}
 var _ core.Spec = &SubscriptionSpec{}
 var _ core.Status = &SubscriptionStatus{}
 var _ core.ConditionAware = &Subscription{}
@@ -104,6 +105,18 @@ type Subscription struct {
 
 	Spec   SubscriptionSpec   `json:"spec,omitempty"`
 	Status SubscriptionStatus `json:"status,omitempty"`
+
+	Resolved SubscriptionResolved `json:"-"`
+}
+
+// SubscriptionResolved holds how the APIM payload addresses the API, its plan and the application, read by the
+// reference resolver: by hrid, or by UUID for one created before the Automation API. It is never serialized.
+type SubscriptionResolved struct {
+	ApiHrid             string
+	PlanHrid            string
+	ApplicationHrid     string
+	ApiUsesUUID         bool
+	ApplicationUsesUUID bool
 }
 
 func (s *Subscription) GetApiRef() core.ObjectRef {
@@ -123,6 +136,33 @@ func (s *Subscription) GetRef() core.ObjectRef {
 		Name:      s.Name,
 		Namespace: s.Namespace,
 	}
+}
+
+// ContextRef is nil: the management context comes from the API.
+func (s *Subscription) ContextRef() core.ObjectRef {
+	return nil
+}
+
+func (s *Subscription) HasContext() bool {
+	return false
+}
+
+func (s *Subscription) GetID() string {
+	return s.Status.ID
+}
+
+// GetOrgID is empty: the status holds no organization.
+func (s *Subscription) GetOrgID() string {
+	return ""
+}
+
+// GetEnvID is empty: the status holds no environment.
+func (s *Subscription) GetEnvID() string {
+	return ""
+}
+
+// PopulateIDs does nothing: the subscription payload takes its identities from ToDTO.
+func (s *Subscription) PopulateIDs(_ core.ContextModel, _ bool) {
 }
 
 func (s *Subscription) GetSpec() core.Spec {

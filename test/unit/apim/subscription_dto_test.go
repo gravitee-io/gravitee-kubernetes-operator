@@ -15,12 +15,15 @@
 package apim_test
 
 import (
+	"encoding/json"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimsubscription "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
@@ -85,7 +88,7 @@ func newApp(managed bool) *v1alpha1.Application {
 var _ = Describe("ToSubscriptionDTO", func() {
 	DescribeTable("SubscriptionUsesUUID",
 		func(sub *v1alpha1.Subscription, want bool) {
-			Expect(model.SubscriptionUsesUUID(sub)).To(Equal(want))
+			Expect(apimsubscription.SubscriptionUsesUUID(sub)).To(Equal(want))
 		},
 		Entry("create: no condition, empty status ID → HRID",
 			newSub("e2e-sub-jwt-v4", "", false), false),
@@ -109,7 +112,7 @@ var _ = Describe("ToSubscriptionDTO", func() {
 
 	DescribeTable("ApplicationUsesUUID",
 		func(app *v1alpha1.Application, want bool) {
-			Expect(model.ApplicationUsesUUID(app)).To(Equal(want))
+			Expect(apimsubscription.ApplicationUsesUUID(app)).To(Equal(want))
 		},
 		Entry("create: no condition, empty status ID → HRID", emptyApp(), false),
 		Entry("managed → HRID", newApp(true), false),
@@ -118,7 +121,8 @@ var _ = Describe("ToSubscriptionDTO", func() {
 
 	DescribeTable("SubscriptionRemoteUsesLegacyAPI",
 		func(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, want bool) {
-			Expect(model.SubscriptionRemoteUsesLegacyAPI(sub, api)).To(Equal(want))
+			dto := toSubscriptionDTO(sub, api, newApp(true))
+			Expect(dto.Legacy.HridContainsApiUUID && !dto.Legacy.HridContainsUUID).To(Equal(want))
 		},
 		Entry("HRID sub + V4 managed API → GetByHRID",
 			newSub("e2e-sub-jwt-v4", "", false), newAPI(true), false),
@@ -129,21 +133,23 @@ var _ = Describe("ToSubscriptionDTO", func() {
 	)
 
 	It("uses HRIDs on create before the Automation condition is persisted", func() {
-		dto := model.ToSubscriptionDTO(newSub("e2e-sub-jwt-v4", "", false), newAPI(true), newApp(true))
+		dto := toSubscriptionDTO(newSub("e2e-sub-jwt-v4", "", false), newAPI(true), newApp(true))
 
-		Expect(dto.ID).To(Equal("default-e2e-sub-jwt-v4"))
-		Expect(dto.ApiID).To(Equal("default-e2e-v4-jwt-api"))
-		Expect(dto.AppID).To(Equal("default-e2e-app-simple"))
-		Expect(dto.PlanID).To(Equal("jwt"))
+		Expect(dto.Hrid).To(Equal("default-e2e-sub-jwt-v4"))
+		Expect(dto.ApiHrid).To(Equal("default-e2e-v4-jwt-api"))
+		Expect(dto.ApplicationHrid).To(Equal("default-e2e-app-simple"))
+		Expect(dto.PlanHrid).To(Equal("jwt"))
 	})
 
 	It("does not copy StartingAt onto the Import payload", func() {
 		sub := newSub("e2e-sub-jwt-v4", "", true)
 		sub.Status.StartedAt = "2023-07-24T20:43:16Z"
 
-		dto := model.ToSubscriptionDTO(sub, newAPI(true), newApp(true))
+		dto := toSubscriptionDTO(sub, newAPI(true), newApp(true))
 
-		Expect(dto.StartingAt).To(BeEmpty())
+		payload, err := json.Marshal(dto)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(string(payload)).ToNot(ContainSubstring("startingAt"))
 	})
 
 	It("maps spec fields used by Import and drift", func() {
@@ -154,79 +160,55 @@ var _ = Describe("ToSubscriptionDTO", func() {
 		sub.Spec.ApiKeys = []subscription.ApiKeySpec{{Key: "key1", ExpireAt: &ending}}
 		sub.Spec.ConsumerConfiguration = &subscription.ConsumerConfiguration{EntrypointID: "webhook"}
 
-		dto := model.ToSubscriptionDTO(sub, newAPI(true), newApp(true))
+		dto := toSubscriptionDTO(sub, newAPI(true), newApp(true))
 
-		Expect(dto.EndingAt).To(Equal(ending))
+		Expect(dto.EndingAt).To(HaveValue(Equal(ending)))
 		Expect(dto.Metadata).To(Equal(map[string]string{"team": "platform"}))
 		Expect(dto.ApiKeys).To(HaveLen(1))
 		Expect(dto.ApiKeys[0].Key).To(Equal("key1"))
 		Expect(dto.ConsumerConfiguration).NotTo(BeNil())
-		Expect(dto.ConsumerConfiguration.EntrypointID).To(Equal("webhook"))
+		Expect(dto.ConsumerConfiguration.EntrypointId).To(Equal("webhook"))
 	})
 
 	It("keeps API and app as HRIDs when only the subscription is pre-Automation", func() {
-		dto := model.ToSubscriptionDTO(
+		dto := toSubscriptionDTO(
 			newSub("e2e-sub-jwt-v4", "sub-uuid-1", false),
 			newAPI(true),
 			newApp(true),
 		)
 
-		Expect(dto.ID).To(Equal("sub-uuid-1"))
-		Expect(dto.ApiID).To(Equal("default-e2e-v4-jwt-api"))
-		Expect(dto.AppID).To(Equal("default-e2e-app-simple"))
-		Expect(dto.PlanID).To(Equal("jwt"))
+		Expect(dto.Hrid).To(Equal("sub-uuid-1"))
+		Expect(dto.ApiHrid).To(Equal("default-e2e-v4-jwt-api"))
+		Expect(dto.ApplicationHrid).To(Equal("default-e2e-app-simple"))
+		Expect(dto.PlanHrid).To(Equal("jwt"))
 	})
 
 	It("uses UUIDs per field when API and app are also pre-Automation", func() {
-		dto := model.ToSubscriptionDTO(
+		dto := toSubscriptionDTO(
 			newSub("e2e-sub-jwt-v4", "sub-uuid-1", false),
 			newAPIWithPlan(false, "plan-uuid"),
 			newApp(false),
 		)
 
-		Expect(dto.ID).To(Equal("sub-uuid-1"))
-		Expect(dto.ApiID).To(Equal("d1912aa8-3051-3e80-bbd4-c0097781bb97"))
-		Expect(dto.AppID).To(Equal("f0848adf-3c29-300f-93bf-b8906295b0d2"))
-		Expect(dto.PlanID).To(Equal("plan-uuid"))
+		Expect(dto.Hrid).To(Equal("sub-uuid-1"))
+		Expect(dto.ApiHrid).To(Equal("d1912aa8-3051-3e80-bbd4-c0097781bb97"))
+		Expect(dto.ApplicationHrid).To(Equal("f0848adf-3c29-300f-93bf-b8906295b0d2"))
+		Expect(dto.PlanHrid).To(Equal("plan-uuid"))
 	})
 
 	It("uses API UUID and plan UUID for a new HRID subscription on a V2 API", func() {
-		dto := model.ToSubscriptionDTO(newSub("e2e-sub-jwt-v2", "", false), newV2API(), newApp(true))
+		dto := toSubscriptionDTO(newSub("e2e-sub-jwt-v2", "", false), newV2API(), newApp(true))
 
-		Expect(dto.ID).To(Equal("default-e2e-sub-jwt-v2"))
-		Expect(dto.ApiID).To(Equal("v2-api-uuid"))
-		Expect(dto.AppID).To(Equal("default-e2e-app-simple"))
-		Expect(dto.PlanID).To(Equal("v2-plan-uuid"))
+		Expect(dto.Hrid).To(Equal("default-e2e-sub-jwt-v2"))
+		Expect(dto.ApiHrid).To(Equal("v2-api-uuid"))
+		Expect(dto.ApplicationHrid).To(Equal("default-e2e-app-simple"))
+		Expect(dto.PlanHrid).To(Equal("v2-plan-uuid"))
 	})
 
 	It("falls back to the plan HRID when a UUID API has no matching plan", func() {
-		dto := model.ToSubscriptionDTO(newSub("e2e-sub-jwt-v4", "", false), newAPI(false), newApp(true))
+		dto := toSubscriptionDTO(newSub("e2e-sub-jwt-v4", "", false), newAPI(false), newApp(true))
 
-		Expect(dto.PlanID).To(Equal("jwt"))
-	})
-})
-
-var _ = Describe("ToSubscriptionDTOForDrift", func() {
-	It("uses all UUIDs when the remote GET is Management v2", func() {
-		dto := model.ToSubscriptionDTOForDrift(
-			newSub("e2e-sub-jwt-v4", "sub-uuid-1", false),
-			newAPIWithPlan(true, "plan-uuid"),
-			newApp(true),
-		)
-
-		Expect(dto.ID).To(Equal("sub-uuid-1"))
-		Expect(dto.ApiID).To(Equal("d1912aa8-3051-3e80-bbd4-c0097781bb97"))
-		Expect(dto.AppID).To(Equal("f0848adf-3c29-300f-93bf-b8906295b0d2"))
-		Expect(dto.PlanID).To(Equal("plan-uuid"))
-	})
-
-	It("keeps the mixed Import shape when the remote GET is Automation", func() {
-		write := model.ToSubscriptionDTO(newSub("e2e-sub-jwt-v2", "", false), newV2API(), newApp(true))
-		drift := model.ToSubscriptionDTOForDrift(newSub("e2e-sub-jwt-v2", "", false), newV2API(), newApp(true))
-
-		Expect(drift).To(Equal(write))
-		Expect(drift.ApiID).To(Equal("v2-api-uuid"))
-		Expect(drift.ID).To(Equal("default-e2e-sub-jwt-v2"))
+		Expect(dto.PlanHrid).To(Equal("jwt"))
 	})
 })
 
@@ -242,4 +224,12 @@ func emptyApp() *v1alpha1.Application {
 	return &v1alpha1.Application{
 		ObjectMeta: metav1.ObjectMeta{Name: "e2e-app-simple", Namespace: "default"},
 	}
+}
+
+func toSubscriptionDTO(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) apimsubscription.DTO {
+	GinkgoHelper()
+	apimsubscription.RecordRefs(sub, api, app)
+	dto, err := apimsubscription.ToDTO(sub)
+	Expect(err).ToNot(HaveOccurred())
+	return dto
 }

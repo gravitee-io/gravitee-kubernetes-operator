@@ -16,38 +16,47 @@ package subscription
 
 import (
 	"context"
-	"time"
-
-	"github.com/go-logr/logr"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription/internal"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimsubscription "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const requeueAfterTime = time.Second * 5
+type Lifecycle = lifecycle.ResourceLifecycle[
+	*v1alpha1.Subscription, apimsubscription.DTO, *apim.SDKClient, apimsubscription.Response,
+]
 
 type Reconciler struct {
 	client.Client
-	Log      logr.Logger
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
-	Watcher  watch.Interface
+	Lifecycle Lifecycle
+	Scheme    *runtime.Scheme
+	Recorder  record.EventRecorder
+	Watcher   watch.Interface
+}
+
+// NewLifecycle wires the Subscription reconcile steps. The management context is the subscribed API's.
+func NewLifecycle() Lifecycle {
+	return lifecycle.NewResourceLifecycle(Lifecycle{
+		Finalizer:     core.SubscriptionFinalizer,
+		ResolveRefs:   apimsubscription.ResolveRefs,
+		ClientFactory: apimsubscription.CreateAPIMClient,
+		ToDTO:         apimsubscription.ToDTO,
+		Delete:        apimsubscription.Delete,
+		Upsert:        apimsubscription.Upsert,
+		PostUpsert:    apimsubscription.UpdateStatusAndRecount,
+		PostDelete:    apimsubscription.RecountParents,
+		Status:        apimsubscription.SetProcessingStatus,
+	})
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete;deletecollection
@@ -55,70 +64,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=subscriptions/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	subscription := &v1alpha1.Subscription{}
-	if err := r.Get(ctx, req.NamespacedName, subscription); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	subscription.SetNamespace(req.Namespace)
-
-	events := event.NewRecorder(r.Recorder)
-
-	k8s.ResetConditionsExceptAutomationAPI(subscription)
-	dc := subscription.DeepCopy()
-
-	_, err := util.CreateOrUpdate(ctx, r.Client, subscription, func() error {
-		util.AddFinalizer(subscription, core.SubscriptionFinalizer)
-		k8s.AddAnnotation(subscription, core.LastSpecHashAnnotation, hash.Calculate(&subscription.Spec))
-
-		if subscription.IsBeingDeleted() {
-			if err := template.ReleaseReferences(ctx, subscription); err != nil {
-				return err
-			}
-		} else if err := template.Compile(ctx, dc, true); err != nil {
-			subscription.Status.ProcessingStatus = core.ProcessingStatusFailed
-			return err
-		}
-
-		var err error
-		if subscription.IsBeingDeleted() {
-			err = events.Record(event.Delete, subscription, func() error {
-				if err := internal.Delete(ctx, dc); err != nil {
-					return err
-				}
-				util.RemoveFinalizer(subscription, core.SubscriptionFinalizer)
-				return nil
-			})
-		} else {
-			err = events.Record(event.Update, subscription, func() error {
-				return internal.CreateOrUpdate(ctx, dc)
-			})
-		}
-
-		return err
-	})
-
-	if err := dc.GetStatus().DeepCopyTo(subscription); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err == nil {
-		log.InfoEndReconcile(ctx, subscription)
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, subscription)
-	}
-
-	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, subscription, err); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if errors.ShouldRetry(err, subscription.IsBeingDeleted()) {
-		log.ErrorRequeuingReconcile(ctx, err, subscription)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
-	}
-
-	log.ErrorAbortingReconcile(ctx, err, subscription)
-	return ctrl.Result{}, nil
+	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.Subscription{})
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {

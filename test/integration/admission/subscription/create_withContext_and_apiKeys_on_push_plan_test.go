@@ -32,7 +32,7 @@ import (
 
 var _ = Describe("Validate create", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := adm.AdmissionCtrl{}
+	admissionCtrl := adm.NewAdmissionCtrl()
 
 	fixtures := fixture.
 		Builder().

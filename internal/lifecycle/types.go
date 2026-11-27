@@ -32,8 +32,9 @@ import (
 // If both API client and error are nil, dry run and admission check must warn the user those action cannot be performed.
 type ClientFactoryFunc[T core.ContextAwareObject, C core.APIClient] func(ctx context.Context, obj T) (C, error)
 
-// ToDTOFunc maps a CR to the wire payload. Do not fetch refs or call the API.
-// Identity() must be set so Delete and GetRemote can address the remote object.
+// ToDTOFunc maps a CR to the wire payload. Do not fetch refs or call the API: what the payload needs from referenced
+// objects is filled on the CR by ResolveRefs, which runs first on the same object (AMClientSecret.Resolved,
+// Subscription.Resolved). Identity() must be set so Delete and GetRemote can address the remote object.
 // An error means the CR cannot be mapped: nothing is sent, rather than a partial payload.
 type ToDTOFunc[T core.ContextAwareObject, D store.Identifiable] func(obj T) (D, error)
 
@@ -48,6 +49,9 @@ type DeleteGuardFunc[T core.ContextAwareObject] func(ctx context.Context, obj T)
 
 // PostUpsertFunc mutates the CR after a successful Upsert (status, annotations).
 type PostUpsertFunc[T core.ContextAwareObject, R any] func(ctx context.Context, obj T, response R) error
+
+// PostDeleteFunc runs once the remote resource is gone, before the finalizer is released.
+type PostDeleteFunc[T core.ContextAwareObject] func(ctx context.Context, obj T) error
 
 // UpsertErrorFunc records a failed Upsert on the CR (for example the remote's refusal findings in its status).
 // It mutates obj only. A non-nil error is returned by the reconcile as-is and decides the requeue, without
@@ -117,6 +121,10 @@ type ResourceLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.A
 	// Delete runs on delete, after DeleteGuard. Required.
 	Delete DeleteFunc[C, D]
 
+	// PostDelete runs on delete after a successful Delete, and when ResolveRefs reported a missing reference.
+	// Nil skips. An error keeps the finalizer: the delete is retried, so it must be idempotent.
+	PostDelete PostDeleteFunc[T]
+
 	// Upsert runs on create/update, after ToDTO. Required.
 	Upsert UpsertFunc[C, D, R]
 
@@ -141,13 +149,13 @@ type AdmissionLifecycle[T core.ContextAwareObject, D store.Identifiable, C core.
 	// Builds C for DryRun and GetRemote. Required.
 	ClientFactory ClientFactoryFunc[T, C]
 
-	// PreCheck runs on create/update after ClientFactory, before ImmutableFields. Nil skips.
+	// PreCheck runs on create/update after ClientFactory, before DryRun. Nil skips.
 	PreCheck AdmissionCheckFunc[T]
 
-	// ImmutableFields runs on update after PreCheck, before ToDTO. Nil skips.
+	// ImmutableFields runs on update after the templates are compiled, before ResolveRefs. Nil skips.
 	ImmutableFields ImmutableFieldsFunc[T]
 
-	// ToDTO runs on create/update after PreCheck and ImmutableFields, before DryRun.
+	// ToDTO runs on create/update after PreCheck, before DryRun.
 	// Required. Use the same func as ResourceLifecycle.ToDTO.
 	ToDTO ToDTOFunc[T, D]
 

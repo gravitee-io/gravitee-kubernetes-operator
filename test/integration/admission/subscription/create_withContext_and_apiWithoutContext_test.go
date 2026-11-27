@@ -32,7 +32,7 @@ import (
 
 var _ = Describe("Validate create", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := adm.AdmissionCtrl{}
+	admissionCtrl := adm.NewAdmissionCtrl()
 
 	fixtures := fixture.
 		Builder().
@@ -63,7 +63,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"error",
 				errors.NewSeveref(
-					"unable to subscribe to API [%s] because it does not reference a management context",
+					"could not resolve context: unable to subscribe to API [%s] because it does not reference a management context",
 					fixtures.APIv4.GetRef(),
 				),
 				err,

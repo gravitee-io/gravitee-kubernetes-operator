@@ -31,7 +31,7 @@ import (
 
 var _ = Describe("Validate create", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := adm.AdmissionCtrl{}
+	admissionCtrl := adm.NewAdmissionCtrl()
 
 	fixtures := fixture.
 		Builder().
@@ -51,7 +51,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		Eventually(func() error {
 			Expect(admissionCtrl.Default(ctx, fixtures.Subscription)).ToNot(HaveOccurred())
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Subscription)
-			return assert.Equals("error", errors.NewSevere("unable to resolve application [default/unresolved]"), err)
+			return assert.Equals("error", errors.NewSevere("could not resolve references: unable to resolve application [default/unresolved]"), err)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
 	})
 })

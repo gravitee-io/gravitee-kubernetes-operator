@@ -92,12 +92,12 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 				return err
 			}
 
-			err = assert.Equals("consumerConfiguration.entrypointId", "webhook", sub.ConsumerConfiguration.EntrypointID)
+			err = assert.Equals("consumerConfiguration.entrypointId", "webhook", sub.ConsumerConfiguration.EntrypointId)
 			if err != nil {
 				return err
 			}
 
-			if err := assert.Equals("consumerConfiguration.channel", "orders", sub.ConsumerConfiguration.Channel); err != nil {
+			if err := assert.Equals("consumerConfiguration.channel", "orders", utils.SafeDereference(sub.ConsumerConfiguration.Channel)); err != nil {
 				return err
 			}
 			return assert.Equals(
@@ -148,7 +148,7 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 				return err
 			}
 
-			if err := assert.Equals("consumerConfiguration.channel", "payments", sub.ConsumerConfiguration.Channel); err != nil {
+			if err := assert.Equals("consumerConfiguration.channel", "payments", utils.SafeDereference(sub.ConsumerConfiguration.Channel)); err != nil {
 				return err
 			}
 			return assert.Equals(

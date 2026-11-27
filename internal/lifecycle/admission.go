@@ -58,10 +58,24 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 	if newObj.IsBeingDeleted() {
 		return errs
 	}
-	// Decided before templateAndRefs, which compiles templates into newObj.
+	// Decided before the templates are compiled into newObj.
 	payloadChanged := a.payloadChanged(oldObj, newObj)
 
-	a.templateAndRefs(ctx, newObj, errs)
+	errs.Add(admission.CompileAndValidateTemplate(ctx, newObj))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	// Before the references are resolved: a change to a frozen reference reads as such, even when the new
+	// target does not exist.
+	if a.ImmutableFields != nil {
+		errs.MergeWith(a.ImmutableFields(oldObj, newObj))
+		if errs.IsSevere() {
+			return errs
+		}
+	}
+
+	a.checkRefs(ctx, newObj, errs)
 	if errs.IsSevere() {
 		return errs
 	}
@@ -74,13 +88,6 @@ func (a AdmissionLifecycle[T, D, C]) ValidateUpdate(
 	a.preCheck(ctx, newObj, errs)
 	if errs.IsSevere() {
 		return errs
-	}
-
-	if a.ImmutableFields != nil {
-		errs.MergeWith(a.ImmutableFields(oldObj, newObj))
-		if errs.IsSevere() {
-			return errs
-		}
 	}
 
 	// An update that leaves the payload as it is, the lifecycle's own finalizer and annotation writes
@@ -128,6 +135,10 @@ func (a AdmissionLifecycle[T, D, C]) templateAndRefs(
 	if errs.IsSevere() {
 		return
 	}
+	a.checkRefs(ctx, obj, errs)
+}
+
+func (a AdmissionLifecycle[T, D, C]) checkRefs(ctx context.Context, obj T, errs *errors.AdmissionErrors) {
 	if err := a.resolveRefs(ctx, obj); err != nil {
 		errs.AddSevere(a.resolveErrorMessage("could not resolve references: ", err))
 	}

@@ -15,7 +15,7 @@
 package apim
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 )
@@ -27,47 +27,44 @@ var _ = Describe("Subscription Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, "default"))
 		},
 		Entry("empty struct",
-			model.SubscriptionDTO{},
-			model.SubscriptionDTO{},
+			sdk.Subscription{},
+			sdk.Subscription{},
 		),
 		Entry("equal struct",
 			completeSubscriptionDTO(),
 			completeSubscriptionDTO(),
 		),
 		Entry("start/end date",
-			model.SubscriptionDTO{
-				ID:       "sub-id",
-				ApiID:    "api-id",
-				AppID:    "app-id",
-				EndingAt: "2023-08-25T23:43:16Z",
-				ApiKeys:  []model.ApiKeyDTO{{Key: "key1", ExpireAt: new("2024-08-25T23:43:16-00:00")}},
+			sdk.Subscription{
+				Hrid:            "sub-id",
+				ApplicationHrid: "app-id",
+				EndingAt:        new("2023-08-25T23:43:16Z"),
+				ApiKeys:         []sdk.ApiKey{{Key: "key1", ExpireAt: new("2024-08-25T23:43:16-00:00")}},
 			},
-			model.SubscriptionDTO{
-				ID:         "default-sub-id",
-				ApiID:      "default-api-id",
-				AppID:      "default-app-id",
-				StartingAt: "2023-07-24T20:43:16-03:00",
-				EndingAt:   "2023-08-25T22:43:16-01:00",
-				ApiKeys:    []model.ApiKeyDTO{{Key: "key1", ExpireAt: new("2024-08-25T23:43:16+00:00")}},
+			sdk.Subscription{
+				Hrid:            "default-sub-id",
+				ApplicationHrid: "default-app-id",
+				EndingAt:        new("2023-08-25T22:43:16-01:00"),
+				ApiKeys:         []sdk.ApiKey{{Key: "key1", ExpireAt: new("2024-08-25T23:43:16+00:00")}},
 			},
 		),
 		Entry("crd-only api keys ignored",
-			model.SubscriptionDTO{
-				ApiKeys: []model.ApiKeyDTO{
+			sdk.Subscription{
+				ApiKeys: []sdk.ApiKey{
 					{Key: "key1"},
 					{Key: "crd-only"},
 				},
 			},
-			model.SubscriptionDTO{
-				ApiKeys: []model.ApiKeyDTO{
+			sdk.Subscription{
+				ApiKeys: []sdk.ApiKey{
 					{Key: "key1"},
 				},
 			},
 		),
 		Entry("empty collections",
-			model.SubscriptionDTO{},
-			model.SubscriptionDTO{
-				ApiKeys:  []model.ApiKeyDTO{},
+			sdk.Subscription{},
+			sdk.Subscription{
+				ApiKeys:  []sdk.ApiKey{},
 				Metadata: map[string]string{},
 			},
 		),
@@ -89,14 +86,14 @@ var _ = Describe("Subscription Drift detection", func() {
 	})
 })
 
-func completeSubscriptionDTO() model.SubscriptionDTO {
+func completeSubscriptionDTO() sdk.Subscription {
 	GinkgoHelper()
-	return loadFixture[model.SubscriptionDTO]("subscription_dto.json")
+	return loadFixture[sdk.Subscription]("subscription_dto.json")
 }
 
-func subscriptionWithEntrypointConfiguration(configuration string) model.SubscriptionDTO {
+func subscriptionWithEntrypointConfiguration(configuration string) sdk.Subscription {
 	GinkgoHelper()
-	return parseJSON[model.SubscriptionDTO](
+	return parseJSON[sdk.Subscription](
 		`{"consumerConfiguration": {"entrypointId": "webhook", "entrypointConfiguration": ` + configuration + `}}`,
 	)
 }
