@@ -38,6 +38,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -376,6 +377,25 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			expectReleaseWarning(lines)
 		})
 
+		It("releases the finalizer of a resource that never had a contextRef", func() {
+			g := deletingGroup("g1", testFinalizer)
+			g.Spec.Context = nil
+			cli := newCluster(g)
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = apim.ResolveContextRef[*v1alpha1.Group]
+
+			lines, err := reconcileLogged(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(r.deleted).To(BeEmpty())
+			err = cli.Get(context.Background(), types.NamespacedName{Namespace: testNs, Name: "g1"}, &v1alpha1.Group{})
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			Expect(lines).To(ContainElement(And(
+				ContainSubstring("Releasing the finalizer without deleting the resource from the platform"),
+				ContainSubstring("spec.contextRef) is required"),
+			)))
+		})
+
 		It("still requeues on any other resolution error", func() {
 			cli := newCluster(deletingGroup("g1", testFinalizer))
 			l := newGroupLifecycle(r)
@@ -706,6 +726,26 @@ var _ = Describe("ResourceLifecycle.Reconcile", func() {
 			refs := condition(fetch(cli, "g1"), k8s.ConditionResolvedRefs)
 			Expect(refs.Status).To(Equal(metav1.ConditionFalse))
 			Expect(refs.Message).To(ContainSubstring("secret missing"))
+		})
+
+		// With the webhook off, nothing else stops a resource without a contextRef: requeuing it would retry
+		// forever.
+		It("reports a missing contextRef on Accepted without requeueing or upserting", func() {
+			g := newGroup("g1", testNs)
+			g.Spec.Context = nil
+			cli := newCluster(g)
+			l := newGroupLifecycle(r)
+			l.ResolveRefs = apim.ResolveContextRef[*v1alpha1.Group]
+
+			result, err := reconcile(l, cli, "g1")
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result).To(Equal(ctrl.Result{}))
+			Expect(r.upserted).To(BeEmpty())
+			accepted := condition(fetch(cli, "g1"), k8s.ConditionAccepted)
+			Expect(accepted.Status).To(Equal(metav1.ConditionFalse))
+			Expect(accepted.Reason).To(Equal(string(gerrors.IllegalStateError)))
+			Expect(accepted.Message).To(ContainSubstring("spec.contextRef) is required"))
 		})
 
 		It("reports an IllegalStateError on Accepted without requeueing or upserting", func() {
