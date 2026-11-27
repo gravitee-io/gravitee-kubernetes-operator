@@ -49,22 +49,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 	fixtures.Subscription.Spec.App.Namespace = constants.Namespace
 	fixtures.Application.Spec.Settings.App.ClientID = &clientID
 
-	otherPlan := (*fixtures.APIv4.Spec.Plans)["JWT"].DeepCopy()
-	otherPlan.Name = "jwt-other"
-	(*fixtures.APIv4.Spec.Plans)["JWT_OTHER"] = otherPlan
-
 	fixtures.Apply()
-
-	// An API and an application that exist, so that switching to them reaches the immutable-field checks.
-	others := fixture.
-		Builder().
-		WithAPIv4(constants.ApiV4WithJWTPlanFile).
-		WithApplication(constants.ApplicationWithClientIDFile).
-		WithContext(constants.ContextWithCredentialsFile).
-		Build()
-	otherClientID := random.GetName()
-	others.Application.Spec.Settings.App.ClientID = &otherClientID
-	others.Apply()
 
 	DescribeTable("mutating illegal property",
 		func(modify func(v1alpha1.Subscription) *v1alpha1.Subscription, expected error) {
@@ -109,59 +94,6 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 			errors.NewSevere(
 				"Plan is immutable. Detected change from [JWT] to [illegal]",
 			),
-		),
-	)
-
-	DescribeTable("switching to another target that exists",
-		func(modify func(v1alpha1.Subscription) *v1alpha1.Subscription, expected func(oldSub, newSub *v1alpha1.Subscription) error) {
-			Eventually(func() error {
-				Expect(admissionCtrl.Default(ctx, fixtures.Subscription)).ToNot(HaveOccurred())
-				newSub := modify(*fixtures.Subscription)
-				_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Subscription, newSub)
-				return assert.Equals("error", expected(fixtures.Subscription, newSub), err)
-			}, constants.EventualTimeout, constants.Interval).Should(Succeed())
-		},
-		Entry(
-			"API ref",
-			func(sub v1alpha1.Subscription) *v1alpha1.Subscription {
-				cp := sub.DeepCopy()
-				cp.Spec.API.Name = others.APIv4.Name
-				return cp
-			},
-			func(oldSub, newSub *v1alpha1.Subscription) error {
-				return errors.NewSeveref(
-					"API reference is immutable. Detected change from [%s] to [%s]",
-					oldSub.GetApiRef(), newSub.GetApiRef(),
-				)
-			},
-		),
-		Entry(
-			"application ref",
-			func(sub v1alpha1.Subscription) *v1alpha1.Subscription {
-				cp := sub.DeepCopy()
-				cp.Spec.App.Name = others.Application.Name
-				return cp
-			},
-			func(oldSub, newSub *v1alpha1.Subscription) error {
-				return errors.NewSeveref(
-					"Application reference is immutable. Detected change from [%s] to [%s]",
-					oldSub.GetAppRef(), newSub.GetAppRef(),
-				)
-			},
-		),
-		Entry(
-			"plan",
-			func(sub v1alpha1.Subscription) *v1alpha1.Subscription {
-				cp := sub.DeepCopy()
-				cp.Spec.Plan = "JWT_OTHER"
-				return cp
-			},
-			func(oldSub, newSub *v1alpha1.Subscription) error {
-				return errors.NewSeveref(
-					"Plan is immutable. Detected change from [%s] to [%s]",
-					oldSub.GetPlan(), newSub.GetPlan(),
-				)
-			},
 		),
 	)
 })

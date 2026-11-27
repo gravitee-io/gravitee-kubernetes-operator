@@ -38,37 +38,26 @@ type DTO struct {
 	Legacy Legacy `json:"-" drift:"ignore"`
 }
 
-// ToDTO maps a Subscription CRD and its API and application to the Automation API payload. A nil app
-// (deleted application) leaves the application out.
-func ToDTO(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) (DTO, error) {
-	return toDTO(sub, parentIdentities(sub, api, app))
-}
-
-// ToResolvedDTO maps a Subscription CRD to the Automation API payload, addressing its API, plan and application as
-// ResolveRefs recorded in sub.Resolved. It is the lifecycle's ToDTO.
-func ToResolvedDTO(sub *v1alpha1.Subscription) (DTO, error) {
-	return toDTO(sub, sub.Resolved)
-}
-
-func toDTO(sub *v1alpha1.Subscription, parents v1alpha1.SubscriptionResolved) (DTO, error) {
+// ToDTO maps a Subscription CRD to the Automation API payload, addressing its API, plan and application as
+// RecordRefs wrote them in sub.Resolved.
+func ToDTO(sub *v1alpha1.Subscription) (DTO, error) {
 	payload, err := mapper.MapViaJSON[sdk.Subscription](sub.Spec.Type)
 	if err != nil {
 		return DTO{}, fmt.Errorf("map subscription [%s] to the APIM payload: %w", sub.Name, err)
 	}
 
-	dto := DTO{Subscription: payload, ApiHrid: parents.ApiHrid}
+	dto := DTO{Subscription: payload, ApiHrid: sub.Resolved.ApiHrid}
 	dto.Hrid = refs.NewNamespacedNameFromObject(sub).HRID()
-	dto.PlanHrid = parents.PlanHrid
-	dto.ApplicationHrid = parents.ApplicationHrid
-	applyLegacy(&dto, sub, parents)
+	dto.PlanHrid = sub.Resolved.PlanHrid
+	dto.ApplicationHrid = sub.Resolved.ApplicationHrid
+	applyLegacy(&dto, sub)
 	return dto, nil
 }
 
-// parentIdentities addresses the API, its plan and the application by their hrids, or by UUID for those created
-// before the Automation API. A nil app (deleted application) leaves the application out.
-func parentIdentities(
-	sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject,
-) v1alpha1.SubscriptionResolved {
+// RecordRefs writes in sub.Resolved how ToDTO addresses the API, its plan and the application: by their hrids, or by
+// UUID for those created before the Automation API. A nil app (deleted application) leaves the application out.
+// ResolveRefs calls it once the references are found and the plan UUIDs of a legacy API are filled.
+func RecordRefs(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) {
 	parents := v1alpha1.SubscriptionResolved{
 		ApiHrid:  refs.NewNamespacedNameFromObject(api).HRID(),
 		PlanHrid: hrid.NameToValidHRID(sub.Spec.Plan),
@@ -77,7 +66,7 @@ func parentIdentities(
 		parents.ApplicationHrid = refs.NewNamespacedNameFromObject(app).HRID()
 	}
 	applyLegacyParents(&parents, sub, api, app)
-	return parents
+	sub.Resolved = parents
 }
 
 // Response is what Upsert returns: the subscription state APIM answers, and the flags the upsert was sent with.

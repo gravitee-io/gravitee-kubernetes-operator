@@ -50,7 +50,7 @@ func NewLifecycle() Lifecycle {
 		Finalizer:     core.SubscriptionFinalizer,
 		ResolveRefs:   apimsubscription.ResolveRefs,
 		ClientFactory: apimsubscription.CreateAPIMClient,
-		ToDTO:         apimsubscription.ToResolvedDTO,
+		ToDTO:         apimsubscription.ToDTO,
 		Delete:        apimsubscription.Delete,
 		Upsert:        apimsubscription.Upsert,
 		PostUpsert:    apimsubscription.UpdateStatusAndRecount,

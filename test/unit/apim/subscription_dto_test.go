@@ -228,7 +228,8 @@ func emptyApp() *v1alpha1.Application {
 
 func toSubscriptionDTO(sub *v1alpha1.Subscription, api core.ApiDefinitionObject, app core.ApplicationObject) apimsubscription.DTO {
 	GinkgoHelper()
-	dto, err := apimsubscription.ToDTO(sub, api, app)
+	apimsubscription.RecordRefs(sub, api, app)
+	dto, err := apimsubscription.ToDTO(sub)
 	Expect(err).ToNot(HaveOccurred())
 	return dto
 }

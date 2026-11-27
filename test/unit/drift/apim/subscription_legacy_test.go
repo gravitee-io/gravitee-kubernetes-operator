@@ -72,7 +72,8 @@ func legacySubscriptionDTO(endingAt string) apimsubscription.DTO {
 	app := &v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "app", Namespace: "default"}}
 	app.Status.ID = "app-uuid"
 
-	dto, err := apimsubscription.ToDTO(sub, api, app)
+	apimsubscription.RecordRefs(sub, api, app)
+	dto, err := apimsubscription.ToDTO(sub)
 	Expect(err).ToNot(HaveOccurred())
 	return dto
 }

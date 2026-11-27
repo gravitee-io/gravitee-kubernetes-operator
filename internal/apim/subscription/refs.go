@@ -28,7 +28,7 @@ import (
 )
 
 // ResolveRefs checks that the API, the application and the plan the subscription references exist, and records in
-// sub.Resolved how the payload addresses them. On delete, only the API is required: it carries the management
+// sub.Resolved how the payload addresses them (RecordRefs). On delete, only the API is required: it carries the management
 // context, so a missing API (NotFound) releases the subscription without calling APIM, while a missing application
 // is left out of the payload and still lets the delete reach APIM.
 func ResolveRefs(ctx context.Context, sub *v1alpha1.Subscription, ns string) error {
@@ -50,7 +50,7 @@ func ResolveRefs(ctx context.Context, sub *v1alpha1.Subscription, ns string) err
 		)
 	}
 	populateLegacyIDs(api)
-	sub.Resolved = parentIdentities(sub, api, app)
+	RecordRefs(sub, api, app)
 	return nil
 }
 
@@ -74,7 +74,6 @@ func CreateAPIMClient(ctx context.Context, sub *v1alpha1.Subscription) (*apim.SD
 	}
 	return client, nil
 }
-
 
 // APIRef returns a copy of the API reference of sub, in the namespace of sub when it names none. The dynamic
 // resolvers write that namespace into the reference they get: resolving a copy leaves the Subscription spec as

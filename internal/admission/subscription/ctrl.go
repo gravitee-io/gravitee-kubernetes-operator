@@ -43,7 +43,7 @@ func NewAdmissionCtrl() AdmissionCtrl {
 			ClientFactory:   apimsubscription.CreateAPIMClient,
 			PreCheck:        validateUpdate,
 			ImmutableFields: validateImmutableProperties,
-			ToDTO:           apimsubscription.ToResolvedDTO,
+			ToDTO:           apimsubscription.ToDTO,
 			DryRun:          apimsubscription.DryRun,
 			GetRemote:       apimsubscription.GetRemote,
 		}),

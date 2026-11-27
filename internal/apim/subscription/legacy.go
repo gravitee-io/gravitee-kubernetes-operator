@@ -15,8 +15,8 @@
 package subscription
 
 // This file holds the addressing of resources created before APIM 4.12, by their UUID. Removing it leaves
-// these to fix: the applyLegacy call in ToDTO, the params of the SDK calls (nil) and UpdateStatus (always
-// Automation API managed).
+// these to fix: the applyLegacy call in ToDTO, the applyLegacyParents call in RecordRefs, the populateLegacyIDs
+// call in ResolveRefs, the params of the SDK calls (nil) and UpdateStatus (always Automation API managed).
 
 import (
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -62,13 +62,13 @@ func (l Legacy) deleteParams() *sdk.DeleteApiSubscriptionParams {
 
 // applyLegacy swaps in the UUID of a subscription created before the Automation API, and flags each identity
 // that is a UUID.
-func applyLegacy(dto *DTO, sub *v1alpha1.Subscription, parents v1alpha1.SubscriptionResolved) {
+func applyLegacy(dto *DTO, sub *v1alpha1.Subscription) {
 	if SubscriptionUsesUUID(sub) {
 		dto.Hrid = sub.Status.ID
 		dto.Legacy.HridContainsUUID = true
 	}
-	dto.Legacy.HridContainsApiUUID = parents.ApiUsesUUID
-	dto.Legacy.HridContainsAppUUID = parents.ApplicationUsesUUID
+	dto.Legacy.HridContainsApiUUID = sub.Resolved.ApiUsesUUID
+	dto.Legacy.HridContainsAppUUID = sub.Resolved.ApplicationUsesUUID
 }
 
 // applyLegacyParents swaps in the UUID of the API and of the application created before the Automation API.

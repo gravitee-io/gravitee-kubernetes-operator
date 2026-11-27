@@ -47,3 +47,32 @@ var _ = Describe("Subscription references", func() {
 		Expect(apimsubscription.APIRef(sub).Namespace).To(Equal("apis"))
 	})
 })
+
+
+var _ = Describe("Subscription RecordRefs", func() {
+	It("addresses an API, its plan and an application created before the Automation API by their UUIDs", func() {
+		sub := newSub("sub", "", false)
+		api, app := newAPIWithPlan(false, "plan-uuid"), newApp(false)
+
+		apimsubscription.RecordRefs(sub, api, app)
+		dto, err := apimsubscription.ToDTO(sub)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dto.Hrid).To(Equal("default-sub"))
+		Expect(dto.ApiHrid).To(Equal(api.GetID()))
+		Expect(dto.PlanHrid).To(Equal("plan-uuid"))
+		Expect(dto.ApplicationHrid).To(Equal(app.GetID()))
+		Expect(dto.Legacy).To(Equal(apimsubscription.Legacy{HridContainsApiUUID: true, HridContainsAppUUID: true}))
+	})
+
+	It("leaves the application out when it is gone", func() {
+		sub := newSub("sub", "", false)
+
+		apimsubscription.RecordRefs(sub, newAPIWithPlan(true, ""), nil)
+		dto, err := apimsubscription.ToDTO(sub)
+
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dto.ApplicationHrid).To(BeEmpty())
+		Expect(dto.Legacy.HridContainsAppUUID).To(BeFalse())
+	})
+})

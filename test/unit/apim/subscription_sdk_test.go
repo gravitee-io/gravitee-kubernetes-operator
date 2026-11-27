@@ -206,3 +206,19 @@ var _ = Describe("Subscription UpdateStatus", func() {
 		Entry("not a date", new("yesterday"), "parse the start date of subscription [default-sub]"),
 	)
 })
+
+var _ = Describe("Subscription FromState", func() {
+	addressed := func(legacy bool) apimsubscription.DTO {
+		return apimsubscription.DTO{ApiHrid: "default-api", Legacy: apimsubscription.Legacy{HridContainsUUID: legacy}}
+	}
+
+	It("keeps the hrid APIM answers for a subscription addressed by its hrid", func() {
+		state := sdk.SubscriptionState{Id: new("sub-uuid"), Hrid: "default-sub"}
+
+		Expect(apimsubscription.FromState(state, addressed(false)).Hrid).To(Equal("default-sub"))
+	})
+
+	It("leaves the hrid empty when APIM answers neither hrid nor id", func() {
+		Expect(apimsubscription.FromState(sdk.SubscriptionState{}, addressed(true)).Hrid).To(BeEmpty())
+	})
+})
