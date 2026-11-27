@@ -28,9 +28,9 @@ type SharedPolicyGroups struct {
 	sdk *apim.SDKClient
 }
 
-// SharedPolicyGroupState is the state APIM answers, with its cross id as a string, as the CR status holds it.
+// SharedPolicyGroupState is what the specs check of the state APIM answers, its cross id as the CR status holds it.
 type SharedPolicyGroupState struct {
-	sdk.SharedPolicyGroupState
+	Name    string
 	CrossID string
 }
 
@@ -44,7 +44,7 @@ func (s *SharedPolicyGroups) GetByHRID(hrid string) (*SharedPolicyGroupState, er
 	if state.CrossId != nil {
 		crossID = *state.CrossId
 	}
-	return &SharedPolicyGroupState{SharedPolicyGroupState: state, CrossID: crossID}, nil
+	return &SharedPolicyGroupState{Name: state.Name, CrossID: crossID}, nil
 }
 
 // CreateOrUpdate creates or updates a shared policy group in APIM as the operator would send it.
