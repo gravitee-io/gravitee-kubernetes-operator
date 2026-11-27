@@ -908,14 +908,16 @@ jobs:
         default: ""
         description: |
           Newline separated list of images to scan. When empty, the staged
-          image is scanned, using the chart version as its tag.
+          image is scanned, using the chart version as its tag. Each image is
+          retagged Major.Minor before the scan, so Aikido tracks one image per
+          minor version (4.12, 4.13, ...) instead of one per patch or build.
     steps:
       - checkout
       - keeper/env-export:
           secret-url: keeper://_XrkO71xa9HZBwxYoUHX0w/field/password
           var-name: AIKIDO_API_KEY
       - run:
-          name: Pull docker images to scan
+          name: Pull docker images to scan and retag them Major.Minor
           command: |
             IMAGES="<< parameters.images >>"
             if [ -z "$IMAGES" ]; then
@@ -925,7 +927,11 @@ jobs:
             : > /tmp/aikido-images.txt
             for image in $IMAGES; do
               if docker pull "$image"; then
-                echo "$image" >> /tmp/aikido-images.txt
+                # 4.14.2 and 4.15.0-rc become 4.14 and 4.15
+                MINOR_VERSION="$(echo "${image##*:}" | cut -d. -f1,2)"
+                MINOR_IMAGE="${image%:*}:${MINOR_VERSION}"
+                docker tag "$image" "$MINOR_IMAGE"
+                echo "$MINOR_IMAGE" >> /tmp/aikido-images.txt
               else
                 echo "WARN: could not pull $image, it will not be scanned"
               fi
