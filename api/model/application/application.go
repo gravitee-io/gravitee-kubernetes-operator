@@ -148,6 +148,7 @@ type Metadata struct {
 	DefaultValue *string `json:"defaultValue,omitempty"`
 	// Metadata Format
 	Format *MetaDataFormat `json:"format,omitempty"`
+	// Deprecated: ignored by APIM, will be removed in 2027-12.
 	// Metadata is hidden or not?
 	// +kubebuilder:validation:Optional
 	Hidden *bool `json:"hidden,omitempty"`
@@ -188,6 +189,7 @@ type Application struct {
 	// Application groups
 	// +kubebuilder:validation:Optional
 	Groups []string `json:"groups"`
+	// Deprecated: ignored by APIM, will be removed in 2027-12. Use pictureUrl.
 	// The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL)
 	// +kubebuilder:validation:Optional
 	Picture *string `json:"picture,omitempty"`

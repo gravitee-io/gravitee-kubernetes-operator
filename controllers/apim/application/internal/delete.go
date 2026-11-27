@@ -18,24 +18,25 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func Delete(
-	ctx context.Context,
-	application *v1alpha1.Application,
-) error {
-	if !util.ContainsFinalizer(application, core.ApplicationFinalizer) {
+func Delete(ctx context.Context, app *v1alpha1.Application) error {
+	if !util.ContainsFinalizer(app, core.ApplicationFinalizer) {
 		return nil
 	}
 
-	apimClient, apimErr := apim.FromContextRef(ctx, application.Spec.Context, application.GetNamespace())
-	if apimErr != nil {
-		return apimErr
+	dto, err := application.ToDTO(app)
+	if err != nil {
+		return err
 	}
 
-	return errors.IgnoreNotFound(apimClient.Applications.Delete(application))
+	client, err := application.CreateAPIMClient(ctx, app)
+	if err != nil {
+		return err
+	}
+
+	return application.Delete(ctx, client, dto)
 }

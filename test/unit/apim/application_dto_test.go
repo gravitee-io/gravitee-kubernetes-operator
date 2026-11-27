@@ -19,7 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -53,7 +53,9 @@ var _ = Describe("Application payload", func() {
 	})
 
 	It("compares the OAuth additional client metadata for drift", func() {
-		dto := model.ToApplicationDTO(newSpec())
+		dto, err := apimapp.ToDTO(&v1alpha1.Application{Spec: newSpec()})
+
+		Expect(err).ToNot(HaveOccurred())
 
 		Expect(dto.Settings.Oauth.AdditionalClientMetadata).To(Equal(map[string]string{"software_id": templateID}))
 	})

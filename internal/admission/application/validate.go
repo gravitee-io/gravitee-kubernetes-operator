@@ -24,8 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
+	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -41,6 +40,7 @@ func validateCreate(ctx context.Context, app *v1alpha1.Application) *errors.Admi
 	if errs.IsSevere() {
 		return errs
 	}
+	errs.MergeWith(WarnDeprecatedFields(app))
 	errs.Add(ctxref.Validate(ctx, app))
 	if errs.IsSevere() {
 		return errs
@@ -72,6 +72,7 @@ func validateUpdate(
 	if errs.IsSevere() {
 		return errs
 	}
+	errs.MergeWith(WarnDeprecatedFields(newApp))
 	errs.Add(ctxref.Validate(ctx, newApp))
 	if errs.IsSevere() {
 		return errs
@@ -96,6 +97,25 @@ func validateUpdate(
 	}
 	mergeDriftValidation(ctx, oldApp, newApp, errs)
 
+	return errs
+}
+
+// WarnDeprecatedFields warns about each field set that APIM ignores and that will be removed in 2027-12.
+func WarnDeprecatedFields(app *v1alpha1.Application) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	if app.Spec.Picture != nil {
+		errs.AddWarning("[spec.picture] is deprecated and ignored by APIM, it will be removed in 2027-12; " +
+			"use [spec.pictureUrl]")
+	}
+	if app.Spec.Metadata == nil {
+		return errs
+	}
+	for _, metadata := range *app.Spec.Metadata {
+		if metadata.Hidden != nil {
+			errs.AddWarningf("[spec.metadata[%s].hidden] is deprecated and ignored by APIM, "+
+				"it will be removed in 2027-12", metadata.Name)
+		}
+	}
 	return errs
 }
 
@@ -124,7 +144,7 @@ func validateSettings(ctx context.Context, app *v1alpha1.Application) *errors.Ad
 		if errs.IsSevere() {
 			return errs
 		}
-		if err := appResolve.ResolveClientCertificates(ctx, settings, app.GetNamespace(), app.GetName()); err != nil {
+		if err := apimapp.ResolveClientCertificates(ctx, settings, app.GetNamespace(), app.GetName()); err != nil {
 			errs.AddSevere(err.Error())
 		}
 	}
@@ -178,30 +198,24 @@ func validateSettingsUpdate(oldApp, newApp *v1alpha1.Application) *errors.Admiss
 func validateDryRun(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp := app.DeepCopy()
-
-	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
-	if err != nil {
-		errs.AddSevere(err.Error())
-	}
-
-	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(app))
-
-	status, err := apim.Applications.DryRunCreateOrUpdate(cp)
+	dto, err := apimapp.ToDTO(app)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
 	}
-	for _, severe := range status.Errors.Severe {
-		errs.AddSevere(severe)
-	}
-	if errs.IsSevere() {
+
+	client, err := apimapp.CreateAPIMClient(ctx, app)
+	if err != nil {
+		errs.AddSevere(err.Error())
 		return errs
 	}
-	for _, warning := range status.Errors.Warning {
-		errs.AddWarning(warning)
+
+	findings, err := apimapp.DryRun(ctx, client, dto)
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
 	}
-	return errs
+	return findings
 }
 
 func validateCertEndDatesVsSubscriptionEndDates(

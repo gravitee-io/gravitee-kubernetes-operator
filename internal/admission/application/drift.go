@@ -17,15 +17,11 @@ package application
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func mergeDriftValidation(
@@ -34,53 +30,32 @@ func mergeDriftValidation(
 	newApp *v1alpha1.Application,
 	errs *errors.AdmissionErrors,
 ) {
-	errs.MergeWith(drift.ValidateDrift(ctx, oldApp, newApp, resolveAppRefs, getRemoteApp,
-		drift.MapDTO(func(app *v1alpha1.Application) model.ApplicationDTO {
-			dto := model.ToApplicationDTO(app.Spec)
-			if k8s.HasTrueAnnotation(app, core.IgnoreGroupsAnnotation) {
-				dto.Groups = nil
-			}
+	errs.MergeWith(drift.ValidateDrift(ctx, oldApp, newApp, resolveAppRefs, remoteAppGetter(ctx),
+		drift.MapDTO(func(app *v1alpha1.Application) apimapp.DTO {
+			// ToDTO fails only on a spec that does not fit the SDK payload, which the dry run refuses on create
+			// and on each spec change. A CR admitted before that check maps to an empty DTO and shows as drift.
+			dto, _ := apimapp.ToDTO(app)
 			return dto
 		}),
 	))
 }
 
 func resolveAppRefs(ctx context.Context, app *v1alpha1.Application) error {
-	return appResolve.ResolveClientCertificates(ctx, app.Spec.Settings, app.GetNamespace(), app.GetName())
+	return apimapp.ResolveClientCertificates(ctx, app.Spec.Settings, app.GetNamespace(), app.GetName())
 }
 
-// getRemoteApp leaves the remote groups out of the comparison when the platform owns them.
-func getRemoteApp(apimClient *apim.APIM, app *v1alpha1.Application) (any, error) {
-	remote, err := fetchRemoteApp(apimClient, app)
-	if err != nil {
-		return nil, err
-	}
-	if k8s.HasTrueAnnotation(app, core.IgnoreGroupsAnnotation) {
-		remote.Groups = nil
-	}
-	return remote, nil
-}
-
-func fetchRemoteApp(apimClient *apim.APIM, app *v1alpha1.Application) (model.ApplicationDTO, error) {
-	automation := k8s.IsAutomationAPIManaged(app)
-	app.PopulateIDs(apimClient.Context, automation)
-	if !automation && app.GetID() != "" {
-		remoteApp, err := apimClient.Applications.GetWithUUID(app.GetID())
+// remoteAppGetter fetches the application through the SDK client of the context the application references;
+// the HTTP client drift hands over is not used.
+func remoteAppGetter(ctx context.Context) drift.RemoteObjectGetter[*v1alpha1.Application] {
+	return func(_ *apim.APIM, app *v1alpha1.Application) (any, error) {
+		dto, err := apimapp.ToDTO(app)
 		if err != nil {
-			return model.ApplicationDTO{}, err
+			return nil, err
 		}
-		return *remoteApp, nil
+		client, err := apimapp.CreateAPIMClient(ctx, app)
+		if err != nil {
+			return nil, err
+		}
+		return apimapp.GetRemote(ctx, client, dto)
 	}
-	remoteApp, err := apimClient.Applications.GetByHRID(appHRID(app))
-	if err != nil {
-		return model.ApplicationDTO{}, err
-	}
-	return *remoteApp, nil
-}
-
-func appHRID(app *v1alpha1.Application) string {
-	if app.Spec.HRID != "" {
-		return app.Spec.HRID
-	}
-	return refs.NewNamespacedNameFromObject(app).HRID()
 }
