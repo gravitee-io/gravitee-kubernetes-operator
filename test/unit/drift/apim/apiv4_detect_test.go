@@ -178,6 +178,17 @@ var _ = Describe("API v4 Drift detection", func() {
 		Expect(result.String()).To(ContainSubstring(`mode: BEST_MATCH != DEFAULT`))
 	})
 
+	It("matches a hyphenated flow mode the CRD sets against the remote BEST_MATCH", func() {
+		sent := model.ToAPIV4DTO(&v4.Api{V4BaseApi: &v4.V4BaseApi{
+			ApiBase:       &base.ApiBase{},
+			FlowExecution: &v4.FlowExecution{Mode: "best-match"},
+		}})
+		remote := sent
+		remote.FlowExecution = &model.APIV4FlowExecutionDTO{Mode: v4.FlowModeBestMatch}
+		result := drift.DetectWithNamespace(sdkV4(sent), sdkV4(remote), "gravitee")
+		Expect(result.DriftDetected()).To(BeFalse(), result.String())
+	})
+
 	It("detects a console-side flip of a portal navigation entry the CRD leaves unset", func() {
 		crd := sdkV4(model.APIV4DTO{PortalNavigation: []*model.APIV4NavigationPathDTO{
 			{Path: "/alpha"},
