@@ -27,6 +27,9 @@ func ToAPIV4DTO(api *v4.Api) APIV4DTO {
 	}
 
 	dto := mapViaJSON[APIV4DTO](api.V4BaseApi)
+	if dto.FlowExecution != nil {
+		dto.FlowExecution.Mode = v4.FlowMode(v4.Enum(dto.FlowExecution.Mode).ToAutomation())
+	}
 	dto.Plans = mapAPIV4Plans(api.Plans)
 	dto.Pages = mapAPIV4Pages(api.Pages)
 
