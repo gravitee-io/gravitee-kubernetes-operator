@@ -44,7 +44,6 @@ type SharedPolicyGroup struct {
 	Phase *FlowPhase `json:"phase"`
 	// SharedPolicyGroup Steps
 	Steps []*Step `json:"steps,omitempty"`
-	// SharedPolicyGroup LifecycleState (UNDEPLOYED;DEPLOYED;PENDING)
 }
 
 type Step struct {
@@ -66,4 +65,7 @@ type Step struct {
 	// FlowStep condition
 	// +kubebuilder:validation:Optional
 	Condition *string `json:"condition,omitempty"`
+	// FlowStep message condition, evaluated on each message (MESSAGE API type)
+	// +kubebuilder:validation:Optional
+	MessageCondition *string `json:"messageCondition,omitempty"`
 }

@@ -7481,6 +7481,7 @@ _Appears in:_
 | `description` _string_ | FlowStep description |  | Optional: \{\} <br /> |
 | `configuration` _[GenericStringMap](#genericstringmap)_ | FlowStep configuration is a map of arbitrary key-values |  | Optional: \{\} <br /> |
 | `condition` _string_ | FlowStep condition |  | Optional: \{\} <br /> |
+| `messageCondition` _string_ | FlowStep message condition, evaluated on each message (MESSAGE API type) |  | Optional: \{\} <br /> |
 
 
 

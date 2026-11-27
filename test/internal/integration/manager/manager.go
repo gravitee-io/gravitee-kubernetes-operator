@@ -250,10 +250,11 @@ func start() {
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&policygroups.Reconciler{
-		Scheme:   mgr.GetScheme(),
-		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("sharedpolicygroups-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.SharedPolicyGroupList{}),
+		Scheme:    mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Lifecycle: policygroups.NewLifecycle(),
+		Recorder:  mgr.GetEventRecorderFor("sharedpolicygroups-controller"),
+		Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.SharedPolicyGroupList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&notification.Reconciler{

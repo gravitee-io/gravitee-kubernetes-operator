@@ -34,6 +34,8 @@ type APIM struct {
 	Export        *Export
 	Notification  *Notification
 	SDK           *apim.SDKClient
+
+	SharedPolicyGroup *SharedPolicyGroups
 }
 
 func NewClient(ctx context.Context) *APIM {
@@ -62,5 +64,7 @@ func NewClient(ctx context.Context) *APIM {
 		Export:        export,
 		Notification:  notification,
 		SDK:           sdkClient,
+
+		SharedPolicyGroup: &SharedPolicyGroups{sdk: sdkClient},
 	}
 }

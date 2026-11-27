@@ -116,6 +116,10 @@ spec:
                         default: true
                         description: Indicate if this FlowStep is enabled or not
                         type: boolean
+                      messageCondition:
+                        description: FlowStep message condition, evaluated on each message (MESSAGE API
+                          type)
+                        type: string
                       name:
                         description: FlowStep name
                         type: string

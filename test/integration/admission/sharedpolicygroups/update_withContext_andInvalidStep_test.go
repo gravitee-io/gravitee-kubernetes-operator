@@ -32,7 +32,7 @@ import (
 var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := spg.AdmissionCtrl{}
+	admissionCtrl := spg.NewAdmissionCtrl()
 
 	It("should return no error", func() {
 		fixtures := fixture.

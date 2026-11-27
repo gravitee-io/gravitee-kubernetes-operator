@@ -16,41 +16,48 @@ package sharedpolicygroups
 
 import (
 	"context"
-	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups/internal"
 	corev1 "k8s.io/api/core/v1"
-
-	"github.com/go-logr/logr"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	spg "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/sharedpolicygroup"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-const requeueAfterTime = time.Second * 5
+type Lifecycle = lifecycle.ResourceLifecycle[*v1alpha1.SharedPolicyGroup, spg.DTO, *apim.SDKClient, spg.Response]
 
 type Reconciler struct {
 	client.Client
-	Log      logr.Logger
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
-	Watcher  watch.Interface
+	Lifecycle Lifecycle
+	Scheme    *runtime.Scheme
+	Recorder  record.EventRecorder
+	Watcher   watch.Interface
+}
+
+// NewLifecycle wires the SharedPolicyGroup reconcile steps. A shared policy group has no references to resolve, so
+// its status reports Accepted only, without a ResolvedRefs condition.
+func NewLifecycle() Lifecycle {
+	return lifecycle.NewResourceLifecycle(Lifecycle{
+		Finalizer:     core.SharedPolicyGroupFinalizer,
+		ResolveRefs:   nil,
+		ClientFactory: spg.CreateAPIMClient,
+		ToDTO:         spg.ToDTO,
+		DeleteGuard:   spg.DeleteGuard,
+		Delete:        spg.Delete,
+		Upsert:        spg.Upsert,
+		PostUpsert:    spg.UpdateStatus,
+		Status:        spg.SetProcessingStatus,
+	})
 }
 
 // Reconcile will handle v1alpha1.SharedPolicyGroup CRDs
@@ -59,71 +66,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=sharedpolicygroups/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	spg := &v1alpha1.SharedPolicyGroup{}
-	if err := r.Get(ctx, req.NamespacedName, spg); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	spg.SetNamespace(req.Namespace)
-
-	events := event.NewRecorder(r.Recorder)
-
-	k8s.ResetConditionsExceptAutomationAPI(spg)
-
-	dc := spg.DeepCopy()
-
-	_, err := util.CreateOrUpdate(ctx, r.Client, spg, func() error {
-		util.AddFinalizer(spg, core.SharedPolicyGroupFinalizer)
-		k8s.AddAnnotation(spg, core.LastSpecHashAnnotation, hash.Calculate(&spg.Spec))
-
-		if spg.IsBeingDeleted() {
-			if err := template.ReleaseReferences(ctx, spg); err != nil {
-				return err
-			}
-		} else if err := template.Compile(ctx, dc, true); err != nil {
-			spg.Status.ProcessingStatus = core.ProcessingStatusFailed
-			return err
-		}
-
-		var err error
-		if spg.IsBeingDeleted() {
-			err = events.Record(event.Delete, spg, func() error {
-				if err := internal.Delete(ctx, dc); err != nil {
-					return err
-				}
-				util.RemoveFinalizer(spg, core.SharedPolicyGroupFinalizer)
-				return nil
-			})
-		} else {
-			err = events.Record(event.Update, spg, func() error {
-				return internal.CreateOrUpdate(ctx, dc)
-			})
-		}
-
-		return err
-	})
-
-	if err := dc.GetStatus().DeepCopyTo(spg); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err == nil {
-		log.InfoEndReconcile(ctx, spg)
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, spg)
-	}
-
-	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, spg, err); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if errors.ShouldRetry(err, spg.IsBeingDeleted()) {
-		log.ErrorRequeuingReconcile(ctx, err, spg)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
-	}
-
-	log.ErrorAbortingReconcile(ctx, err, spg)
-	return ctrl.Result{}, nil
+	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.SharedPolicyGroup{})
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {

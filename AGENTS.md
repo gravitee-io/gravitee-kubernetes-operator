@@ -60,7 +60,7 @@ Type definitions live in `api/v1alpha1/`, data models in `api/model/`. Core inte
 ### Controllers (controllers/)
 
 Three controller families, each under `controllers/`:
-- **`apim/`** — controllers for apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription, and the portal navigation kinds (portaltheme, portal, portallink, portallisting, docs). `group`, apidefinition v4 and the five portal navigation controllers run on `internal/lifecycle`, like the AM controllers; the others (apidefinition v2 included) still have a hand-written loop
+- **`apim/`** — controllers for apidefinition v2/v4, apiresource, application, group, ingress, managementcontext, notification, sharedpolicygroups, subscription, and the portal navigation kinds (portaltheme, portal, portallink, portallisting, docs). `group`, `sharedpolicygroups`, apidefinition v4 and the five portal navigation controllers run on `internal/lifecycle`, like the AM controllers; the others (apidefinition v2 included) still have a hand-written loop
 - **`am/`** — `amcontext`, `securitydomain` (more AM kinds follow)
 - **`gateway-api/`** — 5 controllers (gateway, gatewayclass, gatewayclassparameters, httproute, kafkaroute)
 
@@ -85,7 +85,7 @@ Everything that talks to APIM goes through `internal/apim`. This is the layer th
 | `internal/apim/apim.go` | The `APIM` facade: one field per service, built per reconcile from a `ManagementContext` |
 | `internal/apim/client/` | `Client` (HTTP + `URLs`) and the target builders `OrgTarget`, `EnvV1Target`, `EnvV2Target`, `AutomationTarget` |
 | `internal/apim/sdk.go` | The APIM SDK client `apim.SDKClient` (`*sdk.APIMClient` + its context, `Probe`), built by `NewSDKClient` / `SDKFromContextRef` with the same URL, auth, org/env and cloud rules as `FromContext` |
-| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `apiv4/`, `portaltheme/`, `portal/`, `portallink/`, `portallisting/`, `docs/` |
+| `internal/apim/<resource>/` | One package per resource migrated to the SDK, with the `internal/lifecycle` signatures. Today: `group/`, `sharedpolicygroup/`, `apiv4/`, `portaltheme/`, `portal/`, `portallink/`, `portallisting/`, `docs/` |
 | `internal/apim/navigation/` | Shared by the portal navigation packages: APIM's navigation visibility rule (v4 pages use it too), the portal-or-API `Parent` of a PortalLink or Documentation (`ParentRefs.Resolve` checks and reads it with the webhook's messages), the dry-run findings |
 | `internal/apim/service/` | One file per resource not yet on the SDK: the HTTP calls (`CreateOrUpdate`, `DryRunCreateOrUpdate`, `Delete`, `GetByHRID`, `GetByID`) |
 | `internal/apim/model/` | The **wire payloads** (`*DTO`, or generated `sdk.*` types for migrated resources) sent to and received from APIM, plus their mappers |
@@ -94,7 +94,7 @@ Controllers and webhooks never build a URL or a payload themselves. For a resour
 
 #### APIM SDK (`gravitee-automation-sdk/apim-sdk`)
 
-Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **ApiV4Definition**, **PortalTheme**, **Portal**, **PortalLink**, **PortalListing**, **Documentation**. The portal kinds' hand-written services (`internal/apim/service/{portals,portalthemes,portallinks,portallistings,documentations}.go`) and DTOs (`internal/apim/model/`) stay for master's tests only: production code does not use them.
+Resources are migrating one by one from the hand-written HTTP client to the generated SDK (`apim-sdk/pkg/sdk`). Migrated so far: **Group**, **SharedPolicyGroup**, **ApiV4Definition**, **PortalTheme**, **Portal**, **PortalLink**, **PortalListing**, **Documentation**. The portal kinds' hand-written services (`internal/apim/service/{portals,portalthemes,portallinks,portallistings,documentations}.go`) and DTOs (`internal/apim/model/`) stay for master's tests only: production code does not use them.
 
 - Each migrated resource gets an `internal/apim/<resource>/` package laid out like `internal/am/<resource>/`, with the `internal/lifecycle` signatures (see `internal/apim/group/`):
   - `ToDTO(obj) (DTO, error)`: the payload, plus what the calls need to know about the CR (legacy UUID, annotations) as fields tagged `json:"-" drift:"ignore"`. The drift engine panics on unexported fields;
@@ -148,9 +148,9 @@ Resources created before APIM 4.12 are still UUID-addressed. The service branche
 
 #### DTOs are the API payload
 
-`internal/apim/model/` types are the **Automation API request and response bodies**, not comparison helpers. `SharedPolicyGroup.createOrUpdate` builds `model.ToSharePolicyGroupDTO(...)` and `PUT`s it; `GetByHRID` unmarshals the response into the same `SharedPolicyGroupDTO`. Drift detection is a *second consumer* of these types — that is the only reason `drift:` struct tags live on them.
+`internal/apim/model/` types are the **Automation API request and response bodies**, not comparison helpers. `Dictionaries.createOrUpdate` builds `model.ToDictionaryDTO(...)` and `PUT`s it. Drift detection is a *second consumer* of these types — that is the only reason `drift:` struct tags live on them.
 
-Mappers are plain functions in `internal/apim/model/` (`ToApplicationDTO`, `ToAPIV4DTO`, `ToSharePolicyGroupDTO`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
+Mappers are plain functions in `internal/apim/model/` (`ToApplicationDTO`, `ToAPIV4DTO`, `ToDictionaryDTO`, `ToPortalDTO`, …), not methods on `api/model/` types. Most delegate to the shared `mapViaJSON[T]` JSON round-trip; write explicit mapping only where the wire shape genuinely differs from the CRD (`ToAPIV4DTO` turns the spec's plan and page maps into sorted slices; `SubscriptionDTO.ToAutomation()` / `AutomationSubscriptionDTO.ToLegacy()` bridge two field namings).
 
 Two deviations worth knowing before copying a pattern:
 
