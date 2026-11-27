@@ -22,6 +22,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -48,10 +49,19 @@ func Delete(ctx context.Context, client *apim.SDKClient, dto DTO) error {
 	}))
 }
 
+// SetProcessingStatus writes the deprecated processingStatus, as before the lifecycle: Completed after a successful
+// reconcile, Failed after a failed one.
+func SetProcessingStatus(obj *v1alpha1.Subscription, err error) {
+	if err != nil {
+		obj.Status.ProcessingStatus = core.ProcessingStatusFailed
+		return
+	}
+	obj.Status.ProcessingStatus = core.ProcessingStatusCompleted
+}
+
 // UpdateStatus copies the upsert response into the CR status. A subscription upserted by its hrid becomes
 // Automation API managed; a legacy subscription, upserted by its UUID, stays as it is. A response without an id
-// keeps the one the status has. The deprecated processing status is cleared: the lifecycle reports through the
-// conditions, and a value left by the controller before it would never change again.
+// keeps the one the status has.
 func UpdateStatus(obj *v1alpha1.Subscription, resp Response) error {
 	if resp.State.StartingAt == nil {
 		return fmt.Errorf("subscription [%s] has no start date in APIM", resp.State.Hrid)
@@ -61,7 +71,6 @@ func UpdateStatus(obj *v1alpha1.Subscription, resp Response) error {
 		return fmt.Errorf("parse the start date of subscription [%s]: %w", resp.State.Hrid, err)
 	}
 
-	obj.Status.ProcessingStatus = ""
 	if resp.State.Id != nil {
 		obj.Status.ID = *resp.State.Id
 	}

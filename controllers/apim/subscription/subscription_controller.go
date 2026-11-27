@@ -55,6 +55,7 @@ func NewLifecycle() Lifecycle {
 		Upsert:        apimsubscription.Upsert,
 		PostUpsert:    apimsubscription.UpdateStatusAndRecount,
 		PostDelete:    apimsubscription.RecountParents,
+		Status:        apimsubscription.SetProcessingStatus,
 	})
 }
 

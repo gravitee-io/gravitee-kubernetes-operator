@@ -16,6 +16,7 @@ package apim_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	apimsubscription "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
@@ -220,5 +222,25 @@ var _ = Describe("Subscription FromState", func() {
 
 	It("leaves the hrid empty when APIM answers neither hrid nor id", func() {
 		Expect(apimsubscription.FromState(sdk.SubscriptionState{}, addressed(true)).Hrid).To(BeEmpty())
+	})
+})
+
+var _ = Describe("Subscription SetProcessingStatus", func() {
+	It("writes Completed after a successful reconcile", func() {
+		sub := newSub("sub", "", true)
+		sub.Status.ProcessingStatus = core.ProcessingStatusFailed
+
+		apimsubscription.SetProcessingStatus(sub, nil)
+
+		Expect(sub.Status.ProcessingStatus).To(Equal(core.ProcessingStatusCompleted))
+	})
+
+	It("writes Failed after a failed reconcile", func() {
+		sub := newSub("sub", "", true)
+		sub.Status.ProcessingStatus = core.ProcessingStatusCompleted
+
+		apimsubscription.SetProcessingStatus(sub, errors.New("upsert refused"))
+
+		Expect(sub.Status.ProcessingStatus).To(Equal(core.ProcessingStatusFailed))
 	})
 })

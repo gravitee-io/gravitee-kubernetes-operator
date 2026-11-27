@@ -60,7 +60,7 @@ type SubscriptionStatus struct {
 	// +kubebuilder:validation:MaxItems=8
 	// +kubebuilder:default={}
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-	// The processing status of the Subscription. *** DEPRECATED ***
+	// This value is `Completed` if the sync with APIM succeeded, Failed otherwise. *** DEPRECATED ***
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 }
 
@@ -86,14 +86,8 @@ func (s *SubscriptionStatus) DeepCopyTo(obj client.Object) error {
 	return nil
 }
 
-// IsFailed reports a condition set to False. The deprecated processingStatus is no longer written.
 func (s *SubscriptionStatus) IsFailed() bool {
-	for _, condition := range s.Conditions {
-		if condition.Status == metav1.ConditionFalse {
-			return true
-		}
-	}
-	return false
+	return s.ProcessingStatus == core.ProcessingStatusFailed
 }
 
 func (s *SubscriptionStatus) SetProcessingStatus(status core.ProcessingStatus) {

@@ -160,7 +160,7 @@ func ApplicationRejected(app *v1alpha1.Application) error {
 }
 
 func SubscriptionCompleted(sub *v1alpha1.Subscription) error {
-	return SubscriptionAccepted(sub)
+	return Equals(reconcileStatus, core.ProcessingStatusCompleted, sub.Status.ProcessingStatus)
 }
 
 func SubscriptionAccepted(sub *v1alpha1.Subscription) error {
@@ -169,7 +169,7 @@ func SubscriptionAccepted(sub *v1alpha1.Subscription) error {
 }
 
 func SubscriptionFailed(sub *v1alpha1.Subscription) error {
-	return Equals(reconcileCondition, true, sub.Status.IsFailed())
+	return Equals(reconcileStatus, core.ProcessingStatusFailed, sub.Status.ProcessingStatus)
 }
 
 func SharedPolicyGroupCompleted(sub *v1alpha1.SharedPolicyGroup) error {
