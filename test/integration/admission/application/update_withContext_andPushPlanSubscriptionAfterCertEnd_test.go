@@ -64,7 +64,7 @@ func newClientCertificate() string {
 var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := application.AdmissionCtrl{}
+	admissionCtrl := application.NewAdmissionCtrl()
 
 	// The certificate end-date check reads the security type of every subscribed plan.
 	// A PUSH plan has none, which used to panic the webhook (GKO-3237).

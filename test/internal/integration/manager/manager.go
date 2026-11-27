@@ -227,10 +227,11 @@ func start() {
 
 	runtimeUtil.Must(
 		(&application.Reconciler{
-			Client:   mgr.GetClient(),
-			Scheme:   mgr.GetScheme(),
-			Recorder: mgr.GetEventRecorderFor("application-controller"),
-			Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApplicationList{}),
+			Client:    mgr.GetClient(),
+			Lifecycle: application.NewLifecycle(),
+			Scheme:    mgr.GetScheme(),
+			Recorder:  mgr.GetEventRecorderFor("application-controller"),
+			Watcher:   watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApplicationList{}),
 		}).SetupWithManager(mgr),
 	)
 

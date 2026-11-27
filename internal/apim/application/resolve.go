@@ -21,11 +21,21 @@ import (
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
+
+// ResolveRefs inlines the client certificates the application references, for the lifecycle. A deleted application
+// needs none: Delete addresses it by its hrid, so a certificate Secret deleted first does not leave it in APIM.
+func ResolveRefs(ctx context.Context, obj *v1alpha1.Application, namespace string) error {
+	if obj.Spec.Settings == nil || obj.IsBeingDeleted() {
+		return nil
+	}
+	return ResolveClientCertificates(ctx, obj.Spec.Settings, namespace, obj.Spec.Name)
+}
 
 func ResolveClientCertificates(ctx context.Context, settings *application.Setting, namespace, appName string) error {
 	tls := settings.TLS
@@ -54,8 +64,9 @@ func ResolveClientCertificates(ctx context.Context, settings *application.Settin
 	return nil
 }
 
+// resolveRef leaves a certificate that sets both content and ref as it is, for admission to reject.
 func resolveRef(ctx context.Context, namespace string, cert *application.ClientCertificate) error {
-	if cert.Ref == nil {
+	if cert.Ref == nil || cert.Content != "" {
 		return nil
 	}
 

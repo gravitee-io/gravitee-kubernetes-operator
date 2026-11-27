@@ -32,7 +32,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := admission.AdmissionCtrl{}
+	admissionCtrl := admission.NewAdmissionCtrl()
 
 	It("should resolve client certificate refs from secret and configmap", func() {
 		fixtures := fixture.

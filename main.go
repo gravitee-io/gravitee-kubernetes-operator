@@ -338,10 +338,11 @@ func registerAPIMAutomationAPIControllers(mgr manager.Manager) {
 	}
 
 	if err := (&application.Reconciler{
-		Client:   k8s.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("application-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApplicationList{}),
+		Client:    k8s.GetClient(),
+		Lifecycle: application.NewLifecycle(),
+		Scheme:    mgr.GetScheme(),
+		Recorder:  mgr.GetEventRecorderFor("application-controller"),
+		Watcher:   watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for applications")
 		os.Exit(1)

@@ -774,7 +774,7 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `id` _string_ | The ID of the Application, if a management context has been defined to sync with an APIM instance |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Application.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | *** DEPRECATED *** The processing status of the Application.<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
@@ -2990,7 +2990,7 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `id` _string_ | The ID of the Application, if a management context has been defined to sync with an APIM instance |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Application.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | *** DEPRECATED *** The processing status of the Application.<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 

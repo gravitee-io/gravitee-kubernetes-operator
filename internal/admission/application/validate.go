@@ -22,9 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
-	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -33,70 +31,21 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func validateCreate(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-	// Should be the first validation, it will also compile the templates internally
-	errs.Add(admission.CompileAndValidateTemplate(ctx, app))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.MergeWith(WarnDeprecatedFields(app))
+// preCheck runs after the lifecycle compiled the templates and resolved the certificate refs, on create and
+// update, in today's order: deprecation warnings, context, settings, then the ignore-groups warning.
+func preCheck(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
+	errs := WarnDeprecatedFields(app)
 	errs.Add(ctxref.Validate(ctx, app))
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(validateSettings(ctx, app))
+	errs.MergeWith(validateSettings(app))
 	if errs.IsSevere() {
 		return errs
 	}
 	if k8s.HasTrueAnnotation(app, core.IgnoreGroupsAnnotation) && len(app.Spec.Groups) > 0 {
 		errs.AddWarningf("spec.groups is not applied while %s is true", core.IgnoreGroupsAnnotation)
 	}
-	errs.MergeWith(validateDryRun(ctx, app))
-	return errs
-}
-
-func validateUpdate(
-	ctx context.Context,
-	oldApp *v1alpha1.Application,
-	newApp *v1alpha1.Application,
-) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	if newApp.IsBeingDeleted() {
-		return errs
-	}
-
-	// Should be the first validation, it will also compile the templates internally
-	errs.Add(admission.CompileAndValidateTemplate(ctx, newApp))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.MergeWith(WarnDeprecatedFields(newApp))
-	errs.Add(ctxref.Validate(ctx, newApp))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.MergeWith(validateSettings(ctx, newApp))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.MergeWith(validateSettingsUpdate(oldApp, newApp))
-	if errs.IsSevere() {
-		return errs
-	}
-	errs.MergeWith(validateCertEndDatesVsSubscriptionEndDates(ctx, newApp))
-	if errs.IsSevere() {
-		return errs
-	}
-	if oldApp.GetSpec().Hash() != newApp.GetSpec().Hash() {
-		errs.MergeWith(validateDryRun(ctx, newApp))
-	}
-	if errs.IsSevere() {
-		return errs
-	}
-	mergeDriftValidation(ctx, oldApp, newApp, errs)
-
 	return errs
 }
 
@@ -119,7 +68,7 @@ func WarnDeprecatedFields(app *v1alpha1.Application) *errors.AdmissionErrors {
 	return errs
 }
 
-func validateSettings(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
+func validateSettings(app *v1alpha1.Application) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	settings := app.Spec.Settings
@@ -141,12 +90,6 @@ func validateSettings(ctx context.Context, app *v1alpha1.Application) *errors.Ad
 
 	if hasMultipleCerts {
 		errs.MergeWith(validateClientCertificates(settings.GetClientCertificates()))
-		if errs.IsSevere() {
-			return errs
-		}
-		if err := apimapp.ResolveClientCertificates(ctx, settings, app.GetNamespace(), app.GetName()); err != nil {
-			errs.AddSevere(err.Error())
-		}
 	}
 
 	return errs
@@ -193,29 +136,6 @@ func validateSettingsUpdate(oldApp, newApp *v1alpha1.Application) *errors.Admiss
 	}
 
 	return errs
-}
-
-func validateDryRun(ctx context.Context, app *v1alpha1.Application) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	dto, err := apimapp.ToDTO(app)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	client, err := apimapp.CreateAPIMClient(ctx, app)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	findings, err := apimapp.DryRun(ctx, client, dto)
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-	return findings
 }
 
 func validateCertEndDatesVsSubscriptionEndDates(

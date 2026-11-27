@@ -18,42 +18,46 @@ package application
 
 import (
 	"context"
-	"fmt"
-	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	apimapp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/lifecycle"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	corev1 "k8s.io/api/core/v1"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/go-logr/logr"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application/internal"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const requeueAfterTime = time.Second * 5
+type Lifecycle = lifecycle.ResourceLifecycle[*v1alpha1.Application, apimapp.DTO, *apim.SDKClient, apimapp.Response]
 
 // Reconciler reconciles a Application object.
 type Reconciler struct {
 	client.Client
-	Log      logr.Logger
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
-	Watcher  watch.Interface
+	Lifecycle Lifecycle
+	Scheme    *runtime.Scheme
+	Recorder  record.EventRecorder
+	Watcher   watch.Interface
+}
+
+// NewLifecycle wires the Application reconcile steps.
+func NewLifecycle() Lifecycle {
+	return lifecycle.NewResourceLifecycle(Lifecycle{
+		Finalizer:     core.ApplicationFinalizer,
+		ResolveRefs:   apimapp.ResolveRefs,
+		ClientFactory: apimapp.CreateAPIMClient,
+		ToDTO:         apimapp.ToDTO,
+		Delete:        apimapp.Delete,
+		Upsert:        apimapp.Upsert,
+		PostUpsert:    apimapp.UpdateStatus,
+		Status:        apimapp.SetProcessingStatus,
+	})
 }
 
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
@@ -63,80 +67,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=applications/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	application := &v1alpha1.Application{}
-	if err := r.Get(ctx, req.NamespacedName, application); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	events := event.NewRecorder(r.Recorder)
-
-	if application.Spec.Context == nil {
-		log.ErrorAbortingReconcile(
-			ctx,
-			fmt.Errorf("no context is provided, no attempt will be made to sync with APIM"),
-			application,
-		)
-		return ctrl.Result{}, nil
-	}
-
-	k8s.ResetConditionsExceptAutomationAPI(application)
-
-	dc := application.DeepCopy()
-
-	_, err := util.CreateOrUpdate(ctx, r.Client, application, func() error {
-		util.AddFinalizer(application, core.ApplicationFinalizer)
-		k8s.AddAnnotation(application, core.LastSpecHashAnnotation, hash.Calculate(&application.Spec))
-
-		if application.IsBeingDeleted() {
-			if err := template.ReleaseReferences(ctx, application); err != nil {
-				return err
-			}
-		} else if err := template.Compile(ctx, dc, true); err != nil {
-			application.Status.ProcessingStatus = core.ProcessingStatusFailed
-			return err
-		}
-
-		var err error
-		if application.IsBeingDeleted() {
-			err = events.Record(event.Delete, application, func() error {
-				if err := internal.Delete(ctx, dc); err != nil {
-					return err
-				}
-				util.RemoveFinalizer(application, core.ApplicationFinalizer)
-				return nil
-			})
-		} else {
-			err = events.Record(event.Update, application, func() error {
-				return internal.CreateOrUpdate(ctx, dc)
-			})
-		}
-
-		return err
-	})
-
-	if err := dc.GetStatus().DeepCopyTo(application); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	application.SetFinalizers(dc.GetFinalizers())
-
-	if err == nil {
-		log.InfoEndReconcile(ctx, application)
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, application)
-	}
-
-	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, application, err); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if errors.ShouldRetry(err, application.IsBeingDeleted()) {
-		log.ErrorRequeuingReconcile(ctx, err, application)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
-	}
-
-	log.ErrorAbortingReconcile(ctx, err, application)
-	return ctrl.Result{}, nil
+	return r.Lifecycle.Reconcile(ctx, r.Client, r.Recorder, req, &v1alpha1.Application{})
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {

@@ -32,7 +32,7 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := admission.AdmissionCtrl{}
+	admissionCtrl := admission.NewAdmissionCtrl()
 
 	It("should return error when clientCertificate and clientCertificates are both set", func() {
 		fixtures := fixture.

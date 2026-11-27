@@ -21,6 +21,7 @@ import (
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -63,6 +64,16 @@ func Delete(ctx context.Context, client *apim.SDKClient, dto DTO) error {
 	return errors.IgnoreNotFound(errors.FromSDKResponse(err, func() (*http.Response, []byte) {
 		return resp.HTTPResponse, resp.Body
 	}))
+}
+
+// SetProcessingStatus writes the deprecated processingStatus, as before the lifecycle: Completed after a successful
+// reconcile, Failed after a failed one.
+func SetProcessingStatus(obj *v1alpha1.Application, err error) {
+	if err != nil {
+		obj.Status.ProcessingStatus = core.ProcessingStatusFailed
+		return
+	}
+	obj.Status.ProcessingStatus = core.ProcessingStatusCompleted
 }
 
 // UpdateStatus copies the upsert response into the CR status. An application upserted by its hrid becomes

@@ -63,7 +63,7 @@ const (
 
 var _ = Describe("Validate drift", labels.WithContext, func() {
 	ctx := context.Background()
-	admissionCtrl := admission.AdmissionCtrl{}
+	admissionCtrl := admission.NewAdmissionCtrl()
 
 	It("should not drift on with minimal fields", func() {
 		fixtures := fixture.
