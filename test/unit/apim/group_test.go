@@ -17,6 +17,7 @@ package apim_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -146,13 +147,6 @@ var _ = Describe("Group status", func() {
 		Expect(grp.Status.EnvID).To(Equal("env1"))
 	})
 
-	It("clears the deprecated processing status", func() {
-		grp := developers()
-		grp.Status.ProcessingStatus = core.ProcessingStatusCompleted
-		Expect(apimgroup.UpdateStatus(ctx, grp, apimgroup.Response{})).To(Succeed())
-		Expect(grp.Status.ProcessingStatus).To(BeEmpty())
-	})
-
 	It("defaults a missing member count to zero", func() {
 		grp := developers()
 		grp.Status.Members = 3
@@ -190,5 +184,21 @@ var _ = Describe("Group status", func() {
 		Expect(apimgroup.UpdateStatus(ctx, grp, resp)).To(Succeed())
 		Expect(k8s.IsAutomationAPIManaged(grp)).To(BeFalse())
 		Expect(grp.Status.ID).To(Equal(id))
+	})
+})
+
+var _ = Describe("Group SetProcessingStatus", func() {
+	It("writes Completed after a successful reconcile", func() {
+		grp := developers()
+		grp.Status.ProcessingStatus = core.ProcessingStatusFailed
+		apimgroup.SetProcessingStatus(grp, nil)
+		Expect(grp.Status.ProcessingStatus).To(Equal(core.ProcessingStatusCompleted))
+	})
+
+	It("writes Failed after a failed reconcile", func() {
+		grp := developers()
+		grp.Status.ProcessingStatus = core.ProcessingStatusCompleted
+		apimgroup.SetProcessingStatus(grp, errors.New("upsert refused"))
+		Expect(grp.Status.ProcessingStatus).To(Equal(core.ProcessingStatusFailed))
 	})
 })

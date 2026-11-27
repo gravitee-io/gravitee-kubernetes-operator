@@ -53,6 +53,7 @@ func NewLifecycle() Lifecycle {
 		Delete:        apimgroup.Delete,
 		Upsert:        apimgroup.Upsert,
 		PostUpsert:    apimgroup.UpdateStatus,
+		Status:        apimgroup.SetProcessingStatus,
 	})
 }
 

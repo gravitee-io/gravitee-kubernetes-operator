@@ -21,6 +21,7 @@ import (
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
@@ -69,11 +70,19 @@ func Delete(ctx context.Context, client *apim.SDKClient, dto DTO) error {
 	}))
 }
 
+// SetProcessingStatus writes the deprecated processingStatus, as before the lifecycle: Completed after a successful
+// reconcile, Failed after a failed one.
+func SetProcessingStatus(obj *v1alpha1.Group, err error) {
+	if err != nil {
+		obj.Status.ProcessingStatus = core.ProcessingStatusFailed
+		return
+	}
+	obj.Status.ProcessingStatus = core.ProcessingStatusCompleted
+}
+
 // UpdateStatus copies the upsert response into the CR status. A group upserted by its hrid becomes
-// Automation API managed; a legacy group, upserted by its UUID, stays as it is. The deprecated
-// processingStatus is cleared, so a value written before the lifecycle does not go stale.
+// Automation API managed; a legacy group, upserted by its UUID, stays as it is.
 func UpdateStatus(_ context.Context, obj *v1alpha1.Group, resp Response) error {
-	obj.Status.ProcessingStatus = ""
 	obj.Status.ID = ""
 	if resp.State.Id != nil {
 		obj.Status.ID = *resp.State.Id
