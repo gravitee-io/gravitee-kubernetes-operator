@@ -48,8 +48,9 @@ func ResolveRefsForAdmission(ctx context.Context, obj *v1alpha1.ApiV4Definition,
 }
 
 // adoptLegacyID gives a CR re-created without status the id of the API GKO 4.11 created for it, so that ToDTO
-// sends it by UUID (GKO-3474). It runs here and not in CreateAPIMClient, which delete calls too: deleting a CR
-// before its first sync must not delete the API it would have re-attached to.
+// sends it by UUID (GKO-3474). The id lands on the spec of the copy being synced, which the lifecycle never saves,
+// and the lookup skips a CR being deleted: neither a failed PUT nor a delete before the first sync leads a delete
+// to the API the CR would have re-attached to.
 func adoptLegacyID(ctx context.Context, obj *v1alpha1.ApiV4Definition) error {
 	if !obj.HasContext() || !apidefinition.MayHaveLegacyID(obj) {
 		return nil

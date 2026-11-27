@@ -30,8 +30,10 @@ import (
 // AdoptLegacyID re-attaches an API that GKO 4.11 created to its CR when the CR comes back without status,
 // for example after a delete and re-apply during an upgrade. GKO 4.11 derived the API id from the cross id,
 // organization and environment; APIM only keeps that id when the API is written with hridContainsUUID.
-// When APIM holds an API with that id and this CR's cross id, the status gets the id, so that PopulateIDs
-// takes the legacy branch. Otherwise the API is new and is synced by HRID, as before.
+// When APIM holds an API with that id and this CR's cross id, the spec gets the id, so that PopulateIDs takes the
+// legacy branch and the PUT goes by UUID. Callers pass the copy being synced, which is never saved: the status gets
+// the id from APIM's answer once the PUT succeeds, so a failed PUT leaves no id for a delete to follow to the 4.11
+// API. Otherwise the API is new and is synced by HRID, as before.
 func AdoptLegacyID(ctx context.Context, apimClient *apim.APIM, api *v1alpha1.ApiV4Definition) error {
 	if !MayHaveLegacyID(api) {
 		return nil
@@ -51,16 +53,16 @@ func AdoptLegacyID(ctx context.Context, apimClient *apim.APIM, api *v1alpha1.Api
 		return nil
 	}
 
-	api.Status.ID = id
-	api.Status.CrossID = remote.CrossID
+	api.Spec.ID = id
 	log.Info(ctx, "Re-attached API created before GKO 4.12", log.KeyValues(api, "id", id)...)
 	return nil
 }
 
 // MayHaveLegacyID reports whether the CR may belong to an API GKO 4.11 created: it has no status id, no spec id,
-// and was never synced by HRID.
+// and was never synced by HRID. A CR being deleted is left out: its delete must not reach the API it would have
+// re-attached to.
 func MayHaveLegacyID(api *v1alpha1.ApiV4Definition) bool {
-	return api.Status.ID == "" && api.Spec.ID == "" && !k8s.IsAutomationAPIManaged(api)
+	return api.Status.ID == "" && api.Spec.ID == "" && !k8s.IsAutomationAPIManaged(api) && !api.IsBeingDeleted()
 }
 
 // leavesCRToHRIDSync reports whether a lookup that answered status leaves the CR to the HRID sync. APIM answers an

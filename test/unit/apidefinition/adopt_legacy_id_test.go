@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sync"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -96,14 +97,15 @@ var _ = Describe("AdoptLegacyID", func() {
 		}
 	})
 
-	It("re-attaches the API APIM holds at the 4.11 id with the CR's cross id", func() {
+	It("puts the 4.11 id on the spec only, so that a failed PUT leaves no id in the status", func() {
 		fake.status = http.StatusOK
 		fake.body = `{"id": "` + legacyID + `", "crossId": "` + legacyCrossID + `", "name": "my-api"}`
 
 		Expect(apidefinition.AdoptLegacyID(ctx, apimClient, api)).To(Succeed())
 
-		Expect(api.Status.ID).To(Equal(legacyID))
-		Expect(api.Status.CrossID).To(Equal(legacyCrossID))
+		Expect(api.Spec.ID).To(Equal(legacyID))
+		Expect(api.Status.ID).To(BeEmpty())
+		Expect(api.Status.CrossID).To(BeEmpty())
 		Expect(fake.received()).To(HaveLen(1))
 		request := fake.received()[0]
 		Expect(request.Method).To(Equal(http.MethodGet))
@@ -117,7 +119,7 @@ var _ = Describe("AdoptLegacyID", func() {
 
 		Expect(apidefinition.AdoptLegacyID(ctx, apimClient, api)).To(Succeed())
 
-		Expect(api.Status.ID).To(BeEmpty())
+		Expect(api.GetID()).To(BeEmpty())
 		Expect(api.Status.CrossID).To(BeEmpty())
 	})
 
@@ -127,7 +129,7 @@ var _ = Describe("AdoptLegacyID", func() {
 
 		Expect(apidefinition.AdoptLegacyID(ctx, apimClient, api)).To(Succeed())
 
-		Expect(api.Status.ID).To(BeEmpty())
+		Expect(api.GetID()).To(BeEmpty())
 		Expect(api.Status.CrossID).To(BeEmpty())
 	})
 
@@ -138,7 +140,7 @@ var _ = Describe("AdoptLegacyID", func() {
 
 			Expect(apidefinition.AdoptLegacyID(ctx, apimClient, api)).To(Succeed())
 
-			Expect(api.Status.ID).To(BeEmpty())
+			Expect(api.GetID()).To(BeEmpty())
 		},
 		Entry("on a 404, as an organization admin gets it for an unknown id", http.StatusNotFound),
 		Entry("on a 403, as a user without rights gets it for an unknown id", http.StatusForbidden),
@@ -154,7 +156,7 @@ var _ = Describe("AdoptLegacyID", func() {
 			err := apidefinition.AdoptLegacyID(ctx, apimClient, api)
 
 			Expect(err).To(MatchError(ContainSubstring(legacyID)))
-			Expect(api.Status.ID).To(BeEmpty())
+			Expect(api.GetID()).To(BeEmpty())
 		},
 		Entry("408", http.StatusRequestTimeout),
 		Entry("429", http.StatusTooManyRequests),
@@ -162,20 +164,25 @@ var _ = Describe("AdoptLegacyID", func() {
 		Entry("503", http.StatusServiceUnavailable),
 	)
 
-	DescribeTable("does not call APIM for a CR that GKO 4.11 cannot have left without status",
+	DescribeTable("does not call APIM",
 		func(prepare func(*v1alpha1.ApiV4Definition)) {
 			fake.status = http.StatusOK
 			fake.body = `{"id": "` + legacyID + `", "crossId": "` + legacyCrossID + `", "name": "my-api"}`
 			prepare(api)
-			statusID := api.Status.ID
+			id := api.GetID()
 
 			Expect(apidefinition.AdoptLegacyID(ctx, apimClient, api)).To(Succeed())
 
 			Expect(fake.received()).To(BeEmpty())
-			Expect(api.Status.ID).To(Equal(statusID))
+			Expect(api.GetID()).To(Equal(id))
 		},
-		Entry("with a status id", func(api *v1alpha1.ApiV4Definition) { api.Status.ID = "an-id" }),
-		Entry("with a spec id", func(api *v1alpha1.ApiV4Definition) { api.Spec.ID = "an-id" }),
-		Entry("synced by HRID", func(api *v1alpha1.ApiV4Definition) { k8s.AddAutomationAPIManagedCondition(api) }),
+		Entry("for a CR with a status id", func(api *v1alpha1.ApiV4Definition) { api.Status.ID = "an-id" }),
+		Entry("for a CR with a spec id", func(api *v1alpha1.ApiV4Definition) { api.Spec.ID = "an-id" }),
+		Entry("for a CR synced by HRID", func(api *v1alpha1.ApiV4Definition) {
+			k8s.AddAutomationAPIManagedCondition(api)
+		}),
+		Entry("for a CR being deleted, whose delete must leave the 4.11 API alone", func(api *v1alpha1.ApiV4Definition) {
+			api.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+		}),
 	)
 })
