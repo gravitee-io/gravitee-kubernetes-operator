@@ -29,11 +29,17 @@ func GetRemote(ctx context.Context, client *apim.SDKClient, dto DTO) (DTO, error
 	if err != nil {
 		return DTO{}, err
 	}
-	return DTO{
-		Subscription: state.Spec(),
-		ApiHrid:      dto.ApiHrid,
-		Legacy:       dto.Legacy,
-	}, nil
+	return FromState(state, dto), nil
+}
+
+// FromState turns the state APIM answers into the payload a PUT would send, addressed as dto is. APIM sets no hrid
+// on a subscription read by its UUID: its id, the UUID the CR maps as its hrid, stands in for it.
+func FromState(state sdk.SubscriptionState, dto DTO) DTO {
+	remote := DTO{Subscription: state.Spec(), ApiHrid: dto.ApiHrid, Legacy: dto.Legacy}
+	if dto.Legacy.HridContainsUUID && state.Id != nil {
+		remote.Hrid = *state.Id
+	}
+	return remote
 }
 
 // GetState fetches the subscription state from APIM, including the server-managed fields (id, start date).
