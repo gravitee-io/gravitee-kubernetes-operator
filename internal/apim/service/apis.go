@@ -104,6 +104,20 @@ func (svc *APIs) GetV4ByHRID(hrid string) (*model.AutomationApiDTO, error) {
 	return resp, nil
 }
 
+// GetV4WithUUID fetches a pre-Automation V4 API from the Automation API by UUID.
+func (svc *APIs) GetV4WithUUID(apiID string) (*model.AutomationApiDTO, error) {
+	url := svc.AutomationTarget("apis").WithPath(apiID).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+
+	resp := new(model.AutomationApiDTO)
+
+	if err := svc.HTTP.Get(url.String(), &resp); err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func (svc *APIs) ImportV2(spec *v2.Api) (*base.Status, error) {
 	return svc.importV2(spec, false)
 }

@@ -46,4 +46,26 @@ var _ = Describe("API v4 automation payload", func() {
 		Expect(sent.Failover).To(HaveKeyWithValue("failureCondition", "{#response.status >= 500}"))
 		Expect(sent.Failover).To(HaveKeyWithValue("forceNextEndpointOnFailure", true))
 	})
+
+	DescribeTable("sends flowExecution.mode in the Automation API spelling",
+		func(mode v4.FlowMode, expected v4.FlowMode) {
+			spec := v1alpha1.ApiV4DefinitionSpec{Api: v4.Api{V4BaseApi: &v4.V4BaseApi{
+				ApiBase:       &base.ApiBase{},
+				FlowExecution: &v4.FlowExecution{Mode: mode},
+			}}}
+
+			dto := model.ToAutomation(spec)
+
+			Expect(dto.FlowExecution.Mode).To(Equal(expected))
+			Expect(spec.FlowExecution.Mode).To(Equal(mode))
+		},
+		Entry("best-match", v4.FlowMode("best-match"), v4.FlowModeBestMatch),
+		Entry("BEST-MATCH", v4.FlowMode("BEST-MATCH"), v4.FlowModeBestMatch),
+		Entry("Best-Match", v4.FlowMode("Best-Match"), v4.FlowModeBestMatch),
+		Entry("best_match", v4.FlowMode("best_match"), v4.FlowModeBestMatch),
+		Entry("BEST_MATCH", v4.FlowModeBestMatch, v4.FlowModeBestMatch),
+		Entry("default", v4.FlowMode("default"), v4.FlowModeDefault),
+		Entry("DEFAULT", v4.FlowModeDefault, v4.FlowModeDefault),
+		Entry("unset", v4.FlowMode(""), v4.FlowMode("")),
+	)
 })

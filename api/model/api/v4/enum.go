@@ -21,3 +21,8 @@ type Enum string
 func (e Enum) ToGatewayDefinition() string {
 	return strings.ReplaceAll(strings.ToLower(string(e)), "_", "-")
 }
+
+// ToAutomation returns the Automation API spelling: upper case, underscores.
+func (e Enum) ToAutomation() string {
+	return strings.ToUpper(strings.ReplaceAll(string(e), "-", "_"))
+}
