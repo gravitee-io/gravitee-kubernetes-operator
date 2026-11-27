@@ -116,7 +116,7 @@ Resources are migrating one by one from the hand-written HTTP client to the gene
   - `ResourceLifecycle.Status` sets the status fields the lifecycle does not manage, such as the deprecated `processingStatus` (`apiv4.SetProcessingStatus`);
   - checks a resource ran before its references on master run in its own webhook before the lifecycle (the v4 API type and subscribed plans in `internal/admission/api/v4/ctrl.go`; the portal navigation kinds' parent changes and Portal's deprecated navigation);
   - a webhook whose drift did not resolve the previous version on master leaves `AdmissionLifecycle.ResolveRefs` unset and checks its references in the admission client factory (`internal/admission/portallink/ctrl.go`), and wraps its dry run in `navigation.FindingsOnError` to keep a failing dry run's own message.
-- The portal navigation kinds change no existing test at all, `test/internal/` included: each controller and webhook keeps its lifecycle in a package variable, so `AdmissionCtrl{}` and the `Reconciler` wiring of `main.go` and the test manager stay as on master, and their hand-written APIM client stays for the existing tests (see [APIM SDK](#apim-sdk-gravitee-automation-sdkapim-sdk)).
+- The portal navigation kinds change no existing test, only add new ones; `test/internal/` gains helpers (APIM deletes, an unresolved-condition assertion) and changes none: each controller and webhook keeps its lifecycle in a package variable, so `AdmissionCtrl{}` and the `Reconciler` wiring of `main.go` and the test manager stay as on master, and their hand-written APIM client stays for the existing tests (see [APIM SDK](#apim-sdk-gravitee-automation-sdkapim-sdk)).
 
 ### AM client (internal/am/)
 
