@@ -340,12 +340,15 @@ var _ = Describe("Catalog MCP server", func() {
 	})
 
 	Describe("context reference", func() {
-		It("reports an unset context as not found, so a delete releases the finalizer", func() {
+		// Retrying cannot set a contextRef: the reconcile reports it on Accepted and stops. It reads as
+		// NotFound too, so a delete releases the finalizer.
+		It("reports an unset context as an illegal state that reads as not found", func() {
 			srv := newCatalogMcpServer(nil)
 			srv.Spec.Context = nil
 
 			err := apim.ResolveContextRef(context.Background(), srv, srv.Namespace)
 
+			Expect(xErrors.IsIllegalState(err)).To(BeTrue())
 			Expect(apierrors.IsNotFound(err)).To(BeTrue())
 			Expect(err).To(MatchError("a management context reference (spec.contextRef) is required"))
 		})
