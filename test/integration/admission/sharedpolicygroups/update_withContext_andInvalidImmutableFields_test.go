@@ -35,7 +35,7 @@ import (
 var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := spg.AdmissionCtrl{}
+	admissionCtrl := spg.NewAdmissionCtrl()
 
 	DescribeTable("should return error modifying immutable fields",
 		func(apply func(spg *v1alpha1.SharedPolicyGroup) *v1alpha1.SharedPolicyGroup, msg string) {
@@ -84,7 +84,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		),
 		Entry("should throw errors with modified Phase",
 			func(spg *v1alpha1.SharedPolicyGroup) *v1alpha1.SharedPolicyGroup {
-				phase := sharedpolicygroups.FlowPhase("INTERACT")
+				phase := sharedpolicygroups.FlowPhase("RESPONSE")
 				spg.Spec.Phase = &phase
 				return spg
 			},

@@ -15,10 +15,13 @@
 package apim
 
 import (
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	spg "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/sharedpolicygroup"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("SharedPolicyGroup Drift detection", func() {
@@ -28,8 +31,8 @@ var _ = Describe("SharedPolicyGroup Drift detection", func() {
 			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
-			model.SharedPolicyGroupDTO{},
-			model.SharedPolicyGroupDTO{},
+			spg.DTO{},
+			spg.DTO{},
 		),
 		Entry("equal struct",
 			completeSharedPolicyGroupDTO(),
@@ -37,20 +40,20 @@ var _ = Describe("SharedPolicyGroup Drift detection", func() {
 		),
 		Entry("equal struct from CRD mapping",
 			completeSharedPolicyGroupDTO(),
-			model.ToSharePolicyGroupDTO(completeSharedPolicyGroupSpec()),
+			toSharedPolicyGroupDTO(completeSharedPolicyGroupSpec()),
 		),
 		Entry("empty steps equivalent to nil",
-			model.SharedPolicyGroupDTO{
-				HRID:    "my-spg",
+			spg.DTO{SharedPolicyGroup: sdk.SharedPolicyGroup{
+				Hrid:    "my-spg",
 				Name:    "My SPG",
 				ApiType: "PROXY",
-			},
-			model.SharedPolicyGroupDTO{
-				HRID:    "my-spg",
+			}},
+			spg.DTO{SharedPolicyGroup: sdk.SharedPolicyGroup{
+				Hrid:    "my-spg",
 				Name:    "My SPG",
 				ApiType: "PROXY",
-				Steps:   make([]model.StepDTO, 0),
-			},
+				Steps:   make([]sdk.StepV4, 0),
+			}},
 		),
 	)
 
@@ -63,7 +66,7 @@ var _ = Describe("SharedPolicyGroup Drift detection", func() {
 
 	Describe("All properties regression test", func() {
 		It("ensure no new property isn't tested are tested", func() {
-			expectedEquivalentNotHavingAnyZeroValue(model.ToSharePolicyGroupDTO(completeSharedPolicyGroupSpec()), completeSharedPolicyGroupDTO())
+			expectedEquivalentNotHavingAnyZeroValue(toSharedPolicyGroupDTO(completeSharedPolicyGroupSpec()), completeSharedPolicyGroupDTO())
 		})
 	})
 })
@@ -73,13 +76,21 @@ func completeSharedPolicyGroupSpec() sharedpolicygroups.SharedPolicyGroup {
 	return loadFixture[sharedpolicygroups.SharedPolicyGroup]("shared_policy_group_spec.json")
 }
 
-func completeSharedPolicyGroupDTO() model.SharedPolicyGroupDTO {
+// toSharedPolicyGroupDTO maps a spec the way the operator does, through a CR that holds it.
+func toSharedPolicyGroupDTO(spec sharedpolicygroups.SharedPolicyGroup) spg.DTO {
 	GinkgoHelper()
-	return loadFixture[model.SharedPolicyGroupDTO]("shared_policy_group_dto.json")
+	dto, err := spg.ToDTO(&v1alpha1.SharedPolicyGroup{Spec: v1alpha1.SharedPolicyGroupSpec{SharedPolicyGroup: &spec}})
+	Expect(err).ToNot(HaveOccurred())
+	return dto
 }
 
-func sharedPolicyGroupWithStep(configuration string) model.SharedPolicyGroupDTO {
+func completeSharedPolicyGroupDTO() spg.DTO {
 	GinkgoHelper()
-	return parseJSON[model.SharedPolicyGroupDTO](`{"name": "spg", "apiType": "PROXY", "phase": "REQUEST", "steps": [` +
+	return loadFixture[spg.DTO]("shared_policy_group_dto.json")
+}
+
+func sharedPolicyGroupWithStep(configuration string) spg.DTO {
+	GinkgoHelper()
+	return parseJSON[spg.DTO](`{"name": "spg", "apiType": "PROXY", "phase": "REQUEST", "steps": [` +
 		`{"enabled": true, "policy": "rate-limit", "name": "Rate Limit", "configuration": ` + configuration + `}]}`)
 }

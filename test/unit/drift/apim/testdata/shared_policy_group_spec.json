@@ -16,7 +16,8 @@
         "addHeaders": true,
         "limit": 10
       },
-      "condition": "{#request.headers['foo'] != null}"
+      "condition": "{#request.headers['foo'] != null}",
+      "messageCondition": "{#message.headers['foo'] != null}"
     }
   ]
 }
