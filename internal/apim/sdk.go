@@ -86,6 +86,7 @@ func SDKFromContextRef(ctx context.Context, ref core.ObjectRef, parentNs string)
 }
 
 // errNoContextRef is a NotFound, as a deleted context is: nothing reached APIM without a context either.
+// ResolveContextRef returns it as an IllegalStateError.
 var errNoContextRef = &apierrors.StatusError{ErrStatus: metav1.Status{
 	Status:  metav1.StatusFailure,
 	Code:    http.StatusNotFound,
@@ -94,11 +95,12 @@ var errNoContextRef = &apierrors.StatusError{ErrStatus: metav1.Status{
 }}
 
 // ResolveContextRef is the lifecycle ResolveRefs of a resource that requires a management context.
-// An unset or deleted context is NotFound, so deleting the resource releases its finalizer instead of
-// retrying a call APIM can no longer receive.
+// An unset contextRef is an IllegalStateError: only a spec change sets it, so it is reported on Accepted and not
+// requeued. A deleted context is a ResolveRefError, retried until it exists again. Both are NotFound, so deleting
+// the resource releases its finalizer instead of retrying a call APIM can no longer receive.
 func ResolveContextRef[T core.ContextAwareObject](ctx context.Context, obj T, ns string) error {
 	if !obj.HasContext() {
-		return errNoContextRef
+		return errors.NewIllegalStateError(errNoContextRef)
 	}
 	_, err := dynamic.ResolveContext(ctx, obj.ContextRef(), ns)
 	return err
