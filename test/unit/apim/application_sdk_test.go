@@ -211,6 +211,16 @@ var _ = Describe("Application UpdateStatus", func() {
 		Expect(k8s.IsAutomationAPIManaged(app)).To(BeTrue())
 	})
 
+	It("clears the processing status the controller wrote before the lifecycle", func() {
+		app := newApplication(applicationUUID, "", true)
+		app.Status.ProcessingStatus = core.ProcessingStatusCompleted
+		resp := apimapp.Response{State: state(new(applicationUUID))}
+
+		Expect(apimapp.UpdateStatus(context.Background(), app, resp)).To(Succeed())
+
+		Expect(app.Status.ProcessingStatus).To(BeEmpty())
+	})
+
 	It("leaves an application upserted by its UUID addressed by its UUID", func() {
 		app := newApplication(applicationUUID, "", false)
 		resp := apimapp.Response{State: state(new(applicationUUID)), Legacy: apimapp.Legacy{HridContainsUUID: true}}
