@@ -35,7 +35,6 @@ const (
 type APIM struct {
 	APIs              *service.APIs
 	Applications      *service.Applications
-	Subscription      *service.Subscriptions
 	SharedPolicyGroup *service.SharedPolicyGroup
 	Dictionaries      *service.Dictionaries
 	Portals           *service.Portals
@@ -93,7 +92,6 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 	return &APIM{
 		APIs:              service.NewAPIs(c),
 		Applications:      service.NewApplications(c),
-		Subscription:      service.NewSubscriptions(c),
 		SharedPolicyGroup: service.NewSharedPolicyGroup(c),
 		Dictionaries:      service.NewDictionaries(c),
 		Portals:           service.NewPortals(c),

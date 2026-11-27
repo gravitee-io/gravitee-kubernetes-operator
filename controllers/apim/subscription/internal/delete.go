@@ -18,9 +18,8 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	subscriptionsdk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
@@ -63,14 +62,18 @@ func Delete(
 				"the API and its subscriptions remain in APIM",
 			"api", spec.API.String(), "severity", "warning")
 	} else {
-		apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+		apimClient, err := subscriptionsdk.CreateAPIMClient(ctx, api)
 		if err != nil {
 			return err
 		}
 
-		api.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(api))
+		api.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
 
-		if err := errors.IgnoreNotFound(apim.Subscription.Delete(api, subscription)); err != nil {
+		dto, err := subscriptionsdk.ToDTO(subscription, api, app)
+		if err != nil {
+			return err
+		}
+		if err := subscriptionsdk.Delete(ctx, apimClient, dto); err != nil {
 			return err
 		}
 

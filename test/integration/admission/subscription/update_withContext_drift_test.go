@@ -3,10 +3,11 @@ package subscription
 import (
 	"context"
 
+	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
+	apimsubscription "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
+	apimtest "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -67,15 +68,17 @@ var _ = Describe("Validate drift", labels.WithContext, func() {
 
 		newObj := fixtures.Subscription.DeepCopy()
 
-		apim := apim.NewClient(ctx)
+		apim := apimtest.NewClient(ctx)
 
-		_, err := apim.Subscriptions.Import(model.SubscriptionDTO{
-			ID:       refs.NewNamespacedNameFromObject(fixtures.Subscription).HRID(),
-			ApiID:    refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID(),
-			AppID:    refs.NewNamespacedNameFromObject(fixtures.Application).HRID(),
-			PlanID:   fixtures.Subscription.Spec.GetPlan(),
-			EndingAt: "2070-11-28T12:20:00Z",
-		}, newObj, false, false, false)
+		_, err := apim.Subscriptions.Import(apimsubscription.DTO{
+			Subscription: sdk.Subscription{
+				Hrid:            refs.NewNamespacedNameFromObject(fixtures.Subscription).HRID(),
+				ApplicationHrid: refs.NewNamespacedNameFromObject(fixtures.Application).HRID(),
+				PlanHrid:        fixtures.Subscription.Spec.GetPlan(),
+				EndingAt:        new("2070-11-28T12:20:00Z"),
+			},
+			ApiHrid: refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID(),
+		}, newObj)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("changing the CRD subscription endingAt")

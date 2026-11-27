@@ -19,7 +19,15 @@ import (
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
+
+// APIUsesUUID is true for an API created before the Automation API (UUID in status, no AutomationAPIManaged
+// condition).
+func APIUsesUUID(api core.ApiDefinitionObject) bool {
+	return api.GetID() != "" && !k8s.IsAutomationAPIManaged(api)
+}
 
 type ApiEntity struct {
 	ID                string             `json:"id"`

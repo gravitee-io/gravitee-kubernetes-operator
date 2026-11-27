@@ -14,10 +14,6 @@
 
 package model
 
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
-)
-
 type SubscriptionResponseDTO struct {
 	ID string `json:"id"`
 }
@@ -25,77 +21,4 @@ type SubscriptionResponseDTO struct {
 type SubscriptionRequestDTO struct {
 	AppID  string `json:"applicationId"`
 	PlanID string `json:"planId"`
-}
-
-type ApiKeyDTO struct {
-	Key      string  `json:"key"`
-	ExpireAt *string `json:"expireAt,omitempty" drift:"rfc3339"`
-}
-
-func (k ApiKeyDTO) MatchKey() string {
-	return k.Key
-}
-
-type ConsumerConfigurationDTO struct {
-	EntrypointID            string                  `json:"entrypointId"`
-	Channel                 string                  `json:"channel,omitempty"`
-	EntrypointConfiguration *utils.GenericStringMap `json:"entrypointConfiguration,omitempty" drift:"unstructured:ignore-remote-default"`
-}
-
-type SubscriptionDTO struct {
-	ID                    string                    `json:"id" drift:"ignore-namespace-prefix"`
-	ApiID                 string                    `json:"apiId" drift:"ignore-namespace-prefix"`
-	AppID                 string                    `json:"applicationId" drift:"ignore-namespace-prefix"`
-	PlanID                string                    `json:"planId"`
-	StartingAt            string                    `json:"startingAt" drift:"ignore"` // remote only, so need to ignore
-	EndingAt              string                    `json:"endingAt" drift:"rfc3339"`
-	Metadata              map[string]string         `json:"metadata,omitempty" drift:"empty-is-nil"`
-	ApiKeys               []ApiKeyDTO               `json:"apiKeys,omitempty" drift:"ignore-only:crd"`
-	ConsumerConfiguration *ConsumerConfigurationDTO `json:"consumerConfiguration,omitempty"`
-}
-
-type AutomationSubscriptionDTO struct {
-	HRID                  string                    `json:"hrid"`
-	ApplicationHrid       string                    `json:"applicationHrid"`
-	PlanHrid              string                    `json:"planHrid"`
-	ApiHrid               string                    `json:"apiHrid"`
-	StartingAt            string                    `json:"startingAt"`
-	EndingAt              string                    `json:"endingAt"`
-	Metadata              map[string]string         `json:"metadata,omitempty"`
-	ApiKeys               []ApiKeyDTO               `json:"apiKeys,omitempty"`
-	ConsumerConfiguration *ConsumerConfigurationDTO `json:"consumerConfiguration,omitempty"`
-}
-
-func (a *AutomationSubscriptionDTO) ToLegacy() *SubscriptionDTO {
-	return &SubscriptionDTO{
-		ID:                    a.HRID,
-		ApiID:                 a.ApiHrid,
-		AppID:                 a.ApplicationHrid,
-		PlanID:                a.PlanHrid,
-		StartingAt:            a.StartingAt,
-		EndingAt:              a.EndingAt,
-		Metadata:              a.Metadata,
-		ApiKeys:               a.ApiKeys,
-		ConsumerConfiguration: mapViaJSON[*ConsumerConfigurationDTO](a.ConsumerConfiguration),
-	}
-}
-
-type SubscriptionStatus struct {
-	ID         string `json:"id,omitempty"`
-	StartingAt string `json:"startingAt,omitempty"`
-	EndingAt   string `json:"endingAt,omitempty"`
-}
-
-func (s *SubscriptionDTO) ToAutomation() AutomationSubscriptionDTO {
-	return AutomationSubscriptionDTO{
-		HRID:                  s.ID,
-		ApiHrid:               s.ApiID,
-		ApplicationHrid:       s.AppID,
-		PlanHrid:              s.PlanID,
-		StartingAt:            s.StartingAt,
-		EndingAt:              s.EndingAt,
-		Metadata:              s.Metadata,
-		ApiKeys:               s.ApiKeys,
-		ConsumerConfiguration: mapViaJSON[*ConsumerConfigurationDTO](s.ConsumerConfiguration),
-	}
 }

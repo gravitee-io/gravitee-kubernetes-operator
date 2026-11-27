@@ -17,11 +17,9 @@ package internal
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	subscriptionsdk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -43,7 +41,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		return err
 	}
 
-	apimClient, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+	apimClient, err := subscriptionsdk.CreateAPIMClient(ctx, api)
 	if err != nil {
 		return err
 	}
@@ -54,26 +52,17 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 
 	api.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(subscription))
 
-	dto := model.ToSubscriptionDTO(subscription, api, app)
-	status, err := apimClient.Subscription.Import(
-		dto,
-		subscription,
-		model.SubscriptionUsesUUID(subscription),
-		model.APIUsesUUID(api),
-		model.ApplicationUsesUUID(app),
-	)
-	if err != nil {
-		return gerrors.NewControlPlaneError(err)
-	}
-
-	startedAt, err := time.Parse(time.RFC3339, status.StartingAt)
+	dto, err := subscriptionsdk.ToDTO(subscription, api, app)
 	if err != nil {
 		return err
 	}
-
-	subscription.Status.StartedAt = startedAt.Format(time.RFC3339)
-	subscription.Status.EndingAt = status.EndingAt
-	subscription.Status.ID = status.ID
+	resp, err := subscriptionsdk.Upsert(ctx, apimClient, dto)
+	if err != nil {
+		return gerrors.NewControlPlaneError(err)
+	}
+	if err := subscriptionsdk.UpdateStatus(subscription, resp); err != nil {
+		return err
+	}
 
 	// Counted once, on creation
 	if creating {
