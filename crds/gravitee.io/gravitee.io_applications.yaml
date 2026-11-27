@@ -369,7 +369,7 @@ spec:
                     sync with an APIM instance
                   type: string
                 processingStatus:
-                  description: The processing status of the Application. *** DEPRECATED ***
+                  description: "*** DEPRECATED *** The processing status of the Application."
                   type: string
                 subscriptions:
                   description: The number of subscriptions that reference the application

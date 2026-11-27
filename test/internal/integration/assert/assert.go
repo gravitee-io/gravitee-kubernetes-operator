@@ -142,7 +142,7 @@ func ApiV4Rejected(apiDefinition *v1alpha1.ApiV4Definition) error {
 }
 
 func ApplicationCompleted(app *v1alpha1.Application) error {
-	return ApplicationAccepted(app)
+	return Equals(reconcileStatus, core.ProcessingStatusCompleted, app.Status.ProcessingStatus)
 }
 
 func ApplicationAccepted(app *v1alpha1.Application) error {
@@ -151,7 +151,7 @@ func ApplicationAccepted(app *v1alpha1.Application) error {
 }
 
 func ApplicationFailed(app *v1alpha1.Application) error {
-	return Equals(reconcileCondition, true, app.Status.IsFailed())
+	return Equals(reconcileStatus, core.ProcessingStatusFailed, app.Status.ProcessingStatus)
 }
 
 func ApplicationRejected(app *v1alpha1.Application) error {

@@ -16,6 +16,7 @@ package apim_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	sdk "github.com/gravitee-io/gravitee-automation-sdk/apim-sdk/pkg/sdk"
@@ -211,16 +212,6 @@ var _ = Describe("Application UpdateStatus", func() {
 		Expect(k8s.IsAutomationAPIManaged(app)).To(BeTrue())
 	})
 
-	It("clears the processing status the controller wrote before the lifecycle", func() {
-		app := newApplication(applicationUUID, "", true)
-		app.Status.ProcessingStatus = core.ProcessingStatusCompleted
-		resp := apimapp.Response{State: state(new(applicationUUID))}
-
-		Expect(apimapp.UpdateStatus(context.Background(), app, resp)).To(Succeed())
-
-		Expect(app.Status.ProcessingStatus).To(BeEmpty())
-	})
-
 	It("leaves an application upserted by its UUID addressed by its UUID", func() {
 		app := newApplication(applicationUUID, "", false)
 		resp := apimapp.Response{State: state(new(applicationUUID)), Legacy: apimapp.Legacy{HridContainsUUID: true}}
@@ -249,5 +240,25 @@ var _ = Describe("Application UpdateStatus", func() {
 
 		Expect(app.Status.Errors.Severe).To(BeEmpty())
 		Expect(app.Status.Errors.Warning).To(BeEmpty())
+	})
+})
+
+var _ = Describe("Application SetProcessingStatus", func() {
+	It("writes Completed after a successful reconcile", func() {
+		app := newApplication(applicationUUID, "", true)
+		app.Status.ProcessingStatus = core.ProcessingStatusFailed
+
+		apimapp.SetProcessingStatus(app, nil)
+
+		Expect(app.Status.ProcessingStatus).To(Equal(core.ProcessingStatusCompleted))
+	})
+
+	It("writes Failed after a failed reconcile", func() {
+		app := newApplication(applicationUUID, "", true)
+		app.Status.ProcessingStatus = core.ProcessingStatusCompleted
+
+		apimapp.SetProcessingStatus(app, errors.New("upsert refused"))
+
+		Expect(app.Status.ProcessingStatus).To(Equal(core.ProcessingStatusFailed))
 	})
 })

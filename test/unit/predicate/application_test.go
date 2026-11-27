@@ -25,30 +25,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
-// syncedApplication is an application whose last-spec-hash matches its spec, with the given conditions.
-func syncedApplication(conditions ...metav1.Condition) *v1alpha1.Application {
+// syncedApplication is an application whose last-spec-hash matches its spec, with the given processing status.
+func syncedApplication(status core.ProcessingStatus) *v1alpha1.Application {
 	app := &v1alpha1.Application{ObjectMeta: metav1.ObjectMeta{Name: "app", Namespace: "default"}}
 	app.Spec.Name = "app"
 	app.Annotations = map[string]string{core.LastSpecHashAnnotation: hash.Calculate(&app.Spec)}
-	app.Status.Conditions = conditions
+	app.Status.ProcessingStatus = status
 	return app
 }
 
 var _ = Describe("LastSpecHashPredicate on an Application create, replayed when the operator starts", func() {
 	p := predicate.LastSpecHashPredicate{}
 
-	accepted := metav1.Condition{Type: "Accepted", Status: metav1.ConditionTrue}
-	refused := metav1.Condition{Type: "Accepted", Status: metav1.ConditionFalse}
-
 	DescribeTable("reconciles an application unless its last sync succeeded",
 		func(app *v1alpha1.Application, reconcile bool) {
 			Expect(p.Create(event.CreateEvent{Object: app})).To(Equal(reconcile))
 		},
-		Entry("synced and accepted", syncedApplication(accepted), false),
-		Entry("synced but refused", syncedApplication(refused), true),
-		Entry("synced, with no condition written yet", syncedApplication(), true),
+		Entry("synced and completed", syncedApplication(core.ProcessingStatusCompleted), false),
+		Entry("synced but failed", syncedApplication(core.ProcessingStatusFailed), true),
+		Entry("synced, with no processing status written yet", syncedApplication(""), true),
 		Entry("spec changed since the last sync", func() *v1alpha1.Application {
-			app := syncedApplication(accepted)
+			app := syncedApplication(core.ProcessingStatusCompleted)
 			app.Spec.Name = "renamed"
 			return app
 		}(), true),
